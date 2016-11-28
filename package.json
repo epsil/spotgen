@@ -2,7 +2,7 @@
   "name": "spotify",
   "author": "Vegard Øye",
   "scripts": {
-    "lint": "jshint spotify.js && standard spotify.js",
+    "lint": "jshint spotify.js cli.js && standard spotify.js cli.js",
     "commit": "git --no-pager status && git --no-pager diff && git commit -a -m \"Updated `git status | sed -n '/modified:/ {s/^[[:space:]]*modified:[[:space:]]*//;s/\\.txt$//;s/\\.md$//;s/\\.html$//;s/\\/index$//;p;q;}'`\"",
     "amend": "git --no-pager status && git --no-pager diff && git commit -a --amend --no-edit",
     "amend-html": "npm run build && npm run amend",
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "jshint": "^2.9.4",
+    "request": "^2.79.0",
     "standard": "^8.6.0"
   }
 }
