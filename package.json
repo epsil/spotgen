@@ -19,6 +19,7 @@
     "status": "git status"
   },
   "dependencies": {
+    "async": "^2.1.4",
     "jshint": "^2.9.4",
     "request": "^2.79.0",
     "standard": "^8.6.0"
