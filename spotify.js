@@ -1,4 +1,4 @@
-/* global $, alert */
+/* global $ */
 
 function findTrack (artist, title, callback) {
   $.ajax({
@@ -14,5 +14,7 @@ function findTrack (artist, title, callback) {
 }
 
 $(function () {
-  findTrack('Beach House', 'Walk in the Park', alert)
+  findTrack('Beach House', 'Walk in the Park', function (result) {
+    $('body').append(result)
+  })
 })
