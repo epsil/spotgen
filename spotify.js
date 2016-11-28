@@ -4,7 +4,7 @@ var async = require('async')
 var fs = require('fs')
 var request = require('request')
 
-var input = process.argv[2] || 'list.txt'
+var input = process.argv[2] || 'input.txt'
 var output = process.argv[3] || 'output.txt'
 
 function readList (file) {
@@ -19,18 +19,17 @@ function findTrack (track, callback) {
   url += track
   setTimeout(function () {
     request(url, function (err, response, body) {
-      if (!err) {
-        try {
-          body = JSON.parse(body)
-          if (!body.error &&
-              body.tracks &&
-              body.tracks.items[0] &&
-              body.tracks.items[0].uri) {
-            uri = body.tracks.items[0].uri
-            console.log(uri)
-          }
-        } catch (e) { }
-      }
+      if (err) { return }
+      try {
+        body = JSON.parse(body)
+        if (!body.error &&
+            body.tracks &&
+            body.tracks.items[0] &&
+            body.tracks.items[0].uri) {
+          uri = body.tracks.items[0].uri
+          console.log(uri)
+        }
+      } catch (e) { }
       callback(false, uri)
     })
   }, 100)
@@ -38,20 +37,17 @@ function findTrack (track, callback) {
 
 function writeList (lst, file) {
   fs.writeFile(file, lst.join('\n'), function (err) {
-    if (!err) {
-      console.log('Wrote to ' + file)
-    }
+    if (err) { return }
+    console.log('Wrote to ' + file)
   })
 }
 
 async.mapSeries(readList(input), findTrack, function (err, results) {
-  if (!err) {
-    async.filter(results, function (track, callback) {
-      callback(null, track !== '')
-    }, function (err, results) {
-      if (!err) {
-        writeList(results, output)
-      }
-    })
-  }
+  if (err) { return }
+  async.filter(results, function (track, callback) {
+    callback(null, track !== '')
+  }, function (err, results) {
+    if (err) { return }
+    writeList(results, output)
+  })
 })
