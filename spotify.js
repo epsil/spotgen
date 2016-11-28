@@ -1,24 +1,44 @@
-/* global $ */
+var async = require('async')
+var fs = require('fs')
+var request = require('request')
 
-function findArtistTitle (artist, title, callback) {
-  findTrack(title + ' - ' + artist, callback)
-}
+var lst = fs.readFileSync('list.txt').toString().split(/\r?\n/)
+
+// function findArtistTitle (artist, title, callback) {
+//   findTrack(title + ' - ' + artist, callback)
+// }
 
 function findTrack (track, callback) {
-  $.ajax({
-    url: 'https://api.spotify.com/v1/search',
-    data: {
-      q: track,
-      type: 'track'
-    },
-    success: function (response) {
-      callback(response.tracks.items[0].uri)
+  var url = 'https://api.spotify.com/v1/search?type=track&q=' + track
+  request(url, function (err, response, body) {
+    if (!err) {
+      body = JSON.parse(body)
+      if (!body.error) {
+        callback(false, body.tracks.items[0].uri)
+      } else {
+        callback(false, '')
+      }
+    } else {
+      callback(false, '')
     }
   })
 }
 
-$(function () {
-  findArtistTitle('Beach House', 'Walk in the Park', function (result) {
-    $('body').append(result)
-  })
+function printList (lst) {
+  var i
+  for (i = 0; i < lst.length; i++) {
+    console.log(lst[i])
+  }
+}
+
+async.map(lst, findTrack, function (err, results) {
+  if (!err) {
+    async.filter(results, function (track, callback) {
+      callback(null, track !== '')
+    }, function (err, results) {
+      if (!err) {
+        printList(results)
+      }
+    })
+  }
 })
