@@ -8,8 +8,6 @@
     "lint": "jshint spotify.js && standard spotify.js",
     "commit": "git --no-pager status && git --no-pager diff && git commit -a -m \"Updated `git status | sed -n '/modified:/ {s/^[[:space:]]*modified:[[:space:]]*//;s/\\.txt$//;s/\\.md$//;s/\\.html$//;s/\\/index$//;p;q;}'`\"",
     "amend": "git --no-pager status && git --no-pager diff && git commit -a --amend --no-edit",
-    "amend-html": "npm run build && npm run amend",
-    "build-amend": "npm run rebuild && npm run amend",
     "reword": "git --no-pager status && git --no-pager diff && git commit -a --amend",
     "push": "git --no-pager status && git pull --rebase && git push",
     "push!": "git --no-pager status && git push --force",
