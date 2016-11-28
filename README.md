@@ -8,7 +8,7 @@ Spotify Playlist Converter
 Usage
 -----
 
-    node spotify input.txt output.txt
+    ./spotify.js input.txt output.txt
 
 `input.txt`:
 
