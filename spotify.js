@@ -2,14 +2,16 @@ var async = require('async')
 var fs = require('fs')
 var request = require('request')
 
-var lst = fs.readFileSync('list.txt', 'utf8').toString().split(/\r?\n/)
+var input = process.argv[2] || 'list.txt'
+var output = process.argv[3] || 'output.txt'
 
-// function findArtistTitle (artist, title, callback) {
-//   findTrack(title + ' - ' + artist, callback)
-// }
+function readList (file) {
+  return fs.readFileSync(file, 'utf8').toString().split(/\r?\n/)
+}
 
 function findTrack (track, callback) {
   var url = 'https://api.spotify.com/v1/search?type=track&q='
+  var uri = ''
   track = encodeURIComponent(track)
   url += track
   setTimeout(function () {
@@ -21,40 +23,31 @@ function findTrack (track, callback) {
               body.tracks &&
               body.tracks.items[0] &&
               body.tracks.items[0].uri) {
-            var uri = body.tracks.items[0].uri
-            // console.log('0: ' + url)
-            callback(false, uri)
-          } else {
-            // console.log('1: ' + url)
-            // console.log(body)
-            callback(false, '')
+            uri = body.tracks.items[0].uri
+            console.log(uri)
           }
-        } catch(err) {
-          // console.log('2: ' + url)
-          callback(false, '')
-        }
-      } else {
-        // console.log('3: ' + url)
-        callback(false, '')
+        } catch (e) { }
       }
+      callback(false, uri)
     })
   }, 100)
 }
 
-function printList (lst) {
-  var i
-  for (i = 0; i < lst.length; i++) {
-    console.log(lst[i])
-  }
+function writeList (lst, file) {
+  fs.writeFile(file, lst.join('\n'), function (err) {
+    if (!err) {
+      console.log('Wrote to ' + file)
+    }
+  })
 }
 
-async.mapSeries(lst, findTrack, function (err, results) {
+async.mapSeries(readList(input), findTrack, function (err, results) {
   if (!err) {
     async.filter(results, function (track, callback) {
       callback(null, track !== '')
     }, function (err, results) {
       if (!err) {
-        printList(results)
+        writeList(results, output)
       }
     })
   }
