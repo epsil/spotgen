@@ -5,7 +5,7 @@
     "cli": "node spotify",
     "spotify": "node spotify",
     "dump": "node spotify > output.txt && cat output.txt",
-    "lint": "jshint browser.js spotify.js && standard browser.js spotify.js",
+    "lint": "jshint spotify.js && standard spotify.js",
     "commit": "git --no-pager status && git --no-pager diff && git commit -a -m \"Updated `git status | sed -n '/modified:/ {s/^[[:space:]]*modified:[[:space:]]*//;s/\\.txt$//;s/\\.md$//;s/\\.html$//;s/\\/index$//;p;q;}'`\"",
     "amend": "git --no-pager status && git --no-pager diff && git commit -a --amend --no-edit",
     "amend-html": "npm run build && npm run amend",
