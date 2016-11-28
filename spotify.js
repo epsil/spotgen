@@ -1,10 +1,14 @@
 /* global $ */
 
-function findTrack (artist, title, callback) {
+function findArtistTitle (artist, title, callback) {
+  findTrack(title + ' - ' + artist, callback)
+}
+
+function findTrack (track, callback) {
   $.ajax({
     url: 'https://api.spotify.com/v1/search',
     data: {
-      q: title + ' - ' + artist,
+      q: track,
       type: 'track'
     },
     success: function (response) {
@@ -14,7 +18,7 @@ function findTrack (artist, title, callback) {
 }
 
 $(function () {
-  findTrack('Beach House', 'Walk in the Park', function (result) {
+  findArtistTitle('Beach House', 'Walk in the Park', function (result) {
     $('body').append(result)
   })
 })
