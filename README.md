@@ -8,7 +8,7 @@ Spotify Playlist Converter
 Usage
 -----
 
-    ./spotify.js input.txt output.txt
+    $ ./spotify.js input.txt output.txt
 
 `input.txt`:
 
@@ -27,6 +27,12 @@ Usage
     spotify:track:7x4tFmih1JBITx0e2ucGrT
 
 To import the playlist, copy the contents of `output.txt` to the clipboard, create a new playlist in Spotify, and paste into it.
+
+### Tips
+
+To convert `playlist1.m3u`, `playlist2.m3u`, `playlist3.m3u` to `playlist1.txt`, `playlist2.txt`, `playlist3.txt`, perform the following Bash command:
+
+    $ for f in *.m3u; do ./spotify.js "$f" "${f%.m3u}.txt"; done
 
 Alternatives
 ------------
