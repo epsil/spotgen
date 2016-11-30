@@ -8,7 +8,7 @@ var input = process.argv[2] || 'input.txt'
 var output = process.argv[3] || 'output.txt'
 
 function readList (file) {
-  return fs.readFileSync(file, 'utf8').toString().split(/\r?\n/)
+  return fs.readFileSync(file, 'utf8').toString().split(/\r|\n|\r\n/)
 }
 
 function findTrack (track, callback) {
