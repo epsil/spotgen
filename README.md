@@ -32,13 +32,13 @@ To import the playlist, copy the contents of `output.txt` to the clipboard, crea
 
 Converting multiple playlists at once can easily be done in the Bash shell:
 
-    $ for f in *.m3u; do ./spotify.js "$f" "${f%.m3u}.txt"; done
+    $ for f in *.txt; do ./spotify.js "$f" "${f%.txt}.spotify.txt"; done
 
-This converts `playlist1.m3u`, `playlist2.m3u`, `playlist3.m3u` to `playlist1.txt`, `playlist2.txt`, `playlist3.txt`.
+This converts `playlist1.txt`, `playlist2.txt`, `playlist3.txt` to `playlist1.spotify.txt`, `playlist2.spotify.txt`, `playlist3.spotify.txt`.
 
-Furthermore, if your shell supports globbing, then you can recursively convert all playlists in a directory with the `**/*.m3u` pattern:
+Furthermore, if your shell supports globbing, then you can recursively convert all playlists in a directory with the `**/*.txt` pattern:
 
-    $ for f in **/*.m3u; do ./spotify.js "$f" "${f%.m3u}.txt"; done
+    $ for f in **/*.txt; do ./spotify.js "$f" "${f%.txt}.spotify.txt"; done
 
 Alternatives
 ------------
