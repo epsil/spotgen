@@ -30,7 +30,7 @@ To import the playlist, copy the contents of `output.txt` to the clipboard, crea
 
 ### Tips
 
-To convert `playlist1.m3u`, `playlist2.m3u`, `playlist3.m3u` to `playlist1.txt`, `playlist2.txt`, `playlist3.txt`, perform the following Bash command:
+Converting multiple playlists at once can easily be done in the Bash shell. For example, to convert `playlist1.m3u`, `playlist2.m3u`, `playlist3.m3u` to `playlist1.txt`, `playlist2.txt`, `playlist3.txt`, run the following Bash command:
 
     $ for f in *.m3u; do ./spotify.js "$f" "${f%.m3u}.txt"; done
 
