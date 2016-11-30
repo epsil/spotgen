@@ -1,7 +1,7 @@
 Spotify Playlist Converter
 ==========================
 
-> Convert playlists to Spotify format.
+> A command-line script for converting playlists to Spotify format.
 >
 > Written in JavaScript, requires [Node](https://nodejs.org/).
 
@@ -42,6 +42,8 @@ Furthermore, if your shell supports globbing, then you can recursively convert a
 
 Alternatives
 ------------
+
+A command-line script is very efficient for converting many playlists at once. However, if you only need to convert a few playlists, then you might find it easier to use one of the web services below:
 
 -   [Yet Another Spotify Playlist Converter](http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/) ([source](https://github.com/bertique/YetAnotherSpotifyPlaylistConverter))
 -   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr))
