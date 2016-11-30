@@ -36,6 +36,10 @@ Converting multiple playlists at once can easily be done in the Bash shell:
 
 This converts `playlist1.m3u`, `playlist2.m3u`, `playlist3.m3u` to `playlist1.txt`, `playlist2.txt`, `playlist3.txt`.
 
+Furthermore, if your shell supports globbing, then you can recursively convert all playlists in a directory with the `**/*.m3u` pattern:
+
+    $ for f in **/*.m3u; do ./spotify.js "$f" "${f%.m3u}.txt"; done
+
 Alternatives
 ------------
 
