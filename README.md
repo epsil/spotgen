@@ -43,7 +43,7 @@ Furthermore, if your shell supports globbing, then you can recursively convert a
 Alternatives
 ------------
 
-A command-line script is very efficient for converting many playlists at once. However, if you only need to convert a few playlists, then you might find it easier to use one of the web services below:
+A command-line script is very efficient for converting many playlists at once. However, if you only need to convert a few playlists, a GUI may be easier to use. Here are a couple of free web services:
 
 -   [Yet Another Spotify Playlist Converter](http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/) ([source](https://github.com/bertique/YetAnotherSpotifyPlaylistConverter))
 -   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr))
