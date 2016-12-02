@@ -43,9 +43,9 @@ Furthermore, if your shell supports globbing, then you can recursively convert a
 See also
 --------
 
--   [Exportify](https://github.com/watsonbox/exportify), the opposite (exports Spotify playlists to CSV format)
+-   [Exportify](https://github.com/watsonbox/exportify), the opposite (export Spotify playlists to CSV format)
 
-### Alternatives
+### GUI alternatives
 
 While a command-line script is efficient for processing a large batch of playlists, a GUI may be simpler to use if you only have a few playlists to import. Here are a couple of free web services:
 
