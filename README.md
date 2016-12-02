@@ -36,7 +36,7 @@ Converting multiple playlists at once can easily be done in the Bash shell:
 
 This converts `playlist1.txt`, `playlist2.txt`, `playlist3.txt` to `playlist1.spotify`, `playlist2.spotify`, `playlist3.spotify`.
 
-Furthermore, if your shell supports globbing, then you can recursively convert all playlists in a directory with the `**/*.txt` pattern:
+Furthermore, if the shell supports globbing, then one can recursively convert all playlists in a directory with the `**/*.txt` pattern:
 
     $ for f in **/*.txt; do ./spotify.js "$f" "${f%.txt}.spotify"; done
 
@@ -48,7 +48,7 @@ See also
 
 ### GUI alternatives
 
-While a command-line script is efficient for processing a large batch of playlists, a GUI may be simpler to use if you only have a few playlists to import. Here are a couple of free web services:
+Although a command-line script is unsurpassably efficient for processing multiple playlists in batch, a GUI may be simpler to use if one only has a few playlists to import. Here are a couple of free web services:
 
 -   [Yet Another Spotify Playlist Converter](http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/) ([source](https://github.com/bertique/YetAnotherSpotifyPlaylistConverter))
 -   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr))
