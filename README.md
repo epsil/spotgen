@@ -26,7 +26,7 @@ Usage
     spotify:track:4qbCRlvE5Bb9XNBjxARjoP
     spotify:track:7x4tFmih1JBITx0e2ucGrT
 
-To import the playlist, copy the contents of `output.txt` to the clipboard, create a new playlist in Spotify, and paste into it.
+To import the playlist, copy the contents of `output.txt` to the clipboard, create a new playlist in Spotify, and paste into it (<kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
 ### Tips
 
@@ -40,10 +40,14 @@ Furthermore, if your shell supports globbing, then you can recursively convert a
 
     $ for f in **/*.txt; do ./spotify.js "$f" "${f%.txt}.spotify"; done
 
-Alternatives
-------------
+See also
+--------
 
-A command-line script is very efficient for converting many playlists at once. However, if you only need to convert a few playlists, a GUI may be easier to use. Here are a couple of free web services:
+-   [Exportify](https://github.com/watsonbox/exportify), the opposite (exports Spotify playlists to CSV format)
+
+### Alternatives
+
+While a command-line script is efficient for processing a large batch of playlists, a GUI may be simpler to use if you only have a few playlists to import. Here are a couple of free web services:
 
 -   [Yet Another Spotify Playlist Converter](http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/) ([source](https://github.com/bertique/YetAnotherSpotifyPlaylistConverter))
 -   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr))
