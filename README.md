@@ -44,6 +44,7 @@ See also
 --------
 
 -   [Exportify](https://github.com/watsonbox/exportify), the opposite (export Spotify playlists to CSV format)
+-   [last.py](https://github.com/epsil/lastpy), a Python script for sorting playlists by Last.fm rating
 
 ### GUI alternatives
 
