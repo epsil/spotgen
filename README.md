@@ -26,7 +26,7 @@ Usage
     spotify:track:4qbCRlvE5Bb9XNBjxARjoP
     spotify:track:7x4tFmih1JBITx0e2ucGrT
 
-To import the playlist, copy the contents of `output.txt` to the clipboard, create a new playlist in Spotify, and paste into it (<kbd>Ctrl</kbd> + <kbd>V</kbd>).
+To import the playlist, copy the contents of `output.txt` to the clipboard, create a new playlist in Spotify, and paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
 ### Tips
 
