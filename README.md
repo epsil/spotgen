@@ -32,7 +32,7 @@ To import the playlist, copy the contents of `output.txt` to the clipboard, crea
 
 The input should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a Spotify search.
 
-#### Converting multiple playlists
+#### Multiple playlists
 
 Converting multiple playlists at once can easily be done in the Bash shell:
 
@@ -44,9 +44,9 @@ Furthermore, if the shell supports globbing, then one can recursively convert al
 
     $ for f in **/*.txt; do ./spotify.js "$f" "${f%.txt}.spotify"; done
 
-#### Converting M3U playlists
+#### M3U playlists
 
-With some search and replace magic, one can use a text editor to convert M3U playlists to the textual format understood by Spotify. Preferably, the playlist contains `EXTM3U` metadata, like in following example. The regular expression
+With some search and replace magic, one can use a text editor to convert M3U playlists (with the file extension `.m3u` or `.m3u8`) to the textual format understood by Spotify. Preferably, the playlist contains `EXTM3U` metadata, like in following example. The regular expression
 
     %s/^#EXTM3U\n\|^#EXTINF:[0-9]+,\|^[^#].*\n?//g
 
