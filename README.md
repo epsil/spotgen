@@ -92,7 +92,7 @@ to the compatible text file
     Troublemaker - Beach House
     Wishes - Beach House
 
-See this [blog post](https://epsil.github.io/2013/11/23/) for more examples.
+As can be seen, these transformations require some personal judgment; that is why they are not built into the script. See this [blog post](https://epsil.github.io/2013/11/23/) for more examples.
 
 See also
 --------
