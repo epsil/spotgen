@@ -1,6 +1,7 @@
 {
   "name": "spotify",
   "author": "Vegard Øye",
+  "main": "spotify.js",
   "scripts": {
     "cli": "node spotify",
     "spotify": "node spotify",
