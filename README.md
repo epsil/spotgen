@@ -30,6 +30,10 @@ To import the playlist, copy the contents of `output.txt` to the clipboard, crea
 
 ### Tips
 
+The input should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a Spotify search.
+
+#### Converting multiple playlists
+
 Converting multiple playlists at once can easily be done in the Bash shell:
 
     $ for f in *.txt; do ./spotify.js "$f" "${f%.txt}.spotify"; done
@@ -39,6 +43,56 @@ This converts `playlist1.txt`, `playlist2.txt`, `playlist3.txt` to `playlist1.sp
 Furthermore, if the shell supports globbing, then one can recursively convert all playlists in a directory with the `**/*.txt` pattern:
 
     $ for f in **/*.txt; do ./spotify.js "$f" "${f%.txt}.spotify"; done
+
+#### Converting M3U playlists
+
+With some search and replace magic, one can use a text editor to convert M3U playlists to the textual format understood by Spotify. Preferably, the playlist contains `EXTM3U` metadata, like in following example. The regular expression
+
+    %s/^#EXTM3U\n\|^#EXTINF:[0-9]+,\|^[^#].*\n?//g
+
+transforms the playlist
+
+    #EXTM3U
+    #EXTINF:404,Desire Lines - Deerhunter
+    Deerhunter/Halcyon Digest/06 Desire Lines.mp3
+    #EXTINF:230,Saved By Old Times - Deerhunter
+    Deerhunter/Microcastle/10 Saved By Old Times.mp3
+    #EXTINF:202,Agoraphobia - Deerhunter
+    Deerhunter/Microcastle/02 Agoraphobia.mp3
+    #EXTINF:133,Revival - Deerhunter
+    Deerhunter/Halcyon Digest/03 Revival.mp3
+    #EXTINF:264,Twilight at Carbon Lake - Deerhunter
+    Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3
+
+to the compatible text file
+
+    Desire Lines - Deerhunter
+    Saved By Old Times - Deerhunter
+    Agoraphobia - Deerhunter
+    Revival - Deerhunter
+    Twilight at Carbon Lake - Deerhunter
+
+If the playlist does *not* contain metadata, on the other hand, then one can attempt to infer the artist and title from the file names. Of course, this presupposes that the files are properly named. The regular expression
+
+    %s/\(^[^\/]+\).*\/[-0-9]*[-. ]*\(.*\)\..*/\2 - \1/g
+
+transforms the playlist
+
+    Beach House/Teen Dream/04 Walk in the Park.mp3
+    Beach House/Bloom/10 Irene.mp3
+    Beach House/Bloom/04 Other People.mp3
+    Beach House/Bloom/06 Troublemaker.mp3
+    Beach House/Bloom/08 Wishes.mp3
+
+to the compatible text file
+
+    Walk in the Park - Beach House
+    Irene - Beach House
+    Other People - Beach House
+    Troublemaker - Beach House
+    Wishes - Beach House
+
+See this [blog post](https://epsil.github.io/2013/11/23/) for more examples.
 
 See also
 --------
