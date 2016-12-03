@@ -94,7 +94,7 @@ to the compatible text file
 
 As can be seen, these transformations require some personal judgment; that is why they are not built into the script. See this [blog post](https://epsil.github.io/2013/11/23/) for more examples.
 
-Other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advanced_Stream_Redirector), [PLS](https://en.wikipedia.org/wiki/PLS_%28file_format%29), [WPL](https://en.wikipedia.org/wiki/Windows_Media_Player_Playlist) and [XSPF](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format)), are difficult to work with directly. Therefore, it is recommended to save to M3U format and proceed as outlined above.
+Other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advanced_Stream_Redirector), [PLS](https://en.wikipedia.org/wiki/PLS_%28file_format%29), [WPL](https://en.wikipedia.org/wiki/Windows_Media_Player_Playlist) and [XSPF](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format), are difficult to work with directly. Therefore, it is recommended to save to M3U format and proceed as outlined above.
 
 See also
 --------
