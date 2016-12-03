@@ -46,7 +46,7 @@ Furthermore, if the shell supports globbing, then one can recursively convert al
 
 #### M3U playlists
 
-With some search and replace magic, one can use a text editor to convert [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`) to the textual format understood by Spotify. Preferably, the playlist contains `EXTM3U` metadata, like in following example. The regular expression
+With some search and replace magic, one can use a text editor to convert [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`) to the textual format understood by Spotify's search. Preferably, the playlist contains `EXTM3U` metadata, like in following example. The regular expression
 
     %s/^#EXTM3U\n\|^#EXTINF:[0-9]+,\|^[^#].*\n?//g
 
