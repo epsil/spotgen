@@ -72,7 +72,7 @@ to the compatible text file
     Revival - Deerhunter
     Twilight at Carbon Lake - Deerhunter
 
-If the playlist does *not* contain metadata, or if the files are badly tagged, then one can attempt to infer the artist and title from the file names themselves. Of course, this presupposes that the files are properly named. The regular expression
+If the playlist does *not* contain metadata, or if the files are badly tagged, then one can attempt to infer the artist and title from the file names instead. Of course, this presupposes that the files are properly named. For example, the regular expression
 
     %s/\(^[^\/]+\).*\/[-0-9]*[-. ]*\(.*\)\..*/\2 - \1/g
 
