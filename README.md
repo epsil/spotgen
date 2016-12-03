@@ -30,7 +30,7 @@ To import the playlist, copy the contents of `output.txt` to the clipboard, crea
 
 ### Tips
 
-The input should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a Spotify search. You can even add [field filters](https://developer.spotify.com/web-api/search-item/).
+The input should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a Spotify search. One can even add [field filters](https://developer.spotify.com/web-api/search-item/).
 
 #### Multiple playlists
 
