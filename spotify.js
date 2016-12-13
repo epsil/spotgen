@@ -50,6 +50,21 @@ spotify.Album = function (query) {
           result.albums.items[0].id) {
         return result.albums.items[0].id
       }
+    }).then(function (id) {
+      var url = 'https://api.spotify.com/v1/albums/'
+      url += encodeURIComponent(id)
+      return spotify.request(url)
+    }).then(function (result) {
+      if (result.tracks &&
+          result.tracks.items) {
+        var tracks = result.tracks.items
+        var entries = new spotify.Entries()
+        for (var i in tracks) {
+          var entry = new spotify.Entry(tracks[i], query)
+          entries.addEntry(entry)
+        }
+        return entries
+      }
     })
   }
 }
@@ -88,8 +103,8 @@ spotify.Entries = function (entry) {
 }
 
 spotify.Entry = function (body, query) {
-  for (var k in body) {
-    this[k] = body[k]
+  for (var prop in body) {
+    this[prop] = body[prop]
   }
   this.query = query
 }
@@ -139,7 +154,7 @@ spotify.findTrack = function (track, callback) {
             body.tracks.items[0] &&
             body.tracks.items[0].uri) {
           uri = body.tracks.items[0].uri
-          console.log(uri)
+          // console.log(uri)
         }
       } catch (e) { }
       callback(false, uri)
