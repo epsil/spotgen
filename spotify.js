@@ -92,7 +92,16 @@ spotify.Artist = function (query) {
  * @param {string} query - The track to search for
  */
 spotify.Track = function (query) {
+
+  /**
+   * Query string
+   */
   this.query = query.trim()
+
+  /**
+   * Dispatch query.
+   * @return {Promise | Entry} The track info
+   */
   this.dispatch = function () {
     var query = this.query
     var url = 'https://api.spotify.com/v1/search?type=track&q='
