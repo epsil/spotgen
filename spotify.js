@@ -44,26 +44,38 @@ spotify.request = function (url) {
  * @constructor
  * @param {string} query - The album to search for.
  */
-spotify.Album = function (query) {
+spotify.Album = function (query, id) {
   this.query = query.trim()
+  this.id = id
 
   this.dispatch = function () {
+    if (this.id) {
+      return this.fetch(this.id)
+                 .then(this.entries)
+    } else {
+      return this.search(this.query)
+                 .then(this.result)
+                 .then(this.fetch)
+                 .then(this.entries)
+    }
+  }
+
+  this.search = function (query) {
     var url = 'https://api.spotify.com/v1/search?type=album&q='
     url += encodeURIComponent(query)
     return spotify.request(url)
-      .then(this.result).then(this.fetch).then(this.entries)
   }
 
   this.result = function (body) {
     if (body.albums &&
         body.albums.items[0] &&
         body.albums.items[0].id) {
-      return body.albums.items[0].id
+      this.id = body.albums.items[0].id
+      return this.id
     }
   }
 
   this.fetch = function (id) {
-    this.id = id
     var url = 'https://api.spotify.com/v1/albums/'
     url += encodeURIComponent(id)
     return spotify.request(url)
