@@ -66,7 +66,16 @@ spotify.Playlist = function (str) {
   str = str.trim()
 
   if (str !== '') {
-    playlist.tracks = str.split(/\r|\n|\r\n/)
+    var tracks = str.split(/\r|\n|\r\n/)
+
+    while (tracks.length > 0) {
+      var track = tracks.shift()
+      if (track.match(/^#ORDER BY POPULARITY/)) {
+        playlist.order = 'popularity'
+      } else {
+        playlist.tracks.push(track)
+      }
+    }
   }
 
   return playlist

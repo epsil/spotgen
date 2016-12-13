@@ -26,5 +26,13 @@ describe('Playlist', function () {
         tracks: ['test1', 'test2']
       })
     })
+
+    it('should create sorted playlist', function () {
+      var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
+      playlist.should.eql({
+        tracks: ['test1', 'test2'],
+        order: 'popularity'
+      })
+    })
   })
 })
