@@ -42,7 +42,7 @@ spotify.request = function (url) {
 /**
  * Album query.
  * @constructor
- * @param {string} query - The album to search for
+ * @param {string} query - The album to search for.
  */
 spotify.Album = function (query) {
   this.query = query.trim()
@@ -51,18 +51,19 @@ spotify.Album = function (query) {
     var url = 'https://api.spotify.com/v1/search?type=album&q='
     url += encodeURIComponent(query)
     return spotify.request(url)
-      .then(this.id).then(this.fetch).then(this.entries)
+      .then(this.result).then(this.fetch).then(this.entries)
   }
 
-  this.id = function (result) {
-    if (result.albums &&
-        result.albums.items[0] &&
-        result.albums.items[0].id) {
-      return result.albums.items[0].id
+  this.result = function (body) {
+    if (body.albums &&
+        body.albums.items[0] &&
+        body.albums.items[0].id) {
+      return body.albums.items[0].id
     }
   }
 
   this.fetch = function (id) {
+    this.id = id
     var url = 'https://api.spotify.com/v1/albums/'
     url += encodeURIComponent(id)
     return spotify.request(url)
@@ -89,18 +90,17 @@ spotify.Artist = function (query) {
 /**
  * Track query.
  * @constructor
- * @param {string} query - The track to search for
+ * @param {string} query - The track to search for.
  */
 spotify.Track = function (query) {
-
   /**
-   * Query string
+   * Query string.
    */
   this.query = query.trim()
 
   /**
    * Dispatch query.
-   * @return {Promise | Entry} The track info
+   * @return {Promise | Entry} The track info.
    */
   this.dispatch = function () {
     var query = this.query
@@ -117,6 +117,11 @@ spotify.Track = function (query) {
   }
 }
 
+/**
+ * Playlist entries.
+ * @constructor
+ * @param {string} [entry] - Playlist entry.
+ */
 spotify.Entries = function (entry) {
   this.entries = []
 
@@ -129,6 +134,12 @@ spotify.Entries = function (entry) {
   }
 }
 
+/**
+ * Playlist entry.
+ * @constructor
+ * @param {string} body - Track data.
+ * @param {string} query - Query text.
+ */
 spotify.Entry = function (body, query) {
   for (var prop in body) {
     this[prop] = body[prop]
@@ -139,7 +150,7 @@ spotify.Entry = function (body, query) {
 /**
  * Represents a playlist.
  * @constructor
- * @param {string} str - The playlist as a string
+ * @param {string} str - The playlist as a string.
  */
 spotify.Playlist = function (str) {
   str = str.trim()
