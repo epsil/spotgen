@@ -42,6 +42,25 @@ describe('Playlist', function () {
   })
 })
 
+describe('Album', function () {
+  it('should create an empty track', function () {
+    var album = new spotify.Album('')
+    album.query.should.eql('')
+  })
+
+  it('should create a single album', function () {
+    var album = new spotify.Album('test')
+    album.query.should.eql('test')
+  })
+
+  it('should dispatch a single album', function () {
+    var album = new spotify.Album('test')
+    album.query.should.eql('test')
+    var promise = album.dispatch()
+    return promise.should.eventually.eql('5cv2FBz4B4x0WpAjMSI1UG')
+  })
+})
+
 describe('Track', function () {
   it('should create an empty track', function () {
     var track = new spotify.Track('')
