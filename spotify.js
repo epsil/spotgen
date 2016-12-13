@@ -63,6 +63,18 @@ spotify.Track = function (query) {
   }
 }
 
+spotify.Entries = function (entry) {
+  this.entries = []
+
+  this.addEntry = function (entry) {
+    this.entries.push(entry)
+  }
+
+  if (entry instanceof spotify.Entry) {
+    this.entries.push(entry)
+  }
+}
+
 spotify.Entry = function (body, query) {
   for (var k in body) {
     this[k] = body[k]

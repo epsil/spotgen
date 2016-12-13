@@ -61,3 +61,47 @@ describe('Track', function () {
                   .and.have.property('uri', 'spotify:track:1NZWiuy0mlnsrcYL2dhKt6')
   })
 })
+
+describe('Entries', function () {
+  it('should create an empty list of entries', function () {
+    var entries = new spotify.Entries()
+    entries.entries.should.eql([])
+  })
+
+  it('convert an entry into a singleton entry list', function () {
+    var entry = new spotify.Entry({}, 'test')
+    var entries = new spotify.Entries(entry)
+    entries.entries.should.eql([
+      {
+        query: 'test'
+      }
+    ])
+  })
+
+  it('should add an entry', function () {
+    var entry = new spotify.Entry({}, 'test')
+    var entries = new spotify.Entries()
+    entries.addEntry(entry)
+    entries.entries.should.eql([
+      {
+        query: 'test'
+      }
+    ])
+  })
+
+  it('should preserve order of entries', function () {
+    var foo = new spotify.Entry({}, 'foo')
+    var bar = new spotify.Entry({}, 'bar')
+    var entries = new spotify.Entries()
+    entries.addEntry(foo)
+    entries.addEntry(bar)
+    entries.entries.should.eql([
+      {
+        query: 'foo'
+      },
+      {
+        query: 'bar'
+      }
+    ])
+  })
+})
