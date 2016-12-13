@@ -31,7 +31,7 @@ spotify.Track = function (query) {
       // https://developer.spotify.com/web-api/search-item/
       var url = 'https://api.spotify.com/v1/search?type=track&q='
       var result = {}
-      url += encodeURIComponent(this.query)
+      url += encodeURIComponent(query)
       setTimeout(function () {
         request(url, function (err, response, body) {
           if (err) {
