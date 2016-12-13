@@ -19,5 +19,12 @@ describe('Playlist', function () {
         tracks: ['test']
       })
     })
+
+    it('should create two-track playlist', function () {
+      var playlist = new spotify.Playlist('test1\ntest2')
+      playlist.should.eql({
+        tracks: ['test1', 'test2']
+      })
+    })
   })
 })
