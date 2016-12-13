@@ -8,19 +8,21 @@ var request = require('request')
 var input = process.argv[2] || 'input.txt'
 var output = process.argv[3] || 'output.txt'
 
-function readList (file) {
+var spotify = {}
+
+spotify.readList = function (file) {
   return fs.readFileSync(file, 'utf8').toString().split(/\r|\n|\r\n/)
 }
 
-function AlbumQuery (query) {
+spotify.AlbumQuery = function (query) {
   // ...
 }
 
-function ArtistQuery (query) {
+spotify.ArtistQuery = function (query) {
   // ...
 }
 
-function TrackQuery (query) {
+spotify.TrackQuery = function (query) {
   this.query = query
   this.dispatch = function (callback) {
     // https://developer.spotify.com/web-api/search-item/
@@ -37,7 +39,7 @@ function TrackQuery (query) {
               body.tracks &&
               body.tracks.items[0] &&
               body.tracks.items[0].uri) {
-            var track = new Track(body.tracks.items[0], this.query)
+            var track = new spotify.Track(body.tracks.items[0], this.query)
             var uri = track.uri
             result = track
             console.log(uri)
@@ -49,20 +51,24 @@ function TrackQuery (query) {
   }
 }
 
-function Track (body, query) {
+spotify.Track = function (body, query) {
   for (var k in body) {
     this[k] = body[k]
   }
   this.query = query
 }
 
-function Playlist (order, group) {
-  this.tracks = []
-  this.order = order
-  this.group = group
+spotify.Playlist = function (str) {
+  return {}
 }
 
-function findTrack (track, callback) {
+// function Playlist (order, group) {
+//   this.tracks = []
+//   this.order = order
+//   this.group = group
+// }
+
+spotify.findTrack = function (track, callback) {
   // https://developer.spotify.com/web-api/search-item/
   var url = 'https://api.spotify.com/v1/search?type=track&q='
   var uri = ''
@@ -86,16 +92,16 @@ function findTrack (track, callback) {
   }, 100)
 }
 
-function writeList (lst, file) {
+spotify.writeList = function (lst, file) {
   fs.writeFile(file, lst.join('\n'), function (err) {
     if (err) { return }
     console.log('Wrote to ' + file)
   })
 }
 
-function readTracks (coll) {
+spotify.readTracks = function (coll) {
   var iteratee = function (item, callback) {
-    findTrack(item, function (err, result) {
+    spotify.findTrack(item, function (err, result) {
       console.log(result)
       callback(err, result)
     })
@@ -107,19 +113,21 @@ function readTracks (coll) {
       callback(null, track !== '')
     }, function (err, results) {
       if (err) { return }
-      writeList(results, output)
+      spotify.writeList(results, output)
     })
   }
 
   async.mapSeries(coll, iteratee, callback)
 }
 
-async.mapSeries(readList(input), findTrack, function (err, results) {
+async.mapSeries(spotify.readList(input), spotify.findTrack, function (err, results) {
   if (err) { return }
   async.filter(results, function (track, callback) {
     callback(null, track !== '')
   }, function (err, results) {
     if (err) { return }
-    writeList(results, output)
+    spotify.writeList(results, output)
   })
 })
+
+module.exports = spotify
