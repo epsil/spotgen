@@ -9,6 +9,7 @@
     "lint": "jshint spotify.js test/test.js && standard spotify.js test/test.js",
     "test": "mocha spotify.js test/test.js",
     "tests": "npm run lint && npm run test",
+    "doc": "jsdoc -d doc spotify.js",
     "commit": "git --no-pager status && git --no-pager diff && git commit -a -m \"Updated `git status | sed -n '/modified:/ {s/^[[:space:]]*modified:[[:space:]]*//;s/\\.txt$//;s/\\.md$//;s/\\.html$//;s/\\/index$//;p;q;}'`\"",
     "amend": "git --no-pager status && git --no-pager diff && git commit -a --amend --no-edit",
     "reword": "git --no-pager status && git --no-pager diff && git commit -a --amend",
@@ -25,8 +26,11 @@
   "dependencies": {
     "async": "^2.1.4",
     "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+    "jsdoc": "^3.4.3",
     "jshint": "^2.9.4",
     "mocha": "^3.2.0",
+    "promise": "^7.1.1",
     "request": "^2.79.0",
     "standard": "^8.6.0"
   }

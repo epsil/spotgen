@@ -58,6 +58,11 @@ spotify.Track = function (body, query) {
   this.query = query
 }
 
+/**
+ * Represents a playlist.
+ * @constructor
+ * @param {string} str - The playlist as a string
+ */
 spotify.Playlist = function (str) {
   var playlist = {
     tracks: []
