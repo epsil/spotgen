@@ -25,30 +25,41 @@ spotify.Artist = function (query) {
 spotify.Track = function (query) {
   this.query = query.trim()
 
-  this.dispatch = function (callback) {
-    // https://developer.spotify.com/web-api/search-item/
-    var url = 'https://api.spotify.com/v1/search?type=track&q='
-    var error = false
-    var result = {}
-    url += encodeURIComponent(this.query)
-    setTimeout(function () {
-      request(url, function (err, response, body) {
-        if (err || response.statusCode !== 200) { return }
-        try {
-          body = JSON.parse(body)
-          if (!body.error &&
-              body.tracks &&
-              body.tracks.items[0] &&
-              body.tracks.items[0].uri) {
-            var track = new spotify.Entry(body.tracks.items[0], this.query)
-            var uri = track.uri
-            result = track
-            console.log(uri)
+  this.dispatch = function () {
+    var query = this.query
+    return new Promise(function (resolve, reject) {
+      // https://developer.spotify.com/web-api/search-item/
+      var url = 'https://api.spotify.com/v1/search?type=track&q='
+      var result = {}
+      url += encodeURIComponent(this.query)
+      setTimeout(function () {
+        request(url, function (err, response, body) {
+          if (err) {
+            reject(err)
+          } else if (response.statusCode !== 200) {
+            reject(response.statusCode)
+          } else {
+            try {
+              body = JSON.parse(body)
+              if (!body.error &&
+                  body.tracks &&
+                  body.tracks.items[0] &&
+                  body.tracks.items[0].uri) {
+                var track = new spotify.Entry(body.tracks.items[0], this.query)
+                var uri = track.uri
+                result = track
+                console.log(uri)
+              } else {
+                reject(body)
+              }
+            } catch (e) {
+              reject(e)
+            }
+            resolve(result)
           }
-        } catch (e) { }
-        callback(error, result)
-      })
-    }, 100)
+        })
+      }, 100)
+    })
   }
 }
 

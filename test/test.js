@@ -1,5 +1,7 @@
 /* global describe, it */
 var chai = require('chai')
+var chaiAsPromised = require('chai-as-promised')
+chai.use(chaiAsPromised)
 chai.should()
 
 var spotify = require('../spotify.js')
@@ -49,5 +51,11 @@ describe('Track', function () {
   it('should create a single track', function () {
     var track = new spotify.Track('test')
     track.query.should.eql('test')
+  })
+
+  it('should dispatch a single track', function () {
+    var track = new spotify.Track('test')
+    track.query.should.eql('test')
+    return track.dispatch().should.eventually.eql('yes')
   })
 })
