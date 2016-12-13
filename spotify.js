@@ -14,44 +14,49 @@ spotify.readList = function (file) {
   return fs.readFileSync(file, 'utf8').toString().split(/\r|\n|\r\n/)
 }
 
-spotify.AlbumQuery = function (query) {
+spotify.Album = function (query) {
   // ...
 }
 
-spotify.ArtistQuery = function (query) {
+spotify.Artist = function (query) {
   // ...
 }
 
-spotify.TrackQuery = function (query) {
-  this.query = query
-  this.dispatch = function (callback) {
-    // https://developer.spotify.com/web-api/search-item/
-    var url = 'https://api.spotify.com/v1/search?type=track&q='
-    var error = false
-    var result = {}
-    url += encodeURIComponent(this.query)
-    setTimeout(function () {
-      request(url, function (err, response, body) {
-        if (err || response.statusCode !== 200) { return }
-        try {
-          body = JSON.parse(body)
-          if (!body.error &&
-              body.tracks &&
-              body.tracks.items[0] &&
-              body.tracks.items[0].uri) {
-            var track = new spotify.Track(body.tracks.items[0], this.query)
-            var uri = track.uri
-            result = track
-            console.log(uri)
-          }
-        } catch (e) { }
-        callback(error, result)
-      })
-    }, 100)
+spotify.Track = function (query) {
+  query = query.trim()
+  if (query !== '') {
+    this.query = query
   }
 }
 
-spotify.Track = function (body, query) {
+spotify.Track.dispatch = function (callback) {
+  // https://developer.spotify.com/web-api/search-item/
+  var url = 'https://api.spotify.com/v1/search?type=track&q='
+  var error = false
+  var result = {}
+  url += encodeURIComponent(this.query)
+  setTimeout(function () {
+    request(url, function (err, response, body) {
+      if (err || response.statusCode !== 200) { return }
+      try {
+        body = JSON.parse(body)
+        if (!body.error &&
+            body.tracks &&
+            body.tracks.items[0] &&
+            body.tracks.items[0].uri) {
+          var track = new spotify.Entry(body.tracks.items[0], this.query)
+          var uri = track.uri
+          result = track
+          console.log(uri)
+        }
+      } catch (e) { }
+      callback(error, result)
+    })
+  }, 100)
+}
+
+
+spotify.Entry = function (body, query) {
   for (var k in body) {
     this[k] = body[k]
   }
@@ -64,26 +69,21 @@ spotify.Track = function (body, query) {
  * @param {string} str - The playlist as a string
  */
 spotify.Playlist = function (str) {
-  var playlist = {
-    tracks: []
-  }
-
   str = str.trim()
 
   if (str !== '') {
     var tracks = str.split(/\r|\n|\r\n/)
+    this.tracks = []
 
     while (tracks.length > 0) {
       var track = tracks.shift()
       if (track.match(/^#ORDER BY POPULARITY/)) {
-        playlist.order = 'popularity'
+        this.order = 'popularity'
       } else if (track !== '') {
-        playlist.tracks.push(track)
+        this.tracks.push(track)
       }
     }
   }
-
-  return playlist
 }
 
 // function Playlist (order, group) {
