@@ -56,6 +56,8 @@ describe('Track', function () {
   it('should dispatch a single track', function () {
     var track = new spotify.Track('test')
     track.query.should.eql('test')
-    return track.dispatch().should.eventually.eql('yes')
+    var promise = track.dispatch()
+    return promise.should.eventually.be.an.instanceof(spotify.Entry)
+                  .and.have.property('uri', 'spotify:track:1NZWiuy0mlnsrcYL2dhKt6')
   })
 })

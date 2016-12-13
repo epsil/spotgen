@@ -48,7 +48,7 @@ spotify.Track = function (query) {
                 var track = new spotify.Entry(body.tracks.items[0], this.query)
                 var uri = track.uri
                 result = track
-                console.log(uri)
+                // console.log(uri)
               } else {
                 reject(body)
               }
