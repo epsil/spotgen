@@ -39,33 +39,46 @@ spotify.request = function (url) {
   })
 }
 
+/**
+ * Album query.
+ * @constructor
+ * @param {string} query - The album to search for
+ */
 spotify.Album = function (query) {
   this.query = query.trim()
+
   this.dispatch = function () {
     var url = 'https://api.spotify.com/v1/search?type=album&q='
     url += encodeURIComponent(query)
-    return spotify.request(url).then(function (result) {
-      if (result.albums &&
-          result.albums.items[0] &&
-          result.albums.items[0].id) {
-        return result.albums.items[0].id
+    return spotify.request(url)
+      .then(this.id).then(this.fetch).then(this.entries)
+  }
+
+  this.id = function (result) {
+    if (result.albums &&
+        result.albums.items[0] &&
+        result.albums.items[0].id) {
+      return result.albums.items[0].id
+    }
+  }
+
+  this.fetch = function (id) {
+    var url = 'https://api.spotify.com/v1/albums/'
+    url += encodeURIComponent(id)
+    return spotify.request(url)
+  }
+
+  this.entries = function (result) {
+    if (result.tracks &&
+        result.tracks.items) {
+      var tracks = result.tracks.items
+      var entries = new spotify.Entries()
+      for (var i in tracks) {
+        var entry = new spotify.Entry(tracks[i], query)
+        entries.addEntry(entry)
       }
-    }).then(function (id) {
-      var url = 'https://api.spotify.com/v1/albums/'
-      url += encodeURIComponent(id)
-      return spotify.request(url)
-    }).then(function (result) {
-      if (result.tracks &&
-          result.tracks.items) {
-        var tracks = result.tracks.items
-        var entries = new spotify.Entries()
-        for (var i in tracks) {
-          var entry = new spotify.Entry(tracks[i], query)
-          entries.addEntry(entry)
-        }
-        return entries
-      }
-    })
+      return entries
+    }
   }
 }
 
@@ -73,6 +86,11 @@ spotify.Artist = function (query) {
   // ...
 }
 
+/**
+ * Track query.
+ * @constructor
+ * @param {string} query - The track to search for
+ */
 spotify.Track = function (query) {
   this.query = query.trim()
   this.dispatch = function () {
