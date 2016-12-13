@@ -7,7 +7,7 @@ var spotify = require('../spotify.js')
 describe('Playlist', function () {
   it('should create empty playlist when passed empty string', function () {
     var playlist = new spotify.Playlist('')
-    playlist.should.be.empty
+    playlist.should.eql({})
   })
 
   it('should create one-track playlist', function () {
@@ -43,7 +43,7 @@ describe('Playlist', function () {
 describe('Track', function () {
   it('should create an empty track', function () {
     var track = new spotify.Track('')
-    track.should.be.empty
+    track.should.eql({})
   })
 
   it('should create a single track', function () {

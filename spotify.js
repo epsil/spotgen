@@ -55,7 +55,6 @@ spotify.Track.dispatch = function (callback) {
   }, 100)
 }
 
-
 spotify.Entry = function (body, query) {
   for (var k in body) {
     this[k] = body[k]
