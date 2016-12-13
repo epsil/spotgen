@@ -23,36 +23,33 @@ spotify.Artist = function (query) {
 }
 
 spotify.Track = function (query) {
-  query = query.trim()
-  if (query !== '') {
-    this.query = query
-  }
-}
+  this.query = query.trim()
 
-spotify.Track.dispatch = function (callback) {
-  // https://developer.spotify.com/web-api/search-item/
-  var url = 'https://api.spotify.com/v1/search?type=track&q='
-  var error = false
-  var result = {}
-  url += encodeURIComponent(this.query)
-  setTimeout(function () {
-    request(url, function (err, response, body) {
-      if (err || response.statusCode !== 200) { return }
-      try {
-        body = JSON.parse(body)
-        if (!body.error &&
-            body.tracks &&
-            body.tracks.items[0] &&
-            body.tracks.items[0].uri) {
-          var track = new spotify.Entry(body.tracks.items[0], this.query)
-          var uri = track.uri
-          result = track
-          console.log(uri)
-        }
-      } catch (e) { }
-      callback(error, result)
-    })
-  }, 100)
+  this.dispatch = function (callback) {
+    // https://developer.spotify.com/web-api/search-item/
+    var url = 'https://api.spotify.com/v1/search?type=track&q='
+    var error = false
+    var result = {}
+    url += encodeURIComponent(this.query)
+    setTimeout(function () {
+      request(url, function (err, response, body) {
+        if (err || response.statusCode !== 200) { return }
+        try {
+          body = JSON.parse(body)
+          if (!body.error &&
+              body.tracks &&
+              body.tracks.items[0] &&
+              body.tracks.items[0].uri) {
+            var track = new spotify.Entry(body.tracks.items[0], this.query)
+            var uri = track.uri
+            result = track
+            console.log(uri)
+          }
+        } catch (e) { }
+        callback(error, result)
+      })
+    }, 100)
+  }
 }
 
 spotify.Entry = function (body, query) {

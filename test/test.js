@@ -43,13 +43,11 @@ describe('Playlist', function () {
 describe('Track', function () {
   it('should create an empty track', function () {
     var track = new spotify.Track('')
-    track.should.eql({})
+    track.query.should.eql('')
   })
 
   it('should create a single track', function () {
     var track = new spotify.Track('test')
-    track.should.eql({
-      query: 'test'
-    })
+    track.query.should.eql('test')
   })
 })
