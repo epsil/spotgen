@@ -72,7 +72,7 @@ spotify.Playlist = function (str) {
       var track = tracks.shift()
       if (track.match(/^#ORDER BY POPULARITY/)) {
         playlist.order = 'popularity'
-      } else {
+      } else if (track !== '') {
         playlist.tracks.push(track)
       }
     }
