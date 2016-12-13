@@ -42,6 +42,27 @@ function writeList (lst, file) {
   })
 }
 
+function readTracks (coll) {
+  var iteratee = function (item, callback) {
+    findTrack(item, function (err, result) {
+      console.log(result)
+      callback(err, result)
+    })
+  }
+
+  var callback = function (err, results) {
+    if (err) { return }
+    async.filter(results, function (track, callback) {
+      callback(null, track !== '')
+    }, function (err, results) {
+      if (err) { return }
+      writeList(results, output)
+    })
+  }
+
+  async.mapSeries(coll, iteratee, callback)
+}
+
 async.mapSeries(readList(input), findTrack, function (err, results) {
   if (err) { return }
   async.filter(results, function (track, callback) {
