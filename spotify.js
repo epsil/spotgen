@@ -59,7 +59,17 @@ spotify.Track = function (body, query) {
 }
 
 spotify.Playlist = function (str) {
-  return {}
+  var playlist = {
+    tracks: []
+  }
+
+  str = str.trim()
+
+  if (str !== '') {
+    playlist.tracks = str.split(/\r|\n|\r\n/)
+  }
+
+  return playlist
 }
 
 // function Playlist (order, group) {
