@@ -38,6 +38,12 @@ describe('spotify.js', function () {
       playlist.should.have.deep.property('queries[1].query', 'test2')
       playlist.should.have.property('order', 'popularity')
     })
+
+    it('should dispatch all queries', function () {
+      var playlist = new spotify.Playlist('test1\ntest2')
+      var promise = playlist.dispatch()
+      return promise.should.eventually.be.instanceof(spotify.Collection)
+    })
   })
 
   describe('Album', function () {

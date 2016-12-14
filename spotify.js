@@ -259,6 +259,11 @@ spotify.Entry = function (body, query) {
  */
 spotify.Playlist = function (str) {
   /**
+   * Self reference.
+   */
+  var self = this
+
+  /**
    * List of queries.
    */
   this.queries = []
@@ -289,9 +294,9 @@ spotify.Playlist = function (str) {
     })
     return Promise.all(promises).then(function (collections) {
       for (var i in collections) {
-        this.tracks.concat(collections[i])
+        self.tracks = self.tracks.concat(collections[i])
       }
-      return this.tracks
+      return self.tracks
     })
   }
 }
@@ -318,7 +323,6 @@ spotify.findTrack = function (track, callback) {
             body.tracks.items[0] &&
             body.tracks.items[0].uri) {
           uri = body.tracks.items[0].uri
-          // console.log(uri)
         }
       } catch (e) { }
       callback(false, uri)
