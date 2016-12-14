@@ -46,7 +46,7 @@ describe('spotify.js', function () {
   })
 
   describe('Album', function () {
-    it('should create an empty track', function () {
+    it('should create an empty album', function () {
       var album = new spotify.Album('')
       album.query.should.eql('')
     })
@@ -79,8 +79,8 @@ describe('spotify.js', function () {
       var artist = new spotify.Artist('test')
       artist.query.should.eql('test')
       var promise = artist.dispatch()
-      return promise.should.eventually.be.an.instanceof(spotify.Entry)
-        .and.have.property('uri', 'spotify:artist:1NZWiuy0mlnsrcYL2dhKt6')
+      return promise.should.eventually.be.an.instanceof(spotify.Collection)
+        // .and.have.property('uri', 'spotify:artist:1NZWiuy0mlnsrcYL2dhKt6')
     })
   })
 

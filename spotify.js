@@ -44,57 +44,63 @@ spotify.request = function (url) {
  * @constructor
  * @param {string} query - The album to search for.
  */
-spotify.Album = function (body, query) {
-  for (var prop in body) {
-    this[prop] = body[prop]
+spotify.Album = function (query) {
+  if (typeof query === 'string') {
+    this.query = query.trim()
   }
 
-  this.query = query.trim()
-
   this.dispatch = function () {
-    if (this.id) {
-      return this.fetch(this.id)
-                 .then(this.entries)
+    if (this.searchResponse) {
+      return this.fetchAlbum(this.searchResponse)
+        .then(this.verifyAlbumResponse)
+        .then(this.createCollection)
     } else {
-      return this.search(this.query)
-                 .then(this.result)
-                 .then(this.fetch)
-                 .then(this.entries)
+      return this.searchForAlbum(this.query)
+        .then(this.verifySearchResponse)
+        .then(this.fetchAlbum)
+        .then(this.verifyAlbumResponse)
+        .then(this.createCollection)
     }
   }
 
-  this.search = function (query) {
+  this.searchForAlbum = function (query) {
     var url = 'https://api.spotify.com/v1/search?type=album&q='
     url += encodeURIComponent(query)
     return spotify.request(url)
   }
 
-  this.result = function (body) {
-    if (body.albums &&
-        body.albums.items[0] &&
-        body.albums.items[0].id) {
-      this.id = body.albums.items[0].id
-      return this.id
+  this.verifySearchResponse = function (response) {
+    if (response.albums &&
+        response.albums.items[0] &&
+        response.albums.items[0].id) {
+      this.searchResponse = response
+      return this.searchResponse
     }
   }
 
-  this.fetch = function (id) {
+  this.fetchAlbum = function (response) {
+    var id = response.albums.items[0].id
     var url = 'https://api.spotify.com/v1/albums/'
     url += encodeURIComponent(id)
     return spotify.request(url)
   }
 
-  this.entries = function (result) {
-    if (result.tracks &&
-        result.tracks.items) {
-      var tracks = result.tracks.items
-      var entries = new spotify.Collection()
-      for (var i in tracks) {
-        var entry = new spotify.Entry(tracks[i], query)
-        entries.addEntry(entry)
-      }
-      return entries
+  this.verifyAlbumResponse = function (response) {
+    if (response.tracks &&
+        response.tracks.items) {
+      this.albumResponse = response
+      return this.albumResponse
     }
+  }
+
+  this.createCollection = function (response) {
+    var tracks = response.tracks.items
+    var entries = new spotify.Collection()
+    for (var i in tracks) {
+      var entry = new spotify.Entry(tracks[i], this.query)
+      entries.addEntry(entry)
+    }
+    return entries
   }
 }
 
@@ -123,18 +129,18 @@ spotify.Artist = function (query, id) {
     }).then(function (id) {
       var url = 'https://api.spotify.com/v1/artists/'
       url += encodeURIComponent(id) + '/albums'
-      console.log(url)
       return spotify.request(url)
     }).then(function (result) {
       if (result.items) {
         var items = result.items
         var albums = []
+        var entries = new spotify.Collection()
         for (var i in items) {
-          var entry = new spotify.Entry(tracks[i], query)
+          var entry = new spotify.Entry(items[i], query)
           entries.addEntry(entry)
         }
-
-        return this.id
+        return entries
+      }
     })
   }
 }
