@@ -208,7 +208,8 @@ spotify.Track = function (query) {
           result.tracks.items[0] &&
           result.tracks.items[0].uri) {
         var track = new spotify.Entry(result.tracks.items[0], query)
-        return track
+        var collection = new spotify.Collection(track)
+        return collection
       }
     })
   }
@@ -257,20 +258,41 @@ spotify.Entry = function (body, query) {
  * @param {string} str - The playlist as a string.
  */
 spotify.Playlist = function (str) {
-  str = str.trim()
+  /**
+   * List of queries.
+   */
+  this.queries = []
 
+  /**
+   * List of tracks.
+   */
+  this.tracks = new spotify.Collection()
+
+  str = str.trim()
   if (str !== '') {
     var queries = str.split(/\r|\n|\r\n/)
-    this.queries = []
 
     while (queries.length > 0) {
-      var track = queries.shift()
-      if (track.match(/^#ORDER BY POPULARITY/)) {
+      var query = queries.shift()
+      if (query.match(/^#ORDER BY POPULARITY/)) {
         this.order = 'popularity'
-      } else if (track !== '') {
+      } else if (query !== '') {
+        var track = new spotify.Track(query)
         this.queries.push(track)
       }
     }
+  }
+
+  this.dispatch = function () {
+    var promises = this.queries.map(function (query) {
+      return query.dispatch()
+    })
+    return Promise.all(promises).then(function (collections) {
+      for (var i in collections) {
+        this.tracks.concat(collections[i])
+      }
+      return this.tracks
+    })
   }
 }
 

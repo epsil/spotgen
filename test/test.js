@@ -12,36 +12,31 @@ describe('spotify.js', function () {
   describe('Playlist', function () {
     it('should create empty playlist when passed empty string', function () {
       var playlist = new spotify.Playlist('')
-      playlist.should.eql({})
+      playlist.queries.should.eql([])
     })
 
     it('should create a one-track playlist', function () {
       var playlist = new spotify.Playlist('test')
-      playlist.should.eql({
-        queries: ['test']
-      })
+      playlist.should.have.deep.property('queries[0].query', 'test')
     })
 
     it('should create a two-track playlist', function () {
       var playlist = new spotify.Playlist('test1\ntest2')
-      playlist.should.eql({
-        queries: ['test1', 'test2']
-      })
+      playlist.should.have.deep.property('queries[0].query', 'test1')
+      playlist.should.have.deep.property('queries[1].query', 'test2')
     })
 
     it('should ignore empty lines', function () {
       var playlist = new spotify.Playlist('test1\n\n\n\ntest2')
-      playlist.should.eql({
-        queries: ['test1', 'test2']
-      })
+      playlist.should.have.deep.property('queries[0].query', 'test1')
+      playlist.should.have.deep.property('queries[1].query', 'test2')
     })
 
     it('should create a sorted playlist', function () {
       var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
-      playlist.should.eql({
-        queries: ['test1', 'test2'],
-        order: 'popularity'
-      })
+      playlist.should.have.deep.property('queries[0].query', 'test1')
+      playlist.should.have.deep.property('queries[1].query', 'test2')
+      playlist.should.have.property('order', 'popularity')
     })
   })
 
@@ -98,8 +93,7 @@ describe('spotify.js', function () {
       var track = new spotify.Track('test')
       track.query.should.eql('test')
       var promise = track.dispatch()
-      return promise.should.eventually.be.an.instanceof(spotify.Entry)
-        .and.have.property('uri', 'spotify:track:1NZWiuy0mlnsrcYL2dhKt6')
+      return promise.should.eventually.be.an.instanceof(spotify.Collection)
     })
   })
 
