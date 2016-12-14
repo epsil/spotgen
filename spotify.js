@@ -52,45 +52,42 @@ spotify.Album = function (query) {
   this.dispatch = function () {
     if (this.searchResponse) {
       return this.fetchAlbum(this.searchResponse)
-        .then(this.verifyAlbumResponse)
-        .then(this.createCollection)
+                 .then(this.createCollection)
     } else {
       return this.searchForAlbum(this.query)
-        .then(this.verifySearchResponse)
-        .then(this.fetchAlbum)
-        .then(this.verifyAlbumResponse)
-        .then(this.createCollection)
+                 .then(this.fetchAlbum)
+                 .then(this.createCollection)
     }
   }
 
   this.searchForAlbum = function (query) {
     var url = 'https://api.spotify.com/v1/search?type=album&q='
     url += encodeURIComponent(query)
-    return spotify.request(url)
-  }
-
-  this.verifySearchResponse = function (response) {
-    if (response.albums &&
-        response.albums.items[0] &&
-        response.albums.items[0].id) {
-      this.searchResponse = response
-      return this.searchResponse
-    }
+    return spotify.request(url).then(function (response) {
+      if (response.albums &&
+          response.albums.items[0] &&
+          response.albums.items[0].id) {
+        this.searchResponse = response
+        return Promise.resolve(response)
+      } else {
+        return Promise.reject(response)
+      }
+    })
   }
 
   this.fetchAlbum = function (response) {
     var id = response.albums.items[0].id
     var url = 'https://api.spotify.com/v1/albums/'
     url += encodeURIComponent(id)
-    return spotify.request(url)
-  }
-
-  this.verifyAlbumResponse = function (response) {
-    if (response.tracks &&
-        response.tracks.items) {
-      this.albumResponse = response
-      return this.albumResponse
-    }
+    return spotify.request(url).then(function (response) {
+      if (response.tracks &&
+          response.tracks.items) {
+        this.albumResponse = response
+        return Promise.resolve(response)
+      } else {
+        return Promise.reject(response)
+      }
+    })
   }
 
   this.createCollection = function (response) {
