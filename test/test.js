@@ -15,31 +15,31 @@ describe('spotify.js', function () {
       playlist.should.eql({})
     })
 
-    it('should create one-track playlist', function () {
+    it('should create a one-track playlist', function () {
       var playlist = new spotify.Playlist('test')
       playlist.should.eql({
-        tracks: ['test']
+        queries: ['test']
       })
     })
 
-    it('should create two-track playlist', function () {
+    it('should create a two-track playlist', function () {
       var playlist = new spotify.Playlist('test1\ntest2')
       playlist.should.eql({
-        tracks: ['test1', 'test2']
+        queries: ['test1', 'test2']
       })
     })
 
     it('should ignore empty lines', function () {
       var playlist = new spotify.Playlist('test1\n\n\n\ntest2')
       playlist.should.eql({
-        tracks: ['test1', 'test2']
+        queries: ['test1', 'test2']
       })
     })
 
-    it('should create sorted playlist', function () {
+    it('should create a sorted playlist', function () {
       var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
       playlist.should.eql({
-        tracks: ['test1', 'test2'],
+        queries: ['test1', 'test2'],
         order: 'popularity'
       })
     })

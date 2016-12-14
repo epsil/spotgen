@@ -260,22 +260,22 @@ spotify.Playlist = function (str) {
   str = str.trim()
 
   if (str !== '') {
-    var tracks = str.split(/\r|\n|\r\n/)
-    this.tracks = []
+    var queries = str.split(/\r|\n|\r\n/)
+    this.queries = []
 
-    while (tracks.length > 0) {
-      var track = tracks.shift()
+    while (queries.length > 0) {
+      var track = queries.shift()
       if (track.match(/^#ORDER BY POPULARITY/)) {
         this.order = 'popularity'
       } else if (track !== '') {
-        this.tracks.push(track)
+        this.queries.push(track)
       }
     }
   }
 }
 
 // function Playlist (order, group) {
-//   this.tracks = []
+//   this.queries = []
 //   this.order = order
 //   this.group = group
 // }
