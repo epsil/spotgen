@@ -45,6 +45,11 @@ spotify.request = function (url) {
  * @param {string} query - The album to search for.
  */
 spotify.Album = function (query) {
+  /**
+   * Self reference.
+   */
+  var self = this
+
   if (typeof query === 'string') {
     this.query = query.trim()
   }
@@ -52,6 +57,9 @@ spotify.Album = function (query) {
   this.dispatch = function () {
     if (this.searchResponse) {
       return this.fetchAlbum(this.searchResponse)
+                 .then(this.createCollection)
+    } else if (this.albumResponseSimple) {
+      return this.fetchAlbum(this.albumResponseSimple)
                  .then(this.createCollection)
     } else {
       return this.searchForAlbum(this.query)
@@ -61,6 +69,7 @@ spotify.Album = function (query) {
   }
 
   this.searchForAlbum = function (query) {
+    // https://developer.spotify.com/web-api/search-item/
     var url = 'https://api.spotify.com/v1/search?type=album&q='
     url += encodeURIComponent(query)
     return spotify.request(url).then(function (response) {
@@ -76,7 +85,7 @@ spotify.Album = function (query) {
   }
 
   this.fetchAlbum = function (response) {
-    var id = response.albums.items[0].id
+    var id = response.id ? response.id : response.albums.items[0].id
     var url = 'https://api.spotify.com/v1/albums/'
     url += encodeURIComponent(id)
     return spotify.request(url).then(function (response) {
@@ -94,51 +103,84 @@ spotify.Album = function (query) {
     var tracks = response.tracks.items
     var entries = new spotify.Collection()
     for (var i in tracks) {
-      var entry = new spotify.Entry(tracks[i], this.query)
+      var entry = new spotify.Entry(tracks[i], self.query)
       entries.addEntry(entry)
     }
     return entries
   }
 }
 
-spotify.Artist = function (query, id) {
+spotify.Artist = function (query) {
+  /**
+   * Self reference.
+   */
+  var self = this
+
   /**
    * Query string.
    */
   this.query = query.trim()
-  this.id = id
 
   /**
    * Dispatch query.
-   * @return {Promise | Entry} The track info.
+   * @return {Promise | Entry} The artist info.
    */
   this.dispatch = function () {
-    var query = this.query
+    return this.searchForArtist(this.query)
+               .then(this.fetchAlbums)
+               .then(this.fetchTracks)
+               .then(this.createCollection)
+  }
+
+  this.searchForArtist = function (query) {
+    // https://developer.spotify.com/web-api/search-item/
     var url = 'https://api.spotify.com/v1/search?type=artist&q='
     url += encodeURIComponent(query)
-    return spotify.request(url).then(function (result) {
-      if (result.artists &&
-          result.artists.items[0] &&
-          result.artists.items[0].id) {
-        this.id = result.artists.items[0].id
-        return this.id
-      }
-    }).then(function (id) {
-      var url = 'https://api.spotify.com/v1/artists/'
-      url += encodeURIComponent(id) + '/albums'
-      return spotify.request(url)
-    }).then(function (result) {
-      if (result.items) {
-        var items = result.items
-        var albums = []
-        var entries = new spotify.Collection()
-        for (var i in items) {
-          var entry = new spotify.Entry(items[i], query)
-          entries.addEntry(entry)
-        }
-        return entries
+    return spotify.request(url).then(function (response) {
+      if (response.artists &&
+          response.artists.items[0] &&
+          response.artists.items[0].id) {
+        this.artistResponse = response
+        return Promise.resolve(response)
+      } else {
+        return Promise.reject(response)
       }
     })
+  }
+
+  this.fetchAlbums = function (response) {
+    var id = response.artists.items[0].id
+    var url = 'https://api.spotify.com/v1/artists/'
+    url += encodeURIComponent(id) + '/albums'
+    return spotify.request(url).then(function (response) {
+      if (response.items) {
+        this.albumResponse = response
+        return Promise.resolve(response)
+      } else {
+        return Promise.reject(response)
+      }
+    })
+  }
+
+  this.fetchTracks = function (response) {
+    var tracks = response.items
+    var queries = []
+    for (var i in tracks) {
+      var album = tracks[i]
+      var albumQuery = new spotify.Album(self.query)
+      albumQuery.albumResponseSimple = album
+      queries.push(albumQuery.dispatch())
+    }
+    return Promise.all(queries)
+  }
+
+  this.createCollection = function (albums) {
+    var collection = new spotify.Collection()
+    for (var i in albums) {
+      var album = albums[i]
+      collection = collection.concat(album)
+    }
+    return collection
   }
 }
 
@@ -158,9 +200,9 @@ spotify.Track = function (query) {
    * @return {Promise | Entry} The track info.
    */
   this.dispatch = function () {
-    var query = this.query
+    // https://developer.spotify.com/web-api/search-item/
     var url = 'https://api.spotify.com/v1/search?type=track&q='
-    url += encodeURIComponent(query)
+    url += encodeURIComponent(this.query)
     return spotify.request(url).then(function (result) {
       if (result.tracks &&
           result.tracks.items[0] &&
@@ -182,6 +224,13 @@ spotify.Collection = function (entry) {
 
   this.addEntry = function (entry) {
     this.entries.push(entry)
+  }
+
+  this.concat = function (collection) {
+    var result = new spotify.Collection()
+    result.entries = this.entries
+    result.entries = result.entries.concat(collection.entries)
+    return result
   }
 
   if (entry instanceof spotify.Entry) {

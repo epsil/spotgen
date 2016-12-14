@@ -75,12 +75,11 @@ describe('spotify.js', function () {
       artist.query.should.eql('test')
     })
 
-    it('should dispatch a single artist', function () {
+    it('should fetch an artist\'s tracks', function () {
       var artist = new spotify.Artist('test')
       artist.query.should.eql('test')
       var promise = artist.dispatch()
       return promise.should.eventually.be.an.instanceof(spotify.Collection)
-        // .and.have.property('uri', 'spotify:artist:1NZWiuy0mlnsrcYL2dhKt6')
     })
   })
 
@@ -143,6 +142,29 @@ describe('spotify.js', function () {
         },
         {
           query: 'bar'
+        }
+      ])
+    })
+
+    it('should concatenate collections in the same order', function () {
+      var foo = new spotify.Entry({}, 'foo')
+      var bar = new spotify.Entry({}, 'bar')
+      var baz = new spotify.Entry({}, 'baz')
+      var collection1 = new spotify.Collection()
+      var collection2 = new spotify.Collection()
+      collection1.addEntry(foo)
+      collection1.addEntry(bar)
+      collection2.addEntry(baz)
+      var collection3 = collection1.concat(collection2)
+      collection3.entries.should.eql([
+        {
+          query: 'foo'
+        },
+        {
+          query: 'bar'
+        },
+        {
+          query: 'baz'
         }
       ])
     })
