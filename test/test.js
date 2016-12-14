@@ -60,7 +60,27 @@ describe('spotify.js', function () {
       var album = new spotify.Album('test')
       album.query.should.eql('test')
       var promise = album.dispatch()
-      return promise.should.eventually.be.instanceof(spotify.Entries)
+      return promise.should.eventually.be.instanceof(spotify.Collection)
+    })
+  })
+
+  describe('Artist', function () {
+    it('should create an empty artist', function () {
+      var artist = new spotify.Artist('')
+      artist.query.should.eql('')
+    })
+
+    it('should create a single artist', function () {
+      var artist = new spotify.Artist('test')
+      artist.query.should.eql('test')
+    })
+
+    it('should dispatch a single artist', function () {
+      var artist = new spotify.Artist('test')
+      artist.query.should.eql('test')
+      var promise = artist.dispatch()
+      return promise.should.eventually.be.an.instanceof(spotify.Entry)
+        .and.have.property('uri', 'spotify:artist:1NZWiuy0mlnsrcYL2dhKt6')
     })
   })
 
@@ -84,16 +104,16 @@ describe('spotify.js', function () {
     })
   })
 
-  describe('Entries', function () {
-    it('should create an empty list of entries', function () {
-      var entries = new spotify.Entries()
-      entries.entries.should.eql([])
+  describe('Collection', function () {
+    it('should create an empty list', function () {
+      var collection = new spotify.Collection()
+      collection.entries.should.eql([])
     })
 
-    it('convert an entry into a singleton entry list', function () {
+    it('should convert an entry into a singleton collection', function () {
       var entry = new spotify.Entry({}, 'test')
-      var entries = new spotify.Entries(entry)
-      entries.entries.should.eql([
+      var collection = new spotify.Collection(entry)
+      collection.entries.should.eql([
         {
           query: 'test'
         }
@@ -102,22 +122,22 @@ describe('spotify.js', function () {
 
     it('should add an entry', function () {
       var entry = new spotify.Entry({}, 'test')
-      var entries = new spotify.Entries()
-      entries.addEntry(entry)
-      entries.entries.should.eql([
+      var collection = new spotify.Collection()
+      collection.addEntry(entry)
+      collection.entries.should.eql([
         {
           query: 'test'
         }
       ])
     })
 
-    it('should preserve order of entries', function () {
+    it('should store entries in the order they are added', function () {
       var foo = new spotify.Entry({}, 'foo')
       var bar = new spotify.Entry({}, 'bar')
-      var entries = new spotify.Entries()
-      entries.addEntry(foo)
-      entries.addEntry(bar)
-      entries.entries.should.eql([
+      var collection = new spotify.Collection()
+      collection.addEntry(foo)
+      collection.addEntry(bar)
+      collection.entries.should.eql([
         {
           query: 'foo'
         },

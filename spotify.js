@@ -44,9 +44,12 @@ spotify.request = function (url) {
  * @constructor
  * @param {string} query - The album to search for.
  */
-spotify.Album = function (query, id) {
+spotify.Album = function (body, query) {
+  for (var prop in body) {
+    this[prop] = body[prop]
+  }
+
   this.query = query.trim()
-  this.id = id
 
   this.dispatch = function () {
     if (this.id) {
@@ -85,7 +88,7 @@ spotify.Album = function (query, id) {
     if (result.tracks &&
         result.tracks.items) {
       var tracks = result.tracks.items
-      var entries = new spotify.Entries()
+      var entries = new spotify.Collection()
       for (var i in tracks) {
         var entry = new spotify.Entry(tracks[i], query)
         entries.addEntry(entry)
@@ -95,8 +98,45 @@ spotify.Album = function (query, id) {
   }
 }
 
-spotify.Artist = function (query) {
-  // ...
+spotify.Artist = function (query, id) {
+  /**
+   * Query string.
+   */
+  this.query = query.trim()
+  this.id = id
+
+  /**
+   * Dispatch query.
+   * @return {Promise | Entry} The track info.
+   */
+  this.dispatch = function () {
+    var query = this.query
+    var url = 'https://api.spotify.com/v1/search?type=artist&q='
+    url += encodeURIComponent(query)
+    return spotify.request(url).then(function (result) {
+      if (result.artists &&
+          result.artists.items[0] &&
+          result.artists.items[0].id) {
+        this.id = result.artists.items[0].id
+        return this.id
+      }
+    }).then(function (id) {
+      var url = 'https://api.spotify.com/v1/artists/'
+      url += encodeURIComponent(id) + '/albums'
+      console.log(url)
+      return spotify.request(url)
+    }).then(function (result) {
+      if (result.items) {
+        var items = result.items
+        var albums = []
+        for (var i in items) {
+          var entry = new spotify.Entry(tracks[i], query)
+          entries.addEntry(entry)
+        }
+
+        return this.id
+    })
+  }
 }
 
 /**
@@ -134,7 +174,7 @@ spotify.Track = function (query) {
  * @constructor
  * @param {string} [entry] - Playlist entry.
  */
-spotify.Entries = function (entry) {
+spotify.Collection = function (entry) {
   this.entries = []
 
   this.addEntry = function (entry) {
