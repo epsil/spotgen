@@ -111,7 +111,7 @@ describe('spotify.js', function () {
       var track = new spotify.Track('test')
       track.query.should.eql('test')
       var promise = track.dispatch()
-      return promise.should.eventually.be.an.instanceof(spotify.Queue)
+      return promise.should.eventually.be.an.instanceof(spotify.Track)
     })
   })
 
@@ -121,22 +121,22 @@ describe('spotify.js', function () {
       queue.queue.should.eql([])
     })
 
-    it('should convert a URI into a singleton queue', function () {
-      var uri = new spotify.URI('test')
-      var queue = new spotify.Queue(uri)
+    it('should convert a track into a singleton queue', function () {
+      var track = new spotify.Track('test')
+      var queue = new spotify.Queue(track)
       queue.should.have.deep.property('queue[0].query', 'test')
     })
 
-    it('should add a URI', function () {
-      var uri = new spotify.URI('test')
+    it('should add a track', function () {
+      var track = new spotify.Track('test')
       var queue = new spotify.Queue()
-      queue.add(uri)
+      queue.add(track)
       queue.should.have.deep.property('queue[0].query', 'test')
     })
 
     it('should store queue in the order they are added', function () {
-      var foo = new spotify.URI('foo')
-      var bar = new spotify.URI('bar')
+      var foo = new spotify.Track('foo')
+      var bar = new spotify.Track('bar')
       var queue = new spotify.Queue()
       queue.add(foo)
       queue.add(bar)
@@ -145,8 +145,8 @@ describe('spotify.js', function () {
     })
 
     it('should be sortable', function () {
-      var foo = new spotify.URI('foo')
-      var bar = new spotify.URI('bar')
+      var foo = new spotify.Track('foo')
+      var bar = new spotify.Track('bar')
       var queue = new spotify.Queue()
       queue.add(foo)
       queue.add(bar)
@@ -156,8 +156,8 @@ describe('spotify.js', function () {
     })
 
     it('should be sortable with compare function', function () {
-      var foo = new spotify.URI('foo')
-      var bar = new spotify.URI('bar')
+      var foo = new spotify.Track('foo')
+      var bar = new spotify.Track('bar')
       var queue = new spotify.Queue()
       queue.add(foo)
       queue.add(bar)
@@ -169,9 +169,9 @@ describe('spotify.js', function () {
     })
 
     it('should concatenate queues in the same order', function () {
-      var foo = new spotify.URI('foo')
-      var bar = new spotify.URI('bar')
-      var baz = new spotify.URI('baz')
+      var foo = new spotify.Track('foo')
+      var bar = new spotify.Track('bar')
+      var baz = new spotify.Track('baz')
       var queue1 = new spotify.Queue()
       var queue2 = new spotify.Queue()
       queue1.add(foo)
@@ -184,10 +184,10 @@ describe('spotify.js', function () {
     })
   })
 
-  describe('URI', function () {
-    it('should be able to fetch itself', function () {
-      var uri = new spotify.URI('test')
-      uri.refresh().should.eventually.have.deep.property('response.id')
-    })
-  })
+  // describe('URI', function () {
+  //   it('should be able to fetch itself', function () {
+  //     var uri = new spotify.URI('test')
+  //     uri.refresh().should.eventually.have.deep.property('response.id')
+  //   })
+  // })
 })

@@ -68,6 +68,7 @@ spotify.Playlist = function (str) {
    */
   this.fetchTracks = function () {
     return this.queries.dispatch().then(function (result) {
+      console.log(result)
       self.tracks = result.flatten()
       return self
     })
@@ -80,9 +81,9 @@ spotify.Playlist = function (str) {
   this.toString = function () {
     var result = ''
     self.tracks.forEach(function (track) {
-      if (track.response &&
-          track.response.uri) {
-        result += track.response.uri + '\n'
+      var uri = track.uri()
+      if (uri !== '') {
+        result += uri + '\n'
       }
     })
     return result.trim()
@@ -182,60 +183,63 @@ spotify.Queue = function (uri) {
   }
 }
 
-/**
- * Playlist URI.
- * @constructor
- * @param {string} query - Query text.
- * @param {JSON} [response] - Track response object.
- * Should have the property `uri`.
- */
-spotify.URI = function (query, response) {
-  /**
-   * Self reference.
-   */
-  var self = this
+// /**
+//  * Playlist URI.
+//  * @constructor
+//  * @param {string} query - Query text.
+//  * @param {JSON} [response] - Track response object.
+//  * Should have the property `uri`.
+//  */
+// spotify.URI = function (query, response) {
+//   /**
+//    * Self reference.
+//    */
+//   var self = this
 
-  this.query = query
-  this.response = response
+//   this.query = query
+//   this.response = response
 
-  /**
-   * Fetch full metadata records if not available.
-   */
-  this.refresh = function () {
-    if (self.response &&
-        self.response.popularity) {
-      return Promise.resolve(self)
-    } else {
-      return self.fetch()
-    }
-  }
+//   /**
+//    * Fetch full metadata records if not available.
+//    */
+//   this.refresh = function () {
+//     if (self.response &&
+//         self.response.popularity) {
+//       return Promise.resolve(self)
+//     } else {
+//       return self.fetch()
+//     }
+//   }
 
-  /**
-   * Fetch full metadata records.
-   */
-  this.fetch = function () {
-    var track = new spotify.Track(self.query, self.response)
-    return track.dispatch().then(function (queue) {
-      var uri = queue.get(0)
-      self.response = uri.response
-      return self
-    })
-  }
+//   /**
+//    * Fetch full metadata records.
+//    */
+//   this.fetch = function () {
+//     var track = new spotify.Track(self.query, self.response)
+//     return track.dispatch().then(function (queue) {
+//       var uri = queue.get(0)
+//       self.response = uri.response
+//       return self
+//     })
+//   }
 
-  this.toString = function () {
-    if (self.response &&
-        self.response.name) {
-      return self.response.name
-    } else {
-      return self.query
-    }
-  }
-}
+//   this.toString = function () {
+//     if (self.response &&
+//         self.response.name) {
+//       return self.response.name
+//     } else {
+//       return self.query
+//     }
+//   }
+// }
 
 /**
  * Track query.
  * @constructor
  * @param {string} query - The track to search for.
+ * @param {JSON} [response] - Track response object.
+ * Should have the property `uri`.
+ * @param {JSON} [responseSimple] - Simplified track response object.
  */
 spotify.Track = function (query, response) {
   /**
@@ -244,14 +248,34 @@ spotify.Track = function (query, response) {
   var self = this
 
   /**
-   * Simple track object.
-   */
-  this.response = response
-
-  /**
    * Query string.
    */
   this.query = query.trim()
+
+  /**
+   * Simplified track object.
+   */
+  this.responseSimple = null
+
+  /**
+   * Full track object.
+   */
+  this.response = null
+
+  /**
+   * Whether a track object is full or simplified.
+   * A full object includes information (like popularity)
+   * that a simplified object does not.
+   */
+  this.isFullResponse = function (response) {
+    return response && response.popularity
+  }
+
+  if (self.isFullResponse(response)) {
+    self.response = response
+  } else {
+    self.responseSimple = response
+  }
 
   /**
    * Dispatch query.
@@ -259,20 +283,21 @@ spotify.Track = function (query, response) {
    */
   this.dispatch = function () {
     if (self.response) {
-      return self.fetchTrack(self.response)
+      return Promise.resolve(self)
+    } else if (self.responseSimple) {
+      return self.fetchTrack(self.responseSimple)
     } else {
       return self.searchForTrack()
     }
   }
 
-  this.fetchTrack = function (response) {
-    var id = response.id
+  this.fetchTrack = function (responseSimple) {
+    var id = responseSimple.id
     var url = 'https://api.spotify.com/v1/tracks/'
     url += encodeURIComponent(id)
     return spotify.request(url).then(function (result) {
-      var track = new spotify.URI(self.query, result)
-      var queue = new spotify.Queue(track)
-      return queue
+      self.response = response
+      return self
     })
   }
 
@@ -284,11 +309,63 @@ spotify.Track = function (query, response) {
       if (result.tracks &&
           result.tracks.items[0] &&
           result.tracks.items[0].uri) {
-        var track = new spotify.URI(self.query, result.tracks.items[0])
-        var queue = new spotify.Queue(track)
-        return queue
+        self.responseSimple = result.tracks.items[0]
+        return self
       }
     })
+  }
+
+  // /**
+  //  * Fetch full metadata records if not available.
+  //  */
+  // this.refresh = function () {
+  //   if (self.response &&
+  //       self.response.popularity) {
+  //     return Promise.resolve(self)
+  //   } else {
+  //     return self.fetch()
+  //   }
+  // }
+
+  // /**
+  //  * Fetch full metadata records.
+  //  */
+  // this.fetch = function () {
+  //   var track = new spotify.Track(self.query, self.response)
+  //   return track.dispatch().then(function (queue) {
+  //     var uri = queue.get(0)
+  //     self.response = uri.response
+  //     return self
+  //   })
+  // }
+
+  /**
+   * Spotify URI.
+   * @return {String} The Spotify URI
+   * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`),
+   * or the empty string if not available.
+   */
+  this.uri = function () {
+    if (self.response) {
+      return self.response.uri
+    } else if (self.responseSimple) {
+      return self.responseSimple.uri
+    } else {
+      return ''
+    }
+  }
+
+  /**
+   * Track title.
+   * @return {String} The track title.
+   */
+  this.toString = function () {
+    if (self.response &&
+        self.response.name) {
+      return self.response.name
+    } else {
+      return self.query
+    }
   }
 }
 
@@ -356,8 +433,8 @@ spotify.Album = function (query) {
     var tracks = response.tracks.items
     var queue = new spotify.Queue()
     for (var i in tracks) {
-      var uri = new spotify.URI(self.query, tracks[i])
-      queue.add(uri)
+      var track = new spotify.Track(self.query, tracks[i])
+      queue.add(track)
     }
     return queue
   }
@@ -490,4 +567,6 @@ Are Track and URI really the same thing? Should all higher-level
 requests (Album, Artist) resolve to a collection of Tracks? Do we
 guarantee that each Track is resolved at least once, after which
 repeated invocations do nothing?
+
+Should include track artist in Track.toString(): Title - Artist
 */
