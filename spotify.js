@@ -5,9 +5,6 @@ var async = require('async')
 var fs = require('fs')
 var request = require('request')
 
-var input = process.argv[2] || 'input.txt'
-var output = process.argv[3] || 'output.txt'
-
 var spotify = {}
 
 /**
@@ -56,10 +53,14 @@ spotify.Playlist = function (str) {
    * @return {Queue} A list of results.
    */
   this.dispatch = function () {
+    return self.fetchTracks()
+               .then(self.toString)
+  }
+
+  this.fetchTracks = function () {
     return this.queries.dispatch().then(function (result) {
       self.tracks = result.flatten()
-      self.print()
-      return self.tracks
+      return self
     })
   }
 
@@ -75,7 +76,7 @@ spotify.Playlist = function (str) {
         result += track.response.uri + '\n'
       }
     })
-    return result
+    return result.trim()
   }
 
   /**
@@ -222,16 +223,16 @@ spotify.Album = function (query) {
   }
 
   this.dispatch = function () {
-    if (this.searchResponse) {
-      return this.fetchAlbum(this.searchResponse)
-                 .then(this.createQueue)
-    } else if (this.albumResponseSimple) {
-      return this.fetchAlbum(this.albumResponseSimple)
-                 .then(this.createQueue)
+    if (self.searchResponse) {
+      return self.fetchAlbum(self.searchResponse)
+                 .then(self.createQueue)
+    } else if (self.albumResponseSimple) {
+      return self.fetchAlbum(self.albumResponseSimple)
+                 .then(self.createQueue)
     } else {
-      return this.searchForAlbum(this.query)
-                 .then(this.fetchAlbum)
-                 .then(this.createQueue)
+      return self.searchForAlbum(self.query)
+                 .then(self.fetchAlbum)
+                 .then(self.createQueue)
     }
   }
 
@@ -277,6 +278,11 @@ spotify.Album = function (query) {
   }
 }
 
+/**
+ * Artist query.
+ * @constructor
+ * @param {string} query - The artist to search for.
+ */
 spotify.Artist = function (query) {
   /**
    * Self reference.
@@ -293,10 +299,10 @@ spotify.Artist = function (query) {
    * @return {Promise | URI} The artist info.
    */
   this.dispatch = function () {
-    return this.searchForArtist(this.query)
-               .then(this.fetchAlbums)
-               .then(this.fetchTracks)
-               .then(this.createQueue)
+    return self.searchForArtist(self.query)
+               .then(self.fetchAlbums)
+               .then(self.fetchTracks)
+               .then(self.createQueue)
   }
 
   this.searchForArtist = function (query) {
@@ -351,10 +357,10 @@ spotify.Artist = function (query) {
   }
 }
 
-spotify.readList = function (file) {
-  return fs.readFileSync(file, 'utf8').toString().split(/\r|\n|\r\n/)
-}
-
+/**
+ * Perform a Spotify request.
+ * @param {string} url - The URL to look up.
+ */
 spotify.request = function (url) {
   return new Promise(function (resolve, reject) {
     setTimeout(function () {
@@ -381,65 +387,23 @@ spotify.request = function (url) {
   })
 }
 
-spotify.findTrack = function (track, callback) {
-  // https://developer.spotify.com/web-api/search-item/
-  var url = 'https://api.spotify.com/v1/search?type=track&q='
-  var uri = ''
-  track = encodeURIComponent(track)
-  url += track
-  setTimeout(function () {
-    request(url, function (err, response, body) {
-      if (err) { return }
-      try {
-        body = JSON.parse(body)
-        if (!body.error &&
-            body.tracks &&
-            body.tracks.items[0] &&
-            body.tracks.items[0].uri) {
-          uri = body.tracks.items[0].uri
-        }
-      } catch (e) { }
-      callback(false, uri)
-    })
-  }, 100)
-}
+function main () {
+  var input = process.argv[2] || 'input.txt'
+  var output = process.argv[3] || 'output.txt'
 
-spotify.writeList = function (lst, file) {
-  fs.writeFile(file, lst.join('\n'), function (err) {
-    if (err) { return }
-    console.log('Wrote to ' + file)
+  var str = fs.readFileSync(input, 'utf8').toString()
+  var playlist = new spotify.Playlist(str)
+
+  playlist.dispatch().then(function (str) {
+    fs.writeFile(output, str, function (err) {
+      if (err) { return }
+      console.log('Wrote to ' + output)
+    })
   })
 }
 
-spotify.readTracks = function (coll) {
-  var iteratee = function (item, callback) {
-    spotify.findTrack(item, function (err, result) {
-      console.log(result)
-      callback(err, result)
-    })
-  }
-
-  var callback = function (err, results) {
-    if (err) { return }
-    async.filter(results, function (track, callback) {
-      callback(null, track !== '')
-    }, function (err, results) {
-      if (err) { return }
-      spotify.writeList(results, output)
-    })
-  }
-
-  async.mapSeries(coll, iteratee, callback)
+if (require.main === module) {
+  main()
 }
-
-async.mapSeries(spotify.readList(input), spotify.findTrack, function (err, results) {
-  if (err) { return }
-  async.filter(results, function (track, callback) {
-    callback(null, track !== '')
-  }, function (err, results) {
-    if (err) { return }
-    spotify.writeList(results, output)
-  })
-})
 
 module.exports = spotify

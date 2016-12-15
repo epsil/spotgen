@@ -42,7 +42,7 @@ describe('spotify.js', function () {
     it('should dispatch all queries', function () {
       var playlist = new spotify.Playlist('test1\ntest2')
       var promise = playlist.dispatch()
-      return promise.should.eventually.be.instanceof(spotify.Queue)
+      return promise.should.eventually.eql('spotify:track:5jwDjl5FofuDgwITfcROhq\nspotify:track:25BfjHTtaDCrKrq9hkr10U')
     })
   })
 
