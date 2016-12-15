@@ -10,34 +10,203 @@ var output = process.argv[3] || 'output.txt'
 
 var spotify = {}
 
-spotify.readList = function (file) {
-  return fs.readFileSync(file, 'utf8').toString().split(/\r|\n|\r\n/)
-}
+/**
+ * Represents a playlist.
+ * @constructor
+ * @param {string} str - The playlist as a string.
+ */
+spotify.Playlist = function (str) {
+  /**
+   * Self reference.
+   */
+  var self = this
 
-spotify.request = function (url) {
-  return new Promise(function (resolve, reject) {
-    setTimeout(function () {
-      console.log(url)
-      request(url, function (err, response, body) {
-        if (err) {
-          reject(err)
-        } else if (response.statusCode !== 200) {
-          reject(response.statusCode)
-        } else {
-          try {
-            body = JSON.parse(body)
-          } catch (e) {
-            reject(e)
-          }
-          if (body.error) {
-            reject(body)
-          } else {
-            resolve(body)
-          }
+  /**
+   * List of queries.
+   */
+  this.queries = new spotify.Queue()
+
+  /**
+   * List of tracks.
+   */
+  this.tracks = new spotify.Queue()
+
+  /**
+   * List of URIs.
+   */
+  this.uris = new spotify.Queue()
+
+  str = str.trim()
+  if (str !== '') {
+    var queries = str.split(/\r|\n|\r\n/)
+
+    while (queries.length > 0) {
+      var query = queries.shift()
+      if (query.match(/^#ORDER BY POPULARITY/)) {
+        this.order = 'popularity'
+      } else if (query !== '') {
+        var track = new spotify.Track(query)
+        this.queries.add(track)
+      }
+    }
+  }
+
+  /**
+   * Dispatch all the queries in the playlist.
+   * @return {Queue} A list of results.
+   */
+  this.dispatch = function () {
+    return this.queries.dispatch().then(function (result) {
+      self.tracks = result.flatten()
+      self.tracks.forEach(function (track) {
+        if (track.uri) {
+          self.uris.add(track.uri)
         }
       })
-    }, 100)
-  })
+      self.print()
+      return self.uris
+    })
+  }
+
+  /**
+   * Convert the playlist to a string.
+   * @return {String} A newline-separated list of Spotify URIs.
+   */
+  this.toString = function () {
+    var result = ''
+    self.uris.forEach(function (uri) {
+      result += uri + '\n'
+    })
+    return result
+  }
+
+  /**
+   * Print the playlist to the console.
+   */
+  this.print = function () {
+    console.log(self.toString())
+  }
+}
+
+/**
+ * Queue of playlist entries.
+ * @constructor
+ * @param {string} [URI] - Playlist URI.
+ */
+spotify.Queue = function (uri) {
+  /**
+   * Self reference.
+   */
+  var self = this
+
+  this.queue = []
+
+  if (uri) {
+    this.queue.push(uri)
+  }
+
+  this.add = function (entry) {
+    self.queue.push(entry)
+  }
+
+  this.forEach = function (fn) {
+    return self.queue.forEach(fn)
+  }
+
+  this.map = function (fn) {
+    var result = new spotify.Queue()
+    self.forEach(function (entry) {
+      result.add(fn(entry))
+    })
+    return result
+  }
+
+  this.concat = function (queue) {
+    var result = new spotify.Queue()
+    result.queue = self.queue
+    result.queue = result.queue.concat(queue.queue)
+    return result
+  }
+
+  this.flatten = function () {
+    var result = []
+    for (var i in self.queue) {
+      var entry = self.queue[i]
+      if (entry instanceof spotify.Queue) {
+        entry = entry.flatten()
+        result = result.concat(entry.queue)
+      } else {
+        result.push(entry)
+      }
+    }
+    self.queue = result
+    return self
+  }
+
+  /**
+   * Dispatch all entries in order.
+   * @return {Queue} A list of results.
+   */
+  this.dispatch = function () {
+    // we could have used Promise.all(), but we choose to roll our
+    // own, sequential implementation to avoid overloading the server
+    var result = new spotify.Queue()
+    var ready = Promise.resolve(null)
+    self.queue.forEach(function (entry) {
+      ready = ready.then(function () {
+        return entry.dispatch()
+      }).then(function (value) {
+        result.add(value)
+      })
+    })
+    return ready.then(function () {
+      return result
+    })
+  }
+}
+
+/**
+ * Playlist URI.
+ * @constructor
+ * @param {string} body - Track data.
+ * @param {string} query - Query text.
+ */
+spotify.URI = function (body, query) {
+  for (var prop in body) {
+    this[prop] = body[prop]
+  }
+  this.query = query
+}
+
+/**
+ * Track query.
+ * @constructor
+ * @param {string} query - The track to search for.
+ */
+spotify.Track = function (query) {
+  /**
+   * Query string.
+   */
+  this.query = query.trim()
+
+  /**
+   * Dispatch query.
+   * @return {Promise | URI} The track info.
+   */
+  this.dispatch = function () {
+    // https://developer.spotify.com/web-api/search-item/
+    var url = 'https://api.spotify.com/v1/search?type=track&q='
+    url += encodeURIComponent(this.query)
+    return spotify.request(url).then(function (result) {
+      if (result.tracks &&
+          result.tracks.items[0] &&
+          result.tracks.items[0].uri) {
+        var track = new spotify.URI(result.tracks.items[0], query)
+        var queue = new spotify.Queue(track)
+        return queue
+      }
+    })
+  }
 }
 
 /**
@@ -185,142 +354,34 @@ spotify.Artist = function (query) {
   }
 }
 
-/**
- * Track query.
- * @constructor
- * @param {string} query - The track to search for.
- */
-spotify.Track = function (query) {
-  /**
-   * Query string.
-   */
-  this.query = query.trim()
-
-  /**
-   * Dispatch query.
-   * @return {Promise | URI} The track info.
-   */
-  this.dispatch = function () {
-    // https://developer.spotify.com/web-api/search-item/
-    var url = 'https://api.spotify.com/v1/search?type=track&q='
-    url += encodeURIComponent(this.query)
-    return spotify.request(url).then(function (result) {
-      if (result.tracks &&
-          result.tracks.items[0] &&
-          result.tracks.items[0].uri) {
-        var track = new spotify.URI(result.tracks.items[0], query)
-        var queue = new spotify.Queue(track)
-        return queue
-      }
-    })
-  }
+spotify.readList = function (file) {
+  return fs.readFileSync(file, 'utf8').toString().split(/\r|\n|\r\n/)
 }
 
-/**
- * Queue of playlist entries.
- * @constructor
- * @param {string} [URI] - Playlist URI.
- */
-spotify.Queue = function (uri) {
-  /**
-   * Self reference.
-   */
-  var self = this
-
-  this.queue = []
-
-  if (uri) {
-    this.queue.push(uri)
-  }
-
-  this.add = function (uri) {
-    this.queue.push(uri)
-  }
-
-  this.concat = function (queue) {
-    var result = new spotify.Queue()
-    result.queue = this.queue
-    result.queue = result.queue.concat(queue.queue)
-    return result
-  }
-
-  /**
-   * Dispatch all entries in order.
-   * @return {Queue} A list of results.
-   */
-  this.dispatch = function () {
-    // we could have used Promise.all(), but we choose to roll our
-    // own, sequential implementation to avoid overloading the server
-    var result = new spotify.Queue()
-    var ready = Promise.resolve(null)
-    self.queue.forEach(function (uri, i) {
-      ready = ready.then(function () {
-        return uri.dispatch()
-      }).then(function (value) {
-        result.add(value)
+spotify.request = function (url) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      console.log(url)
+      request(url, function (err, response, body) {
+        if (err) {
+          reject(err)
+        } else if (response.statusCode !== 200) {
+          reject(response.statusCode)
+        } else {
+          try {
+            body = JSON.parse(body)
+          } catch (e) {
+            reject(e)
+          }
+          if (body.error) {
+            reject(body)
+          } else {
+            resolve(body)
+          }
+        }
       })
-    })
-    return ready.then(function () {
-      return result
-    })
-  }
-}
-
-/**
- * Playlist URI.
- * @constructor
- * @param {string} body - Track data.
- * @param {string} query - Query text.
- */
-spotify.URI = function (body, query) {
-  for (var prop in body) {
-    this[prop] = body[prop]
-  }
-  this.query = query
-}
-
-/**
- * Represents a playlist.
- * @constructor
- * @param {string} str - The playlist as a string.
- */
-spotify.Playlist = function (str) {
-  /**
-   * Self reference.
-   */
-  var self = this
-
-  /**
-   * List of queries.
-   */
-  this.queries = new spotify.Queue()
-
-  /**
-   * List of tracks.
-   */
-  this.tracks = new spotify.Queue()
-
-  str = str.trim()
-  if (str !== '') {
-    var queries = str.split(/\r|\n|\r\n/)
-
-    while (queries.length > 0) {
-      var query = queries.shift()
-      if (query.match(/^#ORDER BY POPULARITY/)) {
-        this.order = 'popularity'
-      } else if (query !== '') {
-        var track = new spotify.Track(query)
-        this.queries.add(track)
-      }
-    }
-  }
-
-  this.dispatch = function () {
-    return this.queries.dispatch().then(function (result) {
-      this.tracks = result
-      return result
-    })
-  }
+    }, 100)
+  })
 }
 
 spotify.findTrack = function (track, callback) {
