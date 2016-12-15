@@ -36,11 +36,16 @@ spotify.Playlist = function (str) {
   str = str.trim()
   if (str !== '') {
     var queries = str.split(/\r|\n|\r\n/)
-
     while (queries.length > 0) {
       var query = queries.shift()
-      if (query.match(/^#ORDER BY POPULARITY/)) {
+      if (query.match(/^#ORDER BY POPULARITY/i)) {
         this.order = 'popularity'
+      } else if (query.match(/^#ALBUM /i)) {
+        var album = new spotify.Album(query.substring(7))
+        this.queries.add(album)
+      } else if (query.match(/^#ARTIST /i)) {
+        var artist = new spotify.Artist(query.substring(8))
+        this.queries.add(artist)
       } else if (query !== '') {
         var track = new spotify.Track(query)
         this.queries.add(track)

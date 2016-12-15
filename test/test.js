@@ -39,6 +39,18 @@ describe('spotify.js', function () {
       playlist.should.have.property('order', 'popularity')
     })
 
+    it('should parse album queries', function () {
+      var playlist = new spotify.Playlist('#ALBUM test')
+      playlist.should.have.deep.property('queries.queue[0]')
+        .that.is.instanceof(spotify.Album)
+    })
+
+    it('should parse artist queries', function () {
+      var playlist = new spotify.Playlist('#ARTIST test')
+      playlist.should.have.deep.property('queries.queue[0]')
+        .that.is.instanceof(spotify.Artist)
+    })
+
     it('should dispatch all queries', function () {
       var playlist = new spotify.Playlist('test1\ntest2')
       var promise = playlist.dispatch()
