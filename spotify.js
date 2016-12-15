@@ -307,7 +307,6 @@ spotify.Artist = function (query) {
     return self.searchForArtist(self.query)
                .then(self.fetchAlbums)
                .then(self.fetchTracks)
-               .then(self.createQueue)
   }
 
   this.searchForArtist = function (query) {
@@ -350,15 +349,6 @@ spotify.Artist = function (query) {
       queries.add(albumQuery)
     }
     return queries.dispatch()
-  }
-
-  this.createQueue = function (albums) {
-    var queue = new spotify.Queue()
-    for (var i in albums) {
-      var album = albums[i]
-      queue = queue.concat(album)
-    }
-    return queue
   }
 }
 
