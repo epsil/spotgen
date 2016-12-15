@@ -186,7 +186,17 @@ spotify.URI = function (query, response) {
  * @constructor
  * @param {string} query - The track to search for.
  */
-spotify.Track = function (query) {
+spotify.Track = function (query, response) {
+  /**
+   * Self reference.
+   */
+  var self = this
+
+  /**
+   * Simple track object.
+   */
+  this.response = response
+
   /**
    * Query string.
    */
@@ -197,14 +207,31 @@ spotify.Track = function (query) {
    * @return {Promise | URI} The track info.
    */
   this.dispatch = function () {
+    if (self.response) {
+      return self.fetchTrack(self.response)
+    } else {
+      return self.searchForTrack()
+    }
+  }
+
+  this.fetchTrack = function (response) {
+    var id = response.id
+    var url = 'https://api.spotify.com/v1/tracks/'
+    url += encodeURIComponent(id)
+    return spotify.request(url).then(function (result) {
+      return new spotify.URI(self.query, result)
+    })
+  }
+
+  this.searchForTrack = function () {
     // https://developer.spotify.com/web-api/search-item/
     var url = 'https://api.spotify.com/v1/search?type=track&q='
-    url += encodeURIComponent(this.query)
+    url += encodeURIComponent(self.query)
     return spotify.request(url).then(function (result) {
       if (result.tracks &&
           result.tracks.items[0] &&
           result.tracks.items[0].uri) {
-        var track = new spotify.URI(query, result.tracks.items[0])
+        var track = new spotify.URI(self.query, result.tracks.items[0])
         var queue = new spotify.Queue(track)
         return queue
       }
@@ -244,7 +271,7 @@ spotify.Album = function (query) {
   this.searchForAlbum = function (query) {
     // https://developer.spotify.com/web-api/search-item/
     var url = 'https://api.spotify.com/v1/search?type=album&q='
-    url += encodeURIComponent(query)
+    url += encodeURIComponent(self.query)
     return spotify.request(url).then(function (response) {
       if (response.albums &&
           response.albums.items[0] &&
@@ -312,7 +339,7 @@ spotify.Artist = function (query) {
   this.searchForArtist = function (query) {
     // https://developer.spotify.com/web-api/search-item/
     var url = 'https://api.spotify.com/v1/search?type=artist&q='
-    url += encodeURIComponent(query)
+    url += encodeURIComponent(self.query)
     return spotify.request(url).then(function (response) {
       if (response.artists &&
           response.artists.items[0] &&
