@@ -144,6 +144,30 @@ describe('spotify.js', function () {
       queue.should.have.deep.property('queue[1].query', 'bar')
     })
 
+    it('should be sortable', function () {
+      var foo = new spotify.URI('foo')
+      var bar = new spotify.URI('bar')
+      var queue = new spotify.Queue()
+      queue.add(foo)
+      queue.add(bar)
+      queue.sort()
+      queue.should.have.deep.property('queue[0].query', 'bar')
+      queue.should.have.deep.property('queue[1].query', 'foo')
+    })
+
+    it('should be sortable with compare function', function () {
+      var foo = new spotify.URI('foo')
+      var bar = new spotify.URI('bar')
+      var queue = new spotify.Queue()
+      queue.add(foo)
+      queue.add(bar)
+      queue.sort(function (a, b) {
+        return (a.query < b.query) ? -1 : ((a.query > b.query) ? 1 : 0)
+      })
+      queue.should.have.deep.property('queue[0].query', 'bar')
+      queue.should.have.deep.property('queue[1].query', 'foo')
+    })
+
     it('should concatenate queues in the same order', function () {
       var foo = new spotify.URI('foo')
       var bar = new spotify.URI('bar')

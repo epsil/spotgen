@@ -136,6 +136,11 @@ spotify.Queue = function (uri) {
     return result
   }
 
+  this.sort = function (fn) {
+    self.queue = self.queue.sort(fn)
+    return self
+  }
+
   this.flatten = function () {
     var result = []
     for (var i in self.queue) {
@@ -196,6 +201,15 @@ spotify.URI = function (query, response) {
       self.response = uri.response
       return self
     })
+  }
+
+  this.toString = function () {
+    if (self.response &&
+        self.response.name) {
+      return self.response.name
+    } else {
+      return self.query
+    }
   }
 }
 
