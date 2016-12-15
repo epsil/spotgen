@@ -113,6 +113,10 @@ spotify.Queue = function (uri) {
     self.queue.push(entry)
   }
 
+  this.get = function (idx) {
+    return self.queue[idx]
+  }
+
   this.forEach = function (fn) {
     return self.queue.forEach(fn)
   }
@@ -177,8 +181,22 @@ spotify.Queue = function (uri) {
  * Should have the property `uri`.
  */
 spotify.URI = function (query, response) {
+  /**
+   * Self reference.
+   */
+  var self = this
+
   this.query = query
   this.response = response
+
+  this.refresh = function () {
+    var track = new spotify.Track(self.query, self.response)
+    return track.dispatch().then(function (queue) {
+      var uri = queue.get(0)
+      self.response = uri.response
+      return self
+    })
+  }
 }
 
 /**
@@ -219,7 +237,9 @@ spotify.Track = function (query, response) {
     var url = 'https://api.spotify.com/v1/tracks/'
     url += encodeURIComponent(id)
     return spotify.request(url).then(function (result) {
-      return new spotify.URI(self.query, result)
+      var track = new spotify.URI(self.query, result)
+      var queue = new spotify.Queue(track)
+      return queue
     })
   }
 
@@ -429,3 +449,12 @@ if (require.main === module) {
 }
 
 module.exports = spotify
+
+/*
+Food for thought ...
+
+Are Track and URI really the same thing? Should all higher-level
+requests (Album, Artist) resolve to a collection of Tracks? Do we
+guarantee that each Track is resolved at least once, after which
+repeated invocations do nothing?
+*/

@@ -159,4 +159,11 @@ describe('spotify.js', function () {
       queue3.should.have.deep.property('queue[2].query', 'baz')
     })
   })
+
+  describe('URI', function () {
+    it('should be able to fetch itself', function () {
+      var uri = new spotify.URI('test')
+      uri.refresh().should.eventually.have.deep.property('response.id')
+    })
+  })
 })
