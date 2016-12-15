@@ -7,7 +7,7 @@ chai.should()
 var spotify = require('../spotify.js')
 
 describe('spotify.js', function () {
-  this.timeout(5000)
+  this.timeout(99999)
 
   describe('Playlist', function () {
     it('should create empty playlist when passed empty string', function () {

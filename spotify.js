@@ -17,7 +17,7 @@ spotify.readList = function (file) {
 spotify.request = function (url) {
   return new Promise(function (resolve, reject) {
     setTimeout(function () {
-      console.log('H T T P')
+      console.log(url)
       request(url, function (err, response, body) {
         if (err) {
           reject(err)
@@ -36,7 +36,7 @@ spotify.request = function (url) {
           }
         }
       })
-    }, 1000) // 100
+    }, 100)
   })
 }
 
@@ -164,15 +164,15 @@ spotify.Artist = function (query) {
   }
 
   this.fetchTracks = function (response) {
-    var tracks = response.items
-    var queries = []
-    for (var i in tracks) {
-      var album = tracks[i]
+    var albums = response.items
+    var queries = new spotify.Collection()
+    for (var i in albums) {
+      var album = albums[i]
       var albumQuery = new spotify.Album(self.query)
       albumQuery.albumResponseSimple = album
-      queries.push(albumQuery.dispatch())
+      queries.add(albumQuery)
     }
-    return Promise.all(queries)
+    return queries.dispatch()
   }
 
   this.createCollection = function (albums) {
@@ -252,11 +252,11 @@ spotify.Collection = function (entry) {
     // own, sequential implementation to avoid overloading the server
     var result = new spotify.Collection()
     var ready = Promise.resolve(null)
-    self.entries.forEach(function (promise, i) {
+    self.entries.forEach(function (entry, i) {
       ready = ready.then(function () {
-        return promise
-      }).then(function (entry) {
-        result.add(entry)
+        return entry.dispatch()
+      }).then(function (value) {
+        result.add(value)
       })
     })
     return ready.then(function () {
