@@ -110,63 +110,41 @@ describe('spotify.js', function () {
     })
 
     it('should convert a URI into a singleton queue', function () {
-      var uri = new spotify.URI({}, 'test')
+      var uri = new spotify.URI('test')
       var queue = new spotify.Queue(uri)
-      queue.queue.should.eql([
-        {
-          query: 'test'
-        }
-      ])
+      queue.should.have.deep.property('queue[0].query', 'test')
     })
 
     it('should add a URI', function () {
-      var uri = new spotify.URI({}, 'test')
+      var uri = new spotify.URI('test')
       var queue = new spotify.Queue()
       queue.add(uri)
-      queue.queue.should.eql([
-        {
-          query: 'test'
-        }
-      ])
+      queue.should.have.deep.property('queue[0].query', 'test')
     })
 
     it('should store queue in the order they are added', function () {
-      var foo = new spotify.URI({}, 'foo')
-      var bar = new spotify.URI({}, 'bar')
+      var foo = new spotify.URI('foo')
+      var bar = new spotify.URI('bar')
       var queue = new spotify.Queue()
       queue.add(foo)
       queue.add(bar)
-      queue.queue.should.eql([
-        {
-          query: 'foo'
-        },
-        {
-          query: 'bar'
-        }
-      ])
+      queue.should.have.deep.property('queue[0].query', 'foo')
+      queue.should.have.deep.property('queue[1].query', 'bar')
     })
 
     it('should concatenate queues in the same order', function () {
-      var foo = new spotify.URI({}, 'foo')
-      var bar = new spotify.URI({}, 'bar')
-      var baz = new spotify.URI({}, 'baz')
+      var foo = new spotify.URI('foo')
+      var bar = new spotify.URI('bar')
+      var baz = new spotify.URI('baz')
       var queue1 = new spotify.Queue()
       var queue2 = new spotify.Queue()
       queue1.add(foo)
       queue1.add(bar)
       queue2.add(baz)
       var queue3 = queue1.concat(queue2)
-      queue3.queue.should.eql([
-        {
-          query: 'foo'
-        },
-        {
-          query: 'bar'
-        },
-        {
-          query: 'baz'
-        }
-      ])
+      queue3.should.have.deep.property('queue[0].query', 'foo')
+      queue3.should.have.deep.property('queue[1].query', 'bar')
+      queue3.should.have.deep.property('queue[2].query', 'baz')
     })
   })
 })

@@ -58,13 +58,8 @@ spotify.Playlist = function (str) {
   this.dispatch = function () {
     return this.queries.dispatch().then(function (result) {
       self.tracks = result.flatten()
-      self.tracks.forEach(function (track) {
-        if (track.uri) {
-          self.uris.add(track.uri)
-        }
-      })
       self.print()
-      return self.uris
+      return self.tracks
     })
   }
 
@@ -74,8 +69,11 @@ spotify.Playlist = function (str) {
    */
   this.toString = function () {
     var result = ''
-    self.uris.forEach(function (uri) {
-      result += uri + '\n'
+    self.tracks.forEach(function (track) {
+      if (track.response &&
+          track.response.uri) {
+        result += track.response.uri + '\n'
+      }
     })
     return result
   }
@@ -171,11 +169,9 @@ spotify.Queue = function (uri) {
  * @param {string} body - Track data.
  * @param {string} query - Query text.
  */
-spotify.URI = function (body, query) {
-  for (var prop in body) {
-    this[prop] = body[prop]
-  }
+spotify.URI = function (query, response) {
   this.query = query
+  this.response = response
 }
 
 /**
@@ -201,7 +197,7 @@ spotify.Track = function (query) {
       if (result.tracks &&
           result.tracks.items[0] &&
           result.tracks.items[0].uri) {
-        var track = new spotify.URI(result.tracks.items[0], query)
+        var track = new spotify.URI(query, result.tracks.items[0])
         var queue = new spotify.Queue(track)
         return queue
       }
@@ -273,7 +269,7 @@ spotify.Album = function (query) {
     var tracks = response.tracks.items
     var queue = new spotify.Queue()
     for (var i in tracks) {
-      var uri = new spotify.URI(tracks[i], self.query)
+      var uri = new spotify.URI(self.query, tracks[i])
       queue.add(uri)
     }
     return queue
