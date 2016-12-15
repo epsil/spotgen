@@ -17,6 +17,7 @@ spotify.readList = function (file) {
 spotify.request = function (url) {
   return new Promise(function (resolve, reject) {
     setTimeout(function () {
+      console.log('H T T P')
       request(url, function (err, response, body) {
         if (err) {
           reject(err)
@@ -35,7 +36,7 @@ spotify.request = function (url) {
           }
         }
       })
-    }, 100)
+    }, 1000) // 100
   })
 }
 
@@ -221,7 +222,16 @@ spotify.Track = function (query) {
  * @param {string} [entry] - Playlist entry.
  */
 spotify.Collection = function (entry) {
+  /**
+   * Self reference.
+   */
+  var self = this
+
   this.entries = []
+
+  if (entry) {
+    this.entries.push(entry)
+  }
 
   this.addEntry = function (entry) {
     this.entries.push(entry)
@@ -234,8 +244,20 @@ spotify.Collection = function (entry) {
     return result
   }
 
-  if (entry instanceof spotify.Entry) {
-    this.entries.push(entry)
+  this.dispatch = function () {
+    // we could have used Promise.all(), but we choose to roll our
+    // own, sequential implementation to avoid overloading the server
+    var ready = Promise.resolve(null)
+    self.entries.forEach(function (promise, ndx) {
+      ready = ready.then(function () {
+        return promise
+      }).then(function (value) {
+        self.tracks.addEntry(value)
+      })
+    })
+    return ready.then(function () {
+      return self.tracks
+    })
   }
 }
 
@@ -289,14 +311,19 @@ spotify.Playlist = function (str) {
   }
 
   this.dispatch = function () {
-    var promises = this.queries.map(function (query) {
-      return query.dispatch()
+    // we could have used Promise.all(), but we choose to roll our
+    // own, sequential implementation to avoid overloading the server
+    var ready = Promise.resolve(null)
+    var result = new spotify.Collection()
+    self.queries.forEach(function (promise, ndx) {
+      ready = ready.then(function () {
+        return promise
+      }).then(function (value) {
+        result.addEntry(value)
+      })
     })
-    return Promise.all(promises).then(function (collections) {
-      for (var i in collections) {
-        self.tracks = self.tracks.concat(collections[i])
-      }
-      return self.tracks
+    return ready.then(function () {
+      return result
     })
   }
 }
