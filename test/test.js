@@ -12,30 +12,30 @@ describe('spotify.js', function () {
   describe('Playlist', function () {
     it('should create empty playlist when passed empty string', function () {
       var playlist = new spotify.Playlist('')
-      playlist.queries.should.eql([])
+      playlist.should.have.deep.property('queries.entries').that.eql([])
     })
 
     it('should create a one-track playlist', function () {
       var playlist = new spotify.Playlist('test')
-      playlist.should.have.deep.property('queries[0].query', 'test')
+      playlist.should.have.deep.property('queries.entries[0].query', 'test')
     })
 
     it('should create a two-track playlist', function () {
       var playlist = new spotify.Playlist('test1\ntest2')
-      playlist.should.have.deep.property('queries[0].query', 'test1')
-      playlist.should.have.deep.property('queries[1].query', 'test2')
+      playlist.should.have.deep.property('queries.entries[0].query', 'test1')
+      playlist.should.have.deep.property('queries.entries[1].query', 'test2')
     })
 
     it('should ignore empty lines', function () {
       var playlist = new spotify.Playlist('test1\n\n\n\ntest2')
-      playlist.should.have.deep.property('queries[0].query', 'test1')
-      playlist.should.have.deep.property('queries[1].query', 'test2')
+      playlist.should.have.deep.property('queries.entries[0].query', 'test1')
+      playlist.should.have.deep.property('queries.entries[1].query', 'test2')
     })
 
     it('should create a sorted playlist', function () {
       var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
-      playlist.should.have.deep.property('queries[0].query', 'test1')
-      playlist.should.have.deep.property('queries[1].query', 'test2')
+      playlist.should.have.deep.property('queries.entries[0].query', 'test1')
+      playlist.should.have.deep.property('queries.entries[1].query', 'test2')
       playlist.should.have.property('order', 'popularity')
     })
 
@@ -122,7 +122,7 @@ describe('spotify.js', function () {
     it('should add an entry', function () {
       var entry = new spotify.Entry({}, 'test')
       var collection = new spotify.Collection()
-      collection.addEntry(entry)
+      collection.add(entry)
       collection.entries.should.eql([
         {
           query: 'test'
@@ -134,8 +134,8 @@ describe('spotify.js', function () {
       var foo = new spotify.Entry({}, 'foo')
       var bar = new spotify.Entry({}, 'bar')
       var collection = new spotify.Collection()
-      collection.addEntry(foo)
-      collection.addEntry(bar)
+      collection.add(foo)
+      collection.add(bar)
       collection.entries.should.eql([
         {
           query: 'foo'
@@ -152,9 +152,9 @@ describe('spotify.js', function () {
       var baz = new spotify.Entry({}, 'baz')
       var collection1 = new spotify.Collection()
       var collection2 = new spotify.Collection()
-      collection1.addEntry(foo)
-      collection1.addEntry(bar)
-      collection2.addEntry(baz)
+      collection1.add(foo)
+      collection1.add(bar)
+      collection2.add(baz)
       var collection3 = collection1.concat(collection2)
       collection3.entries.should.eql([
         {

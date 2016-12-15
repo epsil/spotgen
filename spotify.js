@@ -105,7 +105,7 @@ spotify.Album = function (query) {
     var entries = new spotify.Collection()
     for (var i in tracks) {
       var entry = new spotify.Entry(tracks[i], self.query)
-      entries.addEntry(entry)
+      entries.add(entry)
     }
     return entries
   }
@@ -217,7 +217,7 @@ spotify.Track = function (query) {
 }
 
 /**
- * Playlist entries.
+ * Queue of playlist entries.
  * @constructor
  * @param {string} [entry] - Playlist entry.
  */
@@ -233,7 +233,7 @@ spotify.Collection = function (entry) {
     this.entries.push(entry)
   }
 
-  this.addEntry = function (entry) {
+  this.add = function (entry) {
     this.entries.push(entry)
   }
 
@@ -244,19 +244,23 @@ spotify.Collection = function (entry) {
     return result
   }
 
+  /**
+   * Dispatch all entries in order.
+   */
   this.dispatch = function () {
     // we could have used Promise.all(), but we choose to roll our
     // own, sequential implementation to avoid overloading the server
+    var result = new spotify.Collection()
     var ready = Promise.resolve(null)
-    self.entries.forEach(function (promise, ndx) {
+    self.entries.forEach(function (promise, i) {
       ready = ready.then(function () {
         return promise
-      }).then(function (value) {
-        self.tracks.addEntry(value)
+      }).then(function (entry) {
+        result.add(entry)
       })
     })
     return ready.then(function () {
-      return self.tracks
+      return result
     })
   }
 }
@@ -288,7 +292,7 @@ spotify.Playlist = function (str) {
   /**
    * List of queries.
    */
-  this.queries = []
+  this.queries = new spotify.Collection()
 
   /**
    * List of tracks.
@@ -305,34 +309,18 @@ spotify.Playlist = function (str) {
         this.order = 'popularity'
       } else if (query !== '') {
         var track = new spotify.Track(query)
-        this.queries.push(track)
+        this.queries.add(track)
       }
     }
   }
 
   this.dispatch = function () {
-    // we could have used Promise.all(), but we choose to roll our
-    // own, sequential implementation to avoid overloading the server
-    var ready = Promise.resolve(null)
-    var result = new spotify.Collection()
-    self.queries.forEach(function (promise, ndx) {
-      ready = ready.then(function () {
-        return promise
-      }).then(function (value) {
-        result.addEntry(value)
-      })
-    })
-    return ready.then(function () {
+    return this.queries.dispatch().then(function (result) {
+      this.tracks = result
       return result
     })
   }
 }
-
-// function Playlist (order, group) {
-//   this.queries = []
-//   this.order = order
-//   this.group = group
-// }
 
 spotify.findTrack = function (track, callback) {
   // https://developer.spotify.com/web-api/search-item/
