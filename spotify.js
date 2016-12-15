@@ -166,8 +166,9 @@ spotify.Queue = function (uri) {
 /**
  * Playlist URI.
  * @constructor
- * @param {string} body - Track data.
  * @param {string} query - Query text.
+ * @param {JSON} [response] - Track response object.
+ * Should have the property `uri`.
  */
 spotify.URI = function (query, response) {
   this.query = query
