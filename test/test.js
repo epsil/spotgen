@@ -32,11 +32,17 @@ describe('spotify.js', function () {
       playlist.should.have.deep.property('queries.queue[1].query', 'test2')
     })
 
-    it('should create a sorted playlist', function () {
+    it('should create an ordered playlist', function () {
       var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
       playlist.should.have.deep.property('queries.queue[0].query', 'test1')
       playlist.should.have.deep.property('queries.queue[1].query', 'test2')
       playlist.should.have.property('order', 'popularity')
+    })
+
+    it('should order tracks by popularity', function () {
+      var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
+      var promise = playlist.dispatch()
+      return promise.should.eventually.eql('spotify:track:5jwDjl5FofuDgwITfcROhq\nspotify:track:25BfjHTtaDCrKrq9hkr10U')
     })
 
     it('should parse album queries', function () {

@@ -59,17 +59,43 @@ spotify.Playlist = function (str) {
    * @return {Queue} A list of results.
    */
   this.dispatch = function () {
-    return self.fetchTracks()
-               .then(self.toString)
+    if (self.order === 'popularity') {
+      return self.fetchTracks()
+        .then(self.refreshTracks)
+        .then(self.orderByPopularity)
+        .then(self.toString)
+    } else {
+      return self.fetchTracks()
+        .then(self.toString)
+    }
   }
 
   /**
-   * Dispatch all the queries in the playlist.
+   * Dispatch the queries in the playlist.
    */
   this.fetchTracks = function () {
-    return this.queries.dispatch().then(function (result) {
+    return self.queries.dispatch().then(function (result) {
       self.tracks = result.flatten()
       return self
+    })
+  }
+
+  /**
+   * Refresh the tracks in the playlist.
+   */
+  this.refreshTracks = function () {
+    return self.tracks.dispatch().then(function (result) {
+      self.tracks = result.flatten()
+      return self
+    })
+  }
+
+  this.orderByPopularity = function () {
+    self.tracks.sort(function (a, b) {
+      var x = a.popularity()
+      var y = b.popularity()
+      var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
+      return val
     })
   }
 
@@ -251,7 +277,7 @@ spotify.Track = function (query, response) {
     var url = 'https://api.spotify.com/v1/tracks/'
     url += encodeURIComponent(id)
     return spotify.request(url).then(function (result) {
-      self.response = response
+      self.response = result
       return self
     })
   }
@@ -289,6 +315,18 @@ spotify.Track = function (query, response) {
       return self.responseSimple.uri
     } else {
       return ''
+    }
+  }
+
+  /**
+   * Spotify popularity.
+   * @return {int} The Spotify popularity, or -1 if not available.
+   */
+  this.popularity = function () {
+    if (self.response) {
+      return self.response.popularity
+    } else {
+      return -1
     }
   }
 
@@ -522,11 +560,6 @@ module.exports = spotify
 
 /*
 Food for thought ...
-
-Are Track and URI really the same thing? Should all higher-level
-requests (Album, Artist) resolve to a collection of Tracks? Do we
-guarantee that each Track is resolved at least once, after which
-repeated invocations do nothing?
 
 Should include track artist in Track.toString(): Title - Artist
 */
