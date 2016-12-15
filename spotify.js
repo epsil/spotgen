@@ -58,14 +58,14 @@ spotify.Album = function (query) {
   this.dispatch = function () {
     if (this.searchResponse) {
       return this.fetchAlbum(this.searchResponse)
-                 .then(this.createCollection)
+                 .then(this.createQueue)
     } else if (this.albumResponseSimple) {
       return this.fetchAlbum(this.albumResponseSimple)
-                 .then(this.createCollection)
+                 .then(this.createQueue)
     } else {
       return this.searchForAlbum(this.query)
                  .then(this.fetchAlbum)
-                 .then(this.createCollection)
+                 .then(this.createQueue)
     }
   }
 
@@ -100,14 +100,14 @@ spotify.Album = function (query) {
     })
   }
 
-  this.createCollection = function (response) {
+  this.createQueue = function (response) {
     var tracks = response.tracks.items
-    var entries = new spotify.Collection()
+    var queue = new spotify.Queue()
     for (var i in tracks) {
-      var entry = new spotify.Entry(tracks[i], self.query)
-      entries.add(entry)
+      var uri = new spotify.URI(tracks[i], self.query)
+      queue.add(uri)
     }
-    return entries
+    return queue
   }
 }
 
@@ -124,13 +124,13 @@ spotify.Artist = function (query) {
 
   /**
    * Dispatch query.
-   * @return {Promise | Entry} The artist info.
+   * @return {Promise | URI} The artist info.
    */
   this.dispatch = function () {
     return this.searchForArtist(this.query)
                .then(this.fetchAlbums)
                .then(this.fetchTracks)
-               .then(this.createCollection)
+               .then(this.createQueue)
   }
 
   this.searchForArtist = function (query) {
@@ -165,7 +165,7 @@ spotify.Artist = function (query) {
 
   this.fetchTracks = function (response) {
     var albums = response.items
-    var queries = new spotify.Collection()
+    var queries = new spotify.Queue()
     for (var i in albums) {
       var album = albums[i]
       var albumQuery = new spotify.Album(self.query)
@@ -175,13 +175,13 @@ spotify.Artist = function (query) {
     return queries.dispatch()
   }
 
-  this.createCollection = function (albums) {
-    var collection = new spotify.Collection()
+  this.createQueue = function (albums) {
+    var queue = new spotify.Queue()
     for (var i in albums) {
       var album = albums[i]
-      collection = collection.concat(album)
+      queue = queue.concat(album)
     }
-    return collection
+    return queue
   }
 }
 
@@ -198,7 +198,7 @@ spotify.Track = function (query) {
 
   /**
    * Dispatch query.
-   * @return {Promise | Entry} The track info.
+   * @return {Promise | URI} The track info.
    */
   this.dispatch = function () {
     // https://developer.spotify.com/web-api/search-item/
@@ -208,9 +208,9 @@ spotify.Track = function (query) {
       if (result.tracks &&
           result.tracks.items[0] &&
           result.tracks.items[0].uri) {
-        var track = new spotify.Entry(result.tracks.items[0], query)
-        var collection = new spotify.Collection(track)
-        return collection
+        var track = new spotify.URI(result.tracks.items[0], query)
+        var queue = new spotify.Queue(track)
+        return queue
       }
     })
   }
@@ -219,42 +219,43 @@ spotify.Track = function (query) {
 /**
  * Queue of playlist entries.
  * @constructor
- * @param {string} [entry] - Playlist entry.
+ * @param {string} [URI] - Playlist URI.
  */
-spotify.Collection = function (entry) {
+spotify.Queue = function (uri) {
   /**
    * Self reference.
    */
   var self = this
 
-  this.entries = []
+  this.queue = []
 
-  if (entry) {
-    this.entries.push(entry)
+  if (uri) {
+    this.queue.push(uri)
   }
 
-  this.add = function (entry) {
-    this.entries.push(entry)
+  this.add = function (uri) {
+    this.queue.push(uri)
   }
 
-  this.concat = function (collection) {
-    var result = new spotify.Collection()
-    result.entries = this.entries
-    result.entries = result.entries.concat(collection.entries)
+  this.concat = function (queue) {
+    var result = new spotify.Queue()
+    result.queue = this.queue
+    result.queue = result.queue.concat(queue.queue)
     return result
   }
 
   /**
    * Dispatch all entries in order.
+   * @return {Queue} A list of results.
    */
   this.dispatch = function () {
     // we could have used Promise.all(), but we choose to roll our
     // own, sequential implementation to avoid overloading the server
-    var result = new spotify.Collection()
+    var result = new spotify.Queue()
     var ready = Promise.resolve(null)
-    self.entries.forEach(function (entry, i) {
+    self.queue.forEach(function (uri, i) {
       ready = ready.then(function () {
-        return entry.dispatch()
+        return uri.dispatch()
       }).then(function (value) {
         result.add(value)
       })
@@ -266,12 +267,12 @@ spotify.Collection = function (entry) {
 }
 
 /**
- * Playlist entry.
+ * Playlist URI.
  * @constructor
  * @param {string} body - Track data.
  * @param {string} query - Query text.
  */
-spotify.Entry = function (body, query) {
+spotify.URI = function (body, query) {
   for (var prop in body) {
     this[prop] = body[prop]
   }
@@ -292,12 +293,12 @@ spotify.Playlist = function (str) {
   /**
    * List of queries.
    */
-  this.queries = new spotify.Collection()
+  this.queries = new spotify.Queue()
 
   /**
    * List of tracks.
    */
-  this.tracks = new spotify.Collection()
+  this.tracks = new spotify.Queue()
 
   str = str.trim()
   if (str !== '') {

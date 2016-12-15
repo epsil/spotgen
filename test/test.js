@@ -12,37 +12,37 @@ describe('spotify.js', function () {
   describe('Playlist', function () {
     it('should create empty playlist when passed empty string', function () {
       var playlist = new spotify.Playlist('')
-      playlist.should.have.deep.property('queries.entries').that.eql([])
+      playlist.should.have.deep.property('queries.queue').that.eql([])
     })
 
     it('should create a one-track playlist', function () {
       var playlist = new spotify.Playlist('test')
-      playlist.should.have.deep.property('queries.entries[0].query', 'test')
+      playlist.should.have.deep.property('queries.queue[0].query', 'test')
     })
 
     it('should create a two-track playlist', function () {
       var playlist = new spotify.Playlist('test1\ntest2')
-      playlist.should.have.deep.property('queries.entries[0].query', 'test1')
-      playlist.should.have.deep.property('queries.entries[1].query', 'test2')
+      playlist.should.have.deep.property('queries.queue[0].query', 'test1')
+      playlist.should.have.deep.property('queries.queue[1].query', 'test2')
     })
 
     it('should ignore empty lines', function () {
       var playlist = new spotify.Playlist('test1\n\n\n\ntest2')
-      playlist.should.have.deep.property('queries.entries[0].query', 'test1')
-      playlist.should.have.deep.property('queries.entries[1].query', 'test2')
+      playlist.should.have.deep.property('queries.queue[0].query', 'test1')
+      playlist.should.have.deep.property('queries.queue[1].query', 'test2')
     })
 
     it('should create a sorted playlist', function () {
       var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
-      playlist.should.have.deep.property('queries.entries[0].query', 'test1')
-      playlist.should.have.deep.property('queries.entries[1].query', 'test2')
+      playlist.should.have.deep.property('queries.queue[0].query', 'test1')
+      playlist.should.have.deep.property('queries.queue[1].query', 'test2')
       playlist.should.have.property('order', 'popularity')
     })
 
     it('should dispatch all queries', function () {
       var playlist = new spotify.Playlist('test1\ntest2')
       var promise = playlist.dispatch()
-      return promise.should.eventually.be.instanceof(spotify.Collection)
+      return promise.should.eventually.be.instanceof(spotify.Queue)
     })
   })
 
@@ -61,7 +61,7 @@ describe('spotify.js', function () {
       var album = new spotify.Album('test')
       album.query.should.eql('test')
       var promise = album.dispatch()
-      return promise.should.eventually.be.instanceof(spotify.Collection)
+      return promise.should.eventually.be.instanceof(spotify.Queue)
     })
   })
 
@@ -80,7 +80,7 @@ describe('spotify.js', function () {
       var artist = new spotify.Artist('test')
       artist.query.should.eql('test')
       var promise = artist.dispatch()
-      return promise.should.eventually.be.an.instanceof(spotify.Collection)
+      return promise.should.eventually.be.an.instanceof(spotify.Queue)
     })
   })
 
@@ -99,44 +99,44 @@ describe('spotify.js', function () {
       var track = new spotify.Track('test')
       track.query.should.eql('test')
       var promise = track.dispatch()
-      return promise.should.eventually.be.an.instanceof(spotify.Collection)
+      return promise.should.eventually.be.an.instanceof(spotify.Queue)
     })
   })
 
-  describe('Collection', function () {
+  describe('Queue', function () {
     it('should create an empty list', function () {
-      var collection = new spotify.Collection()
-      collection.entries.should.eql([])
+      var queue = new spotify.Queue()
+      queue.queue.should.eql([])
     })
 
-    it('should convert an entry into a singleton collection', function () {
-      var entry = new spotify.Entry({}, 'test')
-      var collection = new spotify.Collection(entry)
-      collection.entries.should.eql([
+    it('should convert a URI into a singleton queue', function () {
+      var uri = new spotify.URI({}, 'test')
+      var queue = new spotify.Queue(uri)
+      queue.queue.should.eql([
         {
           query: 'test'
         }
       ])
     })
 
-    it('should add an entry', function () {
-      var entry = new spotify.Entry({}, 'test')
-      var collection = new spotify.Collection()
-      collection.add(entry)
-      collection.entries.should.eql([
+    it('should add a URI', function () {
+      var uri = new spotify.URI({}, 'test')
+      var queue = new spotify.Queue()
+      queue.add(uri)
+      queue.queue.should.eql([
         {
           query: 'test'
         }
       ])
     })
 
-    it('should store entries in the order they are added', function () {
-      var foo = new spotify.Entry({}, 'foo')
-      var bar = new spotify.Entry({}, 'bar')
-      var collection = new spotify.Collection()
-      collection.add(foo)
-      collection.add(bar)
-      collection.entries.should.eql([
+    it('should store queue in the order they are added', function () {
+      var foo = new spotify.URI({}, 'foo')
+      var bar = new spotify.URI({}, 'bar')
+      var queue = new spotify.Queue()
+      queue.add(foo)
+      queue.add(bar)
+      queue.queue.should.eql([
         {
           query: 'foo'
         },
@@ -146,17 +146,17 @@ describe('spotify.js', function () {
       ])
     })
 
-    it('should concatenate collections in the same order', function () {
-      var foo = new spotify.Entry({}, 'foo')
-      var bar = new spotify.Entry({}, 'bar')
-      var baz = new spotify.Entry({}, 'baz')
-      var collection1 = new spotify.Collection()
-      var collection2 = new spotify.Collection()
-      collection1.add(foo)
-      collection1.add(bar)
-      collection2.add(baz)
-      var collection3 = collection1.concat(collection2)
-      collection3.entries.should.eql([
+    it('should concatenate queues in the same order', function () {
+      var foo = new spotify.URI({}, 'foo')
+      var bar = new spotify.URI({}, 'bar')
+      var baz = new spotify.URI({}, 'baz')
+      var queue1 = new spotify.Queue()
+      var queue2 = new spotify.Queue()
+      queue1.add(foo)
+      queue1.add(bar)
+      queue2.add(baz)
+      var queue3 = queue1.concat(queue2)
+      queue3.queue.should.eql([
         {
           query: 'foo'
         },
