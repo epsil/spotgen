@@ -54,7 +54,8 @@ spotify.Playlist = function (str) {
   }
 
   /**
-   * Dispatch all the queries in the playlist.
+   * Dispatch all the queries in the playlist
+   * and return the track listing.
    * @return {Queue} A list of results.
    */
   this.dispatch = function () {
@@ -62,6 +63,9 @@ spotify.Playlist = function (str) {
                .then(self.toString)
   }
 
+  /**
+   * Dispatch all the queries in the playlist.
+   */
   this.fetchTracks = function () {
     return this.queries.dispatch().then(function (result) {
       self.tracks = result.flatten()
@@ -194,7 +198,22 @@ spotify.URI = function (query, response) {
   this.query = query
   this.response = response
 
+  /**
+   * Fetch full metadata records if not available.
+   */
   this.refresh = function () {
+    if (self.response &&
+        self.response.popularity) {
+      return Promise.resolve(self)
+    } else {
+      return self.fetch()
+    }
+  }
+
+  /**
+   * Fetch full metadata records.
+   */
+  this.fetch = function () {
     var track = new spotify.Track(self.query, self.response)
     return track.dispatch().then(function (queue) {
       var uri = queue.get(0)
