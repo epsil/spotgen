@@ -37,52 +37,42 @@ spotify.Playlist = function (str) {
   this.unique = true
 
   /**
-   * List of queries.
+   * List of entries.
    */
-  this.queries = new spotify.Queue()
-
-  /**
-   * List of tracks.
-   */
-  this.tracks = new spotify.Queue()
-
-  /**
-   * List of URIs.
-   */
-  this.uris = new spotify.Queue()
+  this.entries = new spotify.Queue()
 
   str = str.trim()
   if (str !== '') {
-    var queries = str.split(/\r|\n|\r\n/)
-    while (queries.length > 0) {
-      var query = queries.shift()
-      if (query.match(/^#ORDER BY POPULARITY/i)) {
+    var lines = str.split(/\r|\n|\r\n/)
+    while (lines.length > 0) {
+      var line = lines.shift()
+      if (line.match(/^#ORDER BY POPULARITY/i)) {
         this.ordering = 'popularity'
-      } else if (query.match(/^#ORDER BY LAST.?FM/i)) {
+      } else if (line.match(/^#ORDER BY LAST.?FM/i)) {
         this.ordering = 'lastfm'
-      } else if (query.match(/^#GROUP BY ENTRY/i)) {
+      } else if (line.match(/^#GROUP BY ENTRY/i)) {
         this.grouping = 'entry'
-      } else if (query.match(/^#GROUP BY ARTIST/i)) {
+      } else if (line.match(/^#GROUP BY ARTIST/i)) {
         this.grouping = 'artist'
-      } else if (query.match(/^#GROUP BY ALBUM/i)) {
+      } else if (line.match(/^#GROUP BY ALBUM/i)) {
         this.grouping = 'album'
-      } else if (query.match(/^#UNIQUE/i)) {
+      } else if (line.match(/^#UNIQUE/i)) {
         this.unique = true
-      } else if (query.match(/^#ALBUM /i)) {
-        var album = new spotify.Album(query.substring(7))
-        this.queries.add(album)
-      } else if (query.match(/^#ARTIST /i)) {
-        var artist = new spotify.Artist(query.substring(8))
-        this.queries.add(artist)
-      } else if (query !== '') {
-        var track = new spotify.Track(query)
-        this.queries.add(track)
+      } else if (line.match(/^#ALBUM /i)) {
+        var album = new spotify.Album(line.substring(7))
+        this.entries.add(album)
+      } else if (line.match(/^#ARTIST /i)) {
+        var artist = new spotify.Artist(line.substring(8))
+        this.entries.add(artist)
+      } else if (line !== '') {
+        var track = new spotify.Track(line)
+        this.entries.add(track)
       }
     }
   }
 
   /**
-   * Dispatch all the queries in the playlist
+   * Dispatch all the entries in the playlist
    * and return the track listing.
    * @return {Queue} A list of results.
    */
@@ -95,21 +85,21 @@ spotify.Playlist = function (str) {
   }
 
   /**
-   * Dispatch the queries in the playlist.
+   * Dispatch the entries in the playlist.
    */
   this.fetchTracks = function () {
-    return self.queries.dispatch().then(function (result) {
-      self.tracks = result.flatten()
+    return self.entries.dispatch().then(function (result) {
+      self.entries = result.flatten()
       return self
     })
   }
 
   /**
-   * Refresh the tracks in the playlist.
+   * Refresh the entries in the playlist.
    */
   this.refreshTracks = function () {
-    return self.tracks.dispatch().then(function (result) {
-      self.tracks = result.flatten()
+    return self.entries.dispatch().then(function (result) {
+      self.entries = result.flatten()
       return self
     })
   }
@@ -118,7 +108,7 @@ spotify.Playlist = function (str) {
    * Fetch Last.fm information.
    */
   this.fetchLastfm = function () {
-    return self.tracks.resolveAll(function (entry) {
+    return self.entries.resolveAll(function (entry) {
       return entry.fetchLastfm()
     }).then(function (result) {
       return self
@@ -130,7 +120,7 @@ spotify.Playlist = function (str) {
    */
   this.dedup = function () {
     if (self.unique) {
-      self.tracks.dedup()
+      self.entries.dedup()
     }
   }
 
@@ -145,7 +135,7 @@ spotify.Playlist = function (str) {
   }
 
   this.orderByPopularity = function () {
-    self.tracks.sort(function (a, b) {
+    self.entries.sort(function (a, b) {
       var x = a.popularity()
       var y = b.popularity()
       var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
@@ -154,7 +144,7 @@ spotify.Playlist = function (str) {
   }
 
   this.orderByLastfm = function () {
-    self.tracks.sort(function (a, b) {
+    self.entries.sort(function (a, b) {
       var x = a.lastfm()
       var y = b.lastfm()
       var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
@@ -163,20 +153,20 @@ spotify.Playlist = function (str) {
   }
 
   this.groupByArtist = function () {
-    self.tracks.group(function (track) {
+    self.entries.group(function (track) {
       return track.artist()
     })
   }
 
   this.groupByAlbum = function () {
-    self.tracks.group(function (track) {
+    self.entries.group(function (track) {
       return track.album()
     })
   }
 
   this.groupByEntry = function () {
-    self.tracks.group(function (track) {
-      return track.query
+    self.entries.group(function (track) {
+      return track.entry
     })
   }
 
@@ -197,7 +187,7 @@ spotify.Playlist = function (str) {
    */
   this.toString = function () {
     var result = ''
-    self.tracks.forEach(function (track) {
+    self.entries.forEach(function (track) {
       console.log(track.toString())
       console.log(track.lastfm())
       var uri = track.uri()
@@ -219,36 +209,49 @@ spotify.Playlist = function (str) {
 /**
  * Queue of playlist entries.
  * @constructor
- * @param {string} [URI] - Playlist URI.
  */
-spotify.Queue = function (uri) {
+spotify.Queue = function () {
   /**
    * Self reference.
    */
   var self = this
 
+  /**
+   * Array of entries.
+   */
   this.queue = []
 
-  if (uri) {
-    this.queue.push(uri)
-  }
-
+  /**
+   * Add an entry.
+   */
   this.add = function (entry) {
     self.queue.push(entry)
   }
 
+  /**
+   * Get an entry.
+   */
   this.get = function (idx) {
     return self.queue[idx]
   }
 
+  /**
+   * The number of entries.
+   */
   this.size = function () {
     return self.queue.length
   }
 
+  /**
+   * Iterate over the queue.
+   */
   this.forEach = function (fn) {
     return self.queue.forEach(fn)
   }
 
+  /**
+   * Map a function over the queue.
+   */
   this.map = function (fn) {
     var result = new spotify.Queue()
     self.forEach(function (entry) {
@@ -257,6 +260,9 @@ spotify.Queue = function (uri) {
     return result
   }
 
+  /**
+   * Concatenate two queues.
+   */
   this.concat = function (queue) {
     var result = new spotify.Queue()
     result.queue = self.queue
@@ -264,11 +270,17 @@ spotify.Queue = function (uri) {
     return result
   }
 
+  /**
+   * Sort the queue.
+   */
   this.sort = function (fn) {
     self.queue = self.queue.sort(fn)
     return self
   }
 
+  /**
+   * Whether the queue contains an entry.
+   */
   this.contains = function (obj) {
     for (var i in self.queue) {
       var entry = self.queue[i]
@@ -280,6 +292,9 @@ spotify.Queue = function (uri) {
     return false
   }
 
+  /**
+   * Remove duplicate entries.
+   */
   this.dedup = function () {
     var result = new spotify.Queue()
     self.queue.forEach(function (entry) {
@@ -291,6 +306,9 @@ spotify.Queue = function (uri) {
     return self
   }
 
+  /**
+   * Group entries.
+   */
   this.group = function (fn) {
     var map = []
     var result = []
@@ -310,6 +328,9 @@ spotify.Queue = function (uri) {
     return self
   }
 
+  /**
+   * Flatten a queue of queues into a single queue.
+   */
   this.flatten = function () {
     var result = []
     for (var i in self.queue) {
@@ -358,23 +379,23 @@ spotify.Queue = function (uri) {
 }
 
 /**
- * Track query.
+ * Track entry.
  * @constructor
- * @param {string} query - The track to search for.
+ * @param {string} entry - The track to search for.
  * @param {JSON} [response] - Track response object.
  * Should have the property `uri`.
  * @param {JSON} [responseSimple] - Simplified track response object.
  */
-spotify.Track = function (query, response) {
+spotify.Track = function (entry, response) {
   /**
    * Self reference.
    */
   var self = this
 
   /**
-   * Query string.
+   * Entry string.
    */
-  this.query = query.trim()
+  this.entry = entry.trim()
 
   /**
    * Simplified track object.
@@ -396,8 +417,10 @@ spotify.Track = function (query, response) {
     } else if (self.responseSimple &&
                self.responseSimple.id) {
       return self.responseSimple.id
-    } else if (self.isURI(self.query)) {
-      return self.query.substring(14)
+    } else if (self.isURI(self.entry)) {
+      return self.entry.substring(14)
+    } else if (self.isLink(self.entry)) {
+      return self.entry.substring(30)
     } else {
       return -1
     }
@@ -408,6 +431,13 @@ spotify.Track = function (query, response) {
    */
   this.isURI = function (str) {
     return str.match(/^spotify:track:/i)
+  }
+
+  /**
+   * Whether a string is a Spotify link.
+   */
+  this.isLink = function (str) {
+    return str.match(/^https?:\/\/open\.spotify\.com\/track\//i)
   }
 
   /**
@@ -426,7 +456,7 @@ spotify.Track = function (query, response) {
   }
 
   /**
-   * Dispatch query.
+   * Dispatch entry.
    * @return {Promise | URI} The track info.
    */
   this.dispatch = function () {
@@ -434,10 +464,10 @@ spotify.Track = function (query, response) {
       return Promise.resolve(self)
     } else if (self.responseSimple) {
       return self.fetchTrack()
-    } else if (self.isURI(self.query)) {
+    } else if (self.isURI(self.entry)) {
       return self.fetchTrack()
     } else {
-      return self.searchForTrack(self.query)
+      return self.searchForTrack(self.entry)
     }
   }
 
@@ -627,25 +657,26 @@ spotify.Track = function (query, response) {
     if (name !== '') {
       return name
     } else {
-      return self.query
+      return self.entry
     }
   }
 }
 
 /**
- * Album query.
+ * Album entry.
  * @constructor
- * @param {string} query - The album to search for.
+ * @param {string} entry - The album to search for.
  */
-spotify.Album = function (query, response) {
+spotify.Album = function (entry, response) {
   /**
    * Self reference.
    */
   var self = this
 
-  if (typeof query === 'string') {
-    this.query = query.trim()
-  }
+  /**
+   * Entry string.
+   */
+  this.entry = entry.trim()
 
   /**
    * Album ID.
@@ -666,7 +697,7 @@ spotify.Album = function (query, response) {
   }
 
   /**
-   * Dispatch query.
+   * Dispatch entry.
    * @return {Promise | Queue} The track list.
    */
   this.dispatch = function () {
@@ -677,12 +708,17 @@ spotify.Album = function (query, response) {
       return self.fetchAlbum()
         .then(self.createQueue)
     } else {
-      return self.searchForAlbum(self.query)
+      return self.searchForAlbum(self.entry)
         .then(self.fetchAlbum)
         .then(self.createQueue)
     }
   }
 
+  /**
+   * Search for album.
+   * @param {string} query - The query text.
+   * @return {Promise | JSON} A JSON response.
+   */
   this.searchForAlbum = function (query) {
     // https://developer.spotify.com/web-api/search-item/
     var url = 'https://api.spotify.com/v1/search?type=album&q='
@@ -715,8 +751,8 @@ spotify.Album = function (query, response) {
     var tracks = response.tracks.items
     var queue = new spotify.Queue()
     for (var i in tracks) {
-      var track = new spotify.Track(self.query, tracks[i])
-      queue.add(track)
+      var entry = new spotify.Track(self.entry, tracks[i])
+      queue.add(entry)
     }
     return queue
   }
@@ -741,20 +777,20 @@ spotify.Album = function (query, response) {
 }
 
 /**
- * Artist query.
+ * Artist entry.
  * @constructor
- * @param {string} query - The artist to search for.
+ * @param {string} entry - The artist to search for.
  */
-spotify.Artist = function (query) {
+spotify.Artist = function (entry) {
   /**
    * Self reference.
    */
   var self = this
 
   /**
-   * Query string.
+   * Entry string.
    */
-  this.query = query.trim()
+  this.entry = entry.trim()
 
   /**
    * Search response.
@@ -776,15 +812,20 @@ spotify.Artist = function (query) {
   }
 
   /**
-   * Dispatch query.
+   * Dispatch entry.
    * @return {Promise | URI} The artist info.
    */
   this.dispatch = function () {
-    return self.searchForArtist(self.query)
+    return self.searchForArtist(self.entry)
       .then(self.fetchAlbums)
       .then(self.createQueue)
   }
 
+  /**
+   * Search for artist.
+   * @param {string} query - The query text.
+   * @return {Promise | JSON} A JSON response.
+   */
   this.searchForArtist = function (query) {
     // https://developer.spotify.com/web-api/search-item/
     var url = 'https://api.spotify.com/v1/search?type=artist&q='
@@ -815,12 +856,12 @@ spotify.Artist = function (query) {
 
   this.createQueue = function (response) {
     var albums = response.items
-    var queries = new spotify.Queue()
+    var queue = new spotify.Queue()
     for (var i in albums) {
-      var albumQuery = new spotify.Album(self.query, albums[i])
-      queries.add(albumQuery)
+      var entry = new spotify.Album(self.entry, albums[i])
+      queue.add(entry)
     }
-    return queries.dispatch()
+    return queue.dispatch()
   }
 
   this.isSearchResponse = function (response) {
@@ -887,12 +928,7 @@ Food for thought ...
 
 Use prototype property for defining methods
 
-Be able to group tracks by album, artist, etc.
-
 Implement merging algorithm from last.py
 
-Clean up repetitious Playlist.dispatch() method
-
-Add support for spotify:track:xxxxxxxxxxxxxxxxxxxxxx entries
-(and HTTP links)
+Add support for spotify HTTP links
 */
