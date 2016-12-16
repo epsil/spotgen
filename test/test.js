@@ -89,6 +89,25 @@ describe('spotify.js', function () {
       queue3.should.have.deep.property('queue[1].query', 'bar')
       queue3.should.have.deep.property('queue[2].query', 'baz')
     })
+
+    it('should group on a property', function () {
+      var foo = new spotify.Track('foo')
+      var bar = new spotify.Track('bar')
+      var baz = new spotify.Track('baz')
+      foo.group = '1'
+      bar.group = '2'
+      baz.group = '1'
+      var queue = new spotify.Queue()
+      queue.add(foo)
+      queue.add(bar)
+      queue.add(baz)
+      queue.group(function (track) {
+        return track.group
+      })
+      queue.should.have.deep.property('queue[0].query', 'foo')
+      queue.should.have.deep.property('queue[1].query', 'baz')
+      queue.should.have.deep.property('queue[2].query', 'bar')
+    })
   })
 
   describe('Track', function () {
@@ -137,14 +156,14 @@ describe('spotify.js', function () {
       var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
       playlist.should.have.deep.property('queries.queue[0].query', 'test1')
       playlist.should.have.deep.property('queries.queue[1].query', 'test2')
-      playlist.should.have.property('order', 'popularity')
+      playlist.should.have.property('ordering', 'popularity')
     })
 
     it('should order tracks by Last.fm rating', function () {
       var playlist = new spotify.Playlist('#ORDER BY LASTFM\ntest1\ntest2')
       playlist.should.have.deep.property('queries.queue[0].query', 'test1')
       playlist.should.have.deep.property('queries.queue[1].query', 'test2')
-      playlist.should.have.property('order', 'lastfm')
+      playlist.should.have.property('ordering', 'lastfm')
     })
 
     it('should create an ordered playlist', function () {

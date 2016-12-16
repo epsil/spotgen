@@ -24,7 +24,12 @@ spotify.Playlist = function (str) {
   /**
    * Playlist order.
    */
-  this.order = null
+  this.ordering = null
+
+  /**
+   * Playlist grouping.
+   */
+  this.grouping = true
 
   /**
    * Unique flag.
@@ -52,9 +57,15 @@ spotify.Playlist = function (str) {
     while (queries.length > 0) {
       var query = queries.shift()
       if (query.match(/^#ORDER BY POPULARITY/i)) {
-        this.order = 'popularity'
+        this.ordering = 'popularity'
       } else if (query.match(/^#ORDER BY LAST.?FM/i)) {
-        this.order = 'lastfm'
+        this.ordering = 'lastfm'
+      } else if (query.match(/^#GROUP BY ENTRY/i)) {
+        this.grouping = 'entry'
+      } else if (query.match(/^#GROUP BY ARTIST/i)) {
+        this.grouping = 'artist'
+      } else if (query.match(/^#GROUP BY ALBUM/i)) {
+        this.grouping = 'album'
       } else if (query.match(/^#UNIQUE/i)) {
         this.unique = true
       } else if (query.match(/^#ALBUM /i)) {
@@ -76,32 +87,11 @@ spotify.Playlist = function (str) {
    * @return {Queue} A list of results.
    */
   this.dispatch = function () {
-    if (self.order === 'popularity') {
-      return self.fetchTracks()
-        .then(self.dedup)
-        .then(self.refreshTracks)
-        .then(self.orderByPopularity)
-        .then(self.toString)
-    } else if (self.order === 'lastfm') {
-      return self.fetchTracks()
-        .then(self.dedup)
-        .then(self.fetchLastfm)
-        .then(self.orderByLastfm)
-        .then(self.toString)
-    } else {
-      return self.fetchTracks()
-        .then(self.dedup)
-        .then(self.toString)
-    }
-  }
-
-  /**
-   * Remove duplicates.
-   */
-  this.dedup = function () {
-    if (self.unique) {
-      self.tracks.dedup()
-    }
+    return self.fetchTracks()
+      .then(self.dedup)
+      .then(self.order)
+      .then(self.group)
+      .then(self.toString)
   }
 
   /**
@@ -135,6 +125,25 @@ spotify.Playlist = function (str) {
     })
   }
 
+  /**
+   * Remove duplicates.
+   */
+  this.dedup = function () {
+    if (self.unique) {
+      self.tracks.dedup()
+    }
+  }
+
+  this.order = function () {
+    if (self.ordering === 'popularity') {
+      return self.refreshTracks()
+        .then(self.orderByPopularity)
+    } else if (self.ordering === 'lastfm') {
+      return self.fetchLastfm()
+        .then(self.orderByLastfm)
+    }
+  }
+
   this.orderByPopularity = function () {
     self.tracks.sort(function (a, b) {
       var x = a.popularity()
@@ -151,6 +160,35 @@ spotify.Playlist = function (str) {
       var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
       return val
     })
+  }
+
+  this.groupByArtist = function () {
+    self.tracks.group(function (track) {
+      return track.artist()
+    })
+  }
+
+  this.groupByAlbum = function () {
+    self.tracks.group(function (track) {
+      return track.album()
+    })
+  }
+
+  this.groupByEntry = function () {
+    self.tracks.group(function (track) {
+      return track.query
+    })
+  }
+
+  this.group = function () {
+    if (self.grouping === 'artist') {
+      return self.groupByArtist()
+    } else if (self.grouping === 'album') {
+      return self.refreshTracks()
+        .then(self.groupByAlbum)
+    } else if (self.grouping === 'entry') {
+      return self.groupByEntry()
+    }
   }
 
   /**
@@ -250,6 +288,25 @@ spotify.Queue = function (uri) {
       }
     })
     self.queue = result.queue
+    return self
+  }
+
+  this.group = function (fn) {
+    var map = []
+    var result = []
+    for (var i in self.queue) {
+      var entry = self.queue[i]
+      var key = fn(entry)
+
+      if (!map[key]) {
+        map[key] = []
+      }
+      map[key].push(entry)
+    }
+    for (var k in map) {
+      result = result.concat(map[k])
+    }
+    self.queue = result
     return self
   }
 
@@ -488,6 +545,21 @@ spotify.Track = function (query, response) {
     if (response &&
         response.name) {
       return response.name
+    } else {
+      return ''
+    }
+  }
+
+  /**
+   * Track album.
+   * @return {string} The track album,
+   * or the empty string if not available.
+   */
+  this.album = function () {
+    if (self.response &&
+        self.response.album &&
+        self.response.album.name) {
+      return self.response.album.name
     } else {
       return ''
     }
@@ -756,4 +828,8 @@ Use prototype property for defining methods
 Be able to group tracks by album, artist, etc.
 
 Implement merging algorithm from last.py
+
+Clean up repetitious Playlist.dispatch() method
+
+Add support for spotify:track:xxxxxxxxxxxxxxxxxxxxxx entries
 */
