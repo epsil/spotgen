@@ -5,6 +5,10 @@ var async = require('async')
 var fs = require('fs')
 var request = require('request')
 
+var defaults = require('./defaults')
+
+console.log(defaults.api)
+
 var spotify = {}
 
 /**
