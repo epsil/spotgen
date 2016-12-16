@@ -360,7 +360,7 @@ spotify.Queue = function () {
         return fn(entry)
       }).then(function (value) {
         result.add(value)
-      })
+      }, function () { })
     })
     return ready.then(function () {
       return result
@@ -730,6 +730,9 @@ spotify.Album = function (entry, response) {
       } else {
         return Promise.reject(response)
       }
+    }).then(null, function () {
+      console.log('COULD NOT FIND ' + query)
+      return Promise.reject(null)
     })
   }
 
@@ -931,4 +934,6 @@ Use prototype property for defining methods
 Implement merging algorithm from last.py
 
 Add support for spotify HTTP links
+
+Album link: https://open.spotify.com/album/0xnL6goTzcRFKzbrleXfpF
 */
