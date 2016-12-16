@@ -43,6 +43,8 @@ spotify.Playlist = function (str) {
       var query = queries.shift()
       if (query.match(/^#ORDER BY POPULARITY/i)) {
         this.order = 'popularity'
+      } else if (query.match(/^#ORDER BY LAST.?FM/i)) {
+        this.order = 'lastfm'
       } else if (query.match(/^#ALBUM /i)) {
         var album = new spotify.Album(query.substring(7))
         this.queries.add(album)
@@ -66,6 +68,11 @@ spotify.Playlist = function (str) {
       return self.fetchTracks()
         .then(self.refreshTracks)
         .then(self.orderByPopularity)
+        .then(self.toString)
+    } else if (self.order === 'lastfm') {
+      return self.fetchTracks()
+        .then(self.fetchLastfm)
+        .then(self.orderByLastfm)
         .then(self.toString)
     } else {
       return self.fetchTracks()
@@ -93,10 +100,30 @@ spotify.Playlist = function (str) {
     })
   }
 
+  /**
+   * Fetch Last.fm information.
+   */
+  this.fetchLastfm = function () {
+    return self.tracks.resolveAll(function (entry) {
+      return entry.fetchLastfm()
+    }).then(function (result) {
+      return self
+    })
+  }
+
   this.orderByPopularity = function () {
     self.tracks.sort(function (a, b) {
       var x = a.popularity()
       var y = b.popularity()
+      var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
+      return val
+    })
+  }
+
+  this.orderByLastfm = function () {
+    self.tracks.sort(function (a, b) {
+      var x = a.lastfm()
+      var y = b.lastfm()
       var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
       return val
     })
@@ -110,6 +137,7 @@ spotify.Playlist = function (str) {
     var result = ''
     self.tracks.forEach(function (track) {
       console.log(track.toString())
+      console.log(track.lastfm())
       var uri = track.uri()
       if (uri !== '') {
         result += uri + '\n'
@@ -194,20 +222,30 @@ spotify.Queue = function (uri) {
    * Dispatch all entries in order.
    * @return {Queue} A list of results.
    */
-  this.dispatch = function () {
+  this.resolveAll = function (fn) {
     // we could have used Promise.all(), but we choose to roll our
     // own, sequential implementation to avoid overloading the server
     var result = new spotify.Queue()
     var ready = Promise.resolve(null)
     self.queue.forEach(function (entry) {
       ready = ready.then(function () {
-        return entry.dispatch()
+        return fn(entry)
       }).then(function (value) {
         result.add(value)
       })
     })
     return ready.then(function () {
       return result
+    })
+  }
+
+  /**
+   * Dispatch all entries in order.
+   * @return {Queue} A list of results.
+   */
+  this.dispatch = function () {
+    return self.resolveAll(function (entry) {
+      return entry.dispatch()
     })
   }
 }
@@ -304,6 +342,30 @@ spotify.Track = function (query, response) {
         return self
       }
     })
+  }
+
+  /**
+   * Fetch Last.fm information.
+   */
+  this.fetchLastfm = function () {
+    var artist = self.artist()
+    var title = self.title()
+    return lastfm.getInfo(artist, title).then(function (result) {
+      self.lastfmResponse = result
+      return self
+    })
+  }
+
+  /**
+   * Last.fm rating.
+   * @return {Integer} The playcount, or -1 if not available.
+   */
+  this.lastfm = function () {
+    if (self.lastfmResponse) {
+      return parseInt(self.lastfmResponse.track.playcount)
+    } else {
+      return -1
+    }
   }
 
   /**

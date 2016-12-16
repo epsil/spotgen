@@ -1,11 +1,13 @@
 var request = require('request')
 
 module.exports = function (key) {
+  var lastfm = {}
+
   /**
-   * Perform a Lastfm request.
+   * Perform a Last.fm request.
    * @param {string} url - The URL to look up.
    */
-  this.request = function (url) {
+  lastfm.request = function (url) {
     return new Promise(function (resolve, reject) {
       setTimeout(function () {
         console.log(url)
@@ -31,7 +33,15 @@ module.exports = function (key) {
     })
   }
 
-  this.getInfo = function (artist, title, correct) {
+  /**
+   * Get the Last.fm metadata for a track.
+   * @param {String} artist - The artist.
+   * @param {String} title - The title.
+   * @param {boolean} [correct] - Whether to autocorrect misspellings,
+   * default true.
+   * @return {Promise | JSON} The track info.
+   */
+  lastfm.getInfo = function (artist, title, correct) {
     correct = (correct !== false)
     artist = encodeURIComponent(artist)
     title = encodeURIComponent(title)
@@ -44,7 +54,7 @@ module.exports = function (key) {
     url += '&track=' + title
     url += '&format=json'
 
-    return this.request(url).then(function (result) {
+    return lastfm.request(url).then(function (result) {
       if (result && !result.error && result.track) {
         return Promise.resolve(result)
       } else {
@@ -52,4 +62,6 @@ module.exports = function (key) {
       }
     })
   }
+
+  return lastfm
 }
