@@ -22,6 +22,16 @@ spotify.Playlist = function (str) {
   var self = this
 
   /**
+   * Playlist order.
+   */
+  this.order = null
+
+  /**
+   * Unique flag.
+   */
+  this.unique = true
+
+  /**
    * List of queries.
    */
   this.queries = new spotify.Queue()
@@ -45,6 +55,8 @@ spotify.Playlist = function (str) {
         this.order = 'popularity'
       } else if (query.match(/^#ORDER BY LAST.?FM/i)) {
         this.order = 'lastfm'
+      } else if (query.match(/^#UNIQUE/i)) {
+        this.unique = true
       } else if (query.match(/^#ALBUM /i)) {
         var album = new spotify.Album(query.substring(7))
         this.queries.add(album)
@@ -66,17 +78,29 @@ spotify.Playlist = function (str) {
   this.dispatch = function () {
     if (self.order === 'popularity') {
       return self.fetchTracks()
+        .then(self.dedup)
         .then(self.refreshTracks)
         .then(self.orderByPopularity)
         .then(self.toString)
     } else if (self.order === 'lastfm') {
       return self.fetchTracks()
+        .then(self.dedup)
         .then(self.fetchLastfm)
         .then(self.orderByLastfm)
         .then(self.toString)
     } else {
       return self.fetchTracks()
+        .then(self.dedup)
         .then(self.toString)
+    }
+  }
+
+  /**
+   * Remove duplicates.
+   */
+  this.dedup = function () {
+    if (self.unique) {
+      self.tracks.dedup()
     }
   }
 
@@ -179,6 +203,10 @@ spotify.Queue = function (uri) {
     return self.queue[idx]
   }
 
+  this.size = function () {
+    return self.queue.length
+  }
+
   this.forEach = function (fn) {
     return self.queue.forEach(fn)
   }
@@ -200,6 +228,28 @@ spotify.Queue = function (uri) {
 
   this.sort = function (fn) {
     self.queue = self.queue.sort(fn)
+    return self
+  }
+
+  this.contains = function (obj) {
+    for (var i in self.queue) {
+      var entry = self.queue[i]
+      if ((entry.equals && entry.equals(obj)) ||
+          entry === obj) {
+        return true
+      }
+    }
+    return false
+  }
+
+  this.dedup = function () {
+    var result = new spotify.Queue()
+    self.queue.forEach(function (entry) {
+      if (!result.contains(entry)) {
+        result.add(entry)
+      }
+    })
+    self.queue = result.queue
     return self
   }
 
@@ -407,7 +457,7 @@ spotify.Track = function (query, response) {
         response.artists &&
         response.artists[0] &&
         response.artists[0].name) {
-      return response.artists[0].name
+      return response.artists[0].name.trim()
     } else {
       return ''
     }
@@ -423,7 +473,7 @@ spotify.Track = function (query, response) {
     if (response &&
         response.artists) {
       artists = self.response.artists.map(function (artist) {
-        return artist.name
+        return artist.name.trim()
       })
     }
     return artists.join(', ')
@@ -459,6 +509,15 @@ spotify.Track = function (query, response) {
     } else {
       return ''
     }
+  }
+
+  /**
+   * Whether this track is identical to another track.
+   */
+  this.equals = function (track) {
+    var str1 = self.toString().toLowerCase()
+    var str2 = track.toString().toLowerCase()
+    return str1 === str2
   }
 
   /**
