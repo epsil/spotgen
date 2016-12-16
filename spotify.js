@@ -6,8 +6,7 @@ var fs = require('fs')
 var request = require('request')
 
 var defaults = require('./defaults')
-
-console.log(defaults.api)
+var lastfm = require('./lastfm')(defaults.api)
 
 var spotify = {}
 
@@ -338,10 +337,26 @@ spotify.Track = function (query, response) {
    * Track title.
    * @return {String} The track title.
    */
-  this.toString = function () {
+  this.title = function () {
     if (self.response &&
         self.response.name) {
       return self.response.name
+    } else if (self.responseSimple &&
+               self.responseSimple.name) {
+      return self.responseSimple.name
+    } else {
+      return ''
+    }
+  }
+
+  /**
+   * Full track title.
+   * @return {String} The track title, on the form `Title - Artist`.
+   */
+  this.toString = function () {
+    var title = self.title()
+    if (title !== '') {
+      return title
     } else {
       return self.query
     }
