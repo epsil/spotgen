@@ -155,7 +155,7 @@ spotify.Playlist = function (str) {
 
   /**
    * Convert the playlist to a string.
-   * @return {String} A newline-separated list of Spotify URIs.
+   * @return {string} A newline-separated list of Spotify URIs.
    */
   this.toString = function () {
     var result = ''
@@ -376,7 +376,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Search for track.
-   * @param {String} query - The query text.
+   * @param {string} query - The query text.
    * @return {Promise | Track} A track with
    * a simplified track response.
    */
@@ -420,7 +420,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Spotify URI.
-   * @return {String} The Spotify URI
+   * @return {string} The Spotify URI
    * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`),
    * or the empty string if not available.
    */
@@ -448,7 +448,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Track main artist.
-   * @return {String} The main artist.
+   * @return {string} The main artist.
    */
   this.artist = function () {
     var artists = []
@@ -465,7 +465,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Track artists.
-   * @return {String} All the track artists, separated by `, `.
+   * @return {string} All the track artists, separated by `, `.
    */
   this.artists = function () {
     var artists = []
@@ -481,7 +481,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Track title.
-   * @return {String} The track title.
+   * @return {string} The track title.
    */
   this.title = function () {
     var response = self.response || self.responseSimple
@@ -495,7 +495,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Full track name.
-   * @return {String} The track name, on the form `Title - Artist`.
+   * @return {string} The track name, on the form `Title - Artist`.
    */
   this.name = function () {
     var title = self.title()
@@ -522,7 +522,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Full track title.
-   * @return {String} The track title, on the form `Title - Artist`.
+   * @return {string} The track title, on the form `Title - Artist`.
    */
   this.toString = function () {
     var name = self.name()
@@ -751,7 +751,9 @@ module.exports = spotify
 /*
 Food for thought ...
 
-Should include track artist in Track.toString(): Title - Artist
+Use prototype property for defining methods
 
-Should use prototype property for defining methods
+Be able to group tracks by album, artist, etc.
+
+Implement merging algorithm from last.py
 */

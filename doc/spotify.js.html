@@ -50,6 +50,16 @@ spotify.Playlist = function (str) {
   var self = this
 
   /**
+   * Playlist order.
+   */
+  this.order = null
+
+  /**
+   * Unique flag.
+   */
+  this.unique = true
+
+  /**
    * List of queries.
    */
   this.queries = new spotify.Queue()
@@ -73,6 +83,8 @@ spotify.Playlist = function (str) {
         this.order = 'popularity'
       } else if (query.match(/^#ORDER BY LAST.?FM/i)) {
         this.order = 'lastfm'
+      } else if (query.match(/^#UNIQUE/i)) {
+        this.unique = true
       } else if (query.match(/^#ALBUM /i)) {
         var album = new spotify.Album(query.substring(7))
         this.queries.add(album)
@@ -94,17 +106,29 @@ spotify.Playlist = function (str) {
   this.dispatch = function () {
     if (self.order === 'popularity') {
       return self.fetchTracks()
+        .then(self.dedup)
         .then(self.refreshTracks)
         .then(self.orderByPopularity)
         .then(self.toString)
     } else if (self.order === 'lastfm') {
       return self.fetchTracks()
+        .then(self.dedup)
         .then(self.fetchLastfm)
         .then(self.orderByLastfm)
         .then(self.toString)
     } else {
       return self.fetchTracks()
+        .then(self.dedup)
         .then(self.toString)
+    }
+  }
+
+  /**
+   * Remove duplicates.
+   */
+  this.dedup = function () {
+    if (self.unique) {
+      self.tracks.dedup()
     }
   }
 
@@ -159,7 +183,7 @@ spotify.Playlist = function (str) {
 
   /**
    * Convert the playlist to a string.
-   * @return {String} A newline-separated list of Spotify URIs.
+   * @return {string} A newline-separated list of Spotify URIs.
    */
   this.toString = function () {
     var result = ''
@@ -207,6 +231,10 @@ spotify.Queue = function (uri) {
     return self.queue[idx]
   }
 
+  this.size = function () {
+    return self.queue.length
+  }
+
   this.forEach = function (fn) {
     return self.queue.forEach(fn)
   }
@@ -228,6 +256,28 @@ spotify.Queue = function (uri) {
 
   this.sort = function (fn) {
     self.queue = self.queue.sort(fn)
+    return self
+  }
+
+  this.contains = function (obj) {
+    for (var i in self.queue) {
+      var entry = self.queue[i]
+      if ((entry.equals &amp;&amp; entry.equals(obj)) ||
+          entry === obj) {
+        return true
+      }
+    }
+    return false
+  }
+
+  this.dedup = function () {
+    var result = new spotify.Queue()
+    self.queue.forEach(function (entry) {
+      if (!result.contains(entry)) {
+        result.add(entry)
+      }
+    })
+    self.queue = result.queue
     return self
   }
 
@@ -354,7 +404,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Search for track.
-   * @param {String} query - The query text.
+   * @param {string} query - The query text.
    * @return {Promise | Track} A track with
    * a simplified track response.
    */
@@ -398,7 +448,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Spotify URI.
-   * @return {String} The Spotify URI
+   * @return {string} The Spotify URI
    * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`),
    * or the empty string if not available.
    */
@@ -426,7 +476,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Track main artist.
-   * @return {String} The main artist.
+   * @return {string} The main artist.
    */
   this.artist = function () {
     var artists = []
@@ -435,7 +485,7 @@ spotify.Track = function (query, response) {
         response.artists &amp;&amp;
         response.artists[0] &amp;&amp;
         response.artists[0].name) {
-      return response.artists[0].name
+      return response.artists[0].name.trim()
     } else {
       return ''
     }
@@ -443,7 +493,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Track artists.
-   * @return {String} All the track artists, separated by `, `.
+   * @return {string} All the track artists, separated by `, `.
    */
   this.artists = function () {
     var artists = []
@@ -451,7 +501,7 @@ spotify.Track = function (query, response) {
     if (response &amp;&amp;
         response.artists) {
       artists = self.response.artists.map(function (artist) {
-        return artist.name
+        return artist.name.trim()
       })
     }
     return artists.join(', ')
@@ -459,7 +509,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Track title.
-   * @return {String} The track title.
+   * @return {string} The track title.
    */
   this.title = function () {
     var response = self.response || self.responseSimple
@@ -473,7 +523,7 @@ spotify.Track = function (query, response) {
 
   /**
    * Full track name.
-   * @return {String} The track name, on the form `Title - Artist`.
+   * @return {string} The track name, on the form `Title - Artist`.
    */
   this.name = function () {
     var title = self.title()
@@ -490,8 +540,17 @@ spotify.Track = function (query, response) {
   }
 
   /**
+   * Whether this track is identical to another track.
+   */
+  this.equals = function (track) {
+    var str1 = self.toString().toLowerCase()
+    var str2 = track.toString().toLowerCase()
+    return str1 === str2
+  }
+
+  /**
    * Full track title.
-   * @return {String} The track title, on the form `Title - Artist`.
+   * @return {string} The track title, on the form `Title - Artist`.
    */
   this.toString = function () {
     var name = self.name()
@@ -720,9 +779,11 @@ module.exports = spotify
 /*
 Food for thought ...
 
-Should include track artist in Track.toString(): Title - Artist
-
 Should use prototype property for defining methods
+
+Should be able to group tracks by album, artist, etc.
+
+Should implement merging algorithm from last.py
 */
 </code></pre>
         </article>
@@ -740,7 +801,7 @@ Should use prototype property for defining methods
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 16 2016 13:39:00 GMT+0100 (W. Europe Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 16 2016 15:25:21 GMT+0100 (W. Europe Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
