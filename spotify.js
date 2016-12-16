@@ -387,6 +387,30 @@ spotify.Track = function (query, response) {
   this.response = null
 
   /**
+   * Track ID.
+   */
+  this.id = function () {
+    if (self.response &&
+        self.response.id) {
+      return self.response.id
+    } else if (self.responseSimple &&
+               self.responseSimple.id) {
+      return self.responseSimple.id
+    } else if (self.isURI(self.query)) {
+      return self.query.substring(14)
+    } else {
+      return -1
+    }
+  }
+
+  /**
+   * Whether a string is a Spotify URI.
+   */
+  this.isURI = function (str) {
+    return str.match(/^spotify:track:/i)
+  }
+
+  /**
    * Whether a track object is full or simplified.
    * A full object includes information (like popularity)
    * that a simplified object does not.
@@ -409,7 +433,9 @@ spotify.Track = function (query, response) {
     if (self.response) {
       return Promise.resolve(self)
     } else if (self.responseSimple) {
-      return self.fetchTrack(self.responseSimple)
+      return self.fetchTrack()
+    } else if (self.isURI(self.query)) {
+      return self.fetchTrack()
     } else {
       return self.searchForTrack(self.query)
     }
@@ -421,8 +447,8 @@ spotify.Track = function (query, response) {
    * @return {Promise | Track} A track with
    * a full track response.
    */
-  this.fetchTrack = function (responseSimple) {
-    var id = responseSimple.id
+  this.fetchTrack = function () {
+    var id = self.id()
     var url = 'https://api.spotify.com/v1/tracks/'
     url += encodeURIComponent(id)
     return spotify.request(url).then(function (result) {
@@ -622,15 +648,33 @@ spotify.Album = function (query, response) {
   }
 
   /**
+   * Album ID.
+   */
+  this.id = function () {
+    if (self.albumResponse &&
+        self.albumResponse.id) {
+      return self.albumResponse.id
+    } else if (self.searchResponse &&
+               self.searchResponse.albums &&
+               self.searchResponse.albums.items &&
+               self.searchResponse.albums.items[0] &&
+               self.searchResponse.albums.items[0].id) {
+      return self.searchResponse.albums.items[0].id
+    } else {
+      return -1
+    }
+  }
+
+  /**
    * Dispatch query.
    * @return {Promise | Queue} The track list.
    */
   this.dispatch = function () {
     if (self.searchResponse) {
-      return self.fetchAlbum(self.searchResponse)
+      return self.fetchAlbum()
         .then(self.createQueue)
     } else if (self.albumResponse) {
-      return self.fetchAlbum(self.albumResponse)
+      return self.fetchAlbum()
         .then(self.createQueue)
     } else {
       return self.searchForAlbum(self.query)
@@ -645,7 +689,7 @@ spotify.Album = function (query, response) {
     url += encodeURIComponent(query)
     return spotify.request(url).then(function (response) {
       if (self.isSearchResponse(response)) {
-        this.searchResponse = response
+        self.searchResponse = response
         return Promise.resolve(response)
       } else {
         return Promise.reject(response)
@@ -653,9 +697,8 @@ spotify.Album = function (query, response) {
     })
   }
 
-  this.fetchAlbum = function (response) {
-    var id = (self.isSearchResponse(response) &&
-              response.albums.items[0].id) || response.id
+  this.fetchAlbum = function () {
+    var id = self.id()
     var url = 'https://api.spotify.com/v1/albums/'
     url += encodeURIComponent(id)
     return spotify.request(url).then(function (response) {
@@ -714,6 +757,25 @@ spotify.Artist = function (query) {
   this.query = query.trim()
 
   /**
+   * Search response.
+   */
+  this.artistResponse = null
+
+  /**
+   * Artist ID.
+   */
+  this.id = function () {
+    if (self.artistResponse &&
+        self.artistResponse.artists &&
+        self.artistResponse.artists.items[0] &&
+        self.artistResponse.artists.items[0].id) {
+      return self.artistResponse.artists.items[0].id
+    } else {
+      return -1
+    }
+  }
+
+  /**
    * Dispatch query.
    * @return {Promise | URI} The artist info.
    */
@@ -729,7 +791,7 @@ spotify.Artist = function (query) {
     url += encodeURIComponent(query)
     return spotify.request(url).then(function (response) {
       if (self.isSearchResponse(response)) {
-        this.artistResponse = response
+        self.artistResponse = response
         return Promise.resolve(response)
       } else {
         return Promise.reject(response)
@@ -737,8 +799,8 @@ spotify.Artist = function (query) {
     })
   }
 
-  this.fetchAlbums = function (response) {
-    var id = response.artists.items[0].id
+  this.fetchAlbums = function () {
+    var id = self.id()
     var url = 'https://api.spotify.com/v1/artists/'
     url += encodeURIComponent(id) + '/albums'
     return spotify.request(url).then(function (response) {
@@ -832,4 +894,5 @@ Implement merging algorithm from last.py
 Clean up repetitious Playlist.dispatch() method
 
 Add support for spotify:track:xxxxxxxxxxxxxxxxxxxxxx entries
+(and HTTP links)
 */
