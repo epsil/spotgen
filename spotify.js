@@ -109,6 +109,7 @@ spotify.Playlist = function (str) {
   this.toString = function () {
     var result = ''
     self.tracks.forEach(function (track) {
+      console.log(track.toString())
       var uri = track.uri()
       if (uri !== '') {
         result += uri + '\n'
@@ -334,16 +335,65 @@ spotify.Track = function (query, response) {
   }
 
   /**
+   * Track main artist.
+   * @return {String} The main artist.
+   */
+  this.artist = function () {
+    var artists = []
+    var response = self.response || self.responseSimple
+    if (response &&
+        response.artists &&
+        response.artists[0] &&
+        response.artists[0].name) {
+      return response.artists[0].name
+    } else {
+      return ''
+    }
+  }
+
+  /**
+   * Track artists.
+   * @return {String} All the track artists, separated by `, `.
+   */
+  this.artists = function () {
+    var artists = []
+    var response = self.response || self.responseSimple
+    if (response &&
+        response.artists) {
+      artists = self.response.artists.map(function (artist) {
+        return artist.name
+      })
+    }
+    return artists.join(', ')
+  }
+
+  /**
    * Track title.
    * @return {String} The track title.
    */
   this.title = function () {
-    if (self.response &&
-        self.response.name) {
-      return self.response.name
-    } else if (self.responseSimple &&
-               self.responseSimple.name) {
-      return self.responseSimple.name
+    var response = self.response || self.responseSimple
+    if (response &&
+        response.name) {
+      return response.name
+    } else {
+      return ''
+    }
+  }
+
+  /**
+   * Full track name.
+   * @return {String} The track name, on the form `Title - Artist`.
+   */
+  this.name = function () {
+    var title = self.title()
+    if (title !== '') {
+      var artist = self.artist()
+      if (artist !== '') {
+        return title + ' - ' + artist
+      } else {
+        return title
+      }
     } else {
       return ''
     }
@@ -354,9 +404,9 @@ spotify.Track = function (query, response) {
    * @return {String} The track title, on the form `Title - Artist`.
    */
   this.toString = function () {
-    var title = self.title()
-    if (title !== '') {
-      return title
+    var name = self.name()
+    if (name !== '') {
+      return name
     } else {
       return self.query
     }
@@ -581,4 +631,6 @@ module.exports = spotify
 Food for thought ...
 
 Should include track artist in Track.toString(): Title - Artist
+
+Should use prototype property for defining methods
 */
