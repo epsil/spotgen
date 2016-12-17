@@ -1,9 +1,11 @@
 Spotify Playlist Converter
 ==========================
 
-> A command-line script for converting playlists to Spotify format.
+> A command-line script for generating Spotify playlists.
 >
 > Written in JavaScript, requires [Node](https://nodejs.org/).
+>
+> Example playlist: [The 50 Best Ambient Albums of All Time](examples/50-best-ambient-albums-of-all-time.spotify.txt) ([source](examples/50-best-ambient-albums-of-all-time.txt)).
 
 Usage
 -----
