@@ -1,11 +1,18 @@
-Spotify Playlist Converter
-==========================
+[Spotify Playlist Converter](https://github.com/epsil/spotify-js)
+=================================================================
 
 > A command-line script for generating Spotify playlists.
 >
 > Written in JavaScript, requires [Node](https://nodejs.org/).
 >
 > Example playlist: [The 50 Best Ambient Albums of All Time](examples/50-best-ambient-albums-of-all-time.spotify.txt) ([source](examples/50-best-ambient-albums-of-all-time.txt)).
+
+Obtain
+------
+
+The source code is located at [GitHub](https://github.com/epsil/spotify-js). To clone the repository:
+
+    $ git clone https://github.com/epsil/spotify-js.git
 
 Usage
 -----
