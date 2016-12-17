@@ -48,7 +48,7 @@ spotify.Playlist = function (str) {
       var line = lines.shift()
       if (line.match(/^#ORDER BY POPULARITY/i)) {
         this.ordering = 'popularity'
-      } else if (line.match(/^#ORDER BY LAST.?FM/i)) {
+      } else if (line.match(/^#(SORT|ORDER) BY LAST.?FM/i)) {
         this.ordering = 'lastfm'
       } else if (line.match(/^#GROUP BY ENTRY/i)) {
         this.grouping = 'entry'
@@ -58,6 +58,8 @@ spotify.Playlist = function (str) {
         this.grouping = 'album'
       } else if (line.match(/^#UNIQUE/i)) {
         this.unique = true
+      } else if (line.match(/^##/i)) {
+        // comment
       } else if (line.match(/^#ALBUM /i)) {
         var album = new spotify.Album(line.substring(7))
         this.entries.add(album)
@@ -420,7 +422,7 @@ spotify.Track = function (entry, response) {
     } else if (self.isURI(self.entry)) {
       return self.entry.substring(14)
     } else if (self.isLink(self.entry)) {
-      return self.entry.substring(30)
+      return self.entry.split('/')[4]
     } else {
       return -1
     }
@@ -465,6 +467,8 @@ spotify.Track = function (entry, response) {
     } else if (self.responseSimple) {
       return self.fetchTrack()
     } else if (self.isURI(self.entry)) {
+      return self.fetchTrack()
+    } else if (self.isLink(self.entry)) {
       return self.fetchTrack()
     } else {
       return self.searchForTrack(self.entry)
@@ -931,9 +935,8 @@ Food for thought ...
 
 Use prototype property for defining methods
 
+Add support for spotify album links
+(e.g., https://open.spotify.com/album/0xnL6goTzcRFKzbrleXfpF)
+
 Implement merging algorithm from last.py
-
-Add support for spotify HTTP links
-
-Album link: https://open.spotify.com/album/0xnL6goTzcRFKzbrleXfpF
 */
