@@ -385,7 +385,7 @@ spotify.Queue = function () {
  * @constructor
  * @param {string} entry - The track to search for.
  * @param {JSON} [response] - Track response object.
- * Should have the property `uri`.
+ * Should have the property `popularity`.
  * @param {JSON} [responseSimple] - Simplified track response object.
  */
 spotify.Track = function (entry, response) {
