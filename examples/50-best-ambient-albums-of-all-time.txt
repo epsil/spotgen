@@ -1,0 +1,57 @@
+## Pitchfork's 50 Best Ambient Albums of All Time
+## http://pitchfork.com/features/lists-and-guides/9948-the-50-best-ambient-albums-of-all-time/
+#order by lastfm
+#group by entry
+#album Ambient 1: Music for Airports - Brian Eno
+#album Selected Ambient Works Volume II - Aphex Twin
+#album The Disintegration Loops - William Basinski
+#album The Disintegration Loops II - William Basinski
+#album The Disintegration Loops III - William Basinski
+#album The Disintegration Loops IV - William Basinski
+#album A Rainbow in Curved Air - Terry Riley
+#album Chill Out - The KLF
+#album The Tired Sounds of Stars of the Lid - Stars of the Lid
+#album 94diskont - Oval
+#album Deep Listening - Pauline Oliveros
+#album Harmony in Ultraviolet - Tim Hecker
+#album Evening Star - Fripp & Eno
+#album Pop - Gas
+#album The Expanding Universe - Laurie Spiegel
+#album Apollo - Brian Eno
+#album An Empty Bliss Beyond This World - The Caretaker
+#album Automatic Writing - Robert Ashley
+#album Persian Surgery Dervishes - Terry Riley
+#album Turiya Sings - Alice Coltrane
+#album And Their Refinement of the Decline - Stars of the Lid
+#album Orbvs Terrarvm - The Orb
+#album Replica - Oneohtrix Point Never
+#album A I A: Alien Observer - Grouper
+#album Endless Summer - Fennesz
+#album Playthroughs - Keith Fullerton Whitman
+#album Ambient 4: On Land - Brian Eno
+#album What?? - Folke Rabe
+#album Inter-Dimensional Music - Iasos
+#album Rifts - Oneohtrix Point Never
+#album Accordion and Voice - Pauline Oliveros
+#album On the Other Ocean - David Behrman
+#album The Magic Place - Julianna Barwick
+#album New Age Of Earth - Ashra
+#album The Tamburas Of Pandit Pran Nath - La Monte Young
+#album Structures from Silence - Steve Roach
+#album Four Manifestations On Six Elements - Charlemagne Palestine
+#album Ambient 3: Day of Radiance - Laraaji
+#album Depths - Windy & Carl
+#album Virgins - Tim Hecker
+#album Substrata - Biosphere
+#album Buchla Concerts 1975 - Suzanne Ciani
+#album Sleep - Max Richter
+#album The Pearl - Harold Budd
+#album Plays - Ekkehard Ehlers
+#album Talk Amongst the Trees - Eluvium
+#album snd - Microstoria
+#album For Those Of You Who Have Never - Huerco S.
+#album Epsilon in Malaysian Pale - Edgar Froese
+#album Vernal Equinox - Jon Hassell
+#album Neighborhoods - Ernest Hood
+#album Tomorrow Was the Golden Age - Bing & Ruth
+#album Morals and Dogma - Deathprod
