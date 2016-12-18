@@ -43,6 +43,56 @@ Usage
 
 To import the playlist, copy the contents of `output.txt` to the clipboard, create a new playlist in Spotify, and paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
+### Albums
+
+To add an entire album to the playlist, use the `#album` directive:
+
+    #album Substrata - Biosphere
+
+Result:
+
+    spotify:track:1TCkrnjuurf0DNLLoJxVyd
+    spotify:track:1vriNGX7VD9Cx0Z2N2IglO
+    spotify:track:6RrehqfwNTkuQiWu0WNf3X
+    ...
+
+### Artists
+
+To add the entire discography of an artist to the playlist, use the `#artist` directive:
+
+    #artist Beach House
+
+Result:
+
+    spotify:track:2SNGR7tguWgIR7sWzn40bw
+    spotify:track:40SNnkhRM3ZUPLOOOEAcoM
+    spotify:track:2Fr2fg7o35D5gZObRhragD
+    ...
+
+### Order
+
+To order the tracks by Spotify popularity, add the line `#order by popularity`:
+
+    #order by popularity
+    #artist Beach House
+
+To order the tracks by Last.fm playcount, add the line `#order by lastfm`:
+
+    #order by lastfm
+    #artist Beach House
+
+### Group
+
+To sort the ordered tracks into groups, use the `#group by` directive:
+
+    #order by lastfm
+    #group by album
+    #artist Beach House
+
+This will create a Last.fm-ordered playlist where tracks from the same album are grouped together.
+
+### Other tips
+
 See [tips](Tips.md) for more information.
 
 See also
