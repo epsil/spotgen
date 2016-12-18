@@ -14,6 +14,8 @@ The source code is located at [GitHub](https://github.com/epsil/spotify-js). To 
 
     $ git clone https://github.com/epsil/spotify-js.git
 
+Alternatively, download a [ZIP file](https://github.com/epsil/spotify-js/archive/master.zip).
+
 Usage
 -----
 
