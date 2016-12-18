@@ -1,0 +1,14 @@
+## Pitchfork's Top 10 Albums of 1999
+## http://pitchfork.com/features/lists-and-guides/5815-top-10-albums-of-1999/
+#order by lastfm
+#group by entry
+#album Emergency and I - The Dismemberment Plan
+#album The Soft Bulletin - The Flaming Lips
+#album Keep It Like a Secret - Built to Spill
+#album The Three EPs - The Beta Band
+#album Midnite Vultures - Beck
+#album I See a Darkness - Bonnie "Prince" Billy
+#album Mule Variations - Tom Waits
+#album 69 Love Songs - Magnetic Fields
+#album Slow Riot for New Zero Kanada EP - Godspeed You Black Emperor!
+#album 13 - Blur

@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2004
+## http://pitchfork.com/features/lists-and-guides/5934-top-50-albums-of-2004/
+#order by lastfm
+#group by entry
+#album Funeral - The Arcade Fire
+#album Sung Tongs - Animal Collective
+#album A Grand Don't Come for Free - The Streets
+#album Blueberry Boat - The Fiery Furnaces
+#album Smile - Brian Wilson
+#album Madvillainy - Madvillain
+#album Rejoicing in the Hands - Devendra Banhart
+#album Thunder, Lightning, Strike - The Go! Team
+#album The Pretty Toney Album - Ghostface
+#album The Milk-Eyed Mender - Joanna Newsom
+#album Sonic Nurse - Sonic Youth
+#album Piracy Funds Terrorism, Vol. 1 - M.I.A. / Diplo
+#album Ta Det Lugnt - Dungen
+#album DJ-Kicks - Erlend Øye
+#album Anniemal - Annie
+#album Showtime - Dizzee Rascal
+#album Seven Swans - Sufjan Stevens
+#album The College Dropout - Kanye West
+#album Medulla - Björk
+#album Talkie Walkie - Air
+#album Venice - Fennesz
+#album Connected - The Foreign Exchange
+#album Good News for People Who Love Bad News - Modest Mouse
+#album Desperate Youth, Blood Thirsty Babes - TV on the Radio
+#album DFA Compilation #2 - Various Artists
+#album Franz Ferdinand - Franz Ferdinand
+#album Antics - Interpol
+#album Last Exit - Junior Boys
+#album The Slow Wonder - A.C. Newman
+#album The Disintegration Loops - William Basinski
+#album The Grind Date - De La Soul
+#album Heron King Blues - Califone
+#album The Futureheads - The Futureheads
+#album Espers - Espers
+#album C'mon Miracle - Mirah
+#album KA - Excepter
+#album Virðulegu forsetar - Jóhann Jóhannsson
+#album You Are The Quarry - Morrissey
+#album Cee-Lo Green Is a Soul Machine - Cee-Lo
+#album Bows and Arrows - The Walkmen
+#album Inches - Les Savy Fav
+#album Special Gunpowder - DJ /rupture
+#album Scissor Sisters - Scissor Sisters
+#album Underachievers Please Try Harder - Camera Obscura
+#album The Concretes - The Concretes
+#album Our Endless Numbered Days - Iron & Wine
+#album Blue Cathedral - Comets on Fire
+#album Van Lear Rose - Loretta Lynn
+#album The Blue Notebooks - Max Richter
+#album Fabulous Muscles - Xiu Xiu

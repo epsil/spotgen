@@ -939,5 +939,7 @@ module.exports = spotify
 
   Order albums by year (or rating)
 
+  Add support for Exportify CSV
+
   Implement merging algorithms from last.py
 */

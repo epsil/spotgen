@@ -1,0 +1,54 @@
+## Pitchfork's 50 Best Albums of 2015
+## http://pitchfork.com/features/lists-and-guides/9764-the-50-best-albums-of-2015/
+#order by lastfm
+#group by entry
+#album To Pimp a Butterfly - Kendrick Lamar
+#album In Colour - Jamie xx
+#album Art Angels - Grimes
+#album Summertime '06 - Vince Staples
+#album Currents - Tame Impala
+#album Carrie & Lowell - Sufjan Stevens
+#album Black Messiah - D'Angelo
+#album Wildheart - Miguel
+#album Sometimes I Sit and Think - Courtney Barnett
+#album The Epic - Kamasi Washington
+#album Garden of Delete - Oneohtrix Point Never
+#album I Love You, Honeybear - Father John Misty
+#album Divers - Joanna Newsom
+#album Barter 6 - Young Thug
+#album Vulnicura - Björk
+#album M3LL155X - FKA twigs
+#album If You're Reading This It's Too Late - Drake
+#album Have You In My Wilderness - Julia Holter
+#album Dirty Sprite 2 - Future
+#album Elaenia - Floating Points
+#album Surf - Donnie Trumpet & the Social Experiment
+#album Panda Bear Meets the Grim Reaper - Panda Bear
+#album b'lieve i'm goin down - Kurt Vile
+#album The Beyond - Thundercat
+#album I Don't Like Shit, I Don't Go Outside - Earl Sweatshirt
+#album New Bermuda - Deafheaven
+#album No Cities to Love - Sleater-Kinney
+#album Depression Cherry - Beach House
+#album SremmLife - Rae Sremmurd
+#album Fading Frontier - Deerhunter
+#album Hallucinogen EP - Kelela
+#album Compton - Dr. Dre
+#album A New Place 2 Drown - Archy Marshall
+#album EMOTION - Carly Rae Jepsen
+#album VEGA INTL. Night School - Neon Indian
+#album Unbreakable - Janet Jackson
+#album Me - Empress Of
+#album Mutant - Arca
+#album Platform - Holly Herndon
+#album Dark Energy - Jlin
+#album Late Nights - Jeremih
+#album Apocalypse, girl - Jenny Hval
+#album Poison Season - Destroyer
+#album Reality Show - Jazmine Sullivan
+#album Simple Songs - Jim O'Rourke
+#album Goon - Tobias Jesso Jr.
+#album DJ-Kicks - DJ Koze
+#album Ratchet - Shamir
+#album Natalie Prass - Natalie Prass
+#album Blackheart - Dawn Richard

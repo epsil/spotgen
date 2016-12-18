@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2002
+## http://pitchfork.com/features/lists-and-guides/5888-top-50-albums-of-2002/
+#order by lastfm
+#group by entry
+#album Turn on the Bright Lights - Interpol
+#album Yankee Hotel Foxtrot - Wilco
+#album Source Tags & Codes - And You Will Know Us by the Trail of Dead
+#album Thought for Food - The Books
+#album Yoshimi Battles the Pink Robots - Flaming Lips
+#album Kill the Moonlight - Spoon
+#album Neon Golden - Notwist
+#album Geogaddi - Boards of Canada
+#album Murray Street - Sonic Youth
+#album They Threw Us All in a Trench and Stuck a Monument on Top - Liars
+#album Fantastic Damage - El-P
+#album Mastered by the Guy at the Exchange - Max Tundra
+#album Playthroughs - Keith Fullerton Whitman
+#album One Beat - Sleater-Kinney
+#album High Society - Enon
+#album Beaches & Canyons - Black Dice
+#album The Return of FennO'Berg - Fennesz
+#album Original Pirate Material - The Streets
+#album Reveille - Deerhoof
+#album Make Up the Breakdown - Hot Hot Heat
+#album Read & Burn 01 & 02 - Wire
+#album Saint the Fire Show - Fire Show
+#album Plays - Ekkehard Ehlers
+#album McLusky Do Dallas - McLusky
+#album Blacklisted - Neko Case
+#album Legend of the Liquid Sword - GZA
+#album Everyone Who Pretended to Like Me Is Gone - The Walkmen
+#album Under Construction - Missy Elliott
+#album () - Sigur Rós
+#album I Phantom - Mr. Lif
+#album Oceanic - Isis
+#album Stoke - Philip Jeck
+#album Deadringer - Rjd2
+#album Haunt Me, Haunt Me, Do It Again - Tim Hecker
+#album Suicide Invoice - Hot Snakes
+#album Minesweeper Suite - DJ /Rupture
+#album September 000 - Secret Machines
+#album The Eminem Show - Eminem
+#album Sheer Hellish Miasma - Kevin Drumm
+#album Ballads - Derek Bailey
+#album Quality - Talib Kweli
+#album Sea Change - Beck
+#album Good Health - Pretty Girls Make Graves
+#album Swarm & Dither - Hrvatski
+#album In C - Acid Mothers Temple
+#album Blazing Arrow - Blackalicious
+#album Didn't It Rain - Songs: Ohia
+#album Alice and Blood Money - Tom Waits
+#album From Filthy Tongue of Gods and Griots - Dälek
+#album Field Recordings from the Sun - Comets on Fire

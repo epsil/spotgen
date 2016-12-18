@@ -1,0 +1,54 @@
+## Pitchfork's 50 Best Albums of 2009
+## http://pitchfork.com/features/lists-and-guides/7744-the-top-50-albums-of-2009/
+#order by lastfm
+#group by entry
+#album Merriweather Post Pavilion - Animal Collective
+#album Bitte Orca - Dirty Projectors
+#album The xx - The xx
+#album Embryonic - The Flaming Lips
+#album Only Built for Cuban Linx... Pt. II - Raekwon
+#album Veckatimest - Grizzly Bear
+#album Two Suns - Bat For Lashes
+#album Wolfgang Amadeus Phoenix - Phoenix
+#album Fever Ray - Fever Ray
+#album Album - Girls
+#album Tarot Sport - Fuck Buttons
+#album It's Blitz! - Yeah Yeah Yeahs
+#album Actor - St. Vincent
+#album Psychic Chasms - Neon Indian
+#album Post-Nothing - Japandroids
+#album The Crying Light - Antony and the Johnsons
+#album Warm Heart of Africa - The Very Best
+#album Logos - Atlas Sound
+#album The Pains of Being Pure at Heart - The Pains of Being Pure at Heart
+#album Real Estate - Real Estate
+#album Middle Cyclone - Neko Case
+#album Two Dancers - Wild Beasts
+#album Seek Magic - Memory Tapes
+#album Sometimes I Wish We Were an Eagle - Bill Callahan
+#album BlaQKout - DJ Quik and Kurupt
+#album Blood Bank - Bon Iver
+#album 5: Five Years of Hyperdub - Various Artists
+#album Jewellery - Micachu and the Shapes
+#album Popular Songs - Yo La Tengo
+#album Junior - Röyksopp
+#album Monoliths & Dimensions - Sunn O)))
+#album Beast Rest Forth Mouth - Bear in Heaven
+#album Ambivalence Avenue - Bibio
+#album Manners - Passion Pit
+#album jj n° 2 - jj
+#album Farm - Dinosaur Jr.
+#album Hospice - The Antlers
+#album Guns Don't Kill People-- Lazers Do - Major Lazer
+#album The Visitor - Jim O'Rourke
+#album The Ecstatic - Mos Def
+#album Blue Record - Baroness
+#album Ashes Grammar - A Sunny Day in Glasgow
+#album Why There Are Mountains - Cymbals Eat Guitars
+#album BiRd-BrAiNs - tUnE-yArDs
+#album The Life of the World to Come - The Mountain Goats
+#album Bromst - Dan Deacon
+#album Where Were U in '92? - Zomby
+#album Born Like This - DOOM
+#album Catacombs - Cass McCombs
+#album Songs of Shame - Woods

@@ -1,0 +1,24 @@
+## Pitchfork's Top 20 Albums of 2001
+## http://pitchfork.com/features/lists-and-guides/5844-top-20-albums-of-2001/
+#order by lastfm
+#group by entry
+#album The Glow, Pt. 2 - Microphones
+#album Endless Summer - Fennesz
+#album Since I Left You - Avalanches
+#album Leaves Turn Inside You - Unwound
+#album Circulatory System - Circulatory System
+#album Amnesiac - Radiohead
+#album Yesterday Was Dramatic, Today Is OK - Múm
+#album White Blood Cells - White Stripes
+#album Mass Romantic - New Pornographers
+#album Vocal Studies + Uprock Narratives - Prefuse 73
+#album Confield - Autechre
+#album Idiology - Mouse on Mars
+#album Go Forth - Les Savy Fav
+#album Change - Dismemberment Plan
+#album Is This It - Strokes
+#album Insignificance - Jim O'Rourke
+#album The Cold Vein - Cannibal Ox
+#album Hot Shots II - Beta Band
+#album Life is Full of Possibilities - Dntel
+#album The Argument - Fugazi

@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2012
+## http://pitchfork.com/features/lists-and-guides/9017-the-top-50-albums-of-2012/
+#order by lastfm
+#group by entry
+#album good kid, m.A.A.d city - Kendrick Lamar
+#album Channel Orange - Frank Ocean
+#album The Idler Wheel - Fiona Apple
+#album Lonerism - Tame Impala
+#album The Seer - Swans
+#album Visions - Grimes
+#album Bloom - Beach House
+#album Kill For Love - Chromatics
+#album The Money Store - Death Grips
+#album Shields - Grizzly Bear
+#album Celebration Rock - Japandroids
+#album Allelujah! Don't Bend! Ascend! - Godspeed You! Black Emperor
+#album R.A.P. Music - Killer Mike
+#album Luxury Problems - Andy Stott
+#album Swing Lo Magellan - Dirty Projectors
+#album Kindred - Burial
+#album The Haunted Man - Bat For Lashes
+#album Slaughterhouse/Hair - Ty Segall Band
+#album Attack on Memory - Cloud Nothings
+#album Devotion - Jessie Ware
+#album Mature Themes - Ariel Pink's Haunted Graffiti
+#album Until The Quiet Comes - Flying Lotus
+#album Kaleidoscope Dream - Miguel
+#album Shrines - Purity Ring
+#album Habits & Contradictions - Schoolboy Q
+#album Ekstasis - Julia Holter
+#album fIN - John Talabot
+#album Total Loss - How to Dress Well
+#album Sun - Cat Power
+#album Open Your Heart - The Men
+#album Sweet Heart Sweet Light - Spiritualized
+#album Blue Chips - Action Bronson/Party Supplies
+#album R.I.P. - Actress
+#album Something - Chairlift
+#album TNGHT - TNGHT
+#album Tramp - Sharon Van Etten
+#album Pluto - Future
+#album Spooky Action at a Distance - Lotus Plaza
+#album In Our Heads - Hot Chip
+#album Oshin - DIIV
+#album End of Daze - Dum Dum Girls
+#album Rich Forever - Rick Ross
+#album 2 - Mac DeMarco
+#album METZ - METZ
+#album Cancer for Cure - El-P
+#album Essential Mix - Rustie
+#album Sorrow and Extinction - Pallbearer
+#album Lucifer - Peaking Lights
+#album (III) - Crystal Castles
+#album Mr. M - Lambchop

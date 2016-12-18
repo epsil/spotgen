@@ -1,0 +1,54 @@
+## Pitchfork's 50 Best Albums of 2008
+## http://pitchfork.com/features/lists-and-guides/7573-the-50-best-albums-of-2008/
+#order by lastfm
+#group by entry
+#album Sun Giant - Fleet Foxes
+#album Third - Portishead
+#album Nouns - No Age
+#album In Ghost Colours - Cut Copy
+#album Microcastle - Deerhunter
+#album Dear Science - TV on the Radio
+#album Vampire Weekend - Vampire Weekend
+#album Saturdays=Youth - M83
+#album Hercules and Love Affair - Hercules and Love Affair
+#album Uproot - DJ/rupture
+#album Tha Carter III - Lil Wayne
+#album Where You Go I Go Too - Lindstrøm
+#album New Amerykah Part One (4th World War) - Erykah Badu
+#album No Way Down - Air France
+#album Crystal Castles - Crystal Castles
+#album Vivian Girls - Vivian Girls
+#album The Chemistry of Common Life - Fucked Up
+#album HLLLYH - The Mae Shi
+#album You & Me - The Walkmen
+#album Street Horrrsing - Fuck Buttons
+#album 808s and Heartbreak - Kanye West
+#album Santogold - Santogold
+#album Made in the Dark - Hot Chip
+#album Saint Dymphna - Gang Gang Dance
+#album The Airing of Grievances - Titus Andronicus
+#album Let the Blind Lead Those Who Can See But Cannot Feel - Atlas Sound
+#album Parallax Error Beheads You - Max Tundra
+#album Los Angeles - Flying Lotus
+#album Stay Positive - The Hold Steady
+#album Hold on Now, Youngster - Los Campesinos!
+#album Black Sea - Fennesz
+#album Dig!!! Lazarus Dig!!! - Nick Cave & the Bad Seeds
+#album Midnight Organ Fight - Frightened Rabbit
+#album Love Is Overtaking Me - Arthur Russell
+#album Feed the Animals - Girl Talk
+#album The Mixtape About Nothing - Wale
+#album Dragging a Dead Deer Up a Hill - Grouper
+#album London Zoo - The Bug
+#album Rip It Off - Times New Viking
+#album Esau Mwamwaya & Radioclit are the Very Best - The Very Best
+#album Everything That Happens Will Happen Today - David Byrne and Brian Eno
+#album Lie Down in the Light - Bonnie "Prince" Billy
+#album Rook - Shearwater
+#album This Is It - Marnie Stern
+#album Youth Novels - Lykke Li
+#album Devotion - Beach House
+#album Shallow Grave - The Tallest Man on Earth
+#album High Places - High Places
+#album Alight of Night - Crystal Stilts
+#album Ice Cream Spiritual - Ponytail

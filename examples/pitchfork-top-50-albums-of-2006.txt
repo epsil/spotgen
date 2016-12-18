@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2006
+## http://pitchfork.com/features/lists-and-guides/6510-top-50-albums-of-2006/
+#order by lastfm
+#group by entry
+#album Silent Shout - The Knife
+#album Return to Cookie Mountain - TV on the Radio
+#album Ys - Joanna Newsom
+#album Fishscale - Ghostface Killah
+#album Boys and Girls in America - The Hold Steady
+#album Drum's Not Dead - Liars
+#album Hell Hath No Fury - Clipse
+#album Yellow House - Grizzly Bear
+#album Pink - Boris
+#album The Drift - Scott Walker
+#album So This Is Goodbye - Junior Boys
+#album Everything All the Time - Band of Horses
+#album It's Never Been Like That - Phoenix
+#album Harmony in Ultraviolet - Tim Hecker
+#album Shut Up I Am Dreaming - Sunset Rubdown
+#album Beach House - Beach House
+#album The Body, The Blood, The Machine - The Thermals
+#album Destroyer's Rubies - Destroyer
+#album King - T.I.
+#album Six Demon Bag - Man Man
+#album Be Your Own Pet - Be Your Own Pet
+#album 45:33 - LCD Soundsystem
+#album I Am Not Afraid of You and I Will Beat Your Ass - Yo La Tengo
+#album Writer's Block - Peter Bjorn and John
+#album FutureSex/LoveSounds - Justin Timberlake
+#album The Warning - Hot Chip
+#album Roots & Crowns - Califone
+#album The Greatest - Cat Power
+#album Alright, Still - Lily Allen
+#album The Life Pursuit - Belle and Sebastian
+#album Ships - Danielson
+#album Food & Liquor - Lupe Fiasco
+#album The Obliterati - Mission of Burma
+#album Night Ripper - Girl Talk
+#album Scale - Herbert
+#album Brightblack Morning Light - Brightblack Morning Light
+#album Dedication 2 - DJ Drama & Lil Wayne
+#album Donuts - J Dilla
+#album Transparent Things - Fujiya & Miyagi
+#album The Loon - Tapes 'n Tapes
+#album The Crane Wife - The Decemberists
+#album Blood Mountain - Mastodon
+#album Rather Ripped - Sonic Youth
+#album We Are the Pipettes - The Pipettes
+#album Let's Get Out of This Country - Camera Obscura
+#album Post-War - M. Ward
+#album The Rose Has Teeth in the Mouth of a Beast - Matmos
+#album Someone to Drive You Home - The Long Blondes
+#album Orchestra of Bubbles - Ellen Allien & Apparat
+#album Movements - Booka Shade

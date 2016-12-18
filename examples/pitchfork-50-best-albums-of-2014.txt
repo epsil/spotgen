@@ -1,0 +1,54 @@
+## Pitchfork's 50 Best Albums of 2014
+## http://pitchfork.com/features/lists-and-guides/9558-the-50-best-albums-of-2014/
+#order by lastfm
+#group by entry
+#album Run the Jewels 2 - Run the Jewels
+#album LP1 - FKA twigs
+#album Lost in the Dream - The War on Drugs
+#album Syro - Aphex Twin
+#album Ruins - Grouper
+#album To Be Kind - Swans
+#album Benji - Sun Kil Moon
+#album It's Album Time - Todd Terje
+#album Pom Pom - Ariel Pink
+#album Our Love - Caribou
+#album Too Bright - Perfume Genius
+#album Salad Days - Mac DeMarco
+#album They Want My Soul - Spoon
+#album Atlas - Real Estate
+#album Burn Your Fire for No Witness - Angel Olsen
+#album St. Vincent - St. Vincent
+#album You're Dead! - Flying Lotus
+#album Xen - Arca
+#album Are We There - Sharon Van Etten
+#album Hell Can Wait - Vince Staples
+#album High Life - Brian Eno
+#album Singles - Future Islands
+#album I Never Learn - Lykke Li
+#album Sunbathing Animal - Parquet Courts
+#album Broke With Expensive Taste - Azealia Banks
+#album Rips - Ex Hex
+#album My Krazy Life - YG
+#album Bestial Burden - Pharmakon
+#album What Is This Heart? - How to Dress Well
+#album Plowing Into the Field of Love - Iceage
+#album 1989 - Taylor Swift
+#album Deep Fantasy - White Lung
+#album Tha Tour Part 1 - Rich Gang
+#album Here and Nowhere Else - Cloud Nothings
+#album Lese Majesty - Shabazz Palaces
+#album Aquarius - Tinashe
+#album Say Yes to Love - Perfect Pussy
+#album The Moon Rang Like A Bell - Hundred Waters
+#album More Than Any Other Day - Ought
+#album Manipulator - Ty Segall
+#album Music for the Uninvited - Leon Vynehall
+#album In Conflict - Owen Pallett
+#album Piñata - Freddie Gibbs
+#album Sea When Absent - A Sunny Day in Glasgow
+#album Faith in Strangers - Andy Stott
+#album My Everything - Ariana Grande
+#album Dude Incredible - Shellac
+#album Clark - Clark
+#album Mr Twin Sister - Mr Twin Sister
+#album A U R O R A - Ben Frost

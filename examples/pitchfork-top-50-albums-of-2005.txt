@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2005
+## http://pitchfork.com/features/lists-and-guides/6222-top-50-albums-of-2005/
+#order by lastfm
+#group by entry
+#album Illinois - Sufjan Stevens
+#album Late Registration - Kanye West
+#album Bang Bang Rock & Roll - Art Brut
+#album Arular - M.I.A.
+#album I Am a Bird Now - Antony & the Johnsons
+#album The Runners Four - Deerhoof
+#album Feels - Animal Collective
+#album LCD Soundsystem - LCD Soundsystem
+#album Purple Haze - Cam'ron
+#album Apologies to the Queen Mary - Wolf Parade
+#album We Are Monster - Isolée
+#album Twin Cinema - New Pornographers
+#album Run the Road - Various Artists
+#album OK Cowboy - Vitalic
+#album We Got It 4 Cheap, Vol. 2 - Clipse
+#album Nine Times That Same Song - Love Is All
+#album Strange Geometry - The Clientele
+#album Clap Your Hands Say Yeah - Clap Your Hands Say Yeah
+#album The Woods - Sleater-Kinney
+#album Separation Sunday - The Hold Steady
+#album Superwolf - Bonnie "Prince" Billy & Matt Sweeney
+#album Tender Buttons - Broadcast
+#album The Witching Hour - Ladytron
+#album The Sunset Tree - The Mountain Goats
+#album The Upper Cuts - Alan Braxe & Friends
+#album Picaresque - The Decemberists
+#album Multiply - Jamie Lidell
+#album Black One - Sunn O)))
+#album Serena Maneesh - Serena Maneesh
+#album You Could Have It So Much Better - Franz Ferdinand
+#album Congotronics - Konono No. 1
+#album The B.Coming - Beanie Sigel
+#album Silent Alarm - Bloc Party
+#album Tanglewood Numbers - Silver Jews
+#album The Documentary - The Game
+#album Multiples - Keith Fullerton Whitman
+#album Kreucht & Fleucht - Dominik Eulberg
+#album Cripple Crow - Devendra Banhart
+#album Robyn - Robyn
+#album Let's Get It: Thug Motivation 101 - Young Jeezy
+#album Ruby Blue - Róisín Murphy
+#album Z - My Morning Jacket
+#album Gimme Fiction - Spoon
+#album Lookaftering - Vashti Bunyan
+#album Before the Dawn Heals Us - M83
+#album Extraordinary Machine - Fiona Apple
+#album The Best Party Ever - The Boy Least Likely To
+#album Black Sheep Boy - Okkervil River
+#album EP - Fiery Furnaces
+#album OV - Orthrelm

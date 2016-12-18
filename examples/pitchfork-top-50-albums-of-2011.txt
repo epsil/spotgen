@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2011
+## http://pitchfork.com/features/lists-and-guides/7893-the-top-50-albums-of-2010/
+#order by lastfm
+#group by entry
+#album Bon Iver - Bon Iver
+#album Kaputt - Destroyer
+#album Hurry Up, We're Dreaming - M83
+#album Let England Shake - PJ Harvey
+#album Father, Son, Holy Ghost - Girls
+#album Replica - Oneohtrix Point Never
+#album w h o k i l l - tUnE-yArDs
+#album Take Care - Drake
+#album Days - Real Estate
+#album House of Balloons - The Weeknd
+#album Strange Mercy - St. Vincent
+#album James Blake - James Blake
+#album Past Life Martyred Saints - EMA
+#album Black Up - Shabazz Palaces
+#album Helplessness Blues - Fleet Foxes
+#album Smoke Ring For My Halo - Kurt Vile
+#album Instrumentals - Clams Casino
+#album Parallax - Atlas Sound
+#album XXX - Danny Brown
+#album Space Is Only Noise - Nicolas Jaar
+#album Watch the Throne - Jay-Z / Kanye West
+#album An Empty Bliss Beyond This World - The Caretaker
+#album Apocalypse - Bill Callahan
+#album The Magic Place - Julianna Barwick
+#album Eye Contact - Gang Gang Dance
+#album Looping State of Mind - The Field
+#album 4 - Beyoncé
+#album Zonoscope - Cut Copy
+#album The Book of David - DJ Quik
+#album Ravedeath, 1972 - Tim Hecker
+#album Goodbye Bread - Ty Segall
+#album Tomboy - Panda Bear
+#album David Comes to Life - Fucked Up
+#album On a Mission - Katy B
+#album Nostalgia, Ultra. - Frank Ocean
+#album 50 Words For Snow - Kate Bush
+#album New Brigade - Iceage
+#album Impossible Spaces - Sandro Perri
+#album Slave Ambient - The War on Drugs
+#album Electronic Dream - AraabMuzik
+#album Aesthethica - Liturgy
+#album SBTRKT - SBTRKT
+#album Wounded Rhymes - Lykke Li
+#album New History Warfare Vol. 2: Judges - Colin Stetson
+#album Section.80 - Kendrick Lamar
+#album Cults - Cults
+#album Sepalcure - Sepalcure
+#album Underneath the Pine - Toro Y Moi
+#album Wild Flag - Wild Flag
+#album The Year of Hibernation - Youth Lagoon

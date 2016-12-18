@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2013
+## http://pitchfork.com/features/lists-and-guides/9293-the-top-50-albums-of-2013/
+#order by lastfm
+#group by entry
+#album Modern Vampires of the City - Vampire Weekend
+#album Yeezus - Kanye West
+#album Settle - Disclosure
+#album m b v - My Bloody Valentine
+#album Old - Danny Brown
+#album Sunbather - Deafheaven
+#album Random Access Memories - Daft Punk
+#album Impersonator - Majical Cloudz
+#album Silence Yourself - Savages
+#album Reflektor - Arcade Fire
+#album Psychic - Darkside
+#album Acid Rap - Chance the Rapper
+#album Wakin on a Pretty Daze - Kurt Vile
+#album Shaking the Habitual - The Knife
+#album Night Time, My Time - Sky Ferreira
+#album Dream River - Bill Callahan
+#album Days Are Gone - Haim
+#album The Electric Lady - Janelle Monáe
+#album Doris - Earl Sweatshirt
+#album Jai Paul - Jai Paul
+#album Cupid Deluxe - Blood Orange
+#album Cerulean Salt - Waxahatchee
+#album Double Cup - DJ Rashad
+#album R Plus Seven - Oneohtrix Point Never
+#album Nothing Was the Same - Drake
+#album Overgrown - James Blake
+#album The Worse Things Get, the Harder I Fight - Neko Case
+#album Run the Jewels - Run the Jewels
+#album Excavation - The Haxan Cloak
+#album Monomania - Deerhunter
+#album Anxiety - Autre Ne Veut
+#album Amygdala - DJ Koze
+#album Truant / Rough Sleeper - Burial
+#album Engravings - Forest Swords
+#album Muchacho - Phosphorescent
+#album The Bones of What You Believe - Chvrches
+#album Immunity - Jon Hopkins
+#album Tomorrow's Harvest - Boards of Canada
+#album LongLiveA$AP - A$AP Rocky
+#album Light Up Gold - Parquet Courts
+#album Love's Crushing Diamond - Mutual Benefit
+#album Woman - Rhye
+#album Trouble Will Find Me - The National
+#album The 20/20 Experience - Justin Timberlake
+#album Slow Focus - Fuck Buttons
+#album Matangi - M.I.A.
+#album Nonfiction - The Range
+#album Major Arcana - Speedy Ortiz
+#album Loud City Song - Julia Holter
+#album My Name Is My Name - Pusha T

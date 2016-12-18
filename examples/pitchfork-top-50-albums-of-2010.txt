@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2010
+## http://pitchfork.com/features/lists-and-guides/7893-the-top-50-albums-of-2010/
+#order by lastfm
+#group by entry
+#album My Beautiful Dark Twisted Fantasy - Kanye West
+#album This Is Happening - LCD Soundsystem
+#album Halcyon Digest - Deerhunter
+#album Sir Lucious Left Foot: The Son of Chico Dusty - Big Boi
+#album Teen Dream - Beach House
+#album Contra - Vampire Weekend
+#album Have One on Me - Joanna Newsom
+#album The Bells Sketch - James Blake
+#album Before Today - Ariel Pink's Haunted Graffiti
+#album The Monitor - Titus Andronicus
+#album The Suburbs - Arcade Fire
+#album The ArchAndroid - Janelle Monáe
+#album Everything in Between - No Age
+#album Cosmogramma - Flying Lotus
+#album Body Talk - Robyn
+#album Treats - Sleigh Bells
+#album Swim - Caribou
+#album New Amerykah Part Two: Return of the Ankh - Erykah Badu
+#album Love Remains - How to Dress Well
+#album Returnal - Oneohtrix Point Never
+#album Lisbon - The Walkmen
+#album Broken Dreams Club - Girls
+#album Sit Down, Man - Das Racist
+#album One Life Stand - Hot Chip
+#album The Age of Adz - Sufjan Stevens
+#album Forget - Twin Shadow
+#album There Is Love in You - Four Tet
+#album High Violet - The National
+#album Play It Strange - The Fresh & Onlys
+#album Love King - The-Dream
+#album At Echo Lake - Woods
+#album Bastard - Tyler, the Creator
+#album The Wild Hunt - The Tallest Man on Earth
+#album Crystal Castles - Crystal Castles
+#album Plastic Beach - Gorillaz
+#album Does It Look Like I'm Here? - Emeralds
+#album Stridulum EP - Zola Jesus
+#album Teflon Don - Rick Ross
+#album Crazy For You - Best Coast
+#album Crush - Abe Vigoda
+#album Subiza - Delorean
+#album Thank Me Later - Drake
+#album Innerspeaker - Tame Impala
+#album Spiral Shadow - Kylesa
+#album I'm New Here - Gil Scott-Heron
+#album Black City - Matthew Dear
+#album Public Strain - Women
+#album Dagger Paths - Forest Swords
+#album Gemini - Wild Nothing
+#album King of the Beach - Wavves

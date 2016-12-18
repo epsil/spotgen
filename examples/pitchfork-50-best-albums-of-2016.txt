@@ -1,0 +1,54 @@
+## Pitchfork's 50 Best Albums of 2016
+## http://pitchfork.com/features/lists-and-guides/9980-the-50-best-albums-of-2016/
+#order by lastfm
+#group by entry
+#album A Seat at the Table - Solange
+#album Blonde - Frank Ocean
+#album Lemonade - Beyoncé
+#album Blackstar - David Bowie
+#album The Life of Pablo - Kanye West
+#album Coloring Book - Chance the Rapper
+#album We got it from Here... Thank You 4 Your service - A Tribe Called Quest
+#album Hopelessness - ANOHNI
+#album My Woman - Angel Olsen
+#album A Moon Shaped Pool - Radiohead
+#album Atrocity Exhibition - Danny Brown
+#album 22, A Million - Bon Iver
+#album Malibu - Anderson .Paak
+#album Freetown Sound - Blood Orange
+#album Skeleton Tree - Nick Cave & the Bad Seeds
+#album untitled unmastered - Kendrick Lamar
+#album You Want It Darker - Leonard Cohen
+#album Puberty 2 - Mitski
+#album ANTI - Rihanna
+#album Sirens - Nicolas Jaar
+#album JEFFERY - Young Thug
+#album Still Brazy - YG
+#album Blood Bitch - Jenny Hval
+#album Teens of Denial - Car Seat Headrest
+#album 99.9% - Kaytranada
+#album Human Performance - Parquet Courts
+#album Telefone - Noname
+#album Yes Lawd! - NxWorries
+#album EARS - Kaitlyn Aurelia Smith
+#album Emily's D+Evolution - Esperanza Spalding
+#album Light Upon the Lake - Whitney
+#album A Mulher do Fim do Mundo - Elza Soares
+#album blackSUMMERS'night - Maxwell
+#album Singing Saw - Kevin Morby
+#album I Had a Dream That You Were Mine - Hamilton Leithauser
+#album HEAVN - Jamila Woods
+#album We Are KING - KING
+#album Blank Face LP - Schoolboy Q
+#album DJ-Kicks - Moodymann
+#album A Cosmic Rhythm With Each Stroke - Vijay Iyer
+#album For Those Of You Who Have Never - Huerco S.
+#album Prima Donna - Vince Staples
+#album Front Row Seat to Earth - Weyes Blood
+#album Islah - Kevin Gates
+#album Modern Country - William Tyler
+#album Cardinal - Pinegrove
+#album A Good Night in the Ghetto - Kamaiyah
+#album Next Thing - Frankie Cosmos
+#album Pool - Porches
+#album Savage Mode - 21 Savage

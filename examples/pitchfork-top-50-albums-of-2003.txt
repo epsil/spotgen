@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2003
+## http://pitchfork.com/features/lists-and-guides/5925-top-50-albums-of-2003/
+#order by lastfm
+#group by entry
+#album Echoes - The Rapture
+#album The Lemon of Pink - The Books
+#album Greetings from Michigan - Sufjan Stevens
+#album Hail to the Thief - Radiohead
+#album Up in Flames - Manitoba
+#album One Word Extinguisher - Prefuse 73
+#album Chutes Too Narrow - The Shins
+#album Dead Cities, Red Seas & Lost Ghosts - M83
+#album You Forgot It in People - Broken Social Scene
+#album Who Will Cut Our Hair When We're Gone? - The Unicorns
+#album Room on Fire - The Strokes
+#album Boy in Da Corner - Dizzee Rascal
+#album Afro Finger & Gel - Mu
+#album Guitar Romantic - The Exploding Hearts
+#album Rounds - Four Tet
+#album Apple O' - Deerhoof
+#album The Black Album - Jay-Z
+#album The Meadowlands - The Wrens
+#album Hope - Non-Prophets
+#album Take Me to Your Leader - King Geedorah
+#album Magnolia Electric Co. - Songs: Ohia
+#album Speakerboxxx - Outkast
+#album Wonderful Rainbow - Lightning Bolt
+#album The Violet Hour - The Clientele
+#album Vaudeville Villain - Viktor Vaughn
+#album Hearts of Oak - Ted Leo
+#album Berlinette - Ellen Allien
+#album Young Liars - TV on the Radio
+#album Give Up - The Postal Service
+#album Bazooka Tooth - Aesop Rock
+#album Her Majesty The Decemberists - The Decemberists
+#album I Am the Fun Blame Monster - Menomena
+#album It Still Moves - My Morning Jacket
+#album You Are Free - Cat Power
+#album Castaways & Cutouts - The Decemberists
+#album D-D-Don't Stop the Beat - Junior Senior
+#album Ghetto Pop Life - Danger Mouse + Jemini
+#album Quicksand/Cradlesnakes - Califone
+#album Everything Is Good Here - The Angels of Light
+#album Here Comes the Indian - Animal Collective
+#album Permission to Land - The Darkness
+#album HaHa Sound - Broadcast
+#album Gallowsbird's Bark - The Fiery Furnaces
+#album Bousha Blue Blazes - Alejandra and Aeron
+#album No P. or D. - Ms. John Soda
+#album Transfiguration of Vincent - M. Ward
+#album The Magic Lantern - George
+#album All Your Summer Songs - Saturday Looks Good to Me
+#album Spring - Cyann & Ben
+#album 6 - Supersilent

@@ -1,0 +1,24 @@
+## Pitchfork's Top 20 Albums of 2000
+## http://pitchfork.com/features/lists-and-guides/5816-top-20-albums-of-2000/
+#order by lastfm
+#group by entry
+#album Kid A - Radiohead
+#album Ágætis Byrjun - Sigur Rós
+#album The Moon and Antarctica - Modest Mouse
+#album And Then Nothing Turned Itself Inside-Out - Yo La Tengo
+#album Lift Your Skinny Fists like Antennas to Heaven - Godspeed You Black Emperor!
+#album The Sophtware Slump - Grandaddy
+#album It Was Hot, We Stayed in the Water - Microphones
+#album Rome - Les Savy Fav
+#album Internal Wrangler - Clinic
+#album Dongs of Sevotion - Smog
+#album No Style EP - King Biscuit Time
+#album Pop - Gas
+#album Crooked Fingers - Crooked Fingers
+#album Mwng - Super Furry Animals
+#album Believo! - Enon
+#album All Hands on the Bad One - Sleater-Kinney
+#album Voice Brother and Sister - Summer Hymns
+#album The Hour of Bewilderbeast - Badly Drawn Boy
+#album Tiny Reminders - Two Lone Swordsmen
+#album Fig. 5 - Jackie-O Motherfucker

@@ -1,0 +1,54 @@
+## Pitchfork's Top 50 Albums of 2007
+## http://pitchfork.com/features/lists-and-guides/6753-top-50-albums-of-2007/
+#order by lastfm
+#group by entry
+#album Person Pitch - Panda Bear
+#album Sound of Silver - LCD Soundsystem
+#album Kala - M.I.A.
+#album In Rainbows - Radiohead
+#album Hissing Fauna, Are You the Destroyer? - Of Montreal
+#album Strawberry Jam - Animal Collective
+#album Ga Ga Ga Ga Ga - Spoon
+#album Mirrored - Battles
+#album From Here We Go Sublime - The Field
+#album Untrue - Burial
+#album Night Falls Over Kortedala - Jens Lekman
+#album Weirdo Rippers - No Age
+#album American Gangster - Jay-Z
+#album Cryptograms / Fluorescent Grey - Deerhunter
+#album † - Justice
+#album Da Drought 3 - Lil Wayne
+#album Boxer - The National
+#album Graduation - Kanye West
+#album The Reminder - Feist
+#album Liars - Liars
+#album Rise Above - Dirty Projectors
+#album The Stage Names - Okkervil River
+#album Yearbook 1 - Studio
+#album Spiderman of the Rings - Dan Deacon
+#album A New Chance / New Waves - The Tough Alliance
+#album After Dark - Various Artists
+#album Neon Bible - Arcade Fire
+#album Beyond - Dinosaur Jr.
+#album For Emma, Forever Ago - Bon Iver
+#album Andorra - Caribou
+#album Friend Opportunity - Deerhoof
+#album Disco Romance - Sally Shapiro
+#album What Is?! - King Khan & the Shrines
+#album The Cloud of Unknowing - James Blackshaw
+#album Good Bad Not Evil - Black Lips
+#album The Shepherd's Dog - Iron and Wine
+#album Friend EP - Grizzly Bear
+#album 8 Diagrams - Wu-Tang Clan
+#album Icky Thump - The White Stripes
+#album The Flying Club Cup / Lon Gisland - Beirut
+#album Live at the Annandale Hotel - Life Without Buildings
+#album The Big Doe Rehab - Ghostface Killah
+#album And Their Refinement of the Decline - Stars of the Lid
+#album Let's Stay Friends - Les Savy Fav
+#album Fabric 36 - Ricardo Villalobos
+#album Songs III: Bird on the Water - Marissa Nadler
+#album All Hour Cymbals - Yeasayer
+#album Comicopera - Robert Wyatt
+#album Maths + English - Dizzee Rascal
+#album Aman Iman: Water Is Life - Tinariwen
