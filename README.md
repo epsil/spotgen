@@ -20,8 +20,12 @@ The source code is located at [GitHub](https://github.com/epsil/spotify-js). To 
 
 Alternatively, download a [ZIP file](https://github.com/epsil/spotify-js/archive/master.zip).
 
+The script requires [Node](https://nodejs.org/) to be installed.
+
 Usage
 -----
+
+Run the script with `./spotify.js` or `node spotify`:
 
     $ ./spotify.js input.txt output.txt
 
