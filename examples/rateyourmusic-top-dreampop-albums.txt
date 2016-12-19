@@ -1,0 +1,104 @@
+## Rate Your Music's Top Dream Pop Albums
+## https://rateyourmusic.com/genre/Dream+Pop/
+#order by lastfm
+#group by entry
+#album Souvlaki - Slowdive
+#album Treasure - Cocteau Twins
+#album Heaven or Las Vegas - Cocteau Twins
+#album Long Season - Fishmans
+#album Isn't Anything - My Bloody Valentine
+#album On Fire - Galaxie 500
+#album And Then Nothing Turned Itself Inside-Out - Yo La Tengo
+#album Teen Dream - Beach House
+#album Just for a Day - Slowdive
+#album Pygmalion - Slowdive
+#album Floating Into the Night - Julee Cruise
+#album Uwaga! Jedzie tramwaj - Lenny Valentino
+#album LC - The Durutti Column
+#album Uchū Nippon Setagaya - Fishmans
+#album So Tonight That I Might See - Mazzy Star
+#album Bloom - Beach House
+#album Head Over Heels - Cocteau Twins
+#album Lazer Guided Melodies - Spiritualized
+#album Blue Bell Knoll - Cocteau Twins
+#album It'll End in Tears - This Mortal Coil
+#album Frengers - Mew
+#album Felt Mountain - Goldfrapp
+#album Starfish - The Church
+#album Lesser Matters - The Radio Dept.
+#album The Noise Made by People - Broadcast
+#album Victorialand - Cocteau Twins
+#album And the Glass Handed Kites - Mew
+#album xx - The xx
+#album Snowball - The Field Mice
+#album HaHa Sound - Broadcast
+#album Priest = Aura - The Church
+#album Lost Souls - Doves
+#album Here Comes Everybody - The Wake
+#album m b v - My Bloody Valentine
+#album Pure Phase - Spiritualized Electric Mainline
+#album Saturdays = Youth - M83
+#album Among My Swan - Mazzy Star
+#album And She Closed Her Eyes - Stina Nordenstam
+#album Filigree & Shadow - This Mortal Coil
+#album She Hangs Brightly - Mazzy Star
+#album 呼吸 - Lily Chou-Chou
+#album Loved - Cranes
+#album 23 - Blonde Redhead
+#album December - For Against
+#album The Last Broadcast - Doves
+#album Low Birth Weight - Piano Magic
+#album Quique - Seefeel
+#album The Death of Cool - Kitchens of Distinction
+#album The Troubled Sleep of Piano Magic - Piano Magic
+#album For Keeps - The Field Mice
+#album Forever - Cranes
+#album Together We're Stranger - No-Man
+#album Kūchū Camp - フィッシュマンズ
+#album Split - Lush
+#album The World Is Saved - Stina Nordenstam
+#album Vini Reilly - The Durutti Column
+#album The Moon and the Melodies - Harold Budd
+#album Ask Me Tomorrow - Mojave 3
+#album This Is Our Music - Galaxie 500
+#album Með suð í eyrum við spilum endalaust - Sigur Rós
+#album Different Stars - Trespassers William
+#album The Comforts of Madness - Pale Saints
+#album Bavarian Fruit Bread - Hope Sandoval & the Warm Inventions
+#album Shimmering, Warm & Bright - Bel Canto
+#album Loveheart - Merz
+#album In Ribbons - Pale Saints
+#album Artists' Rifles - Piano Magic
+#album H- omesick for Space
+#album Sounds of the Satellites - Laika
+#album Amor amarillo - Gustavo Cerati
+#album Волшебство - Flёur
+#album Wires - Art of Fighting
+#album A New Stereophonic Sound Spectacular - Hooverphonic
+#album Out of Tune - Mojave 3
+#album Before the Dawn Heals Us - M83
+#album Visions - Grimes
+#album Personne ne le fera pour nous - Mendelson
+#album Excerpts From a Love Circus - Lisa Germano
+#album Four-Calendar Café - Cocteau Twins
+#album The Bells of 1 2 - Sol Seppy
+#album Leave Here a Stranger - Starflyer 59
+#album The Voice of Love - Julee Cruise
+#album Love Is Hell - Kitchens of Distinction
+#album Lunapark - Luna²
+#album Connectivity! - Mahogany
+#album Précis - Benoît Pioulard
+#album Dynamite - Stina Nordenstam
+#album The Ocean Blue - The Ocean Blue
+#album Hurry Up, We're Dreaming - M83
+#album Illuminate - Lydia
+#album Sargasso Sea - Pram
+#album Devotion - Beach House
+#album L'avventura - Britta Phillips & Dean Wareham
+#album Сияние - Flёur
+#album The Violet Hour - The Clientele
+#album Dream It Down - Underground Lovers
+#album Tu hoguera está ardiendo - klaus&kinski
+#album Citrus - Asobi Seksu
+#album Diminuendo - Lowlife
+#album Pacific UV - Pacific UV

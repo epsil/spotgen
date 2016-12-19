@@ -1,0 +1,104 @@
+## Rate Your Music's Top Albums of 2016
+## https://rateyourmusic.com/charts/top/album/2016
+#order by lastfm
+#group by entry
+#album Blackstar - David Bowie
+#album A Moon Shaped Pool - Radiohead
+#album Before the Dawn - Kate Bush
+#album Radical Action - King Crimson
+#album Atrocity Exhibition - Danny Brown
+#album We got it from Here - A Tribe Called Quest
+#album Terminal Redux - Vektor
+#album Skeleton Tree - Nick Cave & The Bad Seeds
+#album The Glowing Man - Swans
+#album Live in Toronto - King Crimson
+#album Winter's Gate - Insomnium
+#album untitled unmastered - Kendrick Lamar
+#album Blonde - Frank Ocean
+#album elseq 1-5 - Autechre
+#album Shrines of Paralysis - Ulcerate
+#album The Synarchy of Molten Bones - Deathspell Omega
+#album Jumalten aika - Moonsorrow
+#album The Impossible Kid - Aesop Rock
+#album Teens of Denial - Car Seat Headrest
+#album Wildflower - The Avalanches
+#album Värähtelijä - Oranssi Pazuzu
+#album Dissociation - The Dillinger Escape Plan
+#album Bottomless Pit - Death Grips
+#album Mariner - Cult of Luna & Julie Christmas
+#album You Want It Darker - Leonard Cohen
+#album Runaljod Ragnarok - Wardruna
+#album Księżyc milczy luty - Furia
+#album The Violent Sleep of Reason - Meshuggah
+#album Worry - Jeff Rosenstock
+#album Voices - Wormrot
+#album Sleep Cycle - Deakin
+#album Plays the Music of Twin Peaks - Xiu Xiu
+#album Act V: Hymns With the Devil in Confessional - The Dear Hunter
+#album Imperial - Denzel Curry
+#album Malibu - Anderson .Paak
+#album Live in San Francisco - Thee Oh Sees
+#album Community - Graham Lambkin
+#album elseq 4 - Autechre
+#album MM3 - Metá Metá
+#album Vessels - Be'lakor
+#album Rheia - Oathbreaker
+#album Niechęć - Niechęć
+#album Theories of Flight - Fates Warning
+#album Nonagon Infinity - King Gizzard and the Lizard Wizard
+#album MY WOMAN - Angel Olsen
+#album You Will Never Be One of Us - Nails
+#album Triangle - Schammasch
+#album On Strange Loops - Mithras
+#album A Seat at the Table - Solange
+#album A Weird Exits - Thee Oh Sees
+#album Stage Four - Touché Amoré
+#album Kodama - Alcest
+#album case / lang / veirs - case / lang / veirs
+#album Atoma - Dark Tranquillity
+#album LAM - LAM
+#album Luminiferous Aether - Mare Cognitum
+#album A Sailor's Guide to Earth - Sturgill Simpson
+#album Affinity - Haken
+#album Fires Within Fires - Neurosis
+#album Brotherhood of the Snake - Testament
+#album Starspawn - Blood Incantation
+#album For This We Fought the Battle of Ages - Subrosa
+#album Transcendence - Devin Townsend Project
+#album Sirens - Nicolas Jaar
+#album Wisdom of Elders - Shabaka and the Ancestors
+#album Akróasis - Obscura
+#album Remnants of Expansion - Krypts
+#album Feelin Kinda Free - The Drones
+#album Guardians - Saor
+#album The Northern Sanctuary - Witherscape
+#album Love & Hate - Michael Kiwanuka
+#album The Holographic Principle - Epica
+#album Stranger Things, Volume One - Kyle Dixon & Michael Stein
+#album Make Happy - Bo Burnham
+#album Hunted - Khemmis
+#album F*** Everyone and Run - Marillion
+#album Wider Than the Sky - 40 Watt Sun
+#album The Fall of Hearts - Katatonia
+#album False Readings On - Eluvium
+#album Le dernier crépuscule - Chthe'ilist
+#album Beyond the Fleeting Gales - Crying
+#album Wildfire - Deströyer 666
+#album IV - BADBADNOTGOOD
+#album Hour of the Nightingale - Trees of Eternity
+#album Puberty 2 - Mitski
+#album Bloodshed Across the Empyrean Altar Beyond the Celestial Zenith - Inquisition
+#album Arktis - Ihsahn
+#album Your Wilderness - The Pineapple Thief
+#album Proponent for Sentience - Allegaeon
+#album Honor Killed the Samurai - Ka
+#album Metsutan: Songs of the Void - Whispered
+#album The Life of Pablo - Kanye West
+#album We Be All Africans - Idris Ackamoor & The Pyramids
+#album The Hope Six Demolition Project - PJ Harvey
+#album The Calm Before - Matt Elliott
+#album Battle Cry - Judas Priest
+#album Meta - Thy Catafalque
+#album Let Them Eat Chaos - Kate Tempest
+#album Legacy - Myrath
+#album Slow Forever - Cobalt

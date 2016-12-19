@@ -1,0 +1,104 @@
+## Rate Your Music's Top Shoegaze Albums
+## https://rateyourmusic.com/genre/Shoegaze/
+#order by lastfm
+#group by entry
+#album Loveless - My Bloody Valentine
+#album Souvlaki - Slowdive
+#album Isn't Anything - My Bloody Valentine
+#album Nowhere - Ride
+#album Deathconsciousness - Have a Nice Life
+#album Just for a Day - Slowdive
+#album Weighing Souls With Sand - The Angelic Process
+#album Souvenirs d'un autre monde - Alcest
+#album Jesu - Jesu
+#album Going Blank Again - Ride
+#album A Storm in Heaven - Verve
+#album Velocity : Design : Comfort - Sweet Trip
+#album m b v - My Bloody Valentine
+#album Dynamo - Soda Stereo
+#album They Spent Their Wild Youthful Days in the Glittering World of the Salons - Swirlies
+#album Chrome - Catherine Wheel
+#album Starflyer 59 - Starflyer 59
+#album Ferment - Catherine Wheel
+#album Mezcal Head - Swervedriver
+#album The Death of Cool - Kitchens of Distinction
+#album Silver - Starflyer 59
+#album Strange Free World - Kitchens of Distinction
+#album Ujubasajuba - Kairon; IRSE!
+#album Raise - Swervedriver
+#album Primary Colours - The Horrors
+#album Split - Lush
+#album Солнцеворот - Гражданская оборона
+#album The Texas-Jerusalem Crossroads - Lift to Experience
+#album Exploding Head - A Place to Bury Strangers
+#album Horsedrawn Wishes - Rollerskate Skinny
+#album Constance - Southpacific
+#album Lapsed - Bardo Pond
+#album The Comforts of Madness - Pale Saints
+#album Flying Saucer Attack - Flying Saucer Attack
+#album Raising Your Voice - Hammock
+#album In Ribbons - Pale Saints
+#album Newave - Coaltar of the Deepers
+#album Waves - Ride
+#album Methodrone - The Brian Jonestown Massacre
+#album Finelines - My Vitriol
+#album Love Is Hell - Kitchens of Distinction
+#album Against Perfection - Adorable
+#album Robot World - Bailter Space
+#album Everything's Alright Forever - The Boo Radleys
+#album Whirlpool - Chapterhouse
+#album Citrus - Asobi Seksu
+#album Stereo Musicale - Blind Mr. Jones
+#album Return Journey - Sun Dial
+#album Kodama - Alcest
+#album Carnavas - Silversun Pickups
+#album No Thank You - Coaltar of the Deepers
+#album Beat - Bowery Electric
+#album Septembre et ses dernières pensées - Les Discrets
+#album Submarine - Whipping Boy
+#album The Unnatural World - Have a Nice Life
+#album Shot Forth Self Living - Medicine
+#album Love Songs for the Chemical Generation - Daniel Land & The Modern Painters
+#album Невыносимая лёгкость бытия - Гражданская оборона
+#album Susurrate - Ecstasy of St. Theresa
+#album Spooky - Lush
+#album Yukari Telepath - Coaltar of the Deepers
+#album Eccsame the Photon Band - Lilys
+#album Conqueror - Jesu
+#album Kenotic - Hammock
+#album Turning Into Small - All Natural Lemon & Lime Flavors
+#album Cuckoo - Curve
+#album Xuvetyn - Lovesliescrushing
+#album In the Presence of Nothing - Lilys
+#album Bowery Electric - Bowery Electric
+#album A Place to Bury Strangers - A Place to Bury Strangers
+#album Vortura - Bailter Space
+#album The Silver Album - The December Sound
+#album Americana - Starflyer 59
+#album Frayed Knots - Luxurious Bags
+#album Satin Black - Paik
+#album All About Satellites and Spaceships - 7% Solution
+#album The Word and the Flesh - Band of Susans
+#album Reflecter - Sun Dial
+#album New Lands - Flying Saucer Attack
+#album Grandeur of Hair - The Goslings
+#album Just in Case We'll Never Meet Again - Klimt 1918
+#album Doppelgänger - Curve
+#album Continental - Robin Guthrie
+#album So Long, Scarecrow - Scarling
+#album Les voyages de l'âme - Alcest
+#album Leaving - Planning for Burial
+#album Shady Ways Anticlockwise - The Naked Souls
+#album The Buried Life - Medicine
+#album Gold - Bethany Curve
+#album Delaware - Drop Nineteens
+#album Taste - The Telescopes
+#album There I Go, Daydreamer - Mira
+#album Ejector Seat Reservation - Swervedriver
+#album Synthstatic - Skywave
+#album Even in Silence - Jessica Bailiff
+#album Serena-Maneesh - Serena Maneesh
+#album The Big Roar - The Joy Formidable
+#album You Brought Us Here - Bethany Curve
+#album Bright Channel - Bright Channel
+#album Drowned in a Sea of Sound - The Daysleepers

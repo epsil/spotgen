@@ -1,4 +1,4 @@
-[Spotify Playlist Converter](https://github.com/epsil/spotify-js)
+[Spotify Playlist Generator](https://github.com/epsil/spotify-js)
 =================================================================
 
 > A command-line script for generating Spotify playlists.
@@ -97,7 +97,7 @@ This will create a Last.fm-ordered playlist where tracks from the same album are
 
 ### Other tips
 
-See [tips](Tips.md) for more information.
+See [tips](Tips.md) for more information regarding playlist conversion.
 
 See also
 --------
