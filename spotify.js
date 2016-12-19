@@ -24,7 +24,7 @@ spotify.Playlist = function (str) {
   /**
    * Playlist grouping.
    */
-  this.grouping = true
+  this.grouping = null
 
   /**
    * Unique flag.
@@ -183,8 +183,9 @@ spotify.Playlist.prototype.group = function () {
   if (this.grouping === 'artist') {
     return this.groupByArtist()
   } else if (this.grouping === 'album') {
-    return this.refreshTracks()
-      .then(this.groupByAlbum)
+    return this.refreshTracks().then(function () {
+      return this.groupByAlbum()
+    })
   } else if (this.grouping === 'entry') {
     return this.groupByEntry()
   }
@@ -197,11 +198,13 @@ spotify.Playlist.prototype.group = function () {
 spotify.Playlist.prototype.toString = function () {
   var result = ''
   this.entries.forEach(function (track) {
-    console.log(track.toString())
-    console.log(track.lastfm())
-    var uri = track.uri()
-    if (uri !== '') {
-      result += uri + '\n'
+    if (track instanceof spotify.Track) {
+      console.log(track.toString())
+      console.log(track.lastfm())
+      var uri = track.uri()
+      if (uri !== '') {
+        result += uri + '\n'
+      }
     }
   })
   return result.trim()
@@ -288,7 +291,9 @@ spotify.Queue.prototype.sort = function (fn) {
 spotify.Queue.prototype.contains = function (obj) {
   for (var i in this.queue) {
     var entry = this.queue[i]
-    if ((entry.equals && entry.equals(obj)) ||
+    if ((entry && entry.equals &&
+         obj && obj.equals &&
+         entry.equals(obj)) ||
         entry === obj) {
       return true
     }

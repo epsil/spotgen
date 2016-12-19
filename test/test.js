@@ -163,6 +163,7 @@ describe('spotify.js', function () {
     it('should create an ordered playlist', function () {
       var playlist = new spotify.Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
       var promise = playlist.dispatch()
+      // FIXME: this is really brittle
       return promise.should.eventually.eql('spotify:track:5jwDjl5FofuDgwITfcROhq\nspotify:track:25BfjHTtaDCrKrq9hkr10U')
     })
 
@@ -181,6 +182,7 @@ describe('spotify.js', function () {
     it('should dispatch all entries', function () {
       var playlist = new spotify.Playlist('test1\ntest2')
       var promise = playlist.dispatch()
+      // FIXME: this is really brittle
       return promise.should.eventually.eql('spotify:track:5jwDjl5FofuDgwITfcROhq\nspotify:track:25BfjHTtaDCrKrq9hkr10U')
     })
   })

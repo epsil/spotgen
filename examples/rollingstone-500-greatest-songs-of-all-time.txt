@@ -75,7 +75,7 @@ Papa's Got a Brand New Bag - James Brown
 Summertime Blues - Eddie Cochran
 Superstition - Stevie Wonder
 Whole Lotta Love - Led Zeppelin
-Strawberry Fields Forever -The Beatles
+Strawberry Fields Forever - The Beatles
 Mystery Train - Elvis Presley
 I Got You (I Feel Good) - James Brown
 Mr. Tambourine Man - The Byrds
@@ -119,7 +119,7 @@ Honky Tonk Women - The Rolling Stones
 Take Me to the River  - Al Green
 Shout (Parts 1 and 2)] - The Isley Brothers
 Go Your Own Way - Fleetwood Mac
-I Want You Back -The Jackson 5
+I Want You Back - The Jackson 5
 Stand By Me - Ben E. King
 House of the Rising Sun - The Animals
 It's a Man's Man's Man's World - James Brown
@@ -187,7 +187,7 @@ Please Please Me - The Beatles
 Desolation Row - Bob Dylan
 I Never Loved a Man (The Way I Love You) - Aretha Franklin
 Back in Black - AC/DC
-Who'll Stop the Rain -Creedence Clearwater Revival
+Who'll Stop the Rain - Creedence Clearwater Revival
 Stayin' Alive - The Bee Gees
 Knocking on Heaven's Door - Bob Dylan
 Free Bird - Lynyrd Skynyrd
@@ -246,7 +246,7 @@ Love Shack - The B-52's
 Gimme Some Lovin' - The Spencer Davis Group
 The Night They Drove Old Dixie Down - The Band
 (Your Love Keeps Lifting Me) Higher and Higher - Jackie Wilson
-Hot Fun in the Summertime -Sly and the Family Stone
+Hot Fun in the Summertime - Sly and the Family Stone
 Rappers Delight - The Sugarhill Gang
 Chain of Fools - Aretha Franklin
 Paranoid - Black Sabbath
@@ -375,7 +375,7 @@ Marquee Moon - Television
 Wonderful World - Sam Cooke
 Brown Eyed Handsome Man - Chuck Berry
 Another Brick in the Wall Part 2 - Pink Floyd
-Fake Plastic Trees -Radiohead
+Fake Plastic Trees - Radiohead
 Hit the Road Jack - Ray Charles
 Pride (In The Name of Love) - U2
 Radio Free Europe - R.E.M.
@@ -475,7 +475,7 @@ Where Did Our Love Go - The Supremes
 Do Right Woman, Do Right Man - Aretha Franklin
 One Nation Under a Groove - Funkadelic
 Sabotage - Beastie Boys
-I Want to Know What Love Is -Foreigner
+I Want to Know What Love Is - Foreigner
 Super Freak - Rick James
 White Rabbit - Jefferson Airplane
 Lady Marmalade - Labelle
