@@ -718,7 +718,7 @@ spotify.Album.prototype.dispatch = function () {
     })
   } else if (this.albumResponse) {
     return this.fetchAlbum().then(function (response) {
-      return this.createQueue(response)
+      return self.createQueue(response)
     })
   } else {
     return this.searchForAlbum(this.entry).then(function () {
