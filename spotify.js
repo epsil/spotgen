@@ -365,19 +365,12 @@ spotify.Queue.prototype.flatten = function () {
  * @return {Queue} A list of results.
  */
 spotify.Queue.prototype.resolveAll = function (fn) {
-  // we could have used Promise.all(), but we choose to roll our
-  // own, sequential implementation to avoid overloading the server
-  var result = new spotify.Queue()
-  var ready = Promise.resolve(null)
-  this.queue.forEach(function (entry) {
-    ready = ready.then(function () {
-      return fn(entry)
-    }).then(function (value) {
-      result.add(value)
-    }, function () { })
-  })
-  return ready.then(function () {
-    return result
+  return spotify.promiseAll(this.toArray().map(function (entry) {
+    return new Promise(function(resolve, reject) {
+      resolve(fn(entry))
+    })
+  })).then(function (arr) {
+    return new spotify.Queue(arr)
   })
 }
 
@@ -885,6 +878,23 @@ spotify.Artist.prototype.isSearchResponse = function (response) {
     response.artists &&
     response.artists.items[0] &&
     response.artists.items[0].id
+}
+
+spotify.promiseAll = function (promises) {
+  // we could have used Promise.all(), but we choose to roll our
+  // own, sequential implementation to avoid overloading the server
+  var accumulator = []
+  var ready = Promise.resolve(null)
+  promises.forEach(function (promise, ndx) {
+    ready = ready.then(function () {
+      return promise
+    }).then(function (value) {
+      accumulator[ndx] = value
+    }, function () { })
+  })
+  return ready.then(function () {
+    return accumulator
+  })
 }
 
 /**
