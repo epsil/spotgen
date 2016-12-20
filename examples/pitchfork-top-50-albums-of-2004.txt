@@ -1,7 +1,5 @@
 ## Pitchfork's Top 50 Albums of 2004
 ## http://pitchfork.com/features/lists-and-guides/5934-top-50-albums-of-2004/
-#order by lastfm
-#group by entry
 #album Funeral - The Arcade Fire
 #album Sung Tongs - Animal Collective
 #album A Grand Don't Come for Free - The Streets

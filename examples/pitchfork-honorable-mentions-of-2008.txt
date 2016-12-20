@@ -1,7 +1,5 @@
 ## Pitchfork's Honorable Mentions of 2008
 ## http://pitchfork.com/features/lists-and-guides/7571-albums-of-the-year-honorable-mention/
-#order by lastfm
-#group by entry
 #album Skeleton - Abe Vigoda
 #album Carried to Dust - Calexico
 #album In Ear Park - Department of Eagles

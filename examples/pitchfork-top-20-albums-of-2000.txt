@@ -1,7 +1,5 @@
 ## Pitchfork's Top 20 Albums of 2000
 ## http://pitchfork.com/features/lists-and-guides/5816-top-20-albums-of-2000/
-#order by lastfm
-#group by entry
 #album Kid A - Radiohead
 #album Ágætis Byrjun - Sigur Rós
 #album The Moon and Antarctica - Modest Mouse

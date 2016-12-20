@@ -1,7 +1,5 @@
 ## Pitchfork's Honorable Mentions of 2010
 ## http://pitchfork.com/features/lists-and-guides/7894-albums-of-the-year-2010-honorable-mention/
-#order by lastfm
-#group by entry
 #album Splazsh - Actress
 #album Cerulean - Baths
 #album White Magic - ceo

@@ -1,7 +1,5 @@
 ## Rate Your Music's Top Dream Pop Albums
 ## https://rateyourmusic.com/genre/Dream+Pop/
-#order by lastfm
-#group by entry
 #album Souvlaki - Slowdive
 #album Treasure - Cocteau Twins
 #album Heaven or Las Vegas - Cocteau Twins

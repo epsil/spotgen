@@ -1,7 +1,5 @@
 ## Pitchfork's Top 50 Albums of 2002
 ## http://pitchfork.com/features/lists-and-guides/5888-top-50-albums-of-2002/
-#order by lastfm
-#group by entry
 #album Turn on the Bright Lights - Interpol
 #album Yankee Hotel Foxtrot - Wilco
 #album Source Tags & Codes - And You Will Know Us by the Trail of Dead

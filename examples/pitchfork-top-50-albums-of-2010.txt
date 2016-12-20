@@ -1,7 +1,5 @@
 ## Pitchfork's Top 50 Albums of 2010
 ## http://pitchfork.com/features/lists-and-guides/7893-the-top-50-albums-of-2010/
-#order by lastfm
-#group by entry
 #album My Beautiful Dark Twisted Fantasy - Kanye West
 #album This Is Happening - LCD Soundsystem
 #album Halcyon Digest - Deerhunter

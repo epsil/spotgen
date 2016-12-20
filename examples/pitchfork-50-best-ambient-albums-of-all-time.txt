@@ -1,7 +1,5 @@
 ## Pitchfork's 50 Best Ambient Albums of All Time
 ## http://pitchfork.com/features/lists-and-guides/9948-the-50-best-ambient-albums-of-all-time/
-#order by lastfm
-#group by entry
 #album Ambient 1: Music for Airports - Brian Eno
 #album Selected Ambient Works Volume II - Aphex Twin
 #album The Disintegration Loops - William Basinski

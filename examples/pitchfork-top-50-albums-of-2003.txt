@@ -1,7 +1,5 @@
 ## Pitchfork's Top 50 Albums of 2003
 ## http://pitchfork.com/features/lists-and-guides/5925-top-50-albums-of-2003/
-#order by lastfm
-#group by entry
 #album Echoes - The Rapture
 #album The Lemon of Pink - The Books
 #album Greetings from Michigan - Sufjan Stevens

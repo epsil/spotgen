@@ -1,7 +1,5 @@
 ## Pitchfork's Honorable Mentions of 2011
 ## http://pitchfork.com/features/lists-and-guides/8730-albums-of-the-year-honorable-mention/
-#order by lastfm
-#group by entry
 #album Passed Me By - Andy Stott
 #album We Stay Together - Andy Stott
 #album Return of 4Eva - Big K.R.I.T.

@@ -1,7 +1,5 @@
 ## Pitchfork's Top 50 Albums of 2006
 ## http://pitchfork.com/features/lists-and-guides/6510-top-50-albums-of-2006/
-#order by lastfm
-#group by entry
 #album Silent Shout - The Knife
 #album Return to Cookie Mountain - TV on the Radio
 #album Ys - Joanna Newsom

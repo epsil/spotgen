@@ -1,7 +1,5 @@
 ## Pitchfork's Honorable Mentions of 2015
 ## http://pitchfork.com/features/lists-and-guides/9768-albums-of-the-year-2015-honorable-mention/
-#order by lastfm
-#group by entry
 #album Teens of Style - Car Seat Headrest
 #album American Drift - Elysia Crampton
 #album Invite the Light - Dam-Funk

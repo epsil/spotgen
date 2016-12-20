@@ -1,7 +1,5 @@
 ## Pitchfork's 50 Best Albums of 2014
 ## http://pitchfork.com/features/lists-and-guides/9558-the-50-best-albums-of-2014/
-#order by lastfm
-#group by entry
 #album Run the Jewels 2 - Run the Jewels
 #album LP1 - FKA twigs
 #album Lost in the Dream - The War on Drugs

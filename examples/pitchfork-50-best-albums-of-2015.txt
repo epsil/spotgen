@@ -1,7 +1,5 @@
 ## Pitchfork's 50 Best Albums of 2015
 ## http://pitchfork.com/features/lists-and-guides/9764-the-50-best-albums-of-2015/
-#order by lastfm
-#group by entry
 #album To Pimp a Butterfly - Kendrick Lamar
 #album In Colour - Jamie xx
 #album Art Angels - Grimes

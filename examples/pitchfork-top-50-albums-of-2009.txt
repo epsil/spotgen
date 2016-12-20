@@ -1,7 +1,5 @@
 ## Pitchfork's 50 Best Albums of 2009
 ## http://pitchfork.com/features/lists-and-guides/7744-the-top-50-albums-of-2009/
-#order by lastfm
-#group by entry
 #album Merriweather Post Pavilion - Animal Collective
 #album Bitte Orca - Dirty Projectors
 #album The xx - The xx

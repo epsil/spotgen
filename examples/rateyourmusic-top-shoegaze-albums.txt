@@ -1,7 +1,5 @@
 ## Rate Your Music's Top Shoegaze Albums
 ## https://rateyourmusic.com/genre/Shoegaze/
-#order by lastfm
-#group by entry
 #album Loveless - My Bloody Valentine
 #album Souvlaki - Slowdive
 #album Isn't Anything - My Bloody Valentine

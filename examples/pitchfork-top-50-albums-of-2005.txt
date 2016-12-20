@@ -1,7 +1,5 @@
 ## Pitchfork's Top 50 Albums of 2005
 ## http://pitchfork.com/features/lists-and-guides/6222-top-50-albums-of-2005/
-#order by lastfm
-#group by entry
 #album Illinois - Sufjan Stevens
 #album Late Registration - Kanye West
 #album Bang Bang Rock & Roll - Art Brut

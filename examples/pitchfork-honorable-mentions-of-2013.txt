@@ -1,7 +1,5 @@
 ## Pitchfork's Honorable Mentions of 2013
 ## http://pitchfork.com/features/lists-and-guides/9292-albums-of-the-year-honorable-mention/
-#order by lastfm
-#group by entry
 #album Trap Lord - A$AP Ferg
 #album Rival Dealer - Burial
 #album Push The Sky Away - Nick Cave & the Bad Seeds

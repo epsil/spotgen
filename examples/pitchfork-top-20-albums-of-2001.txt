@@ -1,7 +1,5 @@
 ## Pitchfork's Top 20 Albums of 2001
 ## http://pitchfork.com/features/lists-and-guides/5844-top-20-albums-of-2001/
-#order by lastfm
-#group by entry
 #album The Glow, Pt. 2 - Microphones
 #album Endless Summer - Fennesz
 #album Since I Left You - Avalanches

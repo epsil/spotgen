@@ -1,7 +1,5 @@
 ## Rate Your Music's Top Albums of 2016
 ## https://rateyourmusic.com/charts/top/album/2016
-#order by lastfm
-#group by entry
 #album Blackstar - David Bowie
 #album A Moon Shaped Pool - Radiohead
 #album Before the Dawn - Kate Bush
