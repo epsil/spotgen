@@ -221,11 +221,22 @@ spotify.Playlist.prototype.print = function () {
  * Queue of playlist entries.
  * @constructor
  */
-spotify.Queue = function () {
+spotify.Queue = function (arr) {
   /**
    * Array of entries.
    */
   this.queue = []
+
+  if (arr) {
+    this.queue = arr
+  }
+}
+
+/**
+ * Convert to array.
+ */
+spotify.Queue.prototype.toArray = function () {
+  return this.queue
 }
 
 /**
@@ -253,28 +264,22 @@ spotify.Queue.prototype.size = function () {
  * Iterate over the queue.
  */
 spotify.Queue.prototype.forEach = function (fn) {
-  return this.queue.forEach(fn)
+  this.queue.forEach(fn)
+  return this
 }
 
 /**
  * Map a function over the queue.
  */
 spotify.Queue.prototype.map = function (fn) {
-  var result = new spotify.Queue()
-  this.forEach(function (entry) {
-    result.add(fn(entry))
-  })
-  return result
+  return new spotify.Queue(this.queue.map(fn))
 }
 
 /**
  * Concatenate two queues.
  */
 spotify.Queue.prototype.concat = function (queue) {
-  var result = new spotify.Queue()
-  result.queue = this.queue
-  result.queue = result.queue.concat(queue.queue)
-  return result
+  return new spotify.Queue(this.queue.concat(queue.queue))
 }
 
 /**
