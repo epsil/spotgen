@@ -1,20 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Spotify</title>
+    <title>Spotify Playlist Generator</title>
     <link href="bootstrap.css" rel="stylesheet">
-    <style>
+    <style type="text/css">
+      <!--
         textarea {
-            background: transparent;
-            font-family: Consolas, "Liberation Mono", Courier, monospace;
-            font-size: 13px;
-            line-height: 19px;
-            min-height: 400px;
-            overflow: auto;
-            padding: 6px 10px;
-            resize: none;
-            width: 100%;
+            font-family: Consolas, "Consolas Web", Menlo, Monaco, "Liberation Mono", Courier, monospace;
+            min-height: 30em;
         }
+      -->
     </style>
     <script src="spotify.js"></script>
   </head>
@@ -22,9 +17,12 @@
     <div class="container">
       <h1>Spotify Playlist Generator</h1>
       <form id="form">
-        <textarea id="input"></textarea>
+        <div class="form-group">
+          <textarea class="form-control"></textarea>
+        </div>
         <button type="submit" class="btn btn-default">Generate Playlist</button>
       </form>
+      <p class="text-right"><a href="https://github.com/epsil/spotify-js" target="_blank">Command-line version</a></p>
     </div>
   </body>
 </html>
