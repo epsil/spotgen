@@ -1,5 +1,5 @@
-[Spotify Playlist Generator](https://github.com/epsil/spotify-js)
-=================================================================
+[Spotify Playlist Generator](https://epsil.github.io/spotify/)
+==============================================================
 
 > A tool for generating Spotify playlists.
 >
@@ -20,7 +20,11 @@ Examples
 Obtain
 ------
 
-The web version is available at <https://epsil.github.io/spotify/>.
+### Web version
+
+The generator can be run in the browser at <https://epsil.github.io/spotify/>.
+
+### Command-line version
 
 The command-line version requires [Node](https://nodejs.org/) to be installed. The source code is located at [GitHub](https://github.com/epsil/spotify-js). To clone the repository:
 
@@ -111,9 +115,7 @@ See also
 -   [Exportify](https://github.com/watsonbox/exportify), the opposite (export Spotify playlists to CSV format)
 -   [last.py](https://github.com/epsil/lastpy), a Python script for sorting playlists by Last.fm rating
 
-### GUI alternatives
-
-Although a command-line script is unsurpassably efficient for processing multiple playlists in batch, a GUI may be simpler to use if one only has a few playlists to import. Here are a couple of free web services:
+### GUI converters
 
 -   [Yet Another Spotify Playlist Converter](http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/) ([source](https://github.com/bertique/YetAnotherSpotifyPlaylistConverter))
 -   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr))
