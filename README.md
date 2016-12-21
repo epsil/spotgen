@@ -1,9 +1,10 @@
 [Spotify Playlist Generator](https://github.com/epsil/spotify-js)
 =================================================================
 
-> A command-line script for generating Spotify playlists.
+> A tool for generating Spotify playlists.
 >
-> Written in JavaScript, requires [Node](https://nodejs.org/).
+> Available as a [webpage](https://epsil.github.io/spotify/)
+> and as a command-line script.
 
 Examples
 --------
@@ -19,22 +20,22 @@ Examples
 Obtain
 ------
 
-The source code is located at [GitHub](https://github.com/epsil/spotify-js). To clone the repository:
+The web version is available at <https://epsil.github.io/spotify/>.
+
+The command-line version requires [Node](https://nodejs.org/) to be installed. The source code is located at [GitHub](https://github.com/epsil/spotify-js). To clone the repository:
 
     $ git clone https://github.com/epsil/spotify-js.git
 
 Alternatively, download a [ZIP file](https://github.com/epsil/spotify-js/archive/master.zip).
 
-The script requires [Node](https://nodejs.org/) to be installed.
+The script is run with `./spotify.js` or `node spotify`:
+
+    $ ./spotify.js input.txt output.txt
 
 Usage
 -----
 
-Run the script with `./spotify.js` or `node spotify`:
-
-    $ ./spotify.js input.txt output.txt
-
-`input.txt`:
+Example input:
 
     Walk in the Park - Beach House
     Irene - Beach House
@@ -42,7 +43,7 @@ Run the script with `./spotify.js` or `node spotify`:
     Troublemaker - Beach House
     Wishes - Beach House
 
-`output.txt`:
+Example output:
 
     spotify:track:4oNXgGnumnu5oIXXyP8StH
     spotify:track:7rAjeWkQM6cLqbPjZtXxl2
@@ -50,7 +51,7 @@ Run the script with `./spotify.js` or `node spotify`:
     spotify:track:4qbCRlvE5Bb9XNBjxARjoP
     spotify:track:7x4tFmih1JBITx0e2ucGrT
 
-To import the playlist, copy the contents of `output.txt` to the clipboard, create a new playlist in Spotify, and paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
+To import the playlist, copy the output to the clipboard, create a new playlist in Spotify, and paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
 ### Albums
 
