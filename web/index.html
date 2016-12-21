@@ -1,10 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Spotify</title>
-<script src="spotify.js"></script>
-</head>
-<body>
-<p>Test</p>
-</body>
+  <head>
+    <title>Spotify</title>
+    <link href="bootstrap.css" rel="stylesheet">
+    <style>
+        textarea {
+            /* border: none; */
+            background: transparent;
+            font-family: Consolas, "Liberation Mono", Courier, monospace;
+            font-size: 13px;
+            line-height: 19px;
+            min-height: 400px;
+            overflow: auto;
+            padding: 6px 10px;
+            resize: none;
+            width: 100%;
+        }
+        /*
+        h2 {
+            font-size: 22px;
+            font-style: italic;
+        }
+        body {
+            background-attachment: fixed;
+            background-image: url('background.svg');
+            background-position: right 10% bottom 20%;
+            background-repeat: no-repeat;
+            background-size: 20em;
+            margin-bottom: 10%;
+            margin-top: 5%;
+        }
+        #pastebin {
+            opacity: 0.01;
+            width: 100%;
+            height: 1px;
+            overflow: hidden;
+        }
+        @media (max-width: 480px) {
+            body {
+                margin-top: 6em;
+            }
+        }
+        */
+    </style>
+    <script src="spotify.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Spotify Playlist Generator</h1>
+      <div contenteditable="true" id="pastebin"></div>
+      <form id="form">
+        <textarea id="input"></textarea>
+        <button type="submit" class="btn btn-default">Generate Playlist</button>
+      </form>
+    </div>
+  </body>
 </html>
