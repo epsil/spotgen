@@ -9,6 +9,9 @@
     "lint": "jshint lastfm.js spotify.js test/test.js && standard lastfm.js spotify.js test/test.js",
     "test": "mocha spotify.js test/test.js",
     "tests": "npm run lint && npm run test",
+    "browser": "browserify web.js -o web/spotify.js",
+    "open": "open web/index.html",
+    "web": "npm run browser && npm run open",
     "doc": "npm run jsdoc && npm run man",
     "jsdoc": "rm -rf doc && jsdoc -c .jsdocrc -d doc README.md spotify.js lastfm.js",
     "man": "open doc/index.html",
@@ -27,6 +30,7 @@
   },
   "dependencies": {
     "async": "^2.1.4",
+    "browserify": "^13.1.1",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "jsdoc": "^3.4.3",

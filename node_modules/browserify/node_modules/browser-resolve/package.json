@@ -1,0 +1,67 @@
+{
+  "name": "browser-resolve",
+  "version": "1.11.2",
+  "description": "resolve which handles browser field support in package.json",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "empty.js"
+  ],
+  "scripts": {
+    "test": "mocha --reporter list test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shtylman/node-browser-resolve.git"
+  },
+  "keywords": [
+    "resolve",
+    "browser"
+  ],
+  "author": {
+    "name": "Roman Shtylman",
+    "email": "shtylman@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "resolve": "1.1.7"
+  },
+  "devDependencies": {
+    "mocha": "1.14.0"
+  },
+  "gitHead": "0955bafbb275d2ec1e425b2d776d4d619bd72282",
+  "bugs": {
+    "url": "https://github.com/shtylman/node-browser-resolve/issues"
+  },
+  "homepage": "https://github.com/shtylman/node-browser-resolve#readme",
+  "_id": "browser-resolve@1.11.2",
+  "_shasum": "8ff09b0a2c421718a1051c260b32e48f442938ce",
+  "_from": "browser-resolve@>=1.11.0 <2.0.0",
+  "_npmVersion": "3.8.9",
+  "_nodeVersion": "6.2.0",
+  "_npmUser": {
+    "name": "defunctzombie",
+    "email": "shtylman@gmail.com"
+  },
+  "dist": {
+    "shasum": "8ff09b0a2c421718a1051c260b32e48f442938ce",
+    "tarball": "https://registry.npmjs.org/browser-resolve/-/browser-resolve-1.11.2.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "substack",
+      "email": "substack@gmail.com"
+    },
+    {
+      "name": "defunctzombie",
+      "email": "shtylman@gmail.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/browser-resolve-1.11.2.tgz_1464190222040_0.7355328067205846"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/browser-resolve/-/browser-resolve-1.11.2.tgz",
+  "readme": "ERROR: No README data found!"
+}
