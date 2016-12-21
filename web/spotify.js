@@ -69032,7 +69032,7 @@ module.exports = spotify
 
 }).call(this,require('_process'))
 },{"./defaults":1,"./lastfm":2,"_process":222,"async":3,"fs":4,"request":259}],385:[function(require,module,exports){
-var spotify = require('./spotify')
+var spotify = require('../spotify')
 
 document.addEventListener('DOMContentLoaded', function () {
   var form = document.querySelector('form')
@@ -69048,4 +69048,4 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 })
 
-},{"./spotify":384}]},{},[385]);
+},{"../spotify":384}]},{},[385]);

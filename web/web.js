@@ -1,4 +1,4 @@
-var spotify = require('./spotify')
+var spotify = require('../spotify')
 
 document.addEventListener('DOMContentLoaded', function () {
   var form = document.querySelector('form')
