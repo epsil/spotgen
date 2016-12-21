@@ -10,7 +10,7 @@ module.exports = function (key) {
   lastfm.request = function (url) {
     return new Promise(function (resolve, reject) {
       setTimeout(function () {
-        console.log(url)
+        console.log(url.replace('&api_key=' + key, ''))
         request(url, function (err, response, body) {
           if (err) {
             reject(err)
