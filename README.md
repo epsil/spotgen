@@ -3,8 +3,7 @@
 
 > A tool for generating Spotify playlists.
 >
-> Available as a [webpage](https://epsil.github.io/spotify/)
-> and as a command-line script.
+> <https://epsil.github.io/spotify/>
 
 Examples
 --------
@@ -16,25 +15,6 @@ Examples
 -   [Rate Your Music's Top Dream Pop Albums](examples/rateyourmusic-top-dreampop-albums.spotify.txt) ([source](examples/rateyourmusic-top-dreampop-albums.txt))
 -   [Rate Your Music's Top Shoegaze Albums](examples/rateyourmusic-top-shoegaze-albums.spotify.txt) ([source](examples/rateyourmusic-top-shoegaze-albums.txt))
 -   [Rolling Stone's 500 Greatest Songs of All Time](examples/rollingstone-500-greatest-songs-of-all-time.spotify.txt) ([source](examples/rollingstone-500-greatest-songs-of-all-time.txt))
-
-Obtain
-------
-
-### Web version
-
-The generator can be run in the browser at <https://epsil.github.io/spotify/>.
-
-### Command-line version
-
-The command-line version requires [Node](https://nodejs.org/) to be installed. The source code is located at [GitHub](https://github.com/epsil/spotify-js). To clone the repository:
-
-    $ git clone https://github.com/epsil/spotify-js.git
-
-Alternatively, download a [ZIP file](https://github.com/epsil/spotify-js/archive/master.zip).
-
-The script is run with `./spotify.js` or `node spotify`:
-
-    $ ./spotify.js input.txt output.txt
 
 Usage
 -----
@@ -108,6 +88,21 @@ This will create a Last.fm-ordered playlist where tracks from the same album are
 ### Other tips
 
 See [tips](Tips.md) for more information regarding playlist conversion.
+
+Command-line script
+-------------------
+
+A command-line version is also available. It requires [Node](https://nodejs.org/) to be installed.
+
+The source code is located at [GitHub](https://github.com/epsil/spotify-js). To clone the repository:
+
+    $ git clone https://github.com/epsil/spotify-js.git
+
+Alternatively, download a [ZIP file](https://github.com/epsil/spotify-js/archive/master.zip).
+
+Run the script with `./spotify.js` or `node spotify`:
+
+    $ ./spotify.js input.txt output.txt
 
 See also
 --------
