@@ -272,14 +272,14 @@ spotify.Queue.prototype.forEach = function (fn) {
  * Map a function over the queue.
  */
 spotify.Queue.prototype.map = function (fn) {
-  return new spotify.Queue(this.queue.map(fn))
+  return new spotify.Queue(this.toArray().map(fn))
 }
 
 /**
  * Concatenate two queues.
  */
 spotify.Queue.prototype.concat = function (queue) {
-  return new spotify.Queue(this.queue.concat(queue.queue))
+  return new spotify.Queue(this.toArray().concat(queue.toArray()))
 }
 
 /**
@@ -316,7 +316,7 @@ spotify.Queue.prototype.dedup = function () {
       result.add(entry)
     }
   })
-  this.queue = result.queue
+  this.queue = result.toArray()
   return this
 }
 
@@ -773,13 +773,11 @@ spotify.Album.prototype.fetchAlbum = function () {
 }
 
 spotify.Album.prototype.createQueue = function (response) {
-  var tracks = response.tracks.items
-  var queue = new spotify.Queue()
-  for (var i in tracks) {
-    var entry = new spotify.Track(this.entry, tracks[i])
-    queue.add(entry)
-  }
-  return queue
+  var self = this
+  var tracks = response.tracks.items.map(function (item) {
+    return new spotify.Track(self.entry, item)
+  })
+  return new spotify.Queue(tracks)
 }
 
 spotify.Album.prototype.isSearchResponse = function (response) {
@@ -874,12 +872,11 @@ spotify.Artist.prototype.fetchAlbums = function () {
 }
 
 spotify.Artist.prototype.createQueue = function (response) {
-  var albums = response.items
-  var queue = new spotify.Queue()
-  for (var i in albums) {
-    var entry = new spotify.Album(this.entry, albums[i])
-    queue.add(entry)
-  }
+  var self = this
+  var albums = response.items.map(function (item) {
+    return new spotify.Album(self.entry, item)
+  })
+  var queue = new spotify.Queue(albums)
   return queue.dispatch()
 }
 
