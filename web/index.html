@@ -7,7 +7,7 @@
       <!--
         textarea {
             font-family: Consolas, "Consolas Web", Menlo, Monaco, "Liberation Mono", Courier, monospace;
-            min-height: 30em;
+            min-height: 20em;
         }
       -->
     </style>
@@ -22,7 +22,50 @@
         </div>
         <button type="submit" class="btn btn-default">Generate Playlist</button>
       </form>
-      <p class="text-right"><a href="https://github.com/epsil/spotify-js" target="_blank">Command-line version</a></p>
+      <p class="text-right"><a href="https://github.com/epsil/spotify-js" target="_blank">Source code</a></p>
+      <h2>Usage</h2>
+      <p>Example input:</p>
+      <pre>Walk in the Park - Beach House
+Irene - Beach House
+Other People - Beach House
+Troublemaker - Beach House
+Wishes - Beach House</pre>
+      <p>Example output:</p>
+      <pre>spotify:track:4oNXgGnumnu5oIXXyP8StH
+spotify:track:7rAjeWkQM6cLqbPjZtXxl2
+spotify:track:2Nt4Uw91pQLXSJ28SttDdF
+spotify:track:4qbCRlvE5Bb9XNBjxARjoP
+spotify:track:7x4tFmih1JBITx0e2ucGrT</pre>
+      <p>To import the playlist, copy the output to the clipboard, create a new playlist in Spotify, and paste into it (with <em>Edit -&gt; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>).</p>
+      <h3>Albums</h3>
+      <p>To add an entire album to the playlist, use the <code>#album</code> directive:</p>
+      <pre>#album Substrata - Biosphere</pre>
+      <p>Result:</p>
+      <pre>spotify:track:1TCkrnjuurf0DNLLoJxVyd
+spotify:track:1vriNGX7VD9Cx0Z2N2IglO
+spotify:track:6RrehqfwNTkuQiWu0WNf3X
+...</pre>
+      <h3>Artists</h3>
+      <p>To add the entire discography of an artist to the playlist, use the <code>#artist</code> directive:</p>
+      <pre>#artist Beach House</pre>
+      <p>Result:</p>
+      <pre>spotify:track:2SNGR7tguWgIR7sWzn40bw
+spotify:track:40SNnkhRM3ZUPLOOOEAcoM
+spotify:track:2Fr2fg7o35D5gZObRhragD
+...</pre>
+      <h3>Order</h3>
+      <p>To order the tracks by Spotify popularity, add the line <code>#order by popularity</code>:</p>
+      <pre>#order by popularity
+#artist Beach House</pre>
+      <p>To order the tracks by <a href="http://last.fm/">Last.fm</a> playcount, add the line <code>#order by lastfm</code>:</p>
+      <pre>#order by lastfm
+#artist Beach House</pre>
+      <h3>Group</h3>
+      <p>To sort the ordered tracks into groups, use the <code>#group by</code> directive:</p>
+      <pre>#order by lastfm
+#group by album
+#artist Beach House</pre>
+      <p>This will create a Last.fm-ordered playlist where tracks from the same album are grouped together.</p>
     </div>
   </body>
 </html>

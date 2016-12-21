@@ -43,9 +43,10 @@
 
 
     <section>
-        <article><h1><a href="https://github.com/epsil/spotify-js">Spotify Playlist Generator</a></h1><blockquote>
-<p>A command-line script for generating Spotify playlists.</p>
-<p>Written in JavaScript, requires <a href="https://nodejs.org/">Node</a>.</p>
+        <article><h1><a href="https://epsil.github.io/spotify/">Spotify Playlist Generator</a></h1><blockquote>
+<p>A tool for generating Spotify playlists.</p>
+<https://epsil.github.io/spotify/>
+
 </blockquote>
 <h2>Examples</h2><ul>
 <li><a href="examples/pitchfork-50-best-albums-of-2016.spotify.txt">Pitchfork's 50 Best Albums of 2016</a> (<a href="examples/pitchfork-50-best-albums-of-2016.txt">source</a>)</li>
@@ -56,21 +57,17 @@
 <li><a href="examples/rateyourmusic-top-shoegaze-albums.spotify.txt">Rate Your Music's Top Shoegaze Albums</a> (<a href="examples/rateyourmusic-top-shoegaze-albums.txt">source</a>)</li>
 <li><a href="examples/rollingstone-500-greatest-songs-of-all-time.spotify.txt">Rolling Stone's 500 Greatest Songs of All Time</a> (<a href="examples/rollingstone-500-greatest-songs-of-all-time.txt">source</a>)</li>
 </ul>
-<h2>Obtain</h2><p>The source code is located at <a href="https://github.com/epsil/spotify-js">GitHub</a>. To clone the repository:</p>
-<pre class="prettyprint source"><code>$ git clone https://github.com/epsil/spotify-js.git</code></pre><p>Alternatively, download a <a href="https://github.com/epsil/spotify-js/archive/master.zip">ZIP file</a>.</p>
-<p>The script requires <a href="https://nodejs.org/">Node</a> to be installed.</p>
-<h2>Usage</h2><p>Run the script with <code>./spotify.js</code> or <code>node spotify</code>:</p>
-<pre class="prettyprint source"><code>$ ./spotify.js input.txt output.txt</code></pre><p><code>input.txt</code>:</p>
+<h2>Usage</h2><p>Example input:</p>
 <pre class="prettyprint source"><code>Walk in the Park - Beach House
 Irene - Beach House
 Other People - Beach House
 Troublemaker - Beach House
-Wishes - Beach House</code></pre><p><code>output.txt</code>:</p>
+Wishes - Beach House</code></pre><p>Example output:</p>
 <pre class="prettyprint source"><code>spotify:track:4oNXgGnumnu5oIXXyP8StH
 spotify:track:7rAjeWkQM6cLqbPjZtXxl2
 spotify:track:2Nt4Uw91pQLXSJ28SttDdF
 spotify:track:4qbCRlvE5Bb9XNBjxARjoP
-spotify:track:7x4tFmih1JBITx0e2ucGrT</code></pre><p>To import the playlist, copy the contents of <code>output.txt</code> to the clipboard, create a new playlist in Spotify, and paste into it (with <em>Edit -&gt; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>).</p>
+spotify:track:7x4tFmih1JBITx0e2ucGrT</code></pre><p>To import the playlist, copy the output to the clipboard, create a new playlist in Spotify, and paste into it (with <em>Edit -&gt; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>).</p>
 <h3>Albums</h3><p>To add an entire album to the playlist, use the <code>#album</code> directive:</p>
 <pre class="prettyprint source"><code>#album Substrata - Biosphere</code></pre><p>Result:</p>
 <pre class="prettyprint source"><code>spotify:track:1TCkrnjuurf0DNLLoJxVyd
@@ -90,12 +87,15 @@ spotify:track:2Fr2fg7o35D5gZObRhragD
 #group by album
 #artist Beach House</code></pre><p>This will create a Last.fm-ordered playlist where tracks from the same album are grouped together.</p>
 <h3>Other tips</h3><p>See <a href="Tips.md">tips</a> for more information regarding playlist conversion.</p>
-<h2>See also</h2><ul>
+<h2>Command-line script</h2><p>A command-line version is also available. It requires <a href="https://nodejs.org/">Node</a> to be installed.</p>
+<p>The source code is located at <a href="https://github.com/epsil/spotify-js">GitHub</a>. To clone the repository:</p>
+<pre class="prettyprint source"><code>$ git clone https://github.com/epsil/spotify-js.git</code></pre><p>Alternatively, download a <a href="https://github.com/epsil/spotify-js/archive/master.zip">ZIP file</a>.</p>
+<p>Run the script with <code>./spotify.js</code> or <code>node spotify</code>:</p>
+<pre class="prettyprint source"><code>$ ./spotify.js input.txt output.txt</code></pre><h2>See also</h2><ul>
 <li><a href="https://github.com/watsonbox/exportify">Exportify</a>, the opposite (export Spotify playlists to CSV format)</li>
 <li><a href="https://github.com/epsil/lastpy">last.py</a>, a Python script for sorting playlists by Last.fm rating</li>
 </ul>
-<h3>GUI alternatives</h3><p>Although a command-line script is unsurpassably efficient for processing multiple playlists in batch, a GUI may be simpler to use if one only has a few playlists to import. Here are a couple of free web services:</p>
-<ul>
+<h3>GUI converters</h3><ul>
 <li><a href="http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/">Yet Another Spotify Playlist Converter</a> (<a href="https://github.com/bertique/YetAnotherSpotifyPlaylistConverter">source</a>)</li>
 <li><a href="http://spotlistr.herokuapp.com/">Spotlistr</a> (<a href="https://github.com/BobNisco/Spotlistr">source</a>)</li>
 <li><a href="http://www.playlist-converter.net/">Playlist Converter</a></li>
@@ -116,7 +116,7 @@ spotify:track:2Fr2fg7o35D5gZObRhragD
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Dec 20 2016 11:18:36 GMT+0100 (W. Europe Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Dec 21 2016 16:06:52 GMT+0100 (W. Europe Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
