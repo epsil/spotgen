@@ -97,10 +97,6 @@ To sort the ordered tracks into groups, use the `#group by` directive:
 
 This will create a Last.fm-ordered playlist where tracks from the same album are grouped together.
 
-### Other tips
-
-See [tips](Tips.md) for more information regarding playlist conversion.
-
 Command-line script
 -------------------
 
@@ -116,13 +112,18 @@ Run the script with `./spotify.js` or `node spotify`:
 
     $ ./spotify.js input.txt output.txt
 
-See also
---------
+Links
+-----
+
+-   [Usage tips](Tips.md)
+-   [Developer documentation](https://epsil.github.io/spotify/doc/)
+
+### See also
 
 -   [Exportify](https://github.com/watsonbox/exportify), the opposite (export Spotify playlists to CSV format)
 -   [last.py](https://github.com/epsil/lastpy), a Python script for sorting playlists by Last.fm rating
 
-### GUI converters
+#### GUI converters
 
 -   [Yet Another Spotify Playlist Converter](http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/) ([source](https://github.com/bertique/YetAnotherSpotifyPlaylistConverter))
 -   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr))

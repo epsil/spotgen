@@ -53,7 +53,8 @@ spotify.Playlist = function (str) {
         this.grouping = 'album'
       } else if (line.match(/^#UNIQUE/i)) {
         this.unique = true
-      } else if (line.match(/^##/i)) {
+      } else if (line.match(/^##/i) ||
+                 line.match(/^#EXTM3U/i)) {
         // comment
       } else if (line.match(/^#ALBUM[0-9]*\s+/i)) {
         var albumMatch = line.match(/^#ALBUM([0-9]*)\s+(.*)/i)
@@ -69,6 +70,15 @@ spotify.Playlist = function (str) {
         var artist = new spotify.Artist(artistEntry)
         artist.setLimit(artistLimit)
         this.entries.add(artist)
+      } else if (line.match(/^#EXTINF/i)) {
+        var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
+        if (match) {
+          this.entries.add(new spotify.Track(match[1]))
+          if (lines.length > 0 &&
+              !lines[0].match(/^#/)) {
+            lines.shift()
+          }
+        }
       } else if (line !== '') {
         var track = new spotify.Track(line)
         this.entries.add(track)

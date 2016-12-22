@@ -19,11 +19,7 @@ Furthermore, if the shell supports globbing, then one can recursively convert al
 M3U playlists
 -------------
 
-With some search and replace magic, one can use a text editor to convert [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`) to the textual format understood by Spotify's search. Preferably, the playlist contains `EXTM3U` metadata, like in the following example. The regular expression
-
-    %s/^#EXTM3U\n\|^#EXTINF:[0-9]+,\|^[^#].*\n?//g
-
-transforms the playlist
+One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`) provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
 
     #EXTM3U
     #EXTINF:404,Desire Lines - Deerhunter
@@ -37,15 +33,9 @@ transforms the playlist
     #EXTINF:264,Twilight at Carbon Lake - Deerhunter
     Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3
 
-to the compatible text file
+The script will automatically read the `#EXTINF` lines and discard the file paths. Provided the files are properly tagged, this method works very well.
 
-    Desire Lines - Deerhunter
-    Saved By Old Times - Deerhunter
-    Agoraphobia - Deerhunter
-    Revival - Deerhunter
-    Twilight at Carbon Lake - Deerhunter
-
-If the playlist does *not* contain metadata, or if the files are badly tagged, then one can attempt to infer the title and artist from the file names instead. Of course, this presupposes that the files are properly named. For example, the regular expression
+If the playlist does *not* contain `EXTM3U` metadata (or if the files are badly tagged), then one can attempt to infer the title and artist from the file paths instead. To do this, open the file in a text editor and use regular expressions to transform it. For example, the regular expression
 
     %s/\(^[^\/]+\).*\/[-0-9]*[-. ]*\(.*\)\..*/\2 - \1/g
 
@@ -65,6 +55,6 @@ to the compatible text file
     Troublemaker - Beach House
     Wishes - Beach House
 
-As can be seen, these transformations require some personal judgment; that is why they are not built into the script. See this [blog post](https://epsil.github.io/2013/11/23/) for more examples.
+Since file name standards vary, the transformation requires some personal judgment; that is why it is not built into the script. See this [blog post](https://epsil.github.io/2013/11/23/) for more examples.
 
-Other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advanced_Stream_Redirector), [PLS](https://en.wikipedia.org/wiki/PLS_%28file_format%29), [WPL](https://en.wikipedia.org/wiki/Windows_Media_Player_Playlist) and [XSPF](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format), are difficult to work with directly. Therefore, it is recommended to save to M3U format and proceed as outlined above.
+Note that other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advanced_Stream_Redirector), [PLS](https://en.wikipedia.org/wiki/PLS_%28file_format%29), [WPL](https://en.wikipedia.org/wiki/Windows_Media_Player_Playlist) and [XSPF](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format), are difficult to work with directly. Therefore, it is recommended to save to M3U format and proceed as outlined above.
