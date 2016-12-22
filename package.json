@@ -11,6 +11,7 @@
     "test": "mocha spotify.js test/test.js",
     "tests": "npm run lint && npm run test",
     "browser": "browserify web/web.js -o web/spotify.js",
+    "minify": "uglifyjs web/spotify.js -o web/spotify.js",
     "open": "open web/index.html",
     "web": "npm run browser && npm run open",
     "doc": "npm run jsdoc && npm run man",
@@ -39,6 +40,7 @@
     "mocha": "^3.2.0",
     "promise": "^7.1.1",
     "request": "^2.79.0",
-    "standard": "^8.6.0"
+    "standard": "^8.6.0",
+    "uglify-js": "^2.7.5"
   }
 }
