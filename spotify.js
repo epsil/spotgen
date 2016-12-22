@@ -63,10 +63,10 @@ spotify.Playlist = function (str) {
         var album = new spotify.Album(albumEntry)
         album.setLimit(albumLimit)
         this.entries.add(album)
-      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
-        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
-        var artistLimit = parseInt(artistMatch[1])
-        var artistEntry = artistMatch[2]
+      } else if (line.match(/^#(ARTIST|TOP)[0-9]*\s+/i)) {
+        var artistMatch = line.match(/^#(ARTIST|TOP)([0-9]*)\s+(.*)/i)
+        var artistLimit = parseInt(artistMatch[2])
+        var artistEntry = artistMatch[3]
         var artist = new spotify.Artist(artistEntry)
         artist.setLimit(artistLimit)
         this.entries.add(artist)

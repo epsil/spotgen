@@ -63,9 +63,9 @@ Result:
     spotify:track:2Fr2fg7o35D5gZObRhragD
     ...
 
-To add the top 5 or top 10 tracks of an artist, use the `#artist5` and `#artist10` directives:
+To add the top 5 or top 10 tracks of an artist, use the `#top5` and `#top10` directives:
 
-    #artist5 Aphex Twin
+    #top5 Aphex Twin
 
 Result:
 
