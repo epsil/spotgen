@@ -8,13 +8,13 @@ Multiple playlists
 
 Converting multiple playlists at once can easily be done in the Bash shell:
 
-    $ for f in *.txt; do ./spotify.js "$f" "${f%.txt}.spotify"; done
+    $ for f in *.txt; do ./spotify.js "$f" "${f%.txt}.spotify.txt"; done
 
-This converts `playlist1.txt`, `playlist2.txt`, `playlist3.txt` to `playlist1.spotify`, `playlist2.spotify`, `playlist3.spotify`.
+This converts `playlist1.txt`, `playlist2.txt`, `playlist3.txt` to `playlist1.spotify.txt`, `playlist2.spotify.txt`, `playlist3.spotify.txt`.
 
 Furthermore, if the shell supports globbing, then one can recursively convert all playlists in a directory with the `**/*.txt` pattern:
 
-    $ for f in **/*.txt; do ./spotify.js "$f" "${f%.txt}.spotify"; done
+    $ for f in **/*.txt; do ./spotify.js "$f" "${f%.txt}.spotify.txt"; done
 
 M3U playlists
 -------------
@@ -33,7 +33,7 @@ One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with t
     #EXTINF:264,Twilight at Carbon Lake - Deerhunter
     Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3
 
-The script will automatically read the `#EXTINF` lines and discard the file paths. Provided the files are properly tagged, this method works very well.
+The script will automatically read the `#EXTINF` lines and discard the file paths. Provided the files are properly tagged, this works very well.
 
 If the playlist does *not* contain `EXTM3U` metadata (or if the files are badly tagged), then one can attempt to infer the title and artist from the file paths instead. To do this, open the file in a text editor and use regular expressions to transform it. For example, the regular expression
 
