@@ -4,36 +4,6 @@ module.exports = function (key) {
   var lastfm = {}
 
   /**
-   * Perform a Last.fm request.
-   * @param {string} url - The URL to look up.
-   */
-  lastfm.request = function (url) {
-    return new Promise(function (resolve, reject) {
-      setTimeout(function () {
-        console.log(url.replace('&api_key=' + key, ''))
-        request(url, function (err, response, body) {
-          if (err) {
-            reject(err)
-          } else if (response.statusCode !== 200) {
-            reject(response.statusCode)
-          } else {
-            try {
-              body = JSON.parse(body)
-            } catch (e) {
-              reject(e)
-            }
-            if (body.error) {
-              reject(body)
-            } else {
-              resolve(body)
-            }
-          }
-        })
-      }, 100) // 10
-    })
-  }
-
-  /**
    * Get the Last.fm metadata for a track.
    * @param {String} artist - The artist.
    * @param {String} title - The title.
@@ -60,6 +30,36 @@ module.exports = function (key) {
       } else {
         return Promise.reject(result)
       }
+    })
+  }
+
+  /**
+   * Perform a Last.fm request.
+   * @param {string} url - The URL to look up.
+   */
+  lastfm.request = function (url) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () {
+        console.log(url.replace('&api_key=' + key, ''))
+        request(url, function (err, response, body) {
+          if (err) {
+            reject(err)
+          } else if (response.statusCode !== 200) {
+            reject(response.statusCode)
+          } else {
+            try {
+              body = JSON.parse(body)
+            } catch (e) {
+              reject(e)
+            }
+            if (body.error) {
+              reject(body)
+            } else {
+              resolve(body)
+            }
+          }
+        })
+      }, 100) // 10
     })
   }
 
