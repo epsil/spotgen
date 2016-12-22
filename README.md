@@ -52,7 +52,7 @@ Result:
 
 ### Artists
 
-To add the entire discography of an artist to the playlist, use the `#artist` directive:
+To add the entire discography of an artist, use the `#artist` directive:
 
     #artist Beach House
 
@@ -62,6 +62,18 @@ Result:
     spotify:track:40SNnkhRM3ZUPLOOOEAcoM
     spotify:track:2Fr2fg7o35D5gZObRhragD
     ...
+
+To add the top 5 or top 10 tracks of an artist, use the `#artist5` and `#artist10` directives:
+
+    #artist5 Aphex Twin
+
+Result:
+
+    spotify:track:3ESsjKqrj3M79I8sSZieK3
+    spotify:track:2LbyMbtKsh2pld57XN50M2
+    spotify:track:1D7TUN3EkC5FRJfDY7jZzN
+    spotify:track:44IECBxt9Hev9ivOFLG7W0
+    spotify:track:1E38xwNBProWZkF26Pqtfm
 
 ### Order
 

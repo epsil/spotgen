@@ -43,23 +43,31 @@ spotify.Playlist = function (str) {
       var line = lines.shift()
       if (line.match(/^#ORDER BY POPULARITY/i)) {
         this.ordering = 'popularity'
-      } else if (line.match(/^#(SORT|ORDER) BY LAST.?FM/i)) {
+      } else if (line.match(/^#(SORT|ORDER)\s+BY\s+LAST.?FM/i)) {
         this.ordering = 'lastfm'
-      } else if (line.match(/^#GROUP BY ENTRY/i)) {
+      } else if (line.match(/^#GROUP\s+BY\s+ENTRY/i)) {
         this.grouping = 'entry'
-      } else if (line.match(/^#GROUP BY ARTIST/i)) {
+      } else if (line.match(/^#GROUP\s+BY\s+ARTIST/i)) {
         this.grouping = 'artist'
-      } else if (line.match(/^#GROUP BY ALBUM/i)) {
+      } else if (line.match(/^#GROUP\s+BY\s+ALBUM/i)) {
         this.grouping = 'album'
       } else if (line.match(/^#UNIQUE/i)) {
         this.unique = true
       } else if (line.match(/^##/i)) {
         // comment
-      } else if (line.match(/^#ALBUM /i)) {
-        var album = new spotify.Album(line.substring(7))
+      } else if (line.match(/^#ALBUM[0-9]*\s+/i)) {
+        var albumMatch = line.match(/^#ALBUM([0-9]*)\s+(.*)/i)
+        var albumLimit = parseInt(albumMatch[1])
+        var albumEntry = albumMatch[2]
+        var album = new spotify.Album(albumEntry)
+        album.setLimit(albumLimit)
         this.entries.add(album)
-      } else if (line.match(/^#ARTIST /i)) {
-        var artist = new spotify.Artist(line.substring(8))
+      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
+        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
+        var artistLimit = parseInt(artistMatch[1])
+        var artistEntry = artistMatch[2]
+        var artist = new spotify.Artist(artistEntry)
+        artist.setLimit(artistLimit)
         this.entries.add(artist)
       } else if (line !== '') {
         var track = new spotify.Track(line)
@@ -273,6 +281,13 @@ spotify.Queue.prototype.forEach = function (fn) {
  */
 spotify.Queue.prototype.map = function (fn) {
   return new spotify.Queue(this.toArray().map(fn))
+}
+
+/**
+ * Slice a queue.
+ */
+spotify.Queue.prototype.slice = function (start, end) {
+  return new spotify.Queue(this.toArray().slice(start, end))
 }
 
 /**
@@ -686,10 +701,24 @@ spotify.Album = function (entry, response) {
    */
   this.entry = entry.trim()
 
+  /**
+   * Number of albums to fetch.
+   */
+  this.limit = null
+
   if (this.isSearchResponse(response)) {
     this.searchResponse = response
   } else if (this.isAlbumResponse(response)) {
     this.albumResponse = response
+  }
+}
+
+/**
+ * Set number of albums to fetch.
+ */
+spotify.Album.prototype.setLimit = function (limit) {
+  if (Number.isInteger(limit)) {
+    this.limit = limit
   }
 }
 
@@ -777,7 +806,11 @@ spotify.Album.prototype.createQueue = function (response) {
   var tracks = response.tracks.items.map(function (item) {
     return new spotify.Track(self.entry, item)
   })
-  return new spotify.Queue(tracks)
+  var queue = new spotify.Queue(tracks)
+  if (self.limit) {
+    queue = queue.slice(0, self.limit)
+  }
+  return queue
 }
 
 spotify.Album.prototype.isSearchResponse = function (response) {
@@ -807,6 +840,30 @@ spotify.Artist = function (entry) {
    * Search response.
    */
   this.artistResponse = null
+
+  /**
+   * Albums response.
+   */
+  this.albumsResponse = null
+
+  /**
+   * Top tracks response.
+   */
+  this.topTracksResponse = null
+
+  /**
+   * Number of tracks to fetch.
+   */
+  this.limit = null
+}
+
+/**
+ * Set number of tracks to fetch.
+ */
+spotify.Artist.prototype.setLimit = function (limit) {
+  if (Number.isInteger(limit)) {
+    this.limit = limit
+  }
 }
 
 /**
@@ -829,11 +886,19 @@ spotify.Artist.prototype.id = function () {
  */
 spotify.Artist.prototype.dispatch = function () {
   var self = this
-  return this.searchForArtist(this.entry).then(function () {
-    return self.fetchAlbums()
-  }).then(function (response) {
-    return self.createQueue(response)
-  })
+  if (self.limit) {
+    return this.searchForArtist(this.entry).then(function () {
+      return self.fetchTopTracks()
+    }).then(function (response) {
+      return self.createQueue(response)
+    })
+  } else {
+    return this.searchForArtist(this.entry).then(function () {
+      return self.fetchAlbums()
+    }).then(function (response) {
+      return self.createQueue(response)
+    })
+  }
 }
 
 /**
@@ -862,8 +927,23 @@ spotify.Artist.prototype.fetchAlbums = function () {
   url += encodeURIComponent(id) + '/albums'
   var self = this
   return spotify.request(url).then(function (response) {
-    if (response.items) {
-      self.albumResponse = response
+    if (self.isAlbumsResponse(response)) {
+      self.albumsResponse = response
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+spotify.Artist.prototype.fetchTopTracks = function () {
+  var id = this.id()
+  var url = 'https://api.spotify.com/v1/artists/'
+  url += encodeURIComponent(id) + '/top-tracks?country=US'
+  var self = this
+  return spotify.request(url).then(function (response) {
+    if (self.isTopTracksResponse(response)) {
+      self.topTracksResponse = response
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -873,11 +953,22 @@ spotify.Artist.prototype.fetchAlbums = function () {
 
 spotify.Artist.prototype.createQueue = function (response) {
   var self = this
-  var albums = response.items.map(function (item) {
-    return new spotify.Album(self.entry, item)
-  })
-  var queue = new spotify.Queue(albums)
-  return queue.dispatch()
+  if (self.isTopTracksResponse(response)) {
+    var tracks = response.tracks.map(function (item) {
+      return new spotify.Track(self.entry, item)
+    })
+    var trackQueue = new spotify.Queue(tracks)
+    if (self.limit) {
+      trackQueue = trackQueue.slice(0, self.limit)
+    }
+    return trackQueue
+  } else {
+    var albums = response.items.map(function (item) {
+      return new spotify.Album(self.entry, item)
+    })
+    var albumQueue = new spotify.Queue(albums)
+    return albumQueue.dispatch()
+  }
 }
 
 spotify.Artist.prototype.isSearchResponse = function (response) {
@@ -885,6 +976,16 @@ spotify.Artist.prototype.isSearchResponse = function (response) {
     response.artists &&
     response.artists.items[0] &&
     response.artists.items[0].id
+}
+
+spotify.Artist.prototype.isAlbumsResponse = function (response) {
+  return response &&
+    response.items
+}
+
+spotify.Artist.prototype.isTopTracksResponse = function (response) {
+  return response &&
+    response.tracks
 }
 
 /**
