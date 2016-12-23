@@ -1,4 +1,4 @@
-var spotify = require('../lib/spotify')
+var Playlist = require('../lib/playlist')
 
 document.addEventListener('DOMContentLoaded', function () {
   var form = document.querySelector('form')
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   form.onsubmit = function () {
-    var playlist = new spotify.Playlist(textarea.value)
+    var playlist = new Playlist(textarea.value)
     playlist.dispatch().then(function (result) {
       console.log('')
       textarea.value = result

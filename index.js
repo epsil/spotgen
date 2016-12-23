@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs')
-var spotify = require('./lib/spotify')
+var Playlist = require('./lib/playlist')
 
 /**
  * Main method.
@@ -12,7 +12,7 @@ function main () {
   var output = process.argv[3] || 'output.txt'
 
   var str = fs.readFileSync(input, 'utf8').toString()
-  var playlist = new spotify.Playlist(str)
+  var playlist = new Playlist(str)
 
   playlist.dispatch().then(function (str) {
     fs.writeFile(output, str, function (err) {
