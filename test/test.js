@@ -4,7 +4,7 @@ var chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 chai.should()
 
-var spotify = require('../spotify.js')
+var spotify = require('../lib/spotify.js')
 
 describe('spotify.js', function () {
   this.timeout(99999)

@@ -58,3 +58,16 @@ to the compatible text file
 Since file name standards vary, the transformation requires some personal judgment; that is why it is not built into the script. See this [blog post](https://epsil.github.io/2013/11/23/) for more examples.
 
 Note that other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advanced_Stream_Redirector), [PLS](https://en.wikipedia.org/wiki/PLS_%28file_format%29), [WPL](https://en.wikipedia.org/wiki/Windows_Media_Player_Playlist) and [XSPF](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format), are difficult to work with directly. Therefore, it is recommended to save to M3U format and proceed as outlined above.
+
+<!--
+Food for thought ...
+
+Add support for spotify album links
+(e.g., https://open.spotify.com/album/0xnL6goTzcRFKzbrleXfpF)
+
+Order albums by year (or rating)
+
+Add support for Exportify CSV
+
+Implement merging algorithms from last.py
+-->
