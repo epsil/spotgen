@@ -115,8 +115,10 @@ Run the script with `./spotify.js` or `node spotify`:
 Links
 -----
 
--   [Usage tips](Tips.md)
+-   [Web interface](https://epsil.github.io/spotify/)
+-   [GitHub repository](https://github.com/epsil/spotify-js)
 -   [Developer documentation](https://epsil.github.io/spotify/doc/)
+-   [Additional tips](Tips.md)
 
 ### See also
 

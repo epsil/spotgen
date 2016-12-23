@@ -47,7 +47,7 @@
 
 
 <div class="description">
-    <p>Represents a playlist.</p>
+    <p>Create a playlist.</p>
 </div>
 
 
@@ -99,7 +99,9 @@
 
             
 
-            <td class="description last"><p>The playlist as a string.</p></td>
+            <td class="description last"><p>A newline-separated string of
+entries on the form <code>TITLE - ARTIST</code>. May also contain
+<code>#ALBUM</code>, <code>#ARTIST</code>, <code>#ORDER</code> and <code>#GROUP</code> directives.</p></td>
         </tr>
 
     
@@ -140,7 +142,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line18">line 18</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line379">line 379</a>
     </li></ul></dd>
     
 
@@ -228,7 +230,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line37">line 37</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line383">line 383</a>
     </li></ul></dd>
     
 
@@ -290,7 +292,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line27">line 27</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line388">line 388</a>
     </li></ul></dd>
     
 
@@ -352,7 +354,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line22">line 22</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line393">line 393</a>
     </li></ul></dd>
     
 
@@ -376,7 +378,7 @@
 
 
 <div class="description">
-    <p>Unique flag.</p>
+    <p>Whether to remove duplicates.</p>
 </div>
 
 
@@ -414,7 +416,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line32">line 32</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line398">line 398</a>
     </li></ul></dd>
     
 
@@ -448,7 +450,7 @@
 
 
 <div class="description">
-    <p>Remove duplicates.</p>
+    <p>Remove duplicate entries.</p>
 </div>
 
 
@@ -492,7 +494,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line145">line 145</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line454">line 454</a>
     </li></ul></dd>
     
 
@@ -523,7 +525,7 @@
 
     
 
-    <h4 class="name" id="dispatch"><span class="type-signature"></span>dispatch<span class="signature">()</span><span class="type-signature"> &rarr; {Queue}</span></h4>
+    <h4 class="name" id="dispatch"><span class="type-signature"></span>dispatch<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
 
     
 
@@ -575,7 +577,7 @@ and return the track listing.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line95">line 95</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line466">line 466</a>
     </li></ul></dd>
     
 
@@ -602,7 +604,8 @@ and return the track listing.</p>
 
         
 <div class="param-desc">
-    <p>A list of results.</p>
+    <p>A newline-separated list
+of Spotify URIs.</p>
 </div>
 
 
@@ -613,7 +616,10 @@ and return the track listing.</p>
     </dt>
     <dd>
         
-<span class="param-type">Queue</span>
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type">string</span>
 
 
     </dd>
@@ -628,14 +634,14 @@ and return the track listing.</p>
 
     
 
-    <h4 class="name" id="fetchLastfm"><span class="type-signature"></span>fetchLastfm<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="fetchLastfm"><span class="type-signature"></span>fetchLastfm<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|<a href="spotify.Playlist.html">spotify.Playlist</a>}</span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Fetch Last.fm information.</p>
+    <p>Fetch Last.fm metadata of each playlist entry.</p>
 </div>
 
 
@@ -679,7 +685,7 @@ and return the track listing.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line133">line 133</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line483">line 483</a>
     </li></ul></dd>
     
 
@@ -702,6 +708,31 @@ and return the track listing.</p>
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Itself.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type"><a href="spotify.Playlist.html">spotify.Playlist</a></span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -710,7 +741,7 @@ and return the track listing.</p>
 
     
 
-    <h4 class="name" id="fetchTracks"><span class="type-signature"></span>fetchTracks<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="fetchTracks"><span class="type-signature"></span>fetchTracks<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|<a href="spotify.Playlist.html">spotify.Playlist</a>}</span></h4>
 
     
 
@@ -761,7 +792,631 @@ and return the track listing.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line111">line 111</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line496">line 496</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Itself.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type"><a href="spotify.Playlist.html">spotify.Playlist</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="group"><span class="type-signature"></span>group<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Group the playlist entries.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line507">line 507</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="groupByAlbum"><span class="type-signature"></span>groupByAlbum<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Group the playlist entries by album.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line522">line 522</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="groupByArtist"><span class="type-signature"></span>groupByArtist<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Group the playlist entries by artist.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line531">line 531</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="groupByEntry"><span class="type-signature"></span>groupByEntry<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Group the playlist entries by entry.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line540">line 540</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="order"><span class="type-signature"></span>order<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|<a href="spotify.Playlist.html">spotify.Playlist</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Order the playlist entries.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line550">line 550</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Itself.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type"><a href="spotify.Playlist.html">spotify.Playlist</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="orderByLastfm"><span class="type-signature"></span>orderByLastfm<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Order the playlist entries by Last.fm playcount.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line566">line 566</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="orderByPopularity"><span class="type-signature"></span>orderByPopularity<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Order the playlist entries by Spotify popularity.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line578">line 578</a>
     </li></ul></dd>
     
 
@@ -843,7 +1498,7 @@ and return the track listing.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line234">line 234</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line590">line 590</a>
     </li></ul></dd>
     
 
@@ -874,14 +1529,14 @@ and return the track listing.</p>
 
     
 
-    <h4 class="name" id="refreshTracks"><span class="type-signature"></span>refreshTracks<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="refreshTracks"><span class="type-signature"></span>refreshTracks<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|<a href="spotify.Playlist.html">spotify.Playlist</a>}</span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Refresh the entries in the playlist.</p>
+    <p>Refresh the metadata of each playlist entry.</p>
 </div>
 
 
@@ -925,7 +1580,7 @@ and return the track listing.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line122">line 122</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line598">line 598</a>
     </li></ul></dd>
     
 
@@ -948,6 +1603,31 @@ and return the track listing.</p>
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Itself.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type"><a href="spotify.Playlist.html">spotify.Playlist</a></span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1007,7 +1687,7 @@ and return the track listing.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line216">line 216</a>
+        <a href="spotify.js.html">spotify.js</a>, <a href="spotify.js.html#line610">line 610</a>
     </li></ul></dd>
     
 
@@ -1071,13 +1751,13 @@ and return the track listing.</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="spotify.Album.html">Album</a></li><li><a href="spotify.Artist.html">Artist</a></li><li><a href="spotify.Playlist.html">Playlist</a></li><li><a href="spotify.Queue.html">Queue</a></li><li><a href="spotify.Track.html">Track</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="spotify.Album.html">Album</a></li><li><a href="spotify.Artist.html">Artist</a></li><li><a href="spotify.Playlist.html">Playlist</a></li><li><a href="spotify.Queue.html">Queue</a></li><li><a href="spotify.Track.html">Track</a></li></ul><h3>Global</h3><ul><li><a href="global.html#main">main</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Thu Dec 22 2016 23:14:11 GMT+0100 (CET)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 23 2016 21:55:27 GMT+0100 (CET)
 </footer>
 
 <script> prettyPrint(); </script>
