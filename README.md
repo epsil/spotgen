@@ -35,7 +35,11 @@ Example output:
     spotify:track:4qbCRlvE5Bb9XNBjxARjoP
     spotify:track:7x4tFmih1JBITx0e2ucGrT
 
-To import the playlist, copy the output to the clipboard, create a new playlist in Spotify, and paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
+To import the playlist:
+
+1.  Copy the output to the clipboard (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>).
+2.  Create a new playlist in Spotify (with *File -> New Playlist* or <kbd>Ctrl</kbd> + <kbd>N</kbd>).
+3.  Paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
 ### Albums
 
