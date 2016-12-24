@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  textarea.focus()
+
   form.onsubmit = function () {
     var playlist = new Playlist(textarea.value)
     button.innerHTML = 'Creating Playlist &hellip;'
