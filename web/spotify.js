@@ -742,7 +742,7 @@ Queue.prototype.concat = function (queue) {
  * Whether the queue contains an entry.
  * @param {Track | Album | Artist} entry -
  * The entry to check for.
- * @return {boolean} - `true` is the queue contains `entry`,
+ * @return {boolean} - `true` if the queue contains `entry`,
  * `false` otherwise.
  */
 Queue.prototype.contains = function (obj) {
