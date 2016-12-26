@@ -36,16 +36,11 @@ var spotify = require('./spotify')
  * @constructor
  * @param {string} entry - The artist to search for.
  */
-function Artist (entry) {
+function Artist (entry, response) {
   /**
    * Albums response.
    */
   this.albumsResponse = null
-
-  /**
-   * Search response.
-   */
-  this.artistResponse = null
 
   /**
    * Entry string.
@@ -58,11 +53,26 @@ function Artist (entry) {
   this.limit = null
 
   /**
+   * Search response.
+   */
+  this.searchResponse = null
+
+  /**
    * Top tracks response.
    */
   this.topTracksResponse = null
 
   this.entry = entry.trim()
+
+  if (this.isSearchResponse(response)) {
+    this.searchResponse = response
+  } else if (this.isArtistResponse(response)) {
+    this.artistResponse = response
+  } else if (this.isAlbumsResponse(response)) {
+    this.albumsResponse = response
+  } else if (this.isTopTracksResponse(response)) {
+    this.topTracksResponse = response
+  }
 }
 
 /**
@@ -70,10 +80,10 @@ function Artist (entry) {
  * @param {JSON} response - A JSON response object.
  * @return {Promise | Queue} A queue of tracks.
  */
-Artist.prototype.createQueue = function (response) {
+Artist.prototype.createQueue = function () {
   var self = this
-  if (self.isTopTracksResponse(response)) {
-    var tracks = response.tracks.map(function (item) {
+  if (self.topTracksResponse) {
+    var tracks = self.topTracksResponse.tracks.map(function (item) {
       return new Track(self.entry, item)
     })
     var trackQueue = new Queue(tracks)
@@ -82,7 +92,7 @@ Artist.prototype.createQueue = function (response) {
     }
     return trackQueue
   } else {
-    var albums = response.items.map(function (item) {
+    var albums = self.albumsResponse.items.map(function (item) {
       return new Album(self.entry, item)
     })
     var albumQueue = new Queue(albums)
@@ -96,19 +106,11 @@ Artist.prototype.createQueue = function (response) {
  */
 Artist.prototype.dispatch = function () {
   var self = this
-  if (self.limit) {
-    return this.searchForArtist(this.entry).then(function () {
-      return self.fetchTopTracks()
-    }).then(function (response) {
-      return self.createQueue(response)
-    })
-  } else {
-    return this.searchForArtist(this.entry).then(function () {
-      return self.fetchAlbums()
-    }).then(function (response) {
-      return self.createQueue(response)
-    })
-  }
+  return this.searchForArtist().then(function () {
+    return self.fetchData()
+  }).then(function () {
+    return self.createQueue()
+  })
 }
 
 /**
@@ -128,6 +130,18 @@ Artist.prototype.fetchAlbums = function () {
       return Promise.reject(response)
     }
   })
+}
+
+/**
+ * Fetch data.
+ * @return {Promise | JSON} A JSON response.
+ */
+Artist.prototype.fetchData = function () {
+  if (this.limit) {
+    return this.fetchTopTracks()
+  } else {
+    return this.fetchAlbums()
+  }
 }
 
 /**
@@ -155,11 +169,14 @@ Artist.prototype.fetchTopTracks = function () {
  * or `-1` if not available.
  */
 Artist.prototype.id = function () {
-  if (this.artistResponse &amp;&amp;
-      this.artistResponse.artists &amp;&amp;
-      this.artistResponse.artists.items[0] &amp;&amp;
-      this.artistResponse.artists.items[0].id) {
-    return this.artistResponse.artists.items[0].id
+  if (this.searchResponse &amp;&amp;
+      this.searchResponse.artists &amp;&amp;
+      this.searchResponse.artists.items[0] &amp;&amp;
+      this.searchResponse.artists.items[0].id) {
+    return this.searchResponse.artists.items[0].id
+  } else if (this.artistResponse &amp;&amp;
+             this.artistResponse.id) {
+    return this.artistResponse.id
   } else {
     return -1
   }
@@ -174,6 +191,17 @@ Artist.prototype.id = function () {
 Artist.prototype.isAlbumsResponse = function (response) {
   return response &amp;&amp;
     response.items
+}
+
+/**
+ * Whether a JSON response is an artist response.
+ * @param {JSON} response - A JSON response object.
+ * @return {boolean} `true` if `response` is an artist response,
+ * `false` otherwise.
+ */
+Artist.prototype.isArtistResponse = function (response) {
+  return response &amp;&amp;
+    response.id
 }
 
 /**
@@ -202,22 +230,27 @@ Artist.prototype.isTopTracksResponse = function (response) {
 
 /**
  * Search for artist.
- * @param {string} query - The query text.
  * @return {Promise | JSON} A JSON response.
  */
-Artist.prototype.searchForArtist = function (query) {
-  // https://developer.spotify.com/web-api/search-item/
-  var url = 'https://api.spotify.com/v1/search?type=artist&amp;q='
-  url += encodeURIComponent(query)
-  var self = this
-  return spotify.request(url).then(function (response) {
-    if (self.isSearchResponse(response)) {
-      self.artistResponse = response
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
+Artist.prototype.searchForArtist = function () {
+  if (this.searchResponse) {
+    return Promise.resolve(this.searchResponse)
+  } else if (this.artistResponse) {
+    return Promise.resolve(this.artistResponse)
+  } else {
+    // https://developer.spotify.com/web-api/search-item/
+    var url = 'https://api.spotify.com/v1/search?type=artist&amp;q='
+    url += encodeURIComponent(this.entry)
+    var self = this
+    return spotify.request(url).then(function (response) {
+      if (self.isSearchResponse(response)) {
+        self.searchResponse = response
+        return Promise.resolve(response)
+      } else {
+        return Promise.reject(response)
+      }
+    })
+  }
 }
 
 /**
@@ -247,7 +280,7 @@ module.exports = Artist
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Dec 25 2016 16:44:40 GMT+0100 (CET)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Mon Dec 26 2016 23:06:37 GMT+0100 (CET)
 </footer>
 
 <script> prettyPrint(); </script>
