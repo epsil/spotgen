@@ -592,11 +592,12 @@ Playlist.prototype.fetchTracks = function () {
  * Group the playlist entries.
  */
 Playlist.prototype.group = function () {
+  var self = this
   if (this.grouping === 'artist') {
     return this.groupByArtist()
   } else if (this.grouping === 'album') {
     return this.refreshTracks().then(function () {
-      return this.groupByAlbum()
+      return self.groupByAlbum()
     })
   } else if (this.grouping === 'entry') {
     return this.groupByEntry()
