@@ -25,7 +25,10 @@ document.addEventListener('DOMContentLoaded', function () {
       textarea.value = result
       textarea.focus()
       textarea.select()
-      if (result !== '') {
+      if (result === '') {
+        button.innerHTML = 'Create Playlist'
+        button.classList.remove('active')
+      } else {
         button.innerHTML = 'Created Playlist'
         console.log('Copy and paste the above ' +
                     'into a new Spotify playlist')
