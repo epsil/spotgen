@@ -49,9 +49,9 @@ To add an entire album to the playlist, use the `#album` directive:
 
 Result:
 
-    spotify:track:1TCkrnjuurf0DNLLoJxVyd
-    spotify:track:1vriNGX7VD9Cx0Z2N2IglO
-    spotify:track:6RrehqfwNTkuQiWu0WNf3X
+    spotify:track:<Substrata Track #1>
+    spotify:track:<Substrata Track #2>
+    spotify:track:<Substrata Track #3>
     ...
 
 ### Artists
@@ -62,22 +62,26 @@ To add the entire discography of an artist, use the `#artist` directive:
 
 Result:
 
-    spotify:track:2SNGR7tguWgIR7sWzn40bw
-    spotify:track:40SNnkhRM3ZUPLOOOEAcoM
-    spotify:track:2Fr2fg7o35D5gZObRhragD
+    spotify:track:<Beach House Track #1>
+    spotify:track:<Beach House Track #2>
+    spotify:track:<Beach House Track #3>
     ...
 
-To add the top 5 or top 10 tracks of an artist, use the `#top5` and `#top10` directives:
+### Top tracks
 
-    #top5 Aphex Twin
+To add the top 10 tracks of an artist, use the `#top` directive:
 
-Result:
+    #top Aphex Twin
 
-    spotify:track:3ESsjKqrj3M79I8sSZieK3
-    spotify:track:2LbyMbtKsh2pld57XN50M2
-    spotify:track:1D7TUN3EkC5FRJfDY7jZzN
-    spotify:track:44IECBxt9Hev9ivOFLG7W0
-    spotify:track:1E38xwNBProWZkF26Pqtfm
+To add only the top 5 tracks, use the `#top5` directive.
+
+### Similar artists
+
+To add tracks from similar artists, use the `#similar` directive:
+
+    #similar Aphex Twin
+
+This will create a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.
 
 ### Order
 
@@ -96,10 +100,20 @@ To order the tracks by [Last.fm](http://last.fm/) playcount, add the line `#orde
 To sort the ordered tracks into groups, use the `#group by` directive:
 
     #order by lastfm
-    #group by album
-    #artist Beach House
+    #group by artist
+    #similar Beach House
 
-This will create a Last.fm-ordered playlist where tracks from the same album are grouped together.
+This will create a Last.fm-ordered playlist of artists similar to Beach House, where tracks from the same artists are grouped together.
+
+### Alternate
+
+To group the tracks and then interleave them, use the `#alternate by` directive:
+
+    #order by lastfm
+    #alternate by artist
+    #similar Beach House
+
+This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.
 
 Command-line script
 -------------------

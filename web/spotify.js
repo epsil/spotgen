@@ -453,6 +453,11 @@ var Similar = require('./similar')
  */
 function Playlist (str) {
   /**
+   * Playlist alternating.
+   */
+  this.alternating = null
+
+  /**
    * List of entries.
    */
   this.entries = new Queue()
@@ -483,6 +488,9 @@ function Playlist (str) {
       } else if (line.match(/^#GROUP\s+BY/i)) {
         var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
         this.grouping = groupMatch[1].toLowerCase()
+      } else if (line.match(/^#ALTERNATE\s+BY/i)) {
+        var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
+        this.alternating = alternateMatch[1].toLowerCase()
       } else if (line.match(/^#UNIQUE/i)) {
         this.unique = true
       } else if (line.match(/^##/i) || line.match(/^#EXTM3U/i)) {
@@ -533,6 +541,28 @@ function Playlist (str) {
 }
 
 /**
+ * Alternate the playlist entries.
+ */
+Playlist.prototype.alternate = function () {
+  var self = this
+  if (this.alternating === 'artist') {
+    return this.entries.alternate(function (track) {
+      return track.artist().toLowerCase()
+    })
+  } else if (this.alternating === 'album') {
+    return this.refreshTracks().then(function () {
+      return self.entries.alternate(function (track) {
+        return track.album().toLowerCase()
+      })
+    })
+  } else if (this.alternating === 'entry') {
+    return this.entries.alternate(function (track) {
+      return track.entry.toLowerCase()
+    })
+  }
+}
+
+/**
  * Remove duplicate entries.
  * @return {Playlist} - Itself.
  */
@@ -557,6 +587,8 @@ Playlist.prototype.dispatch = function () {
     return self.order()
   }).then(function () {
     return self.group()
+  }).then(function () {
+    return self.alternate()
   }).then(function () {
     return self.toString()
   })
@@ -589,41 +621,20 @@ Playlist.prototype.fetchTracks = function () {
 Playlist.prototype.group = function () {
   var self = this
   if (this.grouping === 'artist') {
-    return this.groupByArtist()
+    return this.entries.group(function (track) {
+      return track.artist().toLowerCase()
+    })
   } else if (this.grouping === 'album') {
     return this.refreshTracks().then(function () {
-      return self.groupByAlbum()
+      return self.entries.group(function (track) {
+        return track.album().toLowerCase()
+      })
     })
   } else if (this.grouping === 'entry') {
-    return this.groupByEntry()
+    return this.entries.group(function (track) {
+      return track.entry.toLowerCase()
+    })
   }
-}
-
-/**
- * Group the playlist entries by album.
- */
-Playlist.prototype.groupByAlbum = function () {
-  this.entries.group(function (track) {
-    return track.album().toLowerCase()
-  })
-}
-
-/**
- * Group the playlist entries by artist.
- */
-Playlist.prototype.groupByArtist = function () {
-  this.entries.group(function (track) {
-    return track.artist().toLowerCase()
-  })
-}
-
-/**
- * Group the playlist entries by entry.
- */
-Playlist.prototype.groupByEntry = function () {
-  this.entries.group(function (track) {
-    return track.entry.toLowerCase()
-  })
 }
 
 /**
@@ -709,29 +720,15 @@ Queue.prototype.add = function (entry) {
 }
 
 /**
- * Interleave a nested queue into a flat queue.
+ * Group entries and interleave them.
+ * @param {Function} fn - A grouping function.
+ * Takes an entry as input and returns a grouping key,
+ * a string, as output.
  * @return {Queue} - Itself.
  */
-Queue.prototype.alternate = function () {
-  var queues = this
-  var result = new Queue()
-  var temp = new Queue()
-  var iterator = function (queue) {
-    if (!queue.isEmpty()) {
-      var entry = queue.shift()
-      result.add(entry)
-    }
-    if (!queue.isEmpty()) {
-      temp.add(queue)
-    }
-  }
-  while (!queues.isEmpty()) {
-    queues.forEach(iterator)
-    queues = temp
-    temp = new Queue()
-  }
-  this.queue = result.queue
-  return this
+Queue.prototype.alternate = function (fn) {
+  this.groupBy(fn)
+  this.interleave()
 }
 
 /**
@@ -838,21 +835,58 @@ Queue.prototype.get = function (idx) {
  * @return {Queue} - Itself.
  */
 Queue.prototype.group = function (fn) {
+  this.groupBy(fn)
+  this.flatten()
+}
+
+/**
+ * Group entries.
+ * @param {Function} fn - A grouping function.
+ * Takes an entry as input and returns a grouping key,
+ * a string, as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.groupBy = function (fn) {
   var map = []
   var result = []
   for (var i in this.queue) {
     var entry = this.queue[i]
     var key = fn(entry)
-
     if (!map[key]) {
-      map[key] = []
+      map[key] = new Queue()
     }
-    map[key].push(entry)
+    map[key].add(entry)
   }
   for (var k in map) {
-    result = result.concat(map[k])
+    result.push(map[k])
   }
   this.queue = result
+  return this
+}
+
+/**
+ * Interleave a nested queue into a flat queue.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.interleave = function () {
+  var queues = this
+  var result = new Queue()
+  var temp = new Queue()
+  var iterator = function (queue) {
+    if (!queue.isEmpty()) {
+      var entry = queue.shift()
+      result.add(entry)
+    }
+    if (!queue.isEmpty()) {
+      temp.add(queue)
+    }
+  }
+  while (!queues.isEmpty()) {
+    queues.forEach(iterator)
+    queues = temp
+    temp = new Queue()
+  }
+  this.queue = result.queue
   return this
 }
 
@@ -1045,7 +1079,7 @@ Similar.prototype.createQueue = function () {
   var queue = new Queue(artists)
   queue = queue.slice(0, self.artistLimit)
   return queue.dispatch().then(function (result) {
-    return result.alternate()
+    return result.interleave()
   })
 }
 
