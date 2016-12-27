@@ -70,11 +70,7 @@ Playlist of array: clone
 (Def. algorithm: a class whose dispatch() method returns a Playlist.
 We can even imagine examples where a Algorithm-is-a-Playlist ...)
 
-Put Top in its own class
-
-Move response parameter out of constructor
-
-Move limit parameter into constructor
+Add setID() method to all classes
 
 Add support for spotify album links
 (e.g., https://open.spotify.com/album/0xnL6goTzcRFKzbrleXfpF)

@@ -7,7 +7,7 @@
     "spotify": "node spotify",
     "dump": "node spotify > output.txt && cat output.txt",
     "build": "npm run browser && npm run jsdoc",
-    "lint": "jshint index.js lib/album.js lib/artist.js lib/lastfm.js lib/playlist.js lib/queue.js lib/similar.js lib/spotify.js lib/track.js web/web.js test/test.js && standard index.js lib/album.js lib/artist.js lib/lastfm.js lib/playlist.js lib/queue.js lib/similar.js lib/spotify.js lib/track.js web/web.js test/test.js",
+    "lint": "jshint index.js lib/album.js lib/artist.js lib/lastfm.js lib/playlist.js lib/queue.js lib/similar.js lib/spotify.js lib/top.js lib/track.js web/web.js test/test.js && standard index.js lib/album.js lib/artist.js lib/lastfm.js lib/playlist.js lib/queue.js lib/similar.js lib/spotify.js lib/top.js lib/track.js web/web.js test/test.js",
     "test": "mocha test/test.js",
     "tests": "npm run lint && npm run test",
     "browser": "browserify web/web.js -o web/spotify.js",
