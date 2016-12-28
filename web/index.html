@@ -88,34 +88,34 @@ spotify:track:4qbCRlvE5Bb9XNBjxARjoP
 spotify:track:7x4tFmih1JBITx0e2ucGrT</pre>
       <p>To import the playlist:</p>
       <ol>
-        <li>Copy the output to the clipboard (with <em>Edit &rarr; Copy</em> or <kbd>Ctrl</kbd> + <kbd>C</kbd>).</li>
-        <li>Create a new playlist in Spotify (with <em>File &rarr; New Playlist</em> or <kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
-        <li>Paste into it (with <em>Edit &rarr; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
+        <li>Copy the output to the clipboard (with <em>Edit -&gt; Copy</em> or <kbd>Ctrl</kbd> + <kbd>C</kbd>).</li>
+        <li>Create a new playlist in Spotify (with <em>File -&gt; New Playlist</em> or <kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
+        <li>Paste into it (with <em>Edit -&gt; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
       </ol>
       <h3>Albums</h3>
       <p>To add an entire album to the playlist, use the <code>#album</code> directive:</p>
       <pre>#album Substrata - Biosphere</pre>
       <p>Result:</p>
-      <pre>spotify:track:1TCkrnjuurf0DNLLoJxVyd
-spotify:track:1vriNGX7VD9Cx0Z2N2IglO
-spotify:track:6RrehqfwNTkuQiWu0WNf3X
+      <pre>spotify:track:&lt;Substrata Track #1>
+spotify:track:&lt;Substrata Track #2>
+spotify:track:&lt;Substrata Track #3>
 ...</pre>
       <h3>Artists</h3>
-      <p>To add the entire discography of an artist to the playlist, use the <code>#artist</code> directive:</p>
+      <p>To add the entire discography of an artist, use the <code>#artist</code> directive:</p>
       <pre>#artist Beach House</pre>
       <p>Result:</p>
-      <pre>spotify:track:2SNGR7tguWgIR7sWzn40bw
-spotify:track:40SNnkhRM3ZUPLOOOEAcoM
-spotify:track:2Fr2fg7o35D5gZObRhragD
+      <pre>spotify:track:&lt;Beach House Track #1>
+spotify:track:&lt;Beach House Track #2>
+spotify:track:&lt;Beach House Track #3>
 ...</pre>
-      <p>To add the top 5 or top 10 tracks of an artist, use the <code>#top5</code> and <code>#top10</code> directives:</p>
-      <pre>#top5 Aphex Twin</pre>
-      <p>Result:</p>
-      <pre>spotify:track:3ESsjKqrj3M79I8sSZieK3
-spotify:track:2LbyMbtKsh2pld57XN50M2
-spotify:track:1D7TUN3EkC5FRJfDY7jZzN
-spotify:track:44IECBxt9Hev9ivOFLG7W0
-spotify:track:1E38xwNBProWZkF26Pqtfm</pre>
+      <h3>Top tracks</h3>
+      <p>To add the top 10 tracks of an artist, use the <code>#top</code> directive:</p>
+      <pre>#top Aphex Twin</pre>
+      <p>To add only the top 5 tracks, use the <code>#top5</code> directive.</p>
+      <h3>Similar artists</h3>
+      <p>To add tracks from similar artists, use the <code>#similar</code> directive:</p>
+      <pre>#similar Aphex Twin</pre>
+      <p>This will create a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.</p>
       <h3>Order</h3>
       <p>To order the tracks by Spotify popularity, add the line <code>#order by popularity</code>:</p>
       <pre>#order by popularity
@@ -126,9 +126,15 @@ spotify:track:1E38xwNBProWZkF26Pqtfm</pre>
       <h3>Group</h3>
       <p>To sort the ordered tracks into groups, use the <code>#group by</code> directive:</p>
       <pre>#order by lastfm
-#group by album
-#artist Beach House</pre>
-      <p>This will create a Last.fm-ordered playlist where tracks from the same album are grouped together.</p>
+#group by artist
+#similar Beach House</pre>
+      <p>This will create a Last.fm-ordered playlist of artists similar to Beach House, where tracks from the same artists are grouped together.</p>
+      <h3>Alternate</h3>
+      <p>To group the tracks and then interleave them, use the <code>#alternate by</code> directive:</p>
+      <pre>#order by lastfm
+#alternate by artist
+#similar Beach House</pre>
+      <p>This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.</p>
     </div>
   </body>
 </html>
