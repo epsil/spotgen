@@ -101,7 +101,7 @@ Album.prototype.searchForAlbum = function () {
     return spotify.searchForAlbum(this.entry).then(function (result) {
       self.searchResponse = result
       return self
-    }, function () {
+    }).catch(function () {
       console.log('COULD NOT FIND ' + self.entry)
       return Promise.reject(null)
     })
@@ -849,7 +849,7 @@ Queue.prototype.resolveAll = function (fn) {
       return fn(entry)
     }).then(function (value) {
       result.add(value)
-    }, function () { })
+    }).catch(function () { })
   })
   return ready.then(function () {
     return result
@@ -1124,7 +1124,8 @@ spotify.getTrack = function (id) {
 
 /**
  * Perform a Spotify request.
- * @param {string} url - The URL to look up.
+ * @param {string} url - The URL to resolve.
+ * @return {Promise | JSON} A JSON response.
  */
 spotify.request = function (url) {
   return new Promise(function (resolve, reject) {
