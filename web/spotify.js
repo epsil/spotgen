@@ -60,17 +60,10 @@ Album.prototype.dispatch = function () {
  * @return {Promise | JSON} A JSON response.
  */
 Album.prototype.fetchAlbum = function () {
-  var id = this.id()
-  var url = 'https://api.spotify.com/v1/albums/'
-  url += encodeURIComponent(id)
   var self = this
-  return spotify.request(url).then(function (response) {
-    if (self.isAlbumResponse(response)) {
-      self.albumResponse = response
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
+  return spotify.getAlbum(this.id()).then(function (response) {
+    self.albumResponse = response
+    return self
   })
 }
 
@@ -95,30 +88,6 @@ Album.prototype.id = function () {
 }
 
 /**
- * Whether a JSON response is an album response.
- * @param {JSON} response - A JSON response object.
- * @return {boolean} `true` if `response` is an album response,
- * `false` otherwise.
- */
-Album.prototype.isAlbumResponse = function (response) {
-  return response &&
-    response.id
-}
-
-/**
- * Whether a JSON response is an album search response.
- * @param {JSON} response - A JSON response object.
- * @return {boolean} `true` if `response` is an album search response,
- * `false` otherwise.
- */
-Album.prototype.isSearchResponse = function (response) {
-  return response &&
-    response.albums &&
-    response.albums.items[0] &&
-    response.albums.items[0].id
-}
-
-/**
  * Search for album if not known.
  * @return {Promise | JSON} A JSON response, or `null` if not found.
  */
@@ -129,17 +98,10 @@ Album.prototype.searchForAlbum = function () {
   } else if (this.albumResponse) {
     return Promise.resolve(this.albumResponse)
   } else {
-    // https://developer.spotify.com/web-api/search-item/
-    var url = 'https://api.spotify.com/v1/search?type=album&q='
-    url += encodeURIComponent(this.entry)
-    return spotify.request(url).then(function (response) {
-      if (self.isSearchResponse(response)) {
-        self.searchResponse = response
-        return Promise.resolve(response)
-      } else {
-        return Promise.reject(response)
-      }
-    }).then(null, function () {
+    return spotify.searchForAlbum(this.entry).then(function (result) {
+      self.searchResponse = result
+      return self
+    }, function () {
       console.log('COULD NOT FIND ' + self.entry)
       return Promise.reject(null)
     })
@@ -161,9 +123,13 @@ Album.prototype.setLimit = function (limit) {
  * @param {JSON} response - The response.
  */
 Album.prototype.setResponse = function (response) {
-  if (this.isSearchResponse(response)) {
+  if (response &&
+      response.albums &&
+      response.albums.items[0] &&
+      response.albums.items[0].id) {
     this.searchResponse = response
-  } else if (this.isAlbumResponse(response)) {
+  } else if (response &&
+             response.id) {
     this.albumResponse = response
   }
 }
@@ -245,17 +211,10 @@ Artist.prototype.dispatch = function () {
  * @return {Promise | JSON} A JSON response.
  */
 Artist.prototype.fetchAlbums = function () {
-  var id = this.id()
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/albums'
   var self = this
-  return spotify.request(url).then(function (response) {
-    if (self.isAlbumsResponse(response)) {
-      self.albumsResponse = response
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
+  return spotify.getAlbumsByArtist(this.id()).then(function (result) {
+    self.albumsResponse = result
+    return self
   })
 }
 
@@ -279,61 +238,19 @@ Artist.prototype.id = function () {
 }
 
 /**
- * Whether a JSON response is an albums response.
- * @param {JSON} response - A JSON response object.
- * @return {boolean} `true` if `response` is an albums response,
- * `false` otherwise.
- */
-Artist.prototype.isAlbumsResponse = function (response) {
-  return response &&
-    response.items
-}
-
-/**
- * Whether a JSON response is an artist response.
- * @param {JSON} response - A JSON response object.
- * @return {boolean} `true` if `response` is an artist response,
- * `false` otherwise.
- */
-Artist.prototype.isArtistResponse = function (response) {
-  return response &&
-    response.id
-}
-
-/**
- * Whether a JSON response is an artist search response.
- * @param {JSON} response - A JSON response object.
- * @return {boolean} `true` if `response` is an artist search response,
- * `false` otherwise.
- */
-Artist.prototype.isSearchResponse = function (response) {
-  return response &&
-    response.artists &&
-    response.artists.items[0] &&
-    response.artists.items[0].id
-}
-
-/**
  * Search for artist.
  * @return {Promise | JSON} A JSON response.
  */
 Artist.prototype.searchForArtist = function () {
+  var self = this
   if (this.searchResponse) {
     return Promise.resolve(this.searchResponse)
   } else if (this.artistResponse) {
     return Promise.resolve(this.artistResponse)
   } else {
-    // https://developer.spotify.com/web-api/search-item/
-    var url = 'https://api.spotify.com/v1/search?type=artist&q='
-    url += encodeURIComponent(this.entry)
-    var self = this
-    return spotify.request(url).then(function (response) {
-      if (self.isSearchResponse(response)) {
-        self.searchResponse = response
-        return Promise.resolve(response)
-      } else {
-        return Promise.reject(response)
-      }
+    return spotify.searchForArtist(this.entry).then(function (result) {
+      self.searchResponse = result
+      return self
     })
   }
 }
@@ -353,11 +270,16 @@ Artist.prototype.setLimit = function (limit) {
  * @param {JSON} response - The response.
  */
 Artist.prototype.setResponse = function (response) {
-  if (this.isSearchResponse(response)) {
+  if (response &&
+      response.artists &&
+      response.artists.items[0] &&
+      response.artists.items[0].id) {
     this.searchResponse = response
-  } else if (this.isArtistResponse(response)) {
+  } else if (response &&
+             response.id) {
     this.artistResponse = response
-  } else if (this.isAlbumsResponse(response)) {
+  } else if (response &&
+             response.items) {
     this.albumsResponse = response
   }
 }
@@ -1099,17 +1021,6 @@ Similar.prototype.id = function () {
 }
 
 /**
- * Whether a JSON response is a related artists response.
- * @param {JSON} response - A JSON response object.
- * @return {boolean} `true` if `response` is a related artists
- * response, `false` otherwise.
- */
-Similar.prototype.isRelatedArtistsResponse = function (response) {
-  return response &&
-    response.artists
-}
-
-/**
  * Search for artist.
  * @return {Promise} A Promise to perform the action.
  */
@@ -1123,17 +1034,10 @@ Similar.prototype.searchForArtist = function () {
  * @return {Promise} A Promise to perform the action.
  */
 Similar.prototype.searchForRelatedArtists = function () {
-  // https://api.spotify.com/v1/artists/{id}/related-artists
   var self = this
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(this.id()) + '/related-artists'
-  return spotify.request(url).then(function (response) {
-    if (self.isRelatedArtistsResponse(response)) {
-      self.relatedArtistsResponse = response
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
+  return spotify.searchForRelatedArtists(this.id()).then(function (result) {
+    self.relatedArtistsResponse = result
+    return self
   })
 }
 
@@ -1154,6 +1058,71 @@ var request = require('request')
 var spotify = {}
 
 /**
+ * Fetch album metadata.
+ * @param {string} id - Album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getAlbum = function (id) {
+  var url = 'https://api.spotify.com/v1/albums/'
+  url += encodeURIComponent(id)
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.id) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Get all albums by an artist.
+ * @param {string} id - Artist ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getAlbumsByArtist = function (id) {
+  var url = 'https://api.spotify.com/v1/artists/'
+  url += encodeURIComponent(id) + '/albums'
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.items) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Get the top tracks of an artist.
+ * @param {string} id - Artist ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getTopTracks = function (id) {
+  var url = 'https://api.spotify.com/v1/artists/'
+  url += encodeURIComponent(id) + '/top-tracks?country=US'
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.tracks) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Get a track.
+ * @param {string} id - Track ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getTrack = function (id) {
+  var url = 'https://api.spotify.com/v1/tracks/'
+  url += encodeURIComponent(id)
+  return spotify.request(url)
+}
+
+/**
  * Perform a Spotify request.
  * @param {string} url - The URL to look up.
  */
@@ -1168,6 +1137,7 @@ spotify.request = function (url) {
           reject(response.statusCode)
         } else {
           try {
+            // TODO: replace with request-json
             body = JSON.parse(body)
           } catch (e) {
             reject(e)
@@ -1180,6 +1150,83 @@ spotify.request = function (url) {
         }
       })
     }, 100)
+  })
+}
+
+/**
+ * Search for artist.
+ * @param {string} artist - The artist to search for.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.searchForArtist = function (artist) {
+  var url = 'https://api.spotify.com/v1/search?type=artist&q='
+  url += encodeURIComponent(artist)
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.artists &&
+        response.artists.items[0] &&
+        response.artists.items[0].id) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for album.
+ * @param {string} album - The album to search for.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.searchForAlbum = function (album) {
+  var url = 'https://api.spotify.com/v1/search?type=album&q='
+  url += encodeURIComponent(album)
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.albums &&
+        response.albums.items[0] &&
+        response.albums.items[0].id) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for related artists.
+ * @param {string} id - The album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.searchForRelatedArtists = function (id) {
+  var url = 'https://api.spotify.com/v1/artists/'
+  url += encodeURIComponent(id) + '/related-artists'
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.artists) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for track.
+ * @param {string} track - The track to search for.
+ * @return {Promise | JSON} JSON response.
+ */
+spotify.searchForTrack = function (track) {
+  var url = 'https://api.spotify.com/v1/search?type=track&q='
+  url += encodeURIComponent(track)
+  return spotify.request(url).then(function (response) {
+    if (response.tracks &&
+        response.tracks.items[0] &&
+        response.tracks.items[0].uri) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
   })
 }
 
@@ -1262,17 +1309,10 @@ Top.prototype.dispatch = function () {
  * @return {Promise | JSON} A JSON response.
  */
 Top.prototype.fetchTopTracks = function () {
-  var id = this.getID()
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/top-tracks?country=US'
   var self = this
-  return spotify.request(url).then(function (response) {
-    if (self.isTopTracksResponse(response)) {
-      self.topTracksResponse = response
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
+  return spotify.getTopTracks(this.getID()).then(function (result) {
+    self.topTracksResponse = result
+    return self
   })
 }
 
@@ -1283,17 +1323,6 @@ Top.prototype.fetchTopTracks = function () {
  */
 Top.prototype.getID = function () {
   return this.id
-}
-
-/**
- * Whether a JSON response is a top tracks response.
- * @param {JSON} response - A JSON response object.
- * @return {boolean} `true` if `response` is a top tracks response,
- * `false` otherwise.
- */
-Top.prototype.isTopTracksResponse = function (response) {
-  return response &&
-    response.tracks
 }
 
 /**
@@ -1423,7 +1452,7 @@ Track.prototype.dispatch = function () {
   } else if (this.isLink(this.entry)) {
     return this.fetchTrack()
   } else {
-    return this.searchForTrack(this.entry)
+    return this.searchForTrack()
   }
 }
 
@@ -1458,11 +1487,8 @@ Track.prototype.fetchLastfm = function () {
  * @return {Promise | Track} Itself.
  */
 Track.prototype.fetchTrack = function () {
-  var id = this.id()
-  var url = 'https://api.spotify.com/v1/tracks/'
-  url += encodeURIComponent(id)
   var self = this
-  return spotify.request(url).then(function (result) {
+  return spotify.getTrack(this.id()).then(function (result) {
     self.response = result
     return self
   })
@@ -1487,15 +1513,6 @@ Track.prototype.id = function () {
   } else {
     return -1
   }
-}
-
-/**
- * Whether a track object is full or simplified.
- * A full object includes information (like popularity)
- * that a simplified object does not.
- */
-Track.prototype.isFullResponse = function (response) {
-  return response && response.popularity
 }
 
 /**
@@ -1565,18 +1582,11 @@ Track.prototype.popularity = function () {
  * @param {string} query - The query text.
  * @return {Promise | Track} Itself.
  */
-Track.prototype.searchForTrack = function (query) {
-  // https://developer.spotify.com/web-api/search-item/
-  var url = 'https://api.spotify.com/v1/search?type=track&q='
-  url += encodeURIComponent(query)
+Track.prototype.searchForTrack = function () {
   var self = this
-  return spotify.request(url).then(function (result) {
-    if (result.tracks &&
-        result.tracks.items[0] &&
-        result.tracks.items[0].uri) {
-      self.responseSimple = result.tracks.items[0]
-      return self
-    }
+  return spotify.searchForTrack(this.entry).then(function (result) {
+    self.responseSimple = result.tracks.items[0]
+    return self
   })
 }
 
@@ -1628,7 +1638,8 @@ Track.prototype.uri = function () {
  * @param {JSON} response - The response.
  */
 Track.prototype.setResponse = function (response) {
-  if (this.isFullResponse(response)) {
+  if (response &&
+      response.popularity) {
     this.response = response
   } else {
     this.responseSimple = response
