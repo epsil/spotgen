@@ -1093,6 +1093,163 @@ Ensure that only one entry is dispatched at a time.</p>
 
     
 
+    <h4 class="name" id="filter"><span class="type-signature"></span>filter<span class="signature">(fn)</span><span class="type-signature"> &rarr; {<a href="Queue.html">Queue</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Filter the queue by a predicate.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A predicate function.
+Takes the current entry as input and returns
+<code>true</code> if it passes the test, <code>false</code> otherwise.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line101">line 101</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <ul>
+<li>A new queue.</li>
+</ul>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Queue.html">Queue</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="flatten"><span class="type-signature"></span>flatten<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Queue.html">Queue</a>}</span></h4>
 
     
@@ -1144,7 +1301,7 @@ Ensure that only one entry is dispatched at a time.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line98">line 98</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line109">line 109</a>
     </li></ul></dd>
     
 
@@ -1301,7 +1458,7 @@ the modified value as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line120">line 120</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line131">line 131</a>
     </li></ul></dd>
     
 
@@ -1457,7 +1614,7 @@ The indices start at 0.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line130">line 130</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line141">line 141</a>
     </li></ul></dd>
     
 
@@ -1590,7 +1747,7 @@ a string, as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line141">line 141</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line152">line 152</a>
     </li></ul></dd>
     
 
@@ -1747,7 +1904,7 @@ a string, as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line153">line 153</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line164">line 164</a>
     </li></ul></dd>
     
 
@@ -1853,7 +2010,7 @@ a string, as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line175">line 175</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line186">line 186</a>
     </li></ul></dd>
     
 
@@ -1959,7 +2116,7 @@ a string, as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line201">line 201</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line212">line 212</a>
     </li></ul></dd>
     
 
@@ -2116,7 +2273,7 @@ the modified value as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line212">line 212</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line223">line 223</a>
     </li></ul></dd>
     
 
@@ -2222,7 +2379,7 @@ the modified value as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line279">line 279</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line290">line 290</a>
     </li></ul></dd>
     
 
@@ -2328,7 +2485,7 @@ the modified value as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line292">line 292</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line303">line 303</a>
     </li></ul></dd>
     
 
@@ -2486,7 +2643,7 @@ Takes an entry as input and returns a Promise
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line224">line 224</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line235">line 235</a>
     </li></ul></dd>
     
 
@@ -2593,7 +2750,7 @@ Takes an entry as input and returns a Promise
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line306">line 306</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line317">line 317</a>
     </li></ul></dd>
     
 
@@ -2700,7 +2857,7 @@ if the queue is empty.</li>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line245">line 245</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line256">line 256</a>
     </li></ul></dd>
     
 
@@ -2878,7 +3035,7 @@ if the queue is empty.</li>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line257">line 257</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line268">line 268</a>
     </li></ul></dd>
     
 
@@ -3038,7 +3195,7 @@ Takes two entries as input and returns
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line270">line 270</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line281">line 281</a>
     </li></ul></dd>
     
 
@@ -3144,7 +3301,7 @@ Takes two entries as input and returns
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line314">line 314</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line325">line 325</a>
     </li></ul></dd>
     
 
@@ -3214,7 +3371,7 @@ Takes two entries as input and returns
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Thu Dec 29 2016 23:36:23 GMT+0100 (CET)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 30 2016 01:22:21 GMT+0100 (CET)
 </footer>
 
 <script> prettyPrint(); </script>

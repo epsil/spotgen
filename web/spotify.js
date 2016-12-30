@@ -190,7 +190,11 @@ Artist.prototype.createQueue = function () {
     return album
   })
   var albumQueue = new Queue(albums)
-  return albumQueue.dispatch()
+  return albumQueue.dispatch().then(function (queue) {
+    return queue.flatten().filter(function (track) {
+      return track.hasArtist(self.entry)
+    })
+  })
 }
 
 /**
@@ -707,6 +711,17 @@ Queue.prototype.dispatch = function () {
   return this.resolveAll(function (entry) {
     return entry.dispatch()
   })
+}
+
+/**
+ * Filter the queue by a predicate.
+ * @param {Function} fn - A predicate function.
+ * Takes the current entry as input and returns
+ * `true` if it passes the test, `false` otherwise.
+ * @return {Queue} - A new queue.
+ */
+Queue.prototype.filter = function (fn) {
+  return new Queue(this.toArray().filter(fn))
 }
 
 /**
@@ -1493,6 +1508,21 @@ Track.prototype.fetchTrack = function () {
     self.response = result
     return self
   })
+}
+
+/**
+ * Whether the track has the given artist.
+ * @param {string} artist - The artist.
+ * @return {boolean} `true` the track has the artist,
+ * `false` otherwise.
+ */
+Track.prototype.hasArtist = function (artist) {
+  var response = this.response || this.responseSimple
+  var artists = response.artists.map(function (artist) {
+    return artist.name.trim().toLowerCase()
+  })
+  artist = artist.trim().toLowerCase()
+  return artists.indexOf(artist) > -1
 }
 
 /**
