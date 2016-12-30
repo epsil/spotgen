@@ -15,9 +15,39 @@
     <link href="favicon.ico" rel="icon" type="image/x-icon">
     <style type="text/css">
       <!--
+        body, html {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .playlists {
+            padding-top: 1em;
+        }
+        .generator {
+            color: #ddd;
+            margin: 0;
+            padding: 1em 0 0.25em 0;
+            background-color: #242930;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .generator > *, .instructions {
+            max-width: 500px;
+            padding: 0 20px;
+            margin-left: auto;
+            margin-right: auto;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", Georgia, Charter, "Iowan Old Style", Iowan, "Iowan Web", "Hoefler Text", Cambria, Constantia, Utopia, Marion, Cochin, "Palatino Linotype", Palatino, Baskerville, serif;
-            margin-bottom: 5em;
+            /* margin-bottom: 5em; */
+            margin: 0;
+            padding: 0;
+        }
+        button {
+            background-color: rgba(0, 0, 0, 0.1) !important;
+            border: 2px solid rgba(255, 255, 255, 0.1) !important;
+            color: inherit !important;
+        }
+        h1 {
+            margin: 0.5em 0 0.5em 0;
         }
         h1 a, h1 a:hover {
             color: inherit;
@@ -50,22 +80,29 @@
             -moz-border-right-colors: none;
             -moz-border-top-colors: none;
         }
-        textarea {
+        textarea, textarea:focus {
+            border: 2px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: none !important;
+            color: inherit !important;
+            background-color: rgba(0, 0, 0, 0.1) !important;
             font-family: Consolas, "Consolas Web", Menlo, Monaco, "Liberation Mono", Courier, monospace;
             min-height: 20em;
+            margin-bottom: 2em !important;
         }
         .log {
             color: #999;
             margin-top: 0.5em;
             min-height: 3em;
+            height: 3em;
+            overflow: hidden;
         }
       -->
     </style>
     <script src="spotify.js"></script>
   </head>
   <body>
-    <div class="container">
-      <a href="https://github.com/epsil/spotify-js"><img style="position: absolute; top: 0; right: 0; border: 0; user-select: none; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none;" src="forkme.png" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+    <a href="https://github.com/epsil/spotify-js"><img style="position: absolute; top: 0; right: 0; border: 0; user-select: none; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none;" src="forkme.png" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+    <div class="generator">
       <h1><a href="https://epsil.github.io/spotify/" rel="bookmark">Spotify Playlist Generator</a></h1>
       <form id="form">
         <div class="form-group">
@@ -74,6 +111,44 @@
         <button type="submit" class="btn btn-default">Create Playlist</button>
         <p class="log"></p>
       </form>
+    </div>
+    <div class="playlists">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="thumbnail">
+              <a href="beachhouse.jpg" target="_blank">
+                <img src="beachhouse.jpg" alt="" style="width:100%">
+                <div class="caption">
+                  <p>Top tracks by Aphex Twin</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="thumbnail">
+              <a href="beachhouse.jpg" target="_blank">
+                <img src="beachhouse.jpg" alt="" style="width:100%">
+                <div class="caption">
+                  <p>Similar artists to Deerhunter</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="thumbnail">
+              <a href="beachhouse.jpg" target="_blank">
+                <img src="beachhouse.jpg" alt="" style="width:100%">
+                <div class="caption">
+                  <p>Beach House sorted by Last.fm rating</p>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="instructions">
       <h2>Usage</h2>
       <p>Example input:</p>
       <pre>Walk in the Park - Beach House
