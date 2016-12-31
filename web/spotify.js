@@ -192,6 +192,7 @@ Artist.prototype.createQueue = function () {
   var albumQueue = new Queue(albums)
   return albumQueue.dispatch().then(function (queue) {
     return queue.flatten().filter(function (track) {
+      // TODO: use canonical artist name
       return track.hasArtist(self.entry)
     })
   })
@@ -1521,7 +1522,12 @@ Track.prototype.hasArtist = function (artist) {
     return artist.name.trim().toLowerCase()
   })
   artist = artist.trim().toLowerCase()
-  return artists.indexOf(artist) > -1
+  for (var i in artists) {
+    if (artists[i].includes(artist)) {
+      return true
+    }
+  }
+  return false
 }
 
 /**
