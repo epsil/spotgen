@@ -43606,8 +43606,15 @@ module.exports = Request
 var Playlist = require('../lib/playlist')
 var $ = require('jquery')
 
+console.log = function (message) {
+  if (typeof message === 'string') {
+    $('.log').text(message)
+  }
+}
+
 function clickHandler (str) {
   return function () {
+    resetButton()
     $('textarea').val(str)
     $('html, body').stop().animate({scrollTop: 0}, '500', 'swing', function () {
       $('textarea').focus()
@@ -43616,7 +43623,40 @@ function clickHandler (str) {
   }
 }
 
+function resetButton () {
+  $('button').text('Create Playlist')
+  $('button').removeClass('disabled')
+  $('button').removeClass('active')
+  console.log('')
+}
+
 $(function () {
+  var form = $('form')
+  var textarea = $('textarea')
+  var button = $('button')
+
+  form.on('submit', function () {
+    var playlist = new Playlist(textarea.val())
+    button.text('Creating Playlist \u2026')
+    button.addClass('active')
+    button.addClass('disabled')
+    playlist.dispatch().then(function (result) {
+      console.log('')
+      button.removeClass('disabled')
+      textarea.val(result)
+      textarea.focus()
+      textarea.select()
+      if (result === '') {
+        resetButton()
+      } else {
+        button.text('Created Playlist')
+        console.log('Copy and paste the above ' +
+                    'into a new Spotify playlist')
+      }
+    })
+    return false
+  })
+
   var beachhouse = '## Five hand-picked Beach House tracks\n\n' +
       'Wildflower - Beach House\n' +
       'Walk in the Park - Beach House\n' +
@@ -43648,44 +43688,8 @@ $(function () {
       '#order by lastfm\n' +
       '#artist Deerhunter'
   $('#deerhunter').click(clickHandler(deerhunter))
-})
-
-document.addEventListener('DOMContentLoaded', function () {
-  var form = document.querySelector('form')
-  var textarea = document.querySelector('textarea')
-  var button = document.querySelector('button')
-  var log = document.querySelector('.log')
-
-  console.log = function (message) {
-    if (typeof message === 'string') {
-      log.innerHTML = message
-    }
-  }
 
   textarea.focus()
-
-  form.onsubmit = function () {
-    var playlist = new Playlist(textarea.value)
-    button.innerHTML = 'Creating Playlist &hellip;'
-    button.classList.add('active')
-    button.classList.add('disabled')
-    playlist.dispatch().then(function (result) {
-      console.log('')
-      button.classList.remove('disabled')
-      textarea.value = result
-      textarea.focus()
-      textarea.select()
-      if (result === '') {
-        button.innerHTML = 'Create Playlist'
-        button.classList.remove('active')
-      } else {
-        button.innerHTML = 'Created Playlist'
-        console.log('Copy and paste the above ' +
-                    'into a new Spotify playlist')
-      }
-    })
-    return false
-  }
 })
 
 },{"../lib/playlist":5,"jquery":11}],138:[function(require,module,exports){
