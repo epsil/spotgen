@@ -20,7 +20,7 @@
             padding: 0 !important;
         }
         .playlists {
-            padding-top: 1em;
+            padding-top: 2.5em;
         }
         .generator {
             color: #ddd;
@@ -29,11 +29,18 @@
             background-color: #242930;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
-        .generator > *, .instructions {
+        .thumbnail {
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+            max-width: 150px;
+         }
+        .generator > *, .instructions > * {
             max-width: 500px;
             padding: 0 20px;
             margin-left: auto;
             margin-right: auto;
+        }
+        .instructions {
+            background-color: rgba(0, 0, 0, 0.1) !important;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", Georgia, Charter, "Iowan Old Style", Iowan, "Iowan Web", "Hoefler Text", Cambria, Constantia, Utopia, Marion, Cochin, "Palatino Linotype", Palatino, Baskerville, serif;
@@ -115,32 +122,32 @@
     <div class="playlists">
       <div class="container">
         <div class="row">
-          <div class="col-sm-4">
+          <div class="col-xs-4">
             <div class="thumbnail">
-              <a href="beachhouse.jpg" target="_blank">
-                <img src="beachhouse.jpg" alt="" style="width:100%">
+              <a href="#" id="aphextwin">
+                <img src="aphextwin.png" alt="" style="width: 100%">
                 <div class="caption">
                   <p>Top tracks by Aphex Twin</p>
                 </div>
               </a>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-xs-4">
             <div class="thumbnail">
-              <a href="beachhouse.jpg" target="_blank">
-                <img src="beachhouse.jpg" alt="" style="width:100%">
+              <a href="#" id="deerhunter">
+                <img src="deerhunter.jpg" alt="" style="width: 100%">
                 <div class="caption">
                   <p>Similar artists to Deerhunter</p>
                 </div>
               </a>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-xs-4">
             <div class="thumbnail">
-              <a href="beachhouse.jpg" target="_blank">
-                <img src="beachhouse.jpg" alt="" style="width:100%">
+              <a href="#" id="beachhouse">
+                <img src="beachhouse.jpg" alt="" style="width: 100%">
                 <div class="caption">
-                  <p>Beach House sorted by Last.fm rating</p>
+                  <p>Beach House tracks ordered by Last.fm</p>
                 </div>
               </a>
             </div>

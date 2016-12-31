@@ -1,4 +1,25 @@
 var Playlist = require('../lib/playlist')
+var $ = require('jquery')
+
+$(function () {
+  $('#aphextwin').click(function () {
+    $('textarea').val('#top Aphex Twin')
+    $('textarea').focus()
+    return false
+  })
+
+  $('#deerhunter').click(function () {
+    $('textarea').val('#similar Deerhunter')
+    $('textarea').focus()
+    return false
+  })
+
+  $('#beachhouse').click(function () {
+    $('textarea').val('#order by lastfm\n#artist Beach House')
+    $('textarea').focus()
+    return false
+  })
+})
 
 document.addEventListener('DOMContentLoaded', function () {
   var form = document.querySelector('form')
