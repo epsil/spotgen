@@ -1,0 +1,109 @@
+a, a:hover {
+    color: inherit;
+}
+body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+::selection {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+::-moz-selection {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.playlists {
+    padding-top: 2.5em;
+}
+.generator, .instructions {
+    color: #ddd;
+    margin: 0;
+    padding: 1em 0 0.25em 0;
+    background-color: #242930;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+.thumbnail {
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+    max-width: 150px;
+ }
+.thumbnail p {
+    margin: 0;
+    padding: 0;
+}
+.generator > *, .instructions > * {
+    max-width: 500px;
+    padding: 0 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", Georgia, Charter, "Iowan Old Style", Iowan, "Iowan Web", "Hoefler Text", Cambria, Constantia, Utopia, Marion, Cochin, "Palatino Linotype", Palatino, Baskerville, serif;
+    /* margin-bottom: 5em; */
+    margin: 0;
+    padding: 0;
+}
+button {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    color: inherit !important;
+}
+h1 {
+    margin: 0.5em 0 0.5em 0;
+}
+h1 a, h1 a:link, h1 a:visited, h1 a:hover, h1 a:active,
+.thumbnail a, .thumbnail a:link, .thumbnail a:visited, .thumbnail a:hover, .thumbnail a:active {
+    color: inherit;
+    text-decoration: none;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 200;
+}
+code {
+    background-color: #f5f5f5;
+    color: inherit;
+}
+code, pre {
+    color: inherit;
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+kbd {
+    /* background-color: #fcfcfc; */
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    /* border-color: #ccc #ccc #bbb; */
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    border-image: none;
+    border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+    /* box-shadow: 0 -1px 0 #bbb inset; */
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.1) inset;
+    /* color: #555; */
+    display: inline-block;
+    font-family: inherit !important;
+    /* font-size: 0.5em !important; */
+    font-variant-numeric: normal;
+    line-height: 1em;
+    padding: 3px 5px;
+    vertical-align: middle;
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+}
+textarea, textarea:focus {
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    font-family: Consolas, "Consolas Web", Menlo, Monaco, "Liberation Mono", Courier, monospace;
+    min-height: 15em;
+    margin-bottom: 2em !important;
+}
+.log {
+    color: #999;
+    margin-top: 0.5em;
+    min-height: 3em;
+    height: 3em;
+    overflow: hidden;
+}

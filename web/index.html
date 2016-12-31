@@ -10,124 +10,16 @@
     <meta content="Spotify Playlist Generator" property="og:title">
     <meta content="A tool for generating Spotify playlists." property="og:description">
     <meta content="https://epsil.github.io/spotify/" property="og:url">
+    <meta content="https://epsil.github.io/spotify/apple-touch-icon.png" property="og:image">
     <meta content="en" name="og:locale">
     <link href="bootstrap.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
     <link href="favicon.ico" rel="icon" type="image/x-icon">
-    <style type="text/css">
-      <!--
-        a, a:hover {
-            color: inherit;
-        }
-        body, html {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        ::selection {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        ::-moz-selection {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        .playlists {
-            padding-top: 2.5em;
-        }
-        .generator, .instructions {
-            color: #ddd;
-            margin: 0;
-            padding: 1em 0 0.25em 0;
-            background-color: #242930;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-        .thumbnail {
-            box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
-            max-width: 150px;
-         }
-        .thumbnail p {
-            margin: 0;
-            padding: 0;
-        }
-        .generator > *, .instructions > * {
-            max-width: 500px;
-            padding: 0 20px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", Georgia, Charter, "Iowan Old Style", Iowan, "Iowan Web", "Hoefler Text", Cambria, Constantia, Utopia, Marion, Cochin, "Palatino Linotype", Palatino, Baskerville, serif;
-            /* margin-bottom: 5em; */
-            margin: 0;
-            padding: 0;
-        }
-        button {
-            background-color: rgba(0, 0, 0, 0.1) !important;
-            border: 2px solid rgba(255, 255, 255, 0.1) !important;
-            color: inherit !important;
-        }
-        h1 {
-            margin: 0.5em 0 0.5em 0;
-        }
-        h1 a, h1 a:hover {
-            color: inherit;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-weight: 200;
-        }
-        code {
-            background-color: #f5f5f5;
-            color: inherit;
-        }
-        code, pre {
-            color: inherit;
-            font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-            background-color: rgba(0, 0, 0, 0.1) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-        kbd {
-            /* background-color: #fcfcfc; */
-            background-color: rgba(0, 0, 0, 0.1) !important;
-            /* border-color: #ccc #ccc #bbb; */
-            border-color: rgba(255, 255, 255, 0.1) !important;
-            border-image: none;
-            border-radius: 3px;
-            border-style: solid;
-            border-width: 1px;
-            /* box-shadow: 0 -1px 0 #bbb inset; */
-            box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.1) inset;
-            /* color: #555; */
-            display: inline-block;
-            font-family: inherit !important;
-            /* font-size: 0.5em !important; */
-            font-variant-numeric: normal;
-            line-height: 1em;
-            padding: 3px 5px;
-            vertical-align: middle;
-            -moz-border-bottom-colors: none;
-            -moz-border-left-colors: none;
-            -moz-border-right-colors: none;
-            -moz-border-top-colors: none;
-        }
-        textarea, textarea:focus {
-            border: 2px solid rgba(255, 255, 255, 0.1) !important;
-            box-shadow: none !important;
-            color: inherit !important;
-            background-color: rgba(0, 0, 0, 0.1) !important;
-            font-family: Consolas, "Consolas Web", Menlo, Monaco, "Liberation Mono", Courier, monospace;
-            min-height: 15em;
-            margin-bottom: 2em !important;
-        }
-        .log {
-            color: #999;
-            margin-top: 0.5em;
-            min-height: 3em;
-            height: 3em;
-            overflow: hidden;
-        }
-      -->
-    </style>
+    <link href="apple-touch-icon.png" rel="apple-touch-icon">
     <script src="spotify.js"></script>
   </head>
   <body>
-    <a href="https://github.com/epsil/spotify-js"><img style="position: absolute; top: 0; right: 0; border: 0; user-select: none; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none;" src="forkme.png" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+    <a href="https://github.com/epsil/spotify-js" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0; user-select: none; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none;" src="forkme.png" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
     <div class="generator">
       <h1><a href="https://epsil.github.io/spotify/" rel="bookmark">Spotify Playlist Generator</a></h1>
       <form id="form">
@@ -143,30 +35,30 @@
         <div class="row">
           <div class="col-xs-4">
             <div class="thumbnail">
-              <a href="#" id="aphextwin">
-                <img src="aphextwin.jpg" alt="" style="width: 100%">
-                <div class="caption">
-                  <p>Top tracks by <strong>Aphex Twin</strong></p>
-                </div>
-              </a>
-            </div>
-          </div>
-          <div class="col-xs-4">
-            <div class="thumbnail">
-              <a href="#" id="deerhunter">
-                <img src="deerhunter.jpg" alt="" style="width: 100%">
-                <div class="caption">
-                  <p>Similar artists to <strong>Deerhunter</strong></p>
-                </div>
-              </a>
-            </div>
-          </div>
-          <div class="col-xs-4">
-            <div class="thumbnail">
               <a href="#" id="beachhouse">
                 <img src="beachhouse.jpg" alt="" style="width: 100%">
                 <div class="caption">
-                  <p><strong>Beach House</strong> tracks ordered by Last.fm</p>
+                  <p>Five hand-picked <strong>Beach House</strong> tracks</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="col-xs-4">
+            <div class="thumbnail">
+              <a href="#" id="ambient">
+                <img src="biosphere.jpg" alt="" style="width: 100%">
+                <div class="caption">
+                  <p>Five hand-picked <strong>ambient</strong> albums</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="col-xs-4">
+            <div class="thumbnail">
+              <a href="#" id="aphextwin">
+                <img src="aphextwin.jpg" alt="" style="width: 100%">
+                <div class="caption">
+                  <p>Most popular <strong>Aphex Twin</strong> tracks</p>
                 </div>
               </a>
             </div>
@@ -175,10 +67,10 @@
         <div class="row">
           <div class="col-xs-4">
             <div class="thumbnail">
-              <a href="#" id="ambient">
-                <img src="biosphere.jpg" alt="" style="width: 100%">
+              <a href="#" id="tremblingbluestars">
+                <img src="tremblingbluestars.jpg" alt="" style="width: 100%">
                 <div class="caption">
-                  <p>Top 10 <strong>ambient</strong> albums</p>
+                  <p>Various artists similar to <strong>Trembling Blue Stars</strong></p>
                 </div>
               </a>
             </div>
@@ -188,17 +80,17 @@
               <a href="#" id="djshadow">
                 <img src="djshadow.jpg" alt="" style="width: 100%">
                 <div class="caption">
-                  <p>Similar artists to <strong>DJ Shadow,</strong> ordered by Last.fm</p>
+                  <p>Various artists similar to <strong>DJ Shadow</strong>, ordered by Last.fm rating</p>
                 </div>
               </a>
             </div>
           </div>
           <div class="col-xs-4">
             <div class="thumbnail">
-              <a href="#" id="tremblingbluestars">
-                <img src="tremblingbluestars.jpg" alt="" style="width: 100%">
+              <a href="#" id="deerhunter">
+                <img src="deerhunter.jpg" alt="" style="width: 100%">
                 <div class="caption">
-                  <p>Similar artists to <strong>Trembling Blue Stars</strong></p>
+                  <p>Complete <strong>Deerhunter</strong> discography, ordered by Last.fm rating</p>
                 </div>
               </a>
             </div>
