@@ -15,14 +15,23 @@
     <link href="favicon.ico" rel="icon" type="image/x-icon">
     <style type="text/css">
       <!--
+        a, a:hover {
+            color: inherit;
+        }
         body, html {
             margin: 0 !important;
             padding: 0 !important;
         }
+        ::selection {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        ::-moz-selection {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
         .playlists {
             padding-top: 2.5em;
         }
-        .generator {
+        .generator, .instructions {
             color: #ddd;
             margin: 0;
             padding: 1em 0 0.25em 0;
@@ -33,14 +42,15 @@
             box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
             max-width: 150px;
          }
+        .thumbnail p {
+            margin: 0;
+            padding: 0;
+        }
         .generator > *, .instructions > * {
             max-width: 500px;
             padding: 0 20px;
             margin-left: auto;
             margin-right: auto;
-        }
-        .instructions {
-            background-color: rgba(0, 0, 0, 0.1) !important;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", Georgia, Charter, "Iowan Old Style", Iowan, "Iowan Web", "Hoefler Text", Cambria, Constantia, Utopia, Marion, Cochin, "Palatino Linotype", Palatino, Baskerville, serif;
@@ -59,22 +69,31 @@
         h1 a, h1 a:hover {
             color: inherit;
         }
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 200;
+        }
         code {
             background-color: #f5f5f5;
             color: inherit;
         }
         code, pre {
+            color: inherit;
             font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
         kbd {
-            background-color: #fcfcfc;
-            border-color: #ccc #ccc #bbb;
+            /* background-color: #fcfcfc; */
+            background-color: rgba(0, 0, 0, 0.1) !important;
+            /* border-color: #ccc #ccc #bbb; */
+            border-color: rgba(255, 255, 255, 0.1) !important;
             border-image: none;
             border-radius: 3px;
             border-style: solid;
             border-width: 1px;
-            box-shadow: 0 -1px 0 #bbb inset;
-            color: #555;
+            /* box-shadow: 0 -1px 0 #bbb inset; */
+            box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.1) inset;
+            /* color: #555; */
             display: inline-block;
             font-family: inherit !important;
             /* font-size: 0.5em !important; */
@@ -93,7 +112,7 @@
             color: inherit !important;
             background-color: rgba(0, 0, 0, 0.1) !important;
             font-family: Consolas, "Consolas Web", Menlo, Monaco, "Liberation Mono", Courier, monospace;
-            min-height: 20em;
+            min-height: 15em;
             margin-bottom: 2em !important;
         }
         .log {
@@ -125,9 +144,9 @@
           <div class="col-xs-4">
             <div class="thumbnail">
               <a href="#" id="aphextwin">
-                <img src="aphextwin.png" alt="" style="width: 100%">
+                <img src="aphextwin.jpg" alt="" style="width: 100%">
                 <div class="caption">
-                  <p>Top tracks by Aphex Twin</p>
+                  <p>Top tracks by <strong>Aphex Twin</strong></p>
                 </div>
               </a>
             </div>
@@ -137,7 +156,7 @@
               <a href="#" id="deerhunter">
                 <img src="deerhunter.jpg" alt="" style="width: 100%">
                 <div class="caption">
-                  <p>Similar artists to Deerhunter</p>
+                  <p>Similar artists to <strong>Deerhunter</strong></p>
                 </div>
               </a>
             </div>
@@ -147,7 +166,39 @@
               <a href="#" id="beachhouse">
                 <img src="beachhouse.jpg" alt="" style="width: 100%">
                 <div class="caption">
-                  <p>Beach House tracks ordered by Last.fm</p>
+                  <p><strong>Beach House</strong> tracks ordered by Last.fm</p>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-xs-4">
+            <div class="thumbnail">
+              <a href="#" id="ambient">
+                <img src="biosphere.jpg" alt="" style="width: 100%">
+                <div class="caption">
+                  <p>Top 10 <strong>ambient</strong> albums</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="col-xs-4">
+            <div class="thumbnail">
+              <a href="#" id="djshadow">
+                <img src="djshadow.jpg" alt="" style="width: 100%">
+                <div class="caption">
+                  <p>Similar artists to <strong>DJ Shadow,</strong> ordered by Last.fm</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="col-xs-4">
+            <div class="thumbnail">
+              <a href="#" id="tremblingbluestars">
+                <img src="tremblingbluestars.jpg" alt="" style="width: 100%">
+                <div class="caption">
+                  <p>Similar artists to <strong>Trembling Blue Stars</strong></p>
                 </div>
               </a>
             </div>
