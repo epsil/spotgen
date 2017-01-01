@@ -18,6 +18,7 @@
     "test": "mocha test/test.js",
     "tests": "npm run lint && npm run test",
     "browser": "browserify web/web.js -o web/bundle.js && browserify test/test.js -o test/bundle.js",
+    "webpack": "webpack web/web.js web/bundle.js && webpack test/test.js test/bundle.js",
     "minify": "uglifyjs web/bundle.js -o web/bundle.js",
     "open": "open web/index.html",
     "web": "npm run browser && npm run open",
@@ -50,6 +51,7 @@
     "promise": "^7.1.1",
     "request": "^2.79.0",
     "standard": "^8.6.0",
-    "uglify-js": "^2.7.5"
+    "uglify-js": "^2.7.5",
+    "webpack": "^1.14.0"
   }
 }
