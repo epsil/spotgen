@@ -46008,6 +46008,37 @@ console.log = function (message) {
   }
 }
 
+var beachhouse = '## Five hand-picked Beach House tracks\n\n' +
+    'Wildflower - Beach House\n' +
+    'Walk in the Park - Beach House\n' +
+    'Irene - Beach House\n' +
+    'Levitation - Beach House\n' +
+    'Elegy to the Void - Beach House'
+
+var ambient = '## Five hand-picked ambient albums\n\n' +
+    '#album Substrata - Biosphere\n' +
+    '#album Selected Ambient Works Volume II - Aphex Twin\n' +
+    '#album Apollo - Brian Eno\n' +
+    '#album A I A: Alien Observer - Grouper\n' +
+    '#album The Magic Place - Julianna Barwick'
+
+var m83 = '## Most popular M83 tracks\n\n' +
+    '#top M83'
+
+var spiritualized = '## Various artists similar to Spiritualized\n\n' +
+    '#similar Spiritualized'
+
+var moby = '## Various artists similar to Moby,\n' +
+    '## ordered by Last.fm rating\n\n' +
+    '#order by lastfm\n' +
+    '#alternate by artist\n' +
+    '#similar Moby'
+
+var deerhunter = '## Complete Deerhunter discography,\n' +
+    '## ordered by Last.fm rating\n\n' +
+    '#order by lastfm\n' +
+    '#artist Deerhunter'
+
 function insertPlaylist (str) {
   return function () {
     resetButton()
@@ -46031,7 +46062,6 @@ function resetButton () {
 }
 
 function clickHandler () {
-  var form = $('form')
   var textarea = $('textarea')
   var button = $('button')
   var playlist = new Playlist(textarea.val())
@@ -46058,38 +46088,12 @@ function clickHandler () {
 }
 
 $(function () {
-  var beachhouse = '## Five hand-picked Beach House tracks\n\n' +
-      'Wildflower - Beach House\n' +
-      'Walk in the Park - Beach House\n' +
-      'Irene - Beach House\n' +
-      'Levitation - Beach House\n' +
-      'Elegy to the Void - Beach House'
   $('#beachhouse').click(insertPlaylist(beachhouse))
-  var ambient = '## Five hand-picked ambient albums\n\n' +
-      '#album Substrata - Biosphere\n' +
-      '#album Selected Ambient Works Volume II - Aphex Twin\n' +
-      '#album Apollo - Brian Eno\n' +
-      '#album A I A: Alien Observer - Grouper\n' +
-      '#album The Magic Place - Julianna Barwick'
   $('#ambient').click(insertPlaylist(ambient))
-  var m83 = '## Most popular M83 tracks\n\n' +
-      '#top M83'
   $('#m83').click(insertPlaylist(m83))
-  var spiritualized = '## Various artists similar to Spiritualized\n\n' +
-      '#similar Spiritualized'
   $('#spiritualized').click(insertPlaylist(spiritualized))
-  var moby = '## Various artists similar to Moby,\n' +
-      '## ordered by Last.fm rating\n\n' +
-      '#order by lastfm\n' +
-      '#alternate by artist\n' +
-      '#similar Moby'
   $('#moby').click(insertPlaylist(moby))
-  var deerhunter = '## Complete Deerhunter discography,\n' +
-      '## ordered by Last.fm rating\n\n' +
-      '#order by lastfm\n' +
-      '#artist Deerhunter'
   $('#deerhunter').click(insertPlaylist(deerhunter))
-
   $('form').on('submit', clickHandler)
   $('button').tooltip()
   $('textarea').focus()

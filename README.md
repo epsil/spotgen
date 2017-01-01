@@ -19,7 +19,15 @@ Examples
 Usage
 -----
 
-Example input:
+To import the playlist into Spotify:
+
+1.  Copy the output to the clipboard (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>).
+2.  Create a new playlist in Spotify (with *File -> New Playlist* or <kbd>Ctrl</kbd> + <kbd>N</kbd>).
+3.  Paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
+
+### Tracks
+
+To add a track to the playlist, add a line on the form `TITLE - ARTIST`:
 
     Walk in the Park - Beach House
     Irene - Beach House
@@ -27,19 +35,13 @@ Example input:
     Troublemaker - Beach House
     Wishes - Beach House
 
-Example output:
+Result:
 
     spotify:track:4oNXgGnumnu5oIXXyP8StH
     spotify:track:7rAjeWkQM6cLqbPjZtXxl2
     spotify:track:2Nt4Uw91pQLXSJ28SttDdF
     spotify:track:4qbCRlvE5Bb9XNBjxARjoP
     spotify:track:7x4tFmih1JBITx0e2ucGrT
-
-To import the playlist:
-
-1.  Copy the output to the clipboard (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>).
-2.  Create a new playlist in Spotify (with *File -> New Playlist* or <kbd>Ctrl</kbd> + <kbd>N</kbd>).
-3.  Paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
 ### Albums
 
@@ -114,6 +116,36 @@ To group the tracks and then interleave them, use the `#alternate by` directive:
     #similar Beach House
 
 This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.
+
+### Importing M3U playlists
+
+One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`) provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
+
+    #EXTM3U
+    #EXTINF:404,Desire Lines - Deerhunter
+    Deerhunter/Halcyon Digest/06 Desire Lines.mp3
+    #EXTINF:230,Saved By Old Times - Deerhunter
+    Deerhunter/Microcastle/10 Saved By Old Times.mp3
+    #EXTINF:202,Agoraphobia - Deerhunter
+    Deerhunter/Microcastle/02 Agoraphobia.mp3
+    #EXTINF:133,Revival - Deerhunter
+    Deerhunter/Halcyon Digest/03 Revival.mp3
+    #EXTINF:264,Twilight at Carbon Lake - Deerhunter
+    Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3
+
+The script will automatically read the `#EXTINF` lines and discard the file paths. Provided the files are properly tagged, this works very well.
+
+### Importing existing Spotify playlists
+
+One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify (with *Edit -> Select All* or <kbd>Ctrl</kbd> + <kbd>A</kbd>), copying them to the clipboard (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>) and pasting them as text elsewhere (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>), one obtains a list of links:
+
+    https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
+    https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
+    https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
+    https://open.spotify.com/track/4qbCRlvE5Bb9XNBjxARjoP
+    https://open.spotify.com/track/7x4tFmih1JBITx0e2ucGrT
+
+The script will automatically parse such links as track references. Thus, one can apply the `#order by popularity` directive to an existing playlist, for example.
 
 Command-line script
 -------------------

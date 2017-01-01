@@ -57,23 +57,23 @@
 <li><a href="examples/rateyourmusic-top-shoegaze-albums.spotify.txt">Rate Your Music's Top Shoegaze Albums</a> (<a href="examples/rateyourmusic-top-shoegaze-albums.txt">source</a>)</li>
 <li><a href="examples/rollingstone-500-greatest-songs-of-all-time.spotify.txt">Rolling Stone's 500 Greatest Songs of All Time</a> (<a href="examples/rollingstone-500-greatest-songs-of-all-time.txt">source</a>)</li>
 </ul>
-<h2>Usage</h2><p>Example input:</p>
-<pre class="prettyprint source"><code>Walk in the Park - Beach House
-Irene - Beach House
-Other People - Beach House
-Troublemaker - Beach House
-Wishes - Beach House</code></pre><p>Example output:</p>
-<pre class="prettyprint source"><code>spotify:track:4oNXgGnumnu5oIXXyP8StH
-spotify:track:7rAjeWkQM6cLqbPjZtXxl2
-spotify:track:2Nt4Uw91pQLXSJ28SttDdF
-spotify:track:4qbCRlvE5Bb9XNBjxARjoP
-spotify:track:7x4tFmih1JBITx0e2ucGrT</code></pre><p>To import the playlist:</p>
+<h2>Usage</h2><p>To import the playlist into Spotify:</p>
 <ol>
 <li>Copy the output to the clipboard (with <em>Edit -&gt; Copy</em> or <kbd>Ctrl</kbd> + <kbd>C</kbd>).</li>
 <li>Create a new playlist in Spotify (with <em>File -&gt; New Playlist</em> or <kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
 <li>Paste into it (with <em>Edit -&gt; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
 </ol>
-<h3>Albums</h3><p>To add an entire album to the playlist, use the <code>#album</code> directive:</p>
+<h3>Tracks</h3><p>To add a track to the playlist, add a line on the form <code>TITLE - ARTIST</code>:</p>
+<pre class="prettyprint source"><code>Walk in the Park - Beach House
+Irene - Beach House
+Other People - Beach House
+Troublemaker - Beach House
+Wishes - Beach House</code></pre><p>Result:</p>
+<pre class="prettyprint source"><code>spotify:track:4oNXgGnumnu5oIXXyP8StH
+spotify:track:7rAjeWkQM6cLqbPjZtXxl2
+spotify:track:2Nt4Uw91pQLXSJ28SttDdF
+spotify:track:4qbCRlvE5Bb9XNBjxARjoP
+spotify:track:7x4tFmih1JBITx0e2ucGrT</code></pre><h3>Albums</h3><p>To add an entire album to the playlist, use the <code>#album</code> directive:</p>
 <pre class="prettyprint source"><code>#album Substrata - Biosphere</code></pre><p>Result:</p>
 <pre class="prettyprint source"><code>spotify:track:&lt;Substrata Track #1>
 spotify:track:&lt;Substrata Track #2>
@@ -99,6 +99,24 @@ spotify:track:&lt;Beach House Track #3>
 <pre class="prettyprint source"><code>#order by lastfm
 #alternate by artist
 #similar Beach House</code></pre><p>This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.</p>
+<h3>Importing M3U playlists</h3><p>One can easily import <a href="https://en.wikipedia.org/wiki/M3U">M3U</a> playlists (with the file extension <code>.m3u</code> or <code>.m3u8</code>) provided they contain <code>EXTM3U</code> metadata. That is, the playlist should be on the form:</p>
+<pre class="prettyprint source"><code>#EXTM3U
+#EXTINF:404,Desire Lines - Deerhunter
+Deerhunter/Halcyon Digest/06 Desire Lines.mp3
+#EXTINF:230,Saved By Old Times - Deerhunter
+Deerhunter/Microcastle/10 Saved By Old Times.mp3
+#EXTINF:202,Agoraphobia - Deerhunter
+Deerhunter/Microcastle/02 Agoraphobia.mp3
+#EXTINF:133,Revival - Deerhunter
+Deerhunter/Halcyon Digest/03 Revival.mp3
+#EXTINF:264,Twilight at Carbon Lake - Deerhunter
+Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3</code></pre><p>The script will automatically read the <code>#EXTINF</code> lines and discard the file paths. Provided the files are properly tagged, this works very well.</p>
+<h3>Importing existing Spotify playlists</h3><p>One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify (with <em>Edit -&gt; Select All</em> or <kbd>Ctrl</kbd> + <kbd>A</kbd>), copying them to the clipboard (with <em>Edit -&gt; Copy</em> or <kbd>Ctrl</kbd> + <kbd>C</kbd>) and pasting them as text elsewhere (with <em>Edit -&gt; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>), one obtains a list of links:</p>
+<pre class="prettyprint source"><code>https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
+https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
+https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
+https://open.spotify.com/track/4qbCRlvE5Bb9XNBjxARjoP
+https://open.spotify.com/track/7x4tFmih1JBITx0e2ucGrT</code></pre><p>The script will automatically parse such links as track references. Thus, one can apply the <code>#order by popularity</code> directive to an existing playlist, for example.</p>
 <h2>Command-line script</h2><p>A command-line version is also available. It requires <a href="https://nodejs.org/">Node</a> to be installed.</p>
 <p>The source code is located at <a href="https://github.com/epsil/spotify-js">GitHub</a>. To clone the repository:</p>
 <pre class="prettyprint source"><code>$ git clone https://github.com/epsil/spotify-js.git</code></pre><p>Alternatively, download a <a href="https://github.com/epsil/spotify-js/archive/master.zip">ZIP file</a>.</p>
@@ -134,7 +152,7 @@ spotify:track:&lt;Beach House Track #3>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jan 01 2017 10:40:48 GMT+0100 (CET)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jan 01 2017 11:23:18 GMT+0100 (CET)
 </footer>
 
 <script> prettyPrint(); </script>
