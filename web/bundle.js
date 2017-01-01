@@ -46072,18 +46072,18 @@ $(function () {
       '#album A I A: Alien Observer - Grouper\n' +
       '#album The Magic Place - Julianna Barwick'
   $('#ambient').click(insertPlaylist(ambient))
-  var aphextwin = '## Most popular Aphex Twin tracks\n\n' +
-      '#top Aphex Twin'
-  $('#aphextwin').click(insertPlaylist(aphextwin))
-  var tremblingbluestars = '## Various artists similar to Trembling Blue Stars\n\n' +
-      '#similar Trembling Blue Stars'
-  $('#tremblingbluestars').click(insertPlaylist(tremblingbluestars))
-  var djshadow = '## Various artists similar to DJ Shadow,\n' +
+  var m83 = '## Most popular M83 tracks\n\n' +
+      '#top M83'
+  $('#m83').click(insertPlaylist(m83))
+  var spiritualized = '## Various artists similar to Spiritualized\n\n' +
+      '#similar Spiritualized'
+  $('#spiritualized').click(insertPlaylist(spiritualized))
+  var moby = '## Various artists similar to Moby,\n' +
       '## ordered by Last.fm rating\n\n' +
       '#order by lastfm\n' +
       '#alternate by artist\n' +
-      '#similar DJ Shadow'
-  $('#djshadow').click(insertPlaylist(djshadow))
+      '#similar Moby'
+  $('#moby').click(insertPlaylist(moby))
   var deerhunter = '## Complete Deerhunter discography,\n' +
       '## ordered by Last.fm rating\n\n' +
       '#order by lastfm\n' +
