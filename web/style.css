@@ -17,11 +17,15 @@ body, html {
     padding: 1em 0 0.25em 0;
     background-color: #242930;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    text-shadow: 0px 0px 1px #000, 1px 1px 0px #000, 1px 1px 1px #000;
 }
 .thumbnail {
+    margin-left: auto;
+    margin-right: auto;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
     max-width: 150px;
     transition: box-shadow 0.15s ease-in-out 0s;
+    text-align: center;
  }
 .thumbnail:hover {
     box-shadow: 0 0 8px rgba(102, 175, 233, .6);
@@ -33,9 +37,13 @@ body, html {
 }
 .generator > *, .instructions > * {
     max-width: 500px;
-    padding: 0 20px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+.instructions {
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 2em;
 }
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", Georgia, Charter, "Iowan Old Style", Iowan, "Iowan Web", "Hoefler Text", Cambria, Constantia, Utopia, Marion, Cochin, "Palatino Linotype", Palatino, Baskerville, serif;
@@ -63,6 +71,10 @@ h1, h2, h3, h4, h5, h6 {
 h2 {
     margin-bottom: 1em;
 }
+h3 {
+    margin-bottom: 1em;
+    margin-top: 2em;
+}
 code {
     background-color: #f5f5f5;
     color: inherit;
@@ -85,6 +97,7 @@ kbd {
     /* box-shadow: 0 -1px 0 #bbb inset; */
     box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.1) inset;
     /* color: #555; */
+    color: inherit;
     display: inline-block;
     font-family: inherit !important;
     /* font-size: 0.5em !important; */
@@ -114,5 +127,21 @@ textarea, textarea:focus {
     overflow: hidden;
 }
 .footer {
+    background-color: #20252b;
+    color: #ddd;
     text-align: center;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    line-height: 2;
+    font-weight: 200;
+}
+.footer strong {
+    font-weight: 500;
+}
+.footer * {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+.playlists {
+    text-shadow: 0px 0px 1px #eee, 1px 1px 0px #eee, 1px 1px 1px #eee;
 }
