@@ -3,6 +3,8 @@
   "author": "Vegard Øye",
   "main": "index.js",
   "scripts": {
+    "clean": "git stash && git clean -d -f -f -x",
+    "ds_store": "find . -iname \"*.DS_Store\" -exec git rm {} \\;; find . -iname \"*er i konflikt*\" -exec git rm {} \\;; find . -iname \"*.DS_Store\" -exec rm {} \\;; find . -iname \"*.docx\" -exec rm {} \\;; find . -iname \"*.log\" -exec rm {} \\;",
     "cli": "node spotify",
     "spotify": "node spotify",
     "dump": "node spotify > output.txt && cat output.txt",
