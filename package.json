@@ -10,8 +10,8 @@
     "lint": "jshint index.js lib/album.js lib/artist.js lib/lastfm.js lib/playlist.js lib/queue.js lib/similar.js lib/spotify.js lib/top.js lib/track.js web/web.js test/test.js && standard index.js lib/album.js lib/artist.js lib/lastfm.js lib/playlist.js lib/queue.js lib/similar.js lib/spotify.js lib/top.js lib/track.js web/web.js test/test.js",
     "test": "mocha test/test.js",
     "tests": "npm run lint && npm run test",
-    "browser": "browserify web/web.js -o web/spotify.js",
-    "minify": "uglifyjs web/spotify.js -o web/spotify.js",
+    "browser": "browserify web/web.js -o web/bundle.js && browserify test/test.js -o test/bundle.js",
+    "minify": "uglifyjs web/bundle.js -o web/bundle.js",
     "open": "open web/index.html",
     "web": "npm run browser && npm run open",
     "doc": "npm run jsdoc && npm run man",
@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "async": "^2.1.4",
+    "bootstrap": "^3.3.7",
     "browserify": "^13.1.1",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",

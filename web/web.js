@@ -1,5 +1,9 @@
+/* global jQuery:true */
+/* exported jQuery */
 var Playlist = require('../lib/playlist')
 var $ = require('jquery')
+jQuery = $
+require('bootstrap')
 
 console.log = function (message) {
   if (typeof message === 'string') {
@@ -29,6 +33,8 @@ $(function () {
   var form = $('form')
   var textarea = $('textarea')
   var button = $('button')
+
+  $('#tooltiptest').tooltip()
 
   form.on('submit', function () {
     var playlist = new Playlist(textarea.val())
