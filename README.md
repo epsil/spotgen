@@ -117,7 +117,7 @@ To group the tracks and then interleave them, use the `#alternate by` directive:
 
 This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.
 
-### Importing M3U playlists
+### Import M3U playlists
 
 One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`) provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
 
@@ -135,7 +135,7 @@ One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with t
 
 The script will automatically read the `#EXTINF` lines and discard the file paths. Provided the files are properly tagged, this works very well.
 
-### Importing existing Spotify playlists
+### Import existing Spotify playlists
 
 One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify (with *Edit -> Select All* or <kbd>Ctrl</kbd> + <kbd>A</kbd>), copying them to the clipboard (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>) and pasting them as text elsewhere (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>), one obtains a list of links:
 

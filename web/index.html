@@ -163,7 +163,7 @@ spotify:track:&lt;Beach House Track #3>
 #alternate by artist
 #similar Beach House</pre>
       <p>This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.</p>
-      <h3>Importing M3U playlists</h3>
+      <h3>Import M3U playlists</h3>
       <p>One can easily import <a href="https://en.wikipedia.org/wiki/M3U">M3U</a> playlists (with the file extension <code>.m3u</code> or <code>.m3u8</code>) provided they contain <code>EXTM3U</code> metadata. That is, the playlist should be on the form:</p>
       <pre>#EXTM3U
 #EXTINF:404,Desire Lines - Deerhunter
@@ -177,7 +177,7 @@ Deerhunter/Halcyon Digest/03 Revival.mp3
 #EXTINF:264,Twilight at Carbon Lake - Deerhunter
 Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3</pre>
       <p>The script will automatically read the <code>#EXTINF</code> lines and discard the file paths. Provided the files are properly tagged, this works very well.</p>
-      <h3>Importing existing Spotify playlists</h3>
+      <h3>Import existing Spotify playlists</h3>
       <p>One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify (with <em>Edit &rarr; Select All</em> or <kbd>Ctrl</kbd> + <kbd>A</kbd>), copying them to the clipboard (with <em>Edit &rarr; Copy</em> or <kbd>Ctrl</kbd> + <kbd>C</kbd>) and pasting them as text elsewhere (with <em>Edit &rarr; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>), one obtains a list of links:</p>
       <pre>https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
 https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
