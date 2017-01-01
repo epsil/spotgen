@@ -35,6 +35,9 @@ body, html {
     margin: 0;
     padding: 0;
 }
+.thumbnail pre {
+    display: none;
+}
 .generator > *, .instructions > * {
     max-width: 500px;
     margin-left: auto !important;
