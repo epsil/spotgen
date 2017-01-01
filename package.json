@@ -2,6 +2,11 @@
   "name": "spotify",
   "author": "Vegard Øye",
   "main": "index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/epsil/spotify-js.git"
+  },
   "scripts": {
     "clean": "git stash && git clean -d -f -f -x",
     "ds_store": "find . -iname \"*.DS_Store\" -exec git rm {} \\;; find . -iname \"*er i konflikt*\" -exec git rm {} \\;; find . -iname \"*.DS_Store\" -exec rm {} \\;; find . -iname \"*.docx\" -exec rm {} \\;; find . -iname \"*.log\" -exec rm {} \\;",
