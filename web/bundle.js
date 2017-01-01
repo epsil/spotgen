@@ -45995,10 +45995,12 @@ module.exports = Request
 
 }).call(this,require('_process'),require("buffer").Buffer)
 },{"./lib/auth":26,"./lib/cookies":27,"./lib/getProxyFromURI":28,"./lib/har":29,"./lib/helpers":30,"./lib/multipart":31,"./lib/oauth":32,"./lib/querystring":33,"./lib/redirect":34,"./lib/tunnel":35,"_process":368,"aws-sign2":36,"aws4":37,"buffer":167,"caseless":39,"extend":42,"forever-agent":43,"form-data":44,"hawk":73,"http":389,"http-signature":74,"https":364,"is-typedarray":126,"isstream":127,"mime-types":129,"stream":388,"stringstream":138,"url":396,"util":399,"zlib":166}],150:[function(require,module,exports){
+/* global jQuery:true */
+/* exported jQuery */
 var Playlist = require('../lib/playlist')
 var $ = require('jquery')
 jQuery = $
-var bootstrap = require('bootstrap')
+require('bootstrap')
 
 console.log = function (message) {
   if (typeof message === 'string') {
@@ -46006,86 +46008,91 @@ console.log = function (message) {
   }
 }
 
-function clickHandler (str) {
+function insertPlaylist (str) {
   return function () {
     resetButton()
     $('textarea').val(str)
     $('html, body').stop().animate({scrollTop: 0}, '500', 'swing', function () {
       $('textarea').focus()
+      $('button').mouseover()
     })
     return false
   }
 }
 
 function resetButton () {
-  $('button').text('Create Playlist')
-  $('button').removeClass('disabled')
-  $('button').removeClass('active')
+  var button = $('button')
+  button.text('Create Playlist')
+  button.removeClass('disabled')
+  button.removeClass('active')
+  button.mouseleave()
+  button.tooltip('enable')
   console.log('')
 }
 
-$(function () {
+function clickHandler () {
   var form = $('form')
   var textarea = $('textarea')
   var button = $('button')
-
-  $('#tooltiptest').tooltip()
-
-  form.on('submit', function () {
-    var playlist = new Playlist(textarea.val())
-    button.text('Creating Playlist \u2026')
-    button.addClass('active')
-    button.addClass('disabled')
-    playlist.dispatch().then(function (result) {
-      console.log('')
-      button.removeClass('disabled')
-      textarea.val(result)
-      textarea.focus()
-      textarea.select()
-      if (result === '') {
-        resetButton()
-      } else {
-        button.text('Created Playlist')
-        console.log('Copy and paste the above ' +
-                    'into a new Spotify playlist')
-      }
-    })
-    return false
+  var playlist = new Playlist(textarea.val())
+  button.text('Creating Playlist \u2026')
+  button.addClass('active')
+  button.addClass('disabled')
+  button.mouseleave()
+  button.tooltip('disable')
+  playlist.dispatch().then(function (result) {
+    console.log('')
+    button.removeClass('disabled')
+    textarea.val(result)
+    textarea.focus()
+    textarea.select()
+    if (result === '') {
+      resetButton()
+    } else {
+      button.text('Created Playlist')
+      console.log('Copy and paste the above ' +
+                  'into a new Spotify playlist')
+    }
   })
+  return false
+}
 
+$(function () {
   var beachhouse = '## Five hand-picked Beach House tracks\n\n' +
       'Wildflower - Beach House\n' +
       'Walk in the Park - Beach House\n' +
       'Irene - Beach House\n' +
       'Levitation - Beach House\n' +
       'Elegy to the Void - Beach House'
-  $('#beachhouse').click(clickHandler(beachhouse))
+  $('#beachhouse').click(insertPlaylist(beachhouse))
   var ambient = '## Five hand-picked ambient albums\n\n' +
       '#album Substrata - Biosphere\n' +
       '#album Selected Ambient Works Volume II - Aphex Twin\n' +
       '#album Apollo - Brian Eno\n' +
       '#album A I A: Alien Observer - Grouper\n' +
       '#album The Magic Place - Julianna Barwick'
-  $('#ambient').click(clickHandler(ambient))
+  $('#ambient').click(insertPlaylist(ambient))
   var aphextwin = '## Most popular Aphex Twin tracks\n\n' +
       '#top Aphex Twin'
-  $('#aphextwin').click(clickHandler(aphextwin))
+  $('#aphextwin').click(insertPlaylist(aphextwin))
   var tremblingbluestars = '## Various artists similar to Trembling Blue Stars\n\n' +
       '#similar Trembling Blue Stars'
-  $('#tremblingbluestars').click(clickHandler(tremblingbluestars))
+  $('#tremblingbluestars').click(insertPlaylist(tremblingbluestars))
   var djshadow = '## Various artists similar to DJ Shadow,\n' +
       '## ordered by Last.fm rating\n\n' +
       '#order by lastfm\n' +
       '#alternate by artist\n' +
       '#similar DJ Shadow'
-  $('#djshadow').click(clickHandler(djshadow))
+  $('#djshadow').click(insertPlaylist(djshadow))
   var deerhunter = '## Complete Deerhunter discography,\n' +
       '## ordered by Last.fm rating\n\n' +
       '#order by lastfm\n' +
       '#artist Deerhunter'
-  $('#deerhunter').click(clickHandler(deerhunter))
+  $('#deerhunter').click(insertPlaylist(deerhunter))
 
-  textarea.focus()
+  $('form').on('submit', clickHandler)
+  $('button').tooltip()
+  $('textarea').focus()
 })
 
 },{"../lib/playlist":5,"bootstrap":11,"jquery":24}],151:[function(require,module,exports){
