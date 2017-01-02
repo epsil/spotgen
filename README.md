@@ -21,7 +21,7 @@ Usage
 
 To import the playlist into Spotify:
 
-1.  Copy the output to the clipboard (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>).
+1.  Copy the output (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>).
 2.  Create a new playlist in Spotify (with *File -> New Playlist* or <kbd>Ctrl</kbd> + <kbd>N</kbd>).
 3.  Paste into it (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
@@ -137,7 +137,7 @@ The script will automatically read the `#EXTINF` lines and discard the file path
 
 ### Import existing Spotify playlists
 
-One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify (with *Edit -> Select All* or <kbd>Ctrl</kbd> + <kbd>A</kbd>), copying them to the clipboard (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>) and pasting them as text elsewhere (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>), one obtains a list of links:
+One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify (with *Edit -> Select All* or <kbd>Ctrl</kbd> + <kbd>A</kbd>), copying them (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>) and pasting them as text elsewhere (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>), one obtains a list of links:
 
     https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
     https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
