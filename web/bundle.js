@@ -1097,7 +1097,7 @@ spotify.getAlbum = function (id) {
  */
 spotify.getAlbumsByArtist = function (id) {
   var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/albums'
+  url += encodeURIComponent(id) + '/albums?limit=50'
   return spotify.request(url).then(function (response) {
     if (response &&
         response.items) {
