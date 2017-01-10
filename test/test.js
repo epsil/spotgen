@@ -125,6 +125,13 @@ describe('spotify.js', function () {
       var promise = track.dispatch()
       return promise.should.eventually.be.an.instanceof(Track)
     })
+
+    it('should not confuse album title with track title', function () {
+      var track = new Track('Off the Wall - Michael Jackson')
+      return track.dispatch().then(function (track) {
+        track.uri().should.eql('spotify:track:3zYpRGnnoegSpt3SguSo3W')
+      })
+    })
   })
 
   describe('Playlist', function () {
