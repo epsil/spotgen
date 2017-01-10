@@ -49,7 +49,7 @@ body, html {
     padding-bottom: 2em;
 }
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", Georgia, Charter, "Iowan Old Style", Iowan, "Iowan Web", "Hoefler Text", Cambria, Constantia, Utopia, Marion, Cochin, "Palatino Linotype", Palatino, Baskerville, serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", "Myriad Set Pro", "Myriad Pro", Myriad, Ubuntu, "Bitstream Vera Sans", "DejaVu Sans", Helvetica, Arial, Tahoma, sans-serif !important;
     /* margin-bottom: 5em; */
     margin: 0;
     padding: 0;
