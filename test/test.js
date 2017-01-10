@@ -175,7 +175,8 @@ describe('spotify.js', function () {
       var playlist = new Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
       var promise = playlist.dispatch()
       // FIXME: this is really brittle
-      return promise.should.eventually.eql('spotify:track:5jwDjl5FofuDgwITfcROhq\nspotify:track:25BfjHTtaDCrKrq9hkr10U')
+      return promise.should.eventually.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
+                                           'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
     })
 
     it('should parse album entries', function () {
@@ -194,7 +195,8 @@ describe('spotify.js', function () {
       var playlist = new Playlist('test1\ntest2')
       var promise = playlist.dispatch()
       // FIXME: this is really brittle
-      return promise.should.eventually.eql('spotify:track:5jwDjl5FofuDgwITfcROhq\nspotify:track:25BfjHTtaDCrKrq9hkr10U')
+      return promise.should.eventually.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
+                                           'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
     })
   })
 
