@@ -14,11 +14,18 @@ console.log = function (message) {
 function insertPlaylist () {
   resetButton()
   var str = $(this).find('pre').text()
-  $('textarea').val(str)
-  $('html, body').stop().animate({scrollTop: 0}, '500', 'swing', function () {
+  var callback = function () {
+    $('textarea').val(str)
     $('textarea').focus()
-    $('button').mouseover()
-  })
+    setTimeout(function () {
+      $('button').mouseover()
+    }, 1000)
+  }
+  if ($('html').scrollTop() === 0) {
+    callback()
+  } else {
+    $('html, body').stop().animate({scrollTop: 0}, '500', 'swing', callback)
+  }
   return false
 }
 
