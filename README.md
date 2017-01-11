@@ -1,7 +1,7 @@
 [Spotify Playlist Generator](https://epsil.github.io/spotify/)
 ==============================================================
 
-> A tool for generating Spotify playlists.
+> A tool for converting, reordering and generating Spotify playlists.
 >
 > <https://epsil.github.io/spotify/>
 
@@ -151,7 +151,7 @@ One can also work with existing Spotify playlists. By selecting the playlist's t
     https://open.spotify.com/track/4qbCRlvE5Bb9XNBjxARjoP
     https://open.spotify.com/track/7x4tFmih1JBITx0e2ucGrT
 
-The generator will automatically parse the links, converting them to:
+The generator will automatically convert this to:
 
     spotify:track:4oNXgGnumnu5oIXXyP8StH
     spotify:track:7rAjeWkQM6cLqbPjZtXxl2
