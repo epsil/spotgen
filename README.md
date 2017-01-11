@@ -119,7 +119,7 @@ Result:
 
 ### Import M3U playlists
 
-One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`) provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
+One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`), provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
 
     #EXTM3U
     #EXTINF:404,Desire Lines - Deerhunter
