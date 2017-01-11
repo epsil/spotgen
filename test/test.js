@@ -10,7 +10,7 @@ var Playlist = require('../lib/playlist')
 var Queue = require('../lib/queue')
 var Track = require('../lib/track')
 
-describe('spotify.js', function () {
+describe('Spotify Playlist Generator', function () {
   this.timeout(99999)
 
   describe('Queue', function () {
