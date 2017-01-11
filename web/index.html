@@ -134,10 +134,56 @@ Elegy to the Void - Beach House</pre>
       <h2>Usage</h2>
       <p>To import the playlist into Spotify:</p>
       <ol>
-        <li>Copy the output (with <em>Edit &rarr; Copy</em> or <kbd>Ctrl</kbd> + <kbd>C</kbd>).</li>
-        <li>Create a new playlist in Spotify (with <em>File &rarr; New Playlist</em> or <kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
-        <li>Paste into it (with <em>Edit &rarr; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
+        <li><strong>Copy the output of the generator:</strong><br>
+          Choose <em>Edit &rarr; Copy</em> (<kbd>Ctrl</kbd> + <kbd>C</kbd>).</li>
+        <li><strong>Create a new playlist in Spotify:</strong><br>
+          Choose <em>File &rarr; New Playlist</em> (<kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
+        <li><strong>Paste into the playlist:</strong><br>
+          Select the playlist and choose <em>Edit &rarr; Paste</em> (<kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
       </ol>
+      <h3>Top tracks</h3>
+      <p>To add the top 10 tracks of an artist:</p>
+      <pre>#top Aphex Twin</pre>
+      <p>This will create a playlist consisting of ten most popular tracks of Aphex Twin. To add only the top 5 tracks, use <code>#top5</code>.</p>
+      <h3>Similar artists</h3>
+      <p>To add tracks from similar artists:</p>
+      <pre>#similar Aphex Twin</pre>
+      <p>This will create a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.</p>
+      <h3>Artists</h3>
+      <p>To add the entire discography of an artist:</p>
+      <pre>#artist Beach House</pre>
+      <p>Result:</p>
+      <pre>spotify:track:&lt;Beach House Track #1>
+spotify:track:&lt;Beach House Track #2>
+spotify:track:&lt;Beach House Track #3>
+...</pre>
+      <h3>Albums</h3>
+      <p>To add an entire album to the playlist:</p>
+      <pre>#album Substrata - Biosphere</pre>
+      <p>Result:</p>
+      <pre>spotify:track:&lt;Substrata Track #1>
+spotify:track:&lt;Substrata Track #2>
+spotify:track:&lt;Substrata Track #3>
+...</pre>
+      <h3>Order</h3>
+      <p>To order the tracks by Spotify popularity, use <code>#order by</code>:</p>
+      <pre>#order by popularity
+#artist Beach House</pre>
+      <p>To order the tracks by <a href="http://last.fm/">Last.fm</a> playcount, add the line <code>#order by lastfm</code>:</p>
+      <pre>#order by lastfm
+#artist Beach House</pre>
+      <h3>Group</h3>
+      <p>To sort the ordered tracks into groups, use <code>#group by</code>:</p>
+      <pre>#order by lastfm
+#group by artist
+#similar Beach House</pre>
+      <p>This will create a Last.fm-ordered playlist of artists similar to Beach House, where tracks from the same artists are grouped together.</p>
+      <h3>Alternate</h3>
+      <p>To group the tracks and then interleave them, use <code>#alternate by</code>:</p>
+      <pre>#order by lastfm
+#alternate by artist
+#similar Beach House</pre>
+      <p>This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.</p>
       <h3>Tracks</h3>
       <p>To add a track to the playlist, add a line on the form <code>TITLE - ARTIST</code>:</p>
       <pre>Walk in the Park - Beach House
@@ -151,49 +197,6 @@ spotify:track:7rAjeWkQM6cLqbPjZtXxl2
 spotify:track:2Nt4Uw91pQLXSJ28SttDdF
 spotify:track:4qbCRlvE5Bb9XNBjxARjoP
 spotify:track:7x4tFmih1JBITx0e2ucGrT</pre>
-      <h3>Albums</h3>
-      <p>To add an entire album to the playlist, use the <code>#album</code> directive:</p>
-      <pre>#album Substrata - Biosphere</pre>
-      <p>Result:</p>
-      <pre>spotify:track:&lt;Substrata Track #1>
-spotify:track:&lt;Substrata Track #2>
-spotify:track:&lt;Substrata Track #3>
-...</pre>
-      <h3>Artists</h3>
-      <p>To add the entire discography of an artist, use the <code>#artist</code> directive:</p>
-      <pre>#artist Beach House</pre>
-      <p>Result:</p>
-      <pre>spotify:track:&lt;Beach House Track #1>
-spotify:track:&lt;Beach House Track #2>
-spotify:track:&lt;Beach House Track #3>
-...</pre>
-      <h3>Top tracks</h3>
-      <p>To add the top 10 tracks of an artist, use the <code>#top</code> directive:</p>
-      <pre>#top Aphex Twin</pre>
-      <p>To add only the top 5 tracks, use the <code>#top5</code> directive.</p>
-      <h3>Similar artists</h3>
-      <p>To add tracks from similar artists, use the <code>#similar</code> directive:</p>
-      <pre>#similar Aphex Twin</pre>
-      <p>This will create a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.</p>
-      <h3>Order</h3>
-      <p>To order the tracks by Spotify popularity, add the line <code>#order by popularity</code>:</p>
-      <pre>#order by popularity
-#artist Beach House</pre>
-      <p>To order the tracks by <a href="http://last.fm/">Last.fm</a> playcount, add the line <code>#order by lastfm</code>:</p>
-      <pre>#order by lastfm
-#artist Beach House</pre>
-      <h3>Group</h3>
-      <p>To sort the ordered tracks into groups, use the <code>#group by</code> directive:</p>
-      <pre>#order by lastfm
-#group by artist
-#similar Beach House</pre>
-      <p>This will create a Last.fm-ordered playlist of artists similar to Beach House, where tracks from the same artists are grouped together.</p>
-      <h3>Alternate</h3>
-      <p>To group the tracks and then interleave them, use the <code>#alternate by</code> directive:</p>
-      <pre>#order by lastfm
-#alternate by artist
-#similar Beach House</pre>
-      <p>This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.</p>
       <h3>Import M3U playlists</h3>
       <p>One can easily import <a href="https://en.wikipedia.org/wiki/M3U">M3U</a> playlists (with the file extension <code>.m3u</code> or <code>.m3u8</code>) provided they contain <code>EXTM3U</code> metadata. That is, the playlist should be on the form:</p>
       <pre>#EXTM3U
@@ -207,7 +210,12 @@ Deerhunter/Microcastle/02 Agoraphobia.mp3
 Deerhunter/Halcyon Digest/03 Revival.mp3
 #EXTINF:264,Twilight at Carbon Lake - Deerhunter
 Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3</pre>
-      <p>The script will automatically read the <code>#EXTINF</code> lines and discard the file paths. Provided the files are properly tagged, this works very well.</p>
+      <p>The generator will automatically convert this to:</p>
+      <pre>Desire Lines - Deerhunter
+Saved By Old Times - Deerhunter
+Agoraphobia - Deerhunter
+Revival - Deerhunter
+Twilight at Carbon Lake - Deerhunter</pre>
       <h3>Import existing Spotify playlists</h3>
       <p>One can also work with existing Spotify playlists. By selecting the playlist&#8217;s tracks in Spotify (with <em>Edit &rarr; Select All</em> or <kbd>Ctrl</kbd> + <kbd>A</kbd>), copying them (with <em>Edit &rarr; Copy</em> or <kbd>Ctrl</kbd> + <kbd>C</kbd>) and pasting them as text elsewhere (with <em>Edit &rarr; Paste</em> or <kbd>Ctrl</kbd> + <kbd>V</kbd>), one obtains a list of links:</p>
       <pre>https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
@@ -215,7 +223,12 @@ https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
 https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
 https://open.spotify.com/track/4qbCRlvE5Bb9XNBjxARjoP
 https://open.spotify.com/track/7x4tFmih1JBITx0e2ucGrT</pre>
-      <p>The script will automatically parse such links as track references. Thus, one can apply the <code>#order by popularity</code> directive to an existing playlist, for example.</p>
+      <p>The generator will automatically convert this to:</p>
+      <pre>spotify:track:4oNXgGnumnu5oIXXyP8StH
+spotify:track:7rAjeWkQM6cLqbPjZtXxl2
+spotify:track:2Nt4Uw91pQLXSJ28SttDdF
+spotify:track:4qbCRlvE5Bb9XNBjxARjoP
+spotify:track:7x4tFmih1JBITx0e2ucGrT</pre>
       <h3>Command-line script</h3>
       <p><a href="https://github.com/epsil/spotify-js" target="_blank" title="Command-line version">A command-line version is available from GitHub.</a></p>
     </div>
