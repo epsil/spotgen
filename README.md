@@ -21,9 +21,9 @@ Usage
 
 To import the playlist into Spotify:
 
-1.  **Copy the output of the generator:** choose *Edit -> Copy* or press <kbd>Ctrl</kbd> + <kbd>C</kbd>.
-2.  **Create a new playlist in Spotify:** choose *File -> New Playlist* or press <kbd>Ctrl</kbd> + <kbd>N</kbd>.
-3.  **Paste into the playlist:** select the playlist and choose *Edit -> Paste* or press <kbd>Ctrl</kbd> + <kbd>V</kbd>.
+1.  **Copy the output of the generator:** choose *Edit -> Copy* (<kbd>Ctrl</kbd> + <kbd>C</kbd>).
+2.  **Create a new playlist in Spotify:** choose *File -> New Playlist* (<kbd>Ctrl</kbd> + <kbd>N</kbd>).
+3.  **Paste into the playlist:** select the playlist and choose *Edit -> Paste* (<kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
 ### Top tracks
 
