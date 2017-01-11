@@ -143,7 +143,7 @@ The generator will automatically convert this to:
 
 ### Import existing Spotify playlists
 
-One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify (with *Edit -> Select All* or <kbd>Ctrl</kbd> + <kbd>A</kbd>), copying them (with *Edit -> Copy* or <kbd>Ctrl</kbd> + <kbd>C</kbd>) and pasting them as text elsewhere (with *Edit -> Paste* or <kbd>Ctrl</kbd> + <kbd>V</kbd>), one obtains a list of links:
+One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of links:
 
     https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
     https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
