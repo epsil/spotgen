@@ -1,7 +1,7 @@
 [Spotify Playlist Generator](https://epsil.github.io/spotify/)
 ==============================================================
 
-> A tool for converting, reordering and generating Spotify playlists.
+> A tool for converting, processing and generating Spotify playlists.
 >
 > <https://epsil.github.io/spotify/>
 
