@@ -133,7 +133,7 @@ One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with t
     #EXTINF:264,Twilight at Carbon Lake - Deerhunter
     Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3
 
-The generator will automatically convert this to:
+The generator translates this to:
 
     Desire Lines - Deerhunter
     Saved By Old Times - Deerhunter
@@ -143,21 +143,28 @@ The generator will automatically convert this to:
 
 ### Import existing Spotify playlists
 
-One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of links:
+One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of Spotify links:
 
     https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
     https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
     https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
-    https://open.spotify.com/track/4qbCRlvE5Bb9XNBjxARjoP
-    https://open.spotify.com/track/7x4tFmih1JBITx0e2ucGrT
+    ...
 
-The generator will automatically convert this to:
+One can easily apply `#order by popularity` to such a list:
 
+    #order by popularity
+    https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
+    https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
+    https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
+    ...
+
+Likewise, spotify URIs are handled as well:
+
+    #order by popularity
     spotify:track:4oNXgGnumnu5oIXXyP8StH
     spotify:track:7rAjeWkQM6cLqbPjZtXxl2
     spotify:track:2Nt4Uw91pQLXSJ28SttDdF
-    spotify:track:4qbCRlvE5Bb9XNBjxARjoP
-    spotify:track:7x4tFmih1JBITx0e2ucGrT
+    ...
 
 Command-line script
 -------------------
