@@ -67,6 +67,24 @@ Result:
     spotify:track:<Substrata Track #3>
     ...
 
+### Tracks
+
+To add a track to the playlist, add a line on the form `TITLE - ARTIST`:
+
+    Walk in the Park - Beach House
+    Irene - Beach House
+    Other People - Beach House
+    Troublemaker - Beach House
+    Wishes - Beach House
+
+Result:
+
+    spotify:track:4oNXgGnumnu5oIXXyP8StH
+    spotify:track:7rAjeWkQM6cLqbPjZtXxl2
+    spotify:track:2Nt4Uw91pQLXSJ28SttDdF
+    spotify:track:4qbCRlvE5Bb9XNBjxARjoP
+    spotify:track:7x4tFmih1JBITx0e2ucGrT
+
 ### Order
 
 To order the tracks by Spotify popularity, use `#order by`:
@@ -98,24 +116,6 @@ To group the tracks and then interleave them, use `#alternate by`:
     #similar Beach House
 
 This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.
-
-### Tracks
-
-To add a track to the playlist, add a line on the form `TITLE - ARTIST`:
-
-    Walk in the Park - Beach House
-    Irene - Beach House
-    Other People - Beach House
-    Troublemaker - Beach House
-    Wishes - Beach House
-
-Result:
-
-    spotify:track:4oNXgGnumnu5oIXXyP8StH
-    spotify:track:7rAjeWkQM6cLqbPjZtXxl2
-    spotify:track:2Nt4Uw91pQLXSJ28SttDdF
-    spotify:track:4qbCRlvE5Bb9XNBjxARjoP
-    spotify:track:7x4tFmih1JBITx0e2ucGrT
 
 ### Import M3U playlists
 
