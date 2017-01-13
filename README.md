@@ -194,7 +194,13 @@ Links
 -   [Exportify](https://github.com/watsonbox/exportify), the opposite (export Spotify playlists to CSV format)
 -   [last.py](https://github.com/epsil/lastpy), a Python script for sorting playlists by Last.fm rating
 
-#### GUI converters
+#### Recommendations
+
+-   [MagicPlaylist](http://magicplaylist.co/) ([source](https://github.com/loverajoel/magicplaylist))
+-   [20v](http://20v.co/) ([source](https://github.com/fusenlabs/20v))
+-   [Spotibot](https://www.spotibot.com/)
+
+#### Conversion
 
 -   [Yet Another Spotify Playlist Converter](http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/) ([source](https://github.com/bertique/YetAnotherSpotifyPlaylistConverter))
 -   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr))
