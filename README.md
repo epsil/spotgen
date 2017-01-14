@@ -85,6 +85,12 @@ Result:
     spotify:track:4qbCRlvE5Bb9XNBjxARjoP
     spotify:track:7x4tFmih1JBITx0e2ucGrT
 
+### Duplicates
+
+By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:
+
+    #nonunique
+
 ### Order
 
 To order the tracks by Spotify popularity, use `#order by`:
