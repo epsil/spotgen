@@ -9,6 +9,8 @@
   },
   "scripts": {
     "clean": "git stash && git clean -d -f -f -x",
+    "clean!": "npm run reset && npm run clean",
+    "clean!!": "npm run reset! && npm run clean",
     "ds_store": "find . -iname \"*.DS_Store\" -exec git rm {} \\;; find . -iname \"*er i konflikt*\" -exec git rm {} \\;; find . -iname \"*.DS_Store\" -exec rm {} \\;; find . -iname \"*.docx\" -exec rm {} \\;; find . -iname \"*.log\" -exec rm {} \\;",
     "cli": "node spotify",
     "spotify": "node spotify",
@@ -28,6 +30,9 @@
     "commit": "git --no-pager status && git --no-pager diff && git commit -a -m \"Updated `git status | sed -n '/modified:/ {s/^[[:space:]]*modified:[[:space:]]*//;s/\\.txt$//;s/\\.md$//;s/\\.html$//;s/\\/index$//;p;q;}'`\"",
     "amend": "git --no-pager status && git --no-pager diff && git commit -a --amend --no-edit",
     "reword": "git --no-pager status && git --no-pager diff && git commit -a --amend",
+    "reset": "git reset --hard",
+    "clear": "git stash clear",
+    "reset!": "npm run reset && npm run clear",
     "push": "git --no-pager status && git pull --rebase && git push",
     "push!": "git --no-pager status && git push --force",
     "pull": "git --no-pager status && git pull --rebase",
