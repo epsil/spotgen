@@ -117,11 +117,12 @@ This will create a Last.fm-ordered playlist of artists similar to Beach House, w
 
 To group the tracks and then interleave them, use `#alternate by`:
 
-    #order by lastfm
+    #order by popularity
     #alternate by artist
     #similar Beach House
+    #similar Hooverphonic
 
-This will create a Last.fm-ordered playlist of artists similar to Beach House, with each track having a different artist from the previous track.
+This will create a Last.fm-ordered playlist of artists similar to Beach House and Hooverphonic, with each track having a different artist from the previous track.
 
 ### Import M3U playlists
 
