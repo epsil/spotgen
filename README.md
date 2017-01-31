@@ -168,6 +168,7 @@ One can easily apply `#order by popularity` to such a list:
 Likewise, spotify URIs are handled as well:
 
     #order by popularity
+    #alternate by album
     spotify:track:4oNXgGnumnu5oIXXyP8StH
     spotify:track:7rAjeWkQM6cLqbPjZtXxl2
     spotify:track:2Nt4Uw91pQLXSJ28SttDdF
