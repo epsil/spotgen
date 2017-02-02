@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: index.js</title>
+    <title>JSDoc: Source: lib/csv.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: index.js</h1>
+    <h1 class="page-title">Source: lib/csv.js</h1>
 
     
 
@@ -26,33 +26,50 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>#!/usr/bin/env node
-
-var fs = require('fs')
-var Playlist = require('./lib/playlist')
+            <pre class="prettyprint source linenums"><code>var stringify = require('csv-stringify/lib/sync')
 
 /**
- * Main method.
- * Invoked when run from the command line.
+ * Create CSV formatter.
+ * @constructor
+ * @param {track} track - A track with fetched metadata.
  */
-function main () {
-  var input = process.argv[2] || 'input.txt'
-  var output = process.argv[3] || 'output.txt'
-
-  var str = fs.readFileSync(input, 'utf8').toString()
-  var playlist = new Playlist(str)
-
-  playlist.dispatch().then(function (str) {
-    fs.writeFile(output, str, function (err) {
-      if (err) { return }
-      console.log('Wrote to ' + output)
-    })
-  })
+function CSV (track) {
+  /**
+   * A track with fetched metadata.
+   */
+  this.track = track
 }
 
-if (require.main === module) {
-  main()
+/**
+ * Track data in CSV format, with the following fields:
+ *
+ * Spotify URI,
+ * Track Name,
+ * Artist Name,
+ * Album Name,
+ * Disc Number,
+ * Track Number,
+ * Track Duration,
+ * Added By,
+ * Added At
+ *
+ * @return {string} Track data in CSV format.
+ */
+CSV.prototype.toString = function () {
+  var uri = this.track.uri()
+  var title = this.track.title()
+  var artist = this.track.artist()
+  var album = this.track.album()
+  var discNumber = this.track.discNumber()
+  var trackNumber = this.track.trackNumber()
+  var duration = this.track.duration()
+  var addedBy = ''
+  var addedAt = ''
+  var result = stringify([[uri, title, artist, album, discNumber, trackNumber, duration, addedBy, addedAt]])
+  return result.trim()
 }
+
+module.exports = CSV
 </code></pre>
         </article>
     </section>

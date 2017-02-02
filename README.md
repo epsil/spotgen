@@ -124,7 +124,7 @@ To group the tracks and then interleave them, use `#alternate by`:
 
 This will create a Last.fm-ordered playlist of artists similar to Beach House and Hooverphonic, with each track having a different artist from the previous track.
 
-### Import M3U playlists
+### M3U playlists
 
 One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`), provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
 
@@ -142,6 +142,25 @@ One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with t
 
 The generator translates this to:
 
+    Desire Lines - Deerhunter
+    Saved By Old Times - Deerhunter
+    Agoraphobia - Deerhunter
+    Revival - Deerhunter
+    Twilight at Carbon Lake - Deerhunter
+
+### Comma-separated values
+
+The generator can read [Exportify](https://github.com/watsonbox/exportify)'s CSV format:
+
+    spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
+    spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
+    spotify:track:2SpHd4lGMrJMIQDf92V6VP,Agoraphobia,Deerhunter,Microcastle,1,2,202640,,
+    spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
+    spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,
+
+It is also possible to output to this format, by adding the line `#csv`:
+
+    #csv
     Desire Lines - Deerhunter
     Saved By Old Times - Deerhunter
     Agoraphobia - Deerhunter
