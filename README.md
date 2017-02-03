@@ -89,7 +89,7 @@ Result:
 
 By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:
 
-    #nonunique
+    #duplicates
 
 ### Order
 

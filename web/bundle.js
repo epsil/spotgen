@@ -548,7 +548,7 @@ function Playlist (str) {
       } else if (line.match(/^#ALTERNATE\s+BY/i)) {
         var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
         this.alternating = alternateMatch[1].toLowerCase()
-      } else if (line.match(/^#(DUPLICATE|NONUNIQUE|NONDISTINCT)/i)) {
+      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
         this.unique = false
       } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
         this.unique = true
