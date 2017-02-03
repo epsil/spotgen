@@ -400,17 +400,17 @@ CSV.prototype.orEmptyString = function (num) {
  * @return {string} Track data in CSV format.
  */
 CSV.prototype.toString = function () {
-  var uri = this.track.uri()
-  var title = this.track.title()
-  var artist = this.track.artist()
-  var album = this.track.album()
-  var discNumber = this.orEmptyString(this.track.discNumber())
-  var trackNumber = this.orEmptyString(this.track.trackNumber())
-  var duration = this.orEmptyString(this.track.duration())
-  var popularity = this.orEmptyString(this.track.popularity())
-  var lastfm = this.orEmptyString(this.track.lastfm())
-  var result = stringify([[uri, title, artist, album, discNumber, trackNumber, duration, popularity, lastfm]])
-  return result.trim()
+  return stringify([[
+    this.track.uri(),
+    this.track.title(),
+    this.track.artist(),
+    this.track.album(),
+    this.orEmptyString(this.track.discNumber()),
+    this.orEmptyString(this.track.trackNumber()),
+    this.orEmptyString(this.track.duration()),
+    this.orEmptyString(this.track.popularity()),
+    this.orEmptyString(this.track.lastfm())
+  ]]).trim()
 }
 
 module.exports = CSV
@@ -1259,6 +1259,7 @@ spotify.getAlbum = function (id) {
 spotify.getAlbumsByArtist = function (id) {
   var url = 'https://api.spotify.com/v1/artists/'
   url += encodeURIComponent(id) + '/albums?limit=50'
+
   var getAlbums = function (url, result) {
     return spotify.request(url).then(function (response) {
       if (!(response &&
@@ -1277,7 +1278,32 @@ spotify.getAlbumsByArtist = function (id) {
       }
     })
   }
-  return getAlbums(url, null)
+
+  // Sort albums by type. Proper albums are listed first,
+  // followed by singles, guest albums, and compilation albums.
+  var sortAlbums = function (response) {
+    var rank = function (album) {
+      var rankings = {
+        'album': 1,
+        'single': 2,
+        'appears_on': 3,
+        'compilation': 4
+      }
+      return rankings[album.album_type] || 5
+    }
+    var compare = function (a, b) {
+      var x = rank(a)
+      var y = rank(b)
+      var val = (x < y) ? -1 : ((x > y) ? 1 : 0)
+      return val
+    }
+    if (response && response.items) {
+      response.items = response.items.sort(compare)
+    }
+    return response
+  }
+
+  return getAlbums(url).then(sortAlbums)
 }
 
 /**
