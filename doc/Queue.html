@@ -1518,6 +1518,170 @@ the modified value as output.</p></td>
 
     
 
+    <h4 class="name" id="forEachPromise"><span class="type-signature"></span>forEachPromise<span class="signature">(fn)</span><span class="type-signature"> &rarr; {Promise|<a href="Queue.html">Queue</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Similar to Queue.forEach(), but with promises.
+Each iteration must return a promise
+(e.g., by invoking a promise-returning method).</p>
+<p>The execution is strictly sequential to prevent overloading
+the server. (If parallel execution is needed, use a library
+function like Promise.all() instead.)</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>An iterator function.
+Takes an entry as input and returns a Promise.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line157">line 157</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A promise that invokes
+each promise in sequence. The promise's value is
+a queue of the values of each invoked promise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type"><a href="Queue.html">Queue</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="get"><span class="type-signature"></span>get<span class="signature">(idx)</span><span class="type-signature"></span></h4>
 
     
@@ -1619,7 +1783,7 @@ The indices start at 0.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line147">line 147</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line177">line 177</a>
     </li></ul></dd>
     
 
@@ -1752,7 +1916,7 @@ a string, as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line158">line 158</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line188">line 188</a>
     </li></ul></dd>
     
 
@@ -1909,7 +2073,7 @@ a string, as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line170">line 170</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line200">line 200</a>
     </li></ul></dd>
     
 
@@ -2064,7 +2228,7 @@ a string, as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line194">line 194</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line224">line 224</a>
     </li></ul></dd>
     
 
@@ -2157,7 +2321,7 @@ The indices start at 0.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line211">line 211</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line241">line 241</a>
     </li></ul></dd>
     
 
@@ -2263,7 +2427,7 @@ The indices start at 0.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line237">line 237</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line267">line 267</a>
     </li></ul></dd>
     
 
@@ -2420,7 +2584,7 @@ the modified value as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line248">line 248</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line278">line 278</a>
     </li></ul></dd>
     
 
@@ -2526,7 +2690,7 @@ the modified value as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line304">line 304</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line334">line 334</a>
     </li></ul></dd>
     
 
@@ -2632,7 +2796,7 @@ the modified value as output.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line317">line 317</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line347">line 347</a>
     </li></ul></dd>
     
 
@@ -2672,171 +2836,6 @@ the modified value as output.</p></td>
     </dt>
     <dd>
         
-<span class="param-type"><a href="Queue.html">Queue</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="promiseEach"><span class="type-signature"></span>promiseEach<span class="signature">(fn)</span><span class="type-signature"> &rarr; {Promise|<a href="Queue.html">Queue</a>}</span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Resolve a promise for each entry.
-Similar to Queue.forEach(), but for promises.
-Each iteration must return a promise
-(e.g., by invoking a promise-returning method).
-The execution is strictly sequential;
-if parallel execution is needed, use a
-library function like Promise.all() instead.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>fn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>An iterator function.
-Takes an entry as input and returns a Promise.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line340">line 340</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>A promise that invokes
-each promise in sequence, and then returns
-the result.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Promise</span>
-|
-
 <span class="param-type"><a href="Queue.html">Queue</a></span>
 
 
@@ -2977,7 +2976,7 @@ the entry is added at the end.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line259">line 259</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line289">line 289</a>
     </li></ul></dd>
     
 
@@ -3059,7 +3058,7 @@ the entry is added at the end.</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line362">line 362</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line361">line 361</a>
     </li></ul></dd>
     
 
@@ -3166,7 +3165,7 @@ if the queue is empty.</li>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line271">line 271</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line301">line 301</a>
     </li></ul></dd>
     
 
@@ -3344,7 +3343,7 @@ if the queue is empty.</li>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line282">line 282</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line312">line 312</a>
     </li></ul></dd>
     
 
@@ -3504,7 +3503,7 @@ Takes two entries as input and returns
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line295">line 295</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line325">line 325</a>
     </li></ul></dd>
     
 
@@ -3610,7 +3609,7 @@ Takes two entries as input and returns
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line370">line 370</a>
+        <a href="lib_queue.js.html">lib/queue.js</a>, <a href="lib_queue.js.html#line369">line 369</a>
     </li></ul></dd>
     
 
@@ -3680,7 +3679,7 @@ Takes two entries as input and returns
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Feb 03 2017 16:22:09 GMT+0100 (W. Europe Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Feb 03 2017 23:44:31 GMT+0100 (CET)
 </footer>
 
 <script> prettyPrint(); </script>
