@@ -634,13 +634,13 @@ Playlist.prototype.alternate = function () {
 
 /**
  * Remove duplicate entries.
- * @return {Playlist} - Itself.
+ * @return {Promise|Playlist} - Itself.
  */
 Playlist.prototype.dedup = function () {
   if (this.unique) {
-    this.entries.dedup()
+    return this.entries.dedup()
   }
-  return this
+  return Promise.resolve(this)
 }
 
 /**
@@ -652,9 +652,9 @@ Playlist.prototype.dedup = function () {
 Playlist.prototype.dispatch = function () {
   var self = this
   return this.fetchTracks().then(function () {
-    return self.order()
-  }).then(function () {
     return self.dedup()
+  }).then(function () {
+    return self.order()
   }).then(function () {
     return self.group()
   }).then(function () {
@@ -669,7 +669,7 @@ Playlist.prototype.dispatch = function () {
  * @return {Promise | Queue} A queue of results.
  */
 Playlist.prototype.fetchLastfm = function () {
-  return this.entries.resolveAll(function (entry) {
+  return this.entries.promiseEach(function (entry) {
     return entry.fetchLastfm()
   })
 }
@@ -828,31 +828,37 @@ Queue.prototype.concat = function (queue) {
  * `false` otherwise.
  */
 Queue.prototype.contains = function (obj) {
-  for (var i in this.queue) {
-    var entry = this.queue[i]
-    if ((entry && entry.equals &&
-         obj && obj.equals &&
-         entry.equals(obj)) ||
-        entry === obj) {
-      return true
-    }
-  }
-  return false
+  return this.indexOf(obj) >= 0
 }
 
 /**
  * Remove duplicate entries.
- * @return {Queue} - Itself.
+ * If a track occurs more than once, the version with
+ * the highest Spotify popularity is preferred.
+ * @return {Promise | Queue} - Itself.
  */
 Queue.prototype.dedup = function () {
+  var self = this
   var result = new Queue()
-  this.queue.forEach(function (entry) {
+  return self.promiseEach(function (entry) {
     if (!result.contains(entry)) {
       result.add(entry)
+      return Promise.resolve(entry)
+    } else {
+      var idx = self.indexOf(entry)
+      var other = result.get(idx)
+      return other.refresh().then(function (o) {
+        return entry.refresh()
+      }).then(function () {
+        if (entry.popularity() > other.popularity()) {
+          Queue.set(idx, entry)
+        }
+      })
     }
+  }).then(function () {
+    self.queue = result.toArray()
+    return self
   })
-  this.queue = result.toArray()
-  return this
 }
 
 /**
@@ -861,7 +867,7 @@ Queue.prototype.dedup = function () {
  * @return {Promise | Queue} A queue of results.
  */
 Queue.prototype.dispatch = function () {
-  return this.resolveAll(function (entry) {
+  return this.promiseEach(function (entry) {
     return entry.dispatch()
   })
 }
@@ -955,6 +961,25 @@ Queue.prototype.groupBy = function (fn) {
 }
 
 /**
+ * Get the index of an entry.
+ * @param {Object} obj - The entry to find.
+ * @return The index of `obj`, or `-1` if not found.
+ * The indices start at 0.
+ */
+Queue.prototype.indexOf = function (obj) {
+  for (var i in this.queue) {
+    var entry = this.queue[i]
+    if (entry === obj ||
+        (entry && entry.equals &&
+         obj && obj.equals &&
+         entry.equals(obj))) {
+      return i
+    }
+  }
+  return -1
+}
+
+/**
  * Interleave a nested queue into a flat queue.
  * @return {Queue} - Itself.
  */
@@ -1000,28 +1025,18 @@ Queue.prototype.map = function (fn) {
 }
 
 /**
- * Resolve all entries in sequence.
- * Ensure that only one entry is resolved at a time.
- * @param {Function} fn - A resolving function.
- * Takes an entry as input and returns a Promise
- * (e.g., by calling a Promise-returning entry method).
- * @return {Promise | Queue} A queue of results.
+ * Set a playlist entry.
+ * @param {integer} idx - The index of the entry.
+ * The indices start at 0. If out of bounds,
+ * the entry is added at the end.
+ * @param {Object} entry - The entry to add.
  */
-Queue.prototype.resolveAll = function (fn) {
-  // we could have used Promise.all(), but we choose to roll our
-  // own, sequential implementation to avoid overloading the server
-  var result = new Queue()
-  var ready = Promise.resolve(null)
-  this.queue.forEach(function (entry) {
-    ready = ready.then(function () {
-      return fn(entry)
-    }).then(function (value) {
-      result.add(value)
-    }).catch(function () { })
-  })
-  return ready.then(function () {
-    return result
-  })
+Queue.prototype.set = function (idx, entry) {
+  if (idx >= this.size()) {
+    this.add(entry)
+  } else {
+    this.queue[idx] = entry
+  }
 }
 
 /**
@@ -1080,6 +1095,37 @@ Queue.prototype.orderByPopularity = function () {
     var y = b.popularity()
     var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
     return val
+  })
+}
+
+/**
+ * Resolve a promise for each entry.
+ * Similar to Queue.forEach(), but for promises.
+ * Each iteration must return a promise
+ * (e.g., by invoking a promise-returning method).
+ * The execution is strictly sequential;
+ * if parallel execution is needed, use a
+ * library function like Promise.all() instead.
+ * @param {Function} fn - An iterator function.
+ * Takes an entry as input and returns a Promise.
+ * @return {Promise | Queue} A promise that invokes
+ * each promise in sequence, and then returns
+ * the result.
+ */
+Queue.prototype.promiseEach = function (fn) {
+  // we could have used Promise.all(), but we choose to roll our
+  // own, sequential implementation to avoid overloading the server
+  var result = new Queue()
+  var ready = Promise.resolve(null)
+  this.queue.forEach(function (entry) {
+    ready = ready.then(function () {
+      return fn(entry)
+    }).then(function (value) {
+      result.add(value)
+    }).catch(function () { })
+  })
+  return ready.then(function () {
+    return result
   })
 }
 
@@ -1881,6 +1927,17 @@ Track.prototype.popularity = function () {
   } else {
     return -1
   }
+}
+
+/**
+ * Refresh track metadata.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.refresh = function () {
+  var self = this
+  return self.dispatch().then(function () {
+    return self.dispatch()
+  })
 }
 
 /**
@@ -76600,9 +76657,10 @@ describe('Spotify Playlist Generator', function () {
       queue.add(foo1)
       queue.add(foo2)
       queue.add(bar)
-      queue.dedup()
-      queue.should.have.deep.property('queue[0].entry', 'foo')
-      queue.should.have.deep.property('queue[1].entry', 'bar')
+      return queue.dedup().then(function (queue) {
+        queue.should.have.deep.property('queue[0].entry', 'foo')
+        queue.should.have.deep.property('queue[1].entry', 'bar')
+      })
     })
 
     it('should be sortable', function () {

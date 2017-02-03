@@ -44,9 +44,10 @@ describe('Spotify Playlist Generator', function () {
       queue.add(foo1)
       queue.add(foo2)
       queue.add(bar)
-      queue.dedup()
-      queue.should.have.deep.property('queue[0].entry', 'foo')
-      queue.should.have.deep.property('queue[1].entry', 'bar')
+      return queue.dedup().then(function (queue) {
+        queue.should.have.deep.property('queue[0].entry', 'foo')
+        queue.should.have.deep.property('queue[1].entry', 'bar')
+      })
     })
 
     it('should be sortable', function () {
