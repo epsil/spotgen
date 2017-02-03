@@ -150,15 +150,7 @@ The generator translates this to:
 
 ### Comma-separated values
 
-The generator can read [Exportify](https://github.com/watsonbox/exportify)'s CSV format:
-
-    spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
-    spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
-    spotify:track:2SpHd4lGMrJMIQDf92V6VP,Agoraphobia,Deerhunter,Microcastle,1,2,202640,,
-    spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
-    spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,
-
-It is also possible to output to this format, by adding the line `#csv`:
+To output as CSV, add the line `#csv`:
 
     #csv
     Desire Lines - Deerhunter
@@ -166,6 +158,16 @@ It is also possible to output to this format, by adding the line `#csv`:
     Agoraphobia - Deerhunter
     Revival - Deerhunter
     Twilight at Carbon Lake - Deerhunter
+
+This produces a file on the format used by [Exportify](https://github.com/watsonbox/exportify):
+
+    spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
+    spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
+    spotify:track:2SpHd4lGMrJMIQDf92V6VP,Agoraphobia,Deerhunter,Microcastle,1,2,202640,,
+    spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
+    spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,
+
+The generator can also read files in this format. (Microsoft Excel can import them as well, although it might be necessary to add the line `sep=,` at the top.)
 
 ### Import existing Spotify playlists
 
