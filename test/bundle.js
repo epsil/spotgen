@@ -652,9 +652,9 @@ Playlist.prototype.dedup = function () {
 Playlist.prototype.dispatch = function () {
   var self = this
   return this.fetchTracks().then(function () {
-    return self.dedup()
-  }).then(function () {
     return self.order()
+  }).then(function () {
+    return self.dedup()
   }).then(function () {
     return self.group()
   }).then(function () {
