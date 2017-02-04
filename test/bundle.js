@@ -1265,6 +1265,56 @@ var stringSimilarity = require('string-similarity')
 var sort = {}
 
 /**
+ * Create an ascending comparison function.
+ * @param {function} fn - A scoring function.
+ * @return {function} - A comparison function that returns
+ * `-1` if the first argument scores less than the second argument,
+ * `1` if the first argument scores more than the second argument,
+ * and `0` if the scores are equal.
+ */
+sort.ascending = function (fn) {
+  return function (a, b) {
+    var x = fn(a)
+    var y = fn(b)
+    return (x < y) ? -1 : ((x > y) ? 1 : 0)
+  }
+}
+
+/**
+ * Create a descending comparison function.
+ * @param {function} fn - A scoring function.
+ * @return {function} - A comparison function that returns
+ * `-1` if the first argument scores more than the second argument,
+ * `1` if the first argument scores less than the second argument,
+ * and `0` if the scores are equal.
+ */
+sort.descending = function (fn) {
+  return function (a, b) {
+    var x = fn(a)
+    var y = fn(b)
+    return (x < y) ? 1 : ((x > y) ? -1 : 0)
+  }
+}
+
+/**
+ * Combine comparison functions.
+ * @param {...function} fn - A comparison function.
+ * @return {function} - A combined comparison function that returns
+ * the first comparison value unless the comparands are equal,
+ * in which case it returns the next value.
+ */
+sort.combine = function () {
+  var args = Array.prototype.slice.call(arguments)
+  var callback = function (fn1, fn2) {
+    return function (a, b) {
+      var val = fn1(a, b)
+      return (val === 0) ? fn2(a, b) : val
+    }
+  }
+  return args.reduce(callback)
+}
+
+/**
  * Compare albums by type. Proper albums are ranked highest,
  * followed by singles, guest albums, and compilation albums.
  * @param {JSON} a - An album.
@@ -1273,37 +1323,15 @@ var sort = {}
  * `1` if `a` is greater than `b`,
  * and `0` if `a` is equal to `b`.
  */
-sort.album = function (a, b) {
-  var rank = function (album) {
-    var rankings = {
-      'album': 1,
-      'single': 2,
-      'appears_on': 3,
-      'compilation': 4
-    }
-    return rankings[album.album_type] || 5
+sort.album = sort.ascending(function (album) {
+  var rankings = {
+    'album': 1,
+    'single': 2,
+    'appears_on': 3,
+    'compilation': 4
   }
-
-  var x = rank(a)
-  var y = rank(b)
-  var val = (x < y) ? -1 : ((x > y) ? 1 : 0)
-  return val
-}
-
-/**
- * Combine two comparator functions.
- * @param {function} fn1 - The main comparator function.
- * @param {function} fn2 - The fall-back comparator function.
- * @return {function} - A comparator that returns the comparison value
- * of `fn1` unless the comparands are equal, in which case it
- * returns the comparison value of `fn2`.
- */
-sort.combine = function (fn1, fn2) {
-  return function (a, b) {
-    var val = fn1(a, b)
-    return (val === 0) ? fn2(a, b) : val
-  }
-}
+  return rankings[album.album_type] || 5
+})
 
 /**
  * Compare tracks by Last.fm rating.
@@ -1313,12 +1341,9 @@ sort.combine = function (fn1, fn2) {
  * `-1` if `a` is greater than `b`,
  * and `0` if `a` is equal to `b`.
  */
-sort.lastfm = function (a, b) {
-  var x = a.lastfm()
-  var y = b.lastfm()
-  var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
-  return val
-}
+sort.lastfm = sort.descending(function (track) {
+  return track.lastfm()
+})
 
 /**
  * Compare tracks by Spotify popularity.
@@ -1328,30 +1353,27 @@ sort.lastfm = function (a, b) {
  * `-1` if `a` is greater than `b`,
  * and `0` if `a` is equal to `b`.
  */
-sort.popularity = function (a, b) {
-  var x = a.popularity()
-  var y = b.popularity()
-  var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
-  return val
-}
+sort.popularity = sort.descending(function (track) {
+  return track.popularity()
+})
 
 /**
- * Sort tracks by string similarity.
- * @param {Track} a - A track.
- * @param {Track} b - A track.
- * @return {integer} - `1` if `a` is less than `b`,
- * `-1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
+ * Sort track objects by similarity to a track.
+ * @param {string} track - The track to compare against.
+ * @return {function} - A comparison function.
  */
 sort.similar = function (track) {
-  return function (a, b) {
-    var aname = a.name + ' - ' + (a.artists[0].name || '')
-    var bname = b.name + ' - ' + (b.artists[0].name || '')
-    var x = stringSimilarity.compareTwoStrings(aname, track)
-    var y = stringSimilarity.compareTwoStrings(bname, track)
-    var val = (x < y) ? 1 : ((x > y) ? -1 : 0)
-    return val
-  }
+  var similarity = sort.descending(function (x) {
+    var title = x.name + ' - ' + (x.artists[0].name || '')
+    return stringSimilarity.compareTwoStrings(title, track)
+  })
+  var popularity = sort.descending(function (x) {
+    return x.popularity || -1
+  })
+  var explicit = sort.descending(function (x) {
+    return x.explicit ? 1 : 0
+  })
+  return sort.combine(similarity, popularity, explicit)
 }
 
 module.exports = sort
@@ -1988,6 +2010,9 @@ Track.prototype.name = function () {
 Track.prototype.popularity = function () {
   if (this.response) {
     return this.response.popularity
+  } else if (this.responseSimple &&
+             this.responseSimple.popularity) {
+    return this.responseSimple.popularity
   } else {
     return -1
   }
@@ -2012,7 +2037,7 @@ Track.prototype.refresh = function () {
 Track.prototype.searchForTrack = function () {
   var self = this
   return spotify.searchForTrack(this.entry).then(function (result) {
-    self.responseSimple = result.tracks.items[0]
+    self.response = result.tracks.items[0]
     return self
   })
 }
