@@ -112,6 +112,24 @@ Album.prototype.id = function () {
 }
 
 /**
+ * The album popularity.
+ * @return {string} - The album popularity.
+ */
+Album.prototype.popularity = function () {
+  if (this.albumResponse &&
+      this.albumResponse.popularity) {
+    return this.albumResponse.popularity
+  } else if (this.searchResponse &&
+             this.searchResponse.albums &&
+             this.searchResponse.albums.items[0] &&
+             this.searchResponse.albums.items[0].popularity) {
+    return this.searchResponse.albums.items[0].popularity
+  } else {
+    return ''
+  }
+}
+
+/**
  * Search for album if not known.
  * @return {Promise | JSON} A JSON response, or `null` if not found.
  */
@@ -171,6 +189,24 @@ Album.prototype.title = function () {
              this.searchResponse.albums.items[0] &&
              this.searchResponse.albums.items[0].name) {
     return this.searchResponse.albums.items[0].name
+  } else {
+    return ''
+  }
+}
+
+/**
+ * The album type.
+ * @return {string} - The album type.
+ */
+Album.prototype.type = function () {
+  if (this.albumResponse &&
+      this.albumResponse.album_type) {
+    return this.albumResponse.album_type
+  } else if (this.searchResponse &&
+             this.searchResponse.albums &&
+             this.searchResponse.albums.items[0] &&
+             this.searchResponse.albums.items[0].album_type) {
+    return this.searchResponse.albums.items[0].album_type
   } else {
     return ''
   }
@@ -1323,15 +1359,23 @@ sort.combine = function () {
  * `1` if `a` is greater than `b`,
  * and `0` if `a` is equal to `b`.
  */
-sort.album = sort.ascending(function (album) {
+sort.album = sort.combine(sort.descending(function (album) {
   var rankings = {
-    'album': 1,
-    'single': 2,
-    'appears_on': 3,
-    'compilation': 4
+    'album': 4,
+    'single': 3,
+    'appears_on': 2,
+    'compilation': 1
   }
-  return rankings[album.album_type] || 5
-})
+  var type = album.album_type || album.type()
+  return rankings[type] || 0
+}), sort.descending(function (album) {
+  var popularity = album.popularity
+  if (typeof popularity === 'function') {
+    return popularity()
+  } else {
+    return popularity || -1
+  }
+}))
 
 /**
  * Compare tracks by Last.fm rating.
