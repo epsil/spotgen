@@ -79,6 +79,7 @@ spotify.getTopTracks = function (id) {
   return spotify.request(url).then(function (response) {
     if (response &&
         response.tracks) {
+      response.tracks = response.tracks.sort(sort.popularity)
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -217,7 +218,7 @@ spotify.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      var similar = sort.similar(track)
+      var similar = sort.track(track)
       response.tracks.items = response.tracks.items.sort(similar)
       return Promise.resolve(response)
     } else {

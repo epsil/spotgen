@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs')
-var Playlist = require('./lib/playlist')
+var Playlist = require('./src/playlist')
 
 /**
  * Main method.

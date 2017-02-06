@@ -81849,32 +81849,6 @@ sort.combine = function () {
 }
 
 /**
- * Compare albums by type. Proper albums are ranked highest,
- * followed by singles, guest albums, and compilation albums.
- * @param {JSON} a - An album.
- * @param {JSON} b - An album.
- * @return {integer} - `-1` if `a` is less than `b`,
- * `1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.album = sort.combine(sort.descending(function (album) {
-  var rankings = {
-    'album': 4,
-    'single': 3,
-    'appears_on': 2,
-    'compilation': 1
-  }
-  var type = album.album_type || album.type()
-  return rankings[type] || 0
-}), sort.descending(function (album) {
-  if (typeof album.popularity === 'function') {
-    return album.popularity()
-  } else {
-    return album.popularity || -1
-  }
-}))
-
-/**
  * Compare tracks by Last.fm rating.
  * @param {Track} a - A track.
  * @param {Track} b - A track.
@@ -81882,8 +81856,8 @@ sort.album = sort.combine(sort.descending(function (album) {
  * `-1` if `a` is greater than `b`,
  * and `0` if `a` is equal to `b`.
  */
-sort.lastfm = sort.descending(function (track) {
-  return track.lastfm()
+sort.lastfm = sort.descending(function (x) {
+  return x.lastfm()
 })
 
 /**
@@ -81894,27 +81868,79 @@ sort.lastfm = sort.descending(function (track) {
  * `-1` if `a` is greater than `b`,
  * and `0` if `a` is equal to `b`.
  */
-sort.popularity = sort.descending(function (track) {
-  return track.popularity()
+sort.popularity = sort.descending(function (x) {
+  if (typeof x.popularity === 'function') {
+    return x.popularity()
+  } else {
+    return x.popularity || -1
+  }
 })
+
+/**
+ * Compare albums by type. Proper albums are ranked highest,
+ * followed by singles, guest albums, and compilation albums.
+ * @param {JSON} a - An album.
+ * @param {JSON} b - An album.
+ * @return {integer} - `-1` if `a` is less than `b`,
+ * `1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.type = sort.descending(function (album) {
+  var rankings = {
+    'album': 4,
+    'single': 3,
+    'appears_on': 2,
+    'compilation': 1
+  }
+  var type = album.album_type || album.type()
+  return rankings[type] || 0
+})
+
+/**
+ * Compare albums by type and popularity.
+ * @param {JSON} a - An album.
+ * @param {JSON} b - An album.
+ * @return {integer} - `-1` if `a` is less than `b`,
+ * `1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.album = sort.combine(sort.type, sort.popularity)
 
 /**
  * Sort track objects by similarity to a track.
  * @param {string} track - The track to compare against.
  * @return {function} - A comparison function.
  */
-sort.similar = function (track) {
-  var similarity = sort.descending(function (x) {
+sort.similarity = function (track) {
+  return sort.descending(function (x) {
     var title = x.name + ' - ' + (x.artists[0].name || '')
     return stringSimilarity.compareTwoStrings(title, track)
   })
-  var popularity = sort.descending(function (x) {
-    return x.popularity || -1
-  })
-  var explicit = sort.descending(function (x) {
-    return x.explicit ? 1 : 0
-  })
-  return sort.combine(similarity, popularity, explicit)
+}
+
+/**
+ * Sort track objects by censorship.
+ * Explicit tracks are preferred over censored ones.
+ * @param {Track} a - A track.
+ * @param {Track} b - A track.
+ * @return {integer} - `1` if `a` is less than `b`,
+ * `-1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.censorship = sort.descending(function (x) {
+  return x.explicit ? 1 : 0
+})
+
+/**
+ * Sort track objects by similarity to a track,
+ * popularity, and censorship.
+ * @param {string} track - The track to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.track = function (track) {
+  return sort.combine(sort.similarity(track),
+                      sort.popularity,
+                      sort.censorship)
 }
 
 module.exports = sort
@@ -82001,6 +82027,7 @@ spotify.getTopTracks = function (id) {
   return spotify.request(url).then(function (response) {
     if (response &&
         response.tracks) {
+      response.tracks = response.tracks.sort(sort.popularity)
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -82139,7 +82166,7 @@ spotify.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      var similar = sort.similar(track)
+      var similar = sort.track(track)
       response.tracks.items = response.tracks.items.sort(similar)
       return Promise.resolve(response)
     } else {
