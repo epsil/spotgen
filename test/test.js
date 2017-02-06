@@ -4,11 +4,11 @@ var chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 chai.should()
 
-var Artist = require('../lib/artist')
-var Album = require('../lib/album')
-var Playlist = require('../lib/playlist')
-var Queue = require('../lib/queue')
-var Track = require('../lib/track')
+var Artist = require('../src/artist')
+var Album = require('../src/album')
+var Playlist = require('../src/playlist')
+var Queue = require('../src/queue')
+var Track = require('../src/track')
 
 describe('Spotify Playlist Generator', function () {
   this.timeout(99999)

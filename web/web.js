@@ -1,6 +1,6 @@
 /* global jQuery:true */
 /* exported jQuery */
-var Playlist = require('../lib/playlist')
+var Playlist = require('../src/playlist')
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')

@@ -1,2178 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Queue = require('./queue')
-var Track = require('./track')
-var spotify = require('./spotify')
-
-/**
- * Create album entry.
- * @constructor
- * @param {string} entry - The album to search for.
- * @param {string} [response] - JSON album object.
- */
-function Album (entry, limit) {
-  /**
-   * Album response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#album-object-full).
-   */
-  this.albumResponse = null
-
-  /**
-   * Entry string.
-   */
-  this.entry = entry.trim()
-
-  /**
-   * Number of albums to fetch.
-   */
-  this.limit = null
-
-  /**
-   * Search response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/search-item/#example).
-   */
-  this.searchResponse = null
-
-  /**
-   * Whether to fetch tracks.
-   */
-  this.fetchTracks = true
-
-  this.setLimit(limit)
-}
-
-/**
- * Create a queue of tracks.
- * @param {JSON} response - A JSON response object.
- * @return {Promise | Queue} A queue of tracks.
- */
-Album.prototype.createQueue = function () {
-  var self = this
-  var tracks = this.albumResponse.tracks.items.map(function (item) {
-    var track = new Track(self.entry)
-    track.setResponse(item)
-    track.setAlbum(self.title())
-    return track
-  })
-  var queue = new Queue(tracks)
-  if (self.limit) {
-    queue = queue.slice(0, self.limit)
-  }
-  return queue
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Album.prototype.dispatch = function () {
-  if (this.fetchTracks) {
-    var self = this
-    return this.searchForAlbum().then(function () {
-      return self.fetchAlbum()
-    }).then(function () {
-      return self.createQueue()
-    })
-  } else {
-    return this.searchForAlbum()
-  }
-}
-
-/**
- * Fetch album metadata.
- * @return {Promise | JSON} A JSON response.
- */
-Album.prototype.fetchAlbum = function () {
-  var self = this
-  return spotify.getAlbum(this.id()).then(function (response) {
-    self.albumResponse = response
-    return self
-  })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the album,
- * or `-1` if not available.
- */
-Album.prototype.id = function () {
-  if (this.albumResponse &&
-      this.albumResponse.id) {
-    return this.albumResponse.id
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].id) {
-    return this.searchResponse.albums.items[0].id
-  } else {
-    return -1
-  }
-}
-
-/**
- * The album popularity.
- * @return {string} - The album popularity.
- */
-Album.prototype.popularity = function () {
-  if (this.albumResponse &&
-      this.albumResponse.popularity) {
-    return this.albumResponse.popularity
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].popularity) {
-    return this.searchResponse.albums.items[0].popularity
-  } else {
-    return ''
-  }
-}
-
-/**
- * Search for album if not known.
- * @return {Promise | JSON} A JSON response, or `null` if not found.
- */
-Album.prototype.searchForAlbum = function () {
-  var self = this
-  if (this.searchResponse) {
-    return Promise.resolve(this.searchResponse)
-  } else if (this.albumResponse) {
-    return Promise.resolve(this.albumResponse)
-  } else {
-    return spotify.searchForAlbum(this.entry).then(function (result) {
-      self.searchResponse = result
-      return self
-    }).catch(function () {
-      console.log('COULD NOT FIND ' + self.entry)
-      return Promise.reject(null)
-    })
-  }
-}
-
-/**
- * Set the number of albums to fetch.
- * @param {integer} limit - The maximum amount of albums.
- */
-Album.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.limit = limit
-  }
-}
-
-/**
- * Set the JSON response.
- * @param {JSON} response - The response.
- */
-Album.prototype.setResponse = function (response) {
-  if (response &&
-      response.albums &&
-      response.albums.items[0] &&
-      response.albums.items[0].id) {
-    this.searchResponse = response
-  } else if (response &&
-             response.id) {
-    this.albumResponse = response
-  }
-}
-
-/**
- * The album title.
- * @return {string} - The album title.
- */
-Album.prototype.title = function () {
-  if (this.albumResponse &&
-      this.albumResponse.name) {
-    return this.albumResponse.name
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].name) {
-    return this.searchResponse.albums.items[0].name
-  } else {
-    return ''
-  }
-}
-
-/**
- * The album type.
- * @return {string} - The album type.
- */
-Album.prototype.type = function () {
-  if (this.albumResponse &&
-      this.albumResponse.album_type) {
-    return this.albumResponse.album_type
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].album_type) {
-    return this.searchResponse.albums.items[0].album_type
-  } else {
-    return ''
-  }
-}
-
-/**
- * Spotify URI.
- * @return {string} The Spotify URI
- * (a string on the form `spotify:album:xxxxxxxxxxxxxxxxxxxxxx`),
- * or the empty string if not available.
- */
-Album.prototype.uri = function () {
-  if (this.albumResponse &&
-      this.albumResponse.uri) {
-    return this.albumResponse.uri
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].uri) {
-    return this.searchResponse.albums.items[0].uri
-  } else {
-    return ''
-  }
-}
-
-module.exports = Album
-
-},{"./queue":7,"./spotify":10,"./track":12}],2:[function(require,module,exports){
-var Album = require('./album')
-var Queue = require('./queue')
-var sort = require('./sort')
-var spotify = require('./spotify')
-
-/**
- * Artist entry.
- * @constructor
- * @param {string} entry - The artist to search for.
- */
-function Artist (entry, limit) {
-  /**
-   * Artist response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#artist-object-full).
-   */
-  this.artistResponse = null
-
-  /**
-   * Albums response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-artists-albums/#example).
-   */
-  this.albumsResponse = null
-
-  /**
-   * Entry string.
-   */
-  this.entry = null
-
-  /**
-   * Number of tracks to fetch.
-   */
-  this.limit = null
-
-  /**
-   * Search response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/search-item/#example).
-   */
-  this.searchResponse = null
-
-  this.entry = entry.trim()
-
-  this.setLimit(limit)
-}
-
-/**
- * Create a queue of tracks.
- * @param {JSON} response - A JSON response object.
- * @return {Promise | Queue} A queue of tracks.
- */
-Artist.prototype.createQueue = function () {
-  var self = this
-  var albums = self.albumsResponse.items.map(function (item) {
-    var album = new Album(self.entry)
-    album.setResponse(item)
-    return album
-  })
-  var albumQueue = new Queue(albums)
-  return albumQueue.forEachPromise(function (album) {
-    // get album popularity
-    return album.fetchAlbum()
-  }).then(function (albumQueue) {
-    albumQueue = albumQueue.sort(sort.album)
-    return albumQueue.dispatch()
-  }).then(function (queue) {
-    return queue.flatten().filter(function (track) {
-      // TODO: use canonical artist name
-      return track.hasArtist(self.entry)
-    })
-  })
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Artist.prototype.dispatch = function () {
-  var self = this
-  return this.searchForArtist().then(function () {
-    return self.fetchAlbums()
-  }).then(function () {
-    return self.createQueue()
-  })
-}
-
-/**
- * Fetch albums.
- * @return {Promise | JSON} A JSON response.
- */
-Artist.prototype.fetchAlbums = function () {
-  var self = this
-  return spotify.getAlbumsByArtist(this.id()).then(function (result) {
-    self.albumsResponse = result
-    return self
-  })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Artist.prototype.id = function () {
-  if (this.searchResponse &&
-      this.searchResponse.artists &&
-      this.searchResponse.artists.items[0] &&
-      this.searchResponse.artists.items[0].id) {
-    return this.searchResponse.artists.items[0].id
-  } else if (this.artistResponse &&
-             this.artistResponse.id) {
-    return this.artistResponse.id
-  } else {
-    return -1
-  }
-}
-
-/**
- * Search for artist.
- * @return {Promise | JSON} A JSON response.
- */
-Artist.prototype.searchForArtist = function () {
-  var self = this
-  if (this.searchResponse) {
-    return Promise.resolve(this.searchResponse)
-  } else if (this.artistResponse) {
-    return Promise.resolve(this.artistResponse)
-  } else {
-    return spotify.searchForArtist(this.entry).then(function (result) {
-      self.searchResponse = result
-      return self
-    })
-  }
-}
-
-/**
- * Set the number of tracks to fetch.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Artist.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.limit = limit
-  }
-}
-
-/**
- * Set the JSON response.
- * @param {JSON} response - The response.
- */
-Artist.prototype.setResponse = function (response) {
-  if (response &&
-      response.artists &&
-      response.artists.items[0] &&
-      response.artists.items[0].id) {
-    this.searchResponse = response
-  } else if (response &&
-             response.id) {
-    this.artistResponse = response
-  } else if (response &&
-             response.items) {
-    this.albumsResponse = response
-  }
-}
-
-module.exports = Artist
-
-},{"./album":1,"./queue":7,"./sort":9,"./spotify":10}],3:[function(require,module,exports){
-var stringify = require('csv-stringify/lib/sync')
-
-/**
- * Create CSV formatter.
- * @constructor
- * @param {track} track - A track with fetched metadata.
- */
-function CSV (track) {
-  /**
-   * A track with fetched metadata.
-   */
-  this.track = track
-}
-
-/**
- * Return empty string if less than zero.
- * @param {integer} num - The value.
- * @return {string | integer} The empty string if `num` is less than zero,
- * or `num` otherwise.
- */
-CSV.prototype.orEmptyString = function (num) {
-  return (num < 0) ? '' : num
-}
-
-/**
- * Track data in CSV format, with the following fields:
- *
- * Spotify URI,
- * Track Name,
- * Artist Name,
- * Album Name,
- * Disc Number,
- * Track Number,
- * Track Duration,
- * Added By,
- * Added At
- *
- * @return {string} Track data in CSV format.
- */
-CSV.prototype.toString = function () {
-  return stringify([[
-    this.track.uri(),
-    this.track.title(),
-    this.track.artist(),
-    this.track.album(),
-    this.orEmptyString(this.track.discNumber()),
-    this.orEmptyString(this.track.trackNumber()),
-    this.orEmptyString(this.track.duration()),
-    this.orEmptyString(this.track.popularity()),
-    this.orEmptyString(this.track.lastfm())
-  ]]).trim()
-}
-
-module.exports = CSV
-
-},{"csv-stringify/lib/sync":282}],4:[function(require,module,exports){
-var _0x3c90=['\x65\x78\x70\x6f\x72\x74\x73','\x61\x70\x69','\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66'];(function(_0x5efaa4,_0x51f4cc){var _0x1036ae=function(_0x268b9a){while(--_0x268b9a){_0x5efaa4['\x70\x75\x73\x68'](_0x5efaa4['\x73\x68\x69\x66\x74']());}};_0x1036ae(++_0x51f4cc);}(_0x3c90,0x1aa));var _0x1c06=function(_0x519485,_0x5aa914){var _0x519485=parseInt(_0x519485,0x10);var _0x89cae8=_0x3c90[_0x519485];return _0x89cae8;};module[_0x1c06('0x0')][_0x1c06('0x1')]=_0x1c06('0x2');
-
-},{}],5:[function(require,module,exports){
-var request = require('request')
-
-module.exports = function (key) {
-  var lastfm = {}
-
-  /**
-   * Get the Last.fm metadata for a track.
-   * @param {String} artist - The artist.
-   * @param {String} title - The title.
-   * @param {boolean} [correct] - Whether to autocorrect misspellings,
-   * default true.
-   * @return {Promise | JSON} The track info.
-   */
-  lastfm.getInfo = function (artist, title, correct) {
-    correct = (correct !== false)
-    artist = encodeURIComponent(artist)
-    title = encodeURIComponent(title)
-    key = encodeURIComponent(key)
-
-    // http://www.last.fm/api/show/track.getInfo
-    var url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo'
-    url += '&api_key=' + key
-    url += '&artist=' + artist
-    url += '&track=' + title
-    url += '&format=json'
-
-    return lastfm.request(url).then(function (result) {
-      if (result && !result.error && result.track) {
-        return Promise.resolve(result)
-      } else {
-        return Promise.reject(result)
-      }
-    })
-  }
-
-  /**
-   * Perform a Last.fm request.
-   * @param {string} url - The URL to look up.
-   */
-  lastfm.request = function (url) {
-    return new Promise(function (resolve, reject) {
-      setTimeout(function () {
-        console.log(url.replace('&api_key=' + key, ''))
-        request(url, function (err, response, body) {
-          if (err) {
-            reject(err)
-          } else if (response.statusCode !== 200) {
-            reject(response.statusCode)
-          } else {
-            try {
-              body = JSON.parse(body)
-            } catch (e) {
-              reject(e)
-            }
-            if (body.error) {
-              reject(body)
-            } else {
-              resolve(body)
-            }
-          }
-        })
-      }, 100) // 10
-    })
-  }
-
-  return lastfm
-}
-
-},{"request":285}],6:[function(require,module,exports){
-var Artist = require('./artist')
-var Album = require('./album')
-var CSV = require('./csv')
-var Queue = require('./queue')
-var Top = require('./top')
-var Track = require('./track')
-var Similar = require('./similar')
-
-/**
- * Create a playlist.
- * @constructor
- * @param {string} str - A newline-separated string of
- * entries on the form `TITLE - ARTIST`. May also contain
- * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
- */
-function Playlist (str) {
-  /**
-   * Playlist alternating.
-   */
-  this.alternating = null
-
-  /**
-   * Whether to output as CSV.
-   */
-  this.csv = false
-
-  /**
-   * List of entries.
-   */
-  this.entries = new Queue()
-
-  /**
-   * Playlist grouping.
-   */
-  this.grouping = null
-
-  /**
-   * Playlist order.
-   */
-  this.ordering = null
-
-  /**
-   * Whether to remove duplicates.
-   */
-  this.unique = true
-
-  str = str.trim()
-  if (str !== '') {
-    var lines = str.split(/\r|\n|\r\n/)
-    while (lines.length > 0) {
-      var line = lines.shift()
-      if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
-        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+(.*)/i)
-        this.ordering = orderMatch[2].toLowerCase()
-      } else if (line.match(/^#GROUP\s+BY/i)) {
-        var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
-        this.grouping = groupMatch[1].toLowerCase()
-      } else if (line.match(/^#ALTERNATE\s+BY/i)) {
-        var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
-        this.alternating = alternateMatch[1].toLowerCase()
-      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
-        this.unique = false
-      } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
-        this.unique = true
-      } else if (line.match(/^#[CSV]+/i)) {
-        this.csv = true
-      } else if (line.match(/^##/i) || line.match(/^#EXTM3U/i)) {
-        // comment
-      } else if (line.match(/^#ALBUM(ID)?[0-9]*\s+/i)) {
-        var albumMatch = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i)
-        var albumId = albumMatch[2]
-        var albumLimit = parseInt(albumMatch[3])
-        var albumEntry = albumMatch[4]
-        var album = new Album(albumEntry)
-        album.setLimit(albumLimit)
-        if (albumId) {
-          album.fetchTracks = false
-        }
-        this.entries.add(album)
-      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
-        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
-        var artistLimit = parseInt(artistMatch[1])
-        var artistEntry = artistMatch[2]
-        var artist = new Artist(artistEntry)
-        artist.setLimit(artistLimit)
-        this.entries.add(artist)
-      } else if (line.match(/^#TOP[0-9]*\s+/i)) {
-        var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
-        var topLimit = parseInt(topMatch[1])
-        var topEntry = topMatch[2]
-        var top = new Top(topEntry)
-        top.setLimit(topLimit)
-        this.entries.add(top)
-      } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
-        var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
-        var similarLimit = parseInt(similarMatch[1])
-        var similarEntry = similarMatch[2]
-        var similar = new Similar(similarEntry)
-        similar.setLimit(similarLimit)
-        this.entries.add(similar)
-      } else if (line.match(/^#EXTINF/i)) {
-        var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
-        if (match) {
-          this.entries.add(new Track(match[1]))
-          if (lines.length > 0 &&
-              !lines[0].match(/^#/)) {
-            lines.shift()
-          }
-        }
-      } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
-        var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
-        var uri = uriMatch[0]
-        var uriTrack = new Track(uri)
-        this.entries.add(uriTrack)
-      } else if (line !== '') {
-        var track = new Track(line)
-        this.entries.add(track)
-      }
-    }
-  }
-}
-
-/**
- * Alternate the playlist entries.
- */
-Playlist.prototype.alternate = function () {
-  var self = this
-  if (this.alternating === 'artist') {
-    return this.entries.alternate(function (track) {
-      return track.artist().toLowerCase()
-    })
-  } else if (this.alternating === 'album') {
-    return this.refreshTracks().then(function () {
-      return self.entries.alternate(function (track) {
-        return track.album().toLowerCase()
-      })
-    })
-  } else if (this.alternating === 'entry') {
-    return this.entries.alternate(function (track) {
-      return track.entry.toLowerCase()
-    })
-  }
-}
-
-/**
- * Remove duplicate entries.
- * @return {Promise|Playlist} - Itself.
- */
-Playlist.prototype.dedup = function () {
-  if (this.unique) {
-    return this.entries.dedup()
-  }
-  return Promise.resolve(this)
-}
-
-/**
- * Dispatch all the entries in the playlist
- * and return the track listing.
- * @return {Promise | string} A newline-separated list
- * of Spotify URIs.
- */
-Playlist.prototype.dispatch = function () {
-  var self = this
-  return this.fetchTracks().then(function () {
-    return self.dedup()
-  }).then(function () {
-    return self.order()
-  }).then(function () {
-    return self.group()
-  }).then(function () {
-    return self.alternate()
-  }).then(function () {
-    return self.toString()
-  })
-}
-
-/**
- * Fetch Last.fm metadata of each playlist entry.
- * @return {Promise | Queue} A queue of results.
- */
-Playlist.prototype.fetchLastfm = function () {
-  return this.entries.forEachPromise(function (entry) {
-    return entry.fetchLastfm()
-  })
-}
-
-/**
- * Dispatch the entries in the playlist.
- * @return {Promise} A Promise to perform the action.
- */
-Playlist.prototype.fetchTracks = function () {
-  var self = this
-  return this.entries.dispatch().then(function (queue) {
-    self.entries = queue.flatten()
-  })
-}
-
-/**
- * Group the playlist entries.
- */
-Playlist.prototype.group = function () {
-  var self = this
-  if (this.grouping === 'artist') {
-    return this.entries.group(function (track) {
-      return track.artist().toLowerCase()
-    })
-  } else if (this.grouping === 'album') {
-    return this.refreshTracks().then(function () {
-      return self.entries.group(function (track) {
-        return track.album().toLowerCase()
-      })
-    })
-  } else if (this.grouping === 'entry') {
-    return this.entries.group(function (track) {
-      return track.entry.toLowerCase()
-    })
-  }
-}
-
-/**
- * Order the playlist entries.
- * @return {Promise} A Promise to perform the action.
- */
-Playlist.prototype.order = function () {
-  var self = this
-  if (this.ordering === 'popularity') {
-    return this.refreshTracks().then(function () {
-      self.entries.orderByPopularity()
-    })
-  } else if (this.ordering === 'lastfm') {
-    return this.fetchLastfm().then(function () {
-      self.entries.orderByLastfm()
-    })
-  }
-}
-
-/**
- * Print the playlist to the console.
- */
-Playlist.prototype.print = function () {
-  console.log(this.toString())
-}
-
-/**
- * Refresh the metadata of each playlist entry.
- * @return {Promise} A Promise to perform the action.
- */
-Playlist.prototype.refreshTracks = function () {
-  var self = this
-  return this.entries.dispatch().then(function (result) {
-    self.entries = result.flatten()
-  })
-}
-
-/**
- * Convert the playlist to a string.
- * @return {string} A newline-separated list of Spotify URIs.
- */
-Playlist.prototype.toString = function () {
-  var result = ''
-  var self = this
-  this.entries.forEach(function (entry) {
-    if (entry instanceof Track || entry instanceof Album) {
-      if (entry instanceof Track) {
-        console.log(entry.toString())
-        console.log(entry.popularity() + ' (' + entry.lastfm() + ')')
-      }
-      if (self.csv) {
-        var csvFormat = new CSV(entry)
-        var csvLine = csvFormat.toString()
-        result += csvLine + '\n'
-      } else {
-        var uri = entry.uri()
-        if (uri !== '') {
-          result += uri + '\n'
-        }
-      }
-    }
-  })
-  return result.trim()
-}
-
-module.exports = Playlist
-
-},{"./album":1,"./artist":2,"./csv":3,"./queue":7,"./similar":8,"./top":11,"./track":12}],7:[function(require,module,exports){
-var sort = require('./sort')
-
-/**
- * Create a queue of playlist entries.
- * @constructor
- * @param {Array} [arr] - An array of playlist entries.
- */
-function Queue (arr) {
-  /**
-   * Array of entries.
-   */
-  this.queue = []
-
-  if (arr) {
-    this.queue = arr
-  }
-}
-
-/**
- * Add an entry to the end of the queue.
- * @param {Track | Album | Artist} entry -
- * The entry to add.
- */
-Queue.prototype.add = function (entry) {
-  this.queue.push(entry)
-}
-
-/**
- * Group entries and interleave them.
- * @param {Function} fn - A grouping function.
- * Takes an entry as input and returns a grouping key,
- * a string, as output.
- * @return {Queue} - Itself.
- */
-Queue.prototype.alternate = function (fn) {
-  this.groupBy(fn)
-  this.interleave()
-}
-
-/**
- * Concatenate with another queue.
- * @param {Queue} queue - Another queue to append to this queue.
- * @return {Queue} - A new queue containing all the entries
- * from this queue followed by all the entries from the other queue.
- */
-Queue.prototype.concat = function (queue) {
-  return new Queue(this.toArray().concat(queue.toArray()))
-}
-
-/**
- * Whether the queue contains an entry.
- * @param {Track | Album | Artist} entry -
- * The entry to check for.
- * @return {boolean} - `true` if the queue contains `entry`,
- * `false` otherwise.
- */
-Queue.prototype.contains = function (obj) {
-  return this.indexOf(obj) >= 0
-}
-
-/**
- * Remove duplicate entries.
- * If a track occurs more than once, the version with
- * the highest Spotify popularity is preferred.
- * @return {Promise | Queue} - Itself.
- */
-Queue.prototype.dedup = function () {
-  var self = this
-  var result = new Queue()
-  return self.forEachPromise(function (entry) {
-    if (!result.contains(entry)) {
-      result.add(entry)
-      return Promise.resolve(entry)
-    } else {
-      var idx = self.indexOf(entry)
-      var other = result.get(idx)
-      return other.refresh().then(function (o) {
-        return entry.refresh()
-      }).then(function () {
-        if (entry.popularity() > other.popularity()) {
-          Queue.set(idx, entry)
-        }
-      })
-    }
-  }).then(function () {
-    self.queue = result.toArray()
-    return self
-  })
-}
-
-/**
- * Dispatch all entries in sequence.
- * Ensure that only one entry is dispatched at a time.
- * @return {Promise | Queue} A queue of results.
- */
-Queue.prototype.dispatch = function () {
-  return this.forEachPromise(function (entry) {
-    return entry.dispatch()
-  })
-}
-
-/**
- * Filter the queue by a predicate.
- * @param {Function} fn - A predicate function.
- * Takes the current entry as input and returns
- * `true` if it passes the test, `false` otherwise.
- * @return {Queue} - A new queue.
- */
-Queue.prototype.filter = function (fn) {
-  return new Queue(this.toArray().filter(fn))
-}
-
-/**
- * Transform a nested queue into a flat queue.
- * @return {Queue} - Itself.
- */
-Queue.prototype.flatten = function () {
-  var result = []
-  for (var i in this.queue) {
-    var entry = this.queue[i]
-    if (entry instanceof Queue) {
-      entry = entry.flatten()
-      result = result.concat(entry.queue)
-    } else {
-      result.push(entry)
-    }
-  }
-  this.queue = result
-  return this
-}
-
-/**
- * Iterate over the queue.
- * @param {Function} fn - An iterator function.
- * Takes the current entry as input and returns
- * the modified value as output.
- * @return {Queue} - Itself.
- */
-Queue.prototype.forEach = function (fn) {
-  this.queue.forEach(fn)
-  return this
-}
-
-/**
- * Similar to Queue.forEach(), but with promises.
- * Each iteration must return a promise
- * (e.g., by invoking a promise-returning method).
- *
- * The execution is strictly sequential to prevent overloading
- * the server. (If parallel execution is needed, use a library
- * function like Promise.all() instead.)
- *
- * @param {Function} fn - An iterator function.
- * Takes an entry as input and returns a promise.
- * @return {Promise | Queue} A promise that invokes
- * each promise in sequence. The promise's value is
- * a queue of the values of each invoked promise.
- */
-Queue.prototype.forEachPromise = function (fn) {
-  var result = new Queue()
-  var ready = Promise.resolve(null)
-  this.queue.forEach(function (entry) {
-    ready = ready.then(function () {
-      return fn(entry)
-    }).then(function (value) {
-      result.add(value)
-    }).catch(function () { })
-  })
-  return ready.then(function () {
-    return result
-  })
-}
-
-/**
- * Get a playlist entry.
- * @param {integer} idx - The index of the entry.
- * The indices start at 0.
- */
-Queue.prototype.get = function (idx) {
-  return this.queue[idx]
-}
-
-/**
- * Group entries.
- * @param {Function} fn - A grouping function.
- * Takes an entry as input and returns a grouping key,
- * a string, as output.
- * @return {Queue} - Itself.
- */
-Queue.prototype.group = function (fn) {
-  this.groupBy(fn)
-  this.flatten()
-}
-
-/**
- * Group entries.
- * @param {Function} fn - A grouping function.
- * Takes an entry as input and returns a grouping key,
- * a string, as output.
- * @return {Queue} - Itself.
- */
-Queue.prototype.groupBy = function (fn) {
-  var map = []
-  var result = []
-  for (var i in this.queue) {
-    var entry = this.queue[i]
-    var key = fn(entry)
-    if (!map[key]) {
-      map[key] = new Queue()
-    }
-    map[key].add(entry)
-  }
-  for (var k in map) {
-    result.push(map[k])
-  }
-  this.queue = result
-  return this
-}
-
-/**
- * Get the index of an entry.
- * @param {Object} obj - The entry to find.
- * @return The index of `obj`, or `-1` if not found.
- * The indices start at 0.
- */
-Queue.prototype.indexOf = function (obj) {
-  for (var i in this.queue) {
-    var entry = this.queue[i]
-    if (entry === obj ||
-        (entry && entry.equals &&
-         obj && obj.equals &&
-         entry.equals(obj))) {
-      return i
-    }
-  }
-  return -1
-}
-
-/**
- * Interleave a nested queue into a flat queue.
- * @return {Queue} - Itself.
- */
-Queue.prototype.interleave = function () {
-  var queues = this
-  var result = new Queue()
-  var temp = new Queue()
-  var iterator = function (queue) {
-    if (!queue.isEmpty()) {
-      var entry = queue.shift()
-      result.add(entry)
-    }
-    if (!queue.isEmpty()) {
-      temp.add(queue)
-    }
-  }
-  while (!queues.isEmpty()) {
-    queues.forEach(iterator)
-    queues = temp
-    temp = new Queue()
-  }
-  this.queue = result.queue
-  return this
-}
-
-/**
- * Whether the playlist is empty.
- * @return {boolean} - `true` if empty, `false` otherwise.
- */
-Queue.prototype.isEmpty = function () {
-  return this.size() <= 0
-}
-
-/**
- * Map a function over the queue.
- * @param {Function} fn - An iterator function.
- * Takes the current entry as input and returns
- * the modified value as output.
- * @return {Queue} - A new queue.
- */
-Queue.prototype.map = function (fn) {
-  return new Queue(this.toArray().map(fn))
-}
-
-/**
- * Set a playlist entry.
- * @param {integer} idx - The index of the entry.
- * The indices start at 0. If out of bounds,
- * the entry is added at the end.
- * @param {Object} entry - The entry to add.
- */
-Queue.prototype.set = function (idx, entry) {
-  if (idx >= this.size()) {
-    this.add(entry)
-  } else {
-    this.queue[idx] = entry
-  }
-}
-
-/**
- * The playlist size.
- * @return {integer} - The number of entries.
- */
-Queue.prototype.size = function () {
-  return this.queue.length
-}
-
-/**
- * Slice a queue.
- * @param {integer} start - The index of the first element.
- * @param {integer} end - The index of the last element (not included).
- * @return {Queue} - A new queue containing all elements
- * from `start` (inclusive) to `end` (exclusive).
- */
-Queue.prototype.slice = function (start, end) {
-  return new Queue(this.toArray().slice(start, end))
-}
-
-/**
- * Sort the queue.
- * @param {Function} fn - A sorting function.
- * Takes two entries as input and returns
- * `-1` if the first entry is less than the second,
- * `1` if the first entry is greater than the second, and
- * `0` if the entries are equal.
- * @return {Queue} - Itself.
- */
-Queue.prototype.sort = function (fn) {
-  this.queue = this.queue.sort(fn)
-  return this
-}
-
-/**
- * Order the playlist entries by Last.fm playcount.
- * @return {Queue} - Itself.
- */
-Queue.prototype.orderByLastfm = function () {
-  return this.sort(sort.lastfm)
-}
-
-/**
- * Order the playlist entries by Spotify popularity.
- * @return {Queue} - Itself.
- */
-Queue.prototype.orderByPopularity = function () {
-  return this.sort(sort.popularity)
-}
-
-/**
- * Remove the first element from the queue.
- * @return {Object} - The first element, or `undefined`
- * if the queue is empty.
- */
-Queue.prototype.shift = function () {
-  return this.queue.shift()
-}
-
-/**
- * Convert queue to array.
- * @return {Array} An array of playlist entries.
- */
-Queue.prototype.toArray = function () {
-  return this.queue
-}
-
-module.exports = Queue
-
-},{"./sort":9}],8:[function(require,module,exports){
-var Artist = require('./artist')
-var Queue = require('./queue')
-var Top = require('./top')
-var spotify = require('./spotify')
-
-/**
- * Similar entry.
- * @constructor
- * @param {string} entry - The artist to search for.
- */
-function Similar (entry) {
-  /**
-   * Artist query.
-   */
-  this.artist = null
-
-  /**
-   * Number of tracks to fetch per artist.
-   */
-  this.artistLimit = 20
-
-  /**
-   * Entry string.
-   */
-  this.entry = null
-
-  /**
-   * Related artists response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
-   */
-  this.relatedArtistsResponse = null
-
-  /**
-   * Number of tracks to fetch per artist.
-   */
-  this.trackLimit = 5
-
-  this.entry = entry.trim()
-}
-
-/**
- * Create a queue of tracks.
- * @return {Promise | Queue} A queue of tracks.
- */
-Similar.prototype.createQueue = function () {
-  var self = this
-  var artists = self.relatedArtistsResponse.artists.map(function (item) {
-    var top = new Top(self.entry)
-    top.setLimit(self.trackLimit)
-    top.setID(item.id)
-    return top
-  })
-  var queue = new Queue(artists)
-  queue = queue.slice(0, self.artistLimit)
-  return queue.dispatch().then(function (result) {
-    return result.interleave()
-  })
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Similar.prototype.dispatch = function () {
-  var self = this
-  return this.searchForArtist().then(function () {
-    return self.searchForRelatedArtists()
-  }).then(function () {
-    return self.createQueue()
-  })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Similar.prototype.id = function () {
-  if (this.artist) {
-    return this.artist.id()
-  } else {
-    return -1
-  }
-}
-
-/**
- * Search for artist.
- * @return {Promise} A Promise to perform the action.
- */
-Similar.prototype.searchForArtist = function () {
-  this.artist = new Artist(this.entry)
-  return this.artist.searchForArtist()
-}
-
-/**
- * Search for related artists.
- * @return {Promise} A Promise to perform the action.
- */
-Similar.prototype.searchForRelatedArtists = function () {
-  var self = this
-  return spotify.searchForRelatedArtists(this.id()).then(function (result) {
-    self.relatedArtistsResponse = result
-    return self
-  })
-}
-
-/**
- * Set the number of tracks to fetch per artist.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Similar.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.trackLimit = limit
-  }
-}
-
-module.exports = Similar
-
-},{"./artist":2,"./queue":7,"./spotify":10,"./top":11}],9:[function(require,module,exports){
-var stringSimilarity = require('string-similarity')
-
-var sort = {}
-
-/**
- * Create an ascending comparison function.
- * @param {function} fn - A scoring function.
- * @return {function} - A comparison function that returns
- * `-1` if the first argument scores less than the second argument,
- * `1` if the first argument scores more than the second argument,
- * and `0` if the scores are equal.
- */
-sort.ascending = function (fn) {
-  return function (a, b) {
-    var x = fn(a)
-    var y = fn(b)
-    return (x < y) ? -1 : ((x > y) ? 1 : 0)
-  }
-}
-
-/**
- * Create a descending comparison function.
- * @param {function} fn - A scoring function.
- * @return {function} - A comparison function that returns
- * `-1` if the first argument scores more than the second argument,
- * `1` if the first argument scores less than the second argument,
- * and `0` if the scores are equal.
- */
-sort.descending = function (fn) {
-  return function (a, b) {
-    var x = fn(a)
-    var y = fn(b)
-    return (x < y) ? 1 : ((x > y) ? -1 : 0)
-  }
-}
-
-/**
- * Combine comparison functions.
- * @param {...function} fn - A comparison function.
- * @return {function} - A combined comparison function that returns
- * the first comparison value unless the comparands are equal,
- * in which case it returns the next value.
- */
-sort.combine = function () {
-  var args = Array.prototype.slice.call(arguments)
-  var callback = function (fn1, fn2) {
-    return function (a, b) {
-      var val = fn1(a, b)
-      return (val === 0) ? fn2(a, b) : val
-    }
-  }
-  return args.reduce(callback)
-}
-
-/**
- * Compare albums by type. Proper albums are ranked highest,
- * followed by singles, guest albums, and compilation albums.
- * @param {JSON} a - An album.
- * @param {JSON} b - An album.
- * @return {integer} - `-1` if `a` is less than `b`,
- * `1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.album = sort.combine(sort.descending(function (album) {
-  var rankings = {
-    'album': 4,
-    'single': 3,
-    'appears_on': 2,
-    'compilation': 1
-  }
-  var type = album.album_type || album.type()
-  return rankings[type] || 0
-}), sort.descending(function (album) {
-  if (typeof album.popularity === 'function') {
-    return album.popularity()
-  } else {
-    return album.popularity || -1
-  }
-}))
-
-/**
- * Compare tracks by Last.fm rating.
- * @param {Track} a - A track.
- * @param {Track} b - A track.
- * @return {integer} - `1` if `a` is less than `b`,
- * `-1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.lastfm = sort.descending(function (track) {
-  return track.lastfm()
-})
-
-/**
- * Compare tracks by Spotify popularity.
- * @param {Track} a - A track.
- * @param {Track} b - A track.
- * @return {integer} - `1` if `a` is less than `b`,
- * `-1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.popularity = sort.descending(function (track) {
-  return track.popularity()
-})
-
-/**
- * Sort track objects by similarity to a track.
- * @param {string} track - The track to compare against.
- * @return {function} - A comparison function.
- */
-sort.similar = function (track) {
-  var similarity = sort.descending(function (x) {
-    var title = x.name + ' - ' + (x.artists[0].name || '')
-    return stringSimilarity.compareTwoStrings(title, track)
-  })
-  var popularity = sort.descending(function (x) {
-    return x.popularity || -1
-  })
-  var explicit = sort.descending(function (x) {
-    return x.explicit ? 1 : 0
-  })
-  return sort.combine(similarity, popularity, explicit)
-}
-
-module.exports = sort
-
-},{"string-similarity":410}],10:[function(require,module,exports){
-var request = require('request')
-var sort = require('./sort')
-var spotify = {}
-
-/**
- * Fetch album metadata.
- *
- * [Reference](https://developer.spotify.com/web-api/get-album/#example).
- *
- * @param {string} id - Album ID.
- * @return {Promise | JSON} A JSON response.
- */
-spotify.getAlbum = function (id) {
-  var url = 'https://api.spotify.com/v1/albums/'
-  url += encodeURIComponent(id)
-  return spotify.request(url).then(function (response) {
-    if (response &&
-        response.id) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Get all albums by an artist.
- *
- * [Reference](https://developer.spotify.com/web-api/get-artists-albums/#example).
- *
- * @param {string} id - Artist ID.
- * @return {Promise | JSON} A JSON response.
- */
-spotify.getAlbumsByArtist = function (id) {
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/albums?limit=50'
-
-  var getAlbums = function (url, result) {
-    return spotify.request(url).then(function (response) {
-      if (!(response &&
-            response.items)) {
-        return Promise.reject(response)
-      }
-      if (result) {
-        result.items = result.items.concat(response.items)
-      } else {
-        result = response
-      }
-      if (response.next) {
-        return getAlbums(response.next, result)
-      } else {
-        return Promise.resolve(result)
-      }
-    })
-  }
-
-  // sort albums by type
-  var sortAlbums = function (response) {
-    if (response && response.items) {
-      response.items = response.items.sort(sort.album)
-    }
-    return response
-  }
-
-  return getAlbums(url).then(sortAlbums)
-}
-
-/**
- * Get the top tracks of an artist.
- *
- * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
- *
- * @param {string} id - Artist ID.
- * @return {Promise | JSON} A JSON response.
- */
-spotify.getTopTracks = function (id) {
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/top-tracks?country=US'
-  return spotify.request(url).then(function (response) {
-    if (response &&
-        response.tracks) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Get a track.
- *
- * [Reference](https://developer.spotify.com/web-api/get-track/#example).
- *
- * @param {string} id - Track ID.
- * @return {Promise | JSON} A JSON response.
- */
-spotify.getTrack = function (id) {
-  var url = 'https://api.spotify.com/v1/tracks/'
-  url += encodeURIComponent(id)
-  return spotify.request(url)
-}
-
-/**
- * Perform a Spotify request.
- * @param {string} url - The URL to resolve.
- * @return {Promise | JSON} A JSON response.
- */
-spotify.request = function (url) {
-  return new Promise(function (resolve, reject) {
-    setTimeout(function () {
-      console.log(url)
-      request(url, function (err, response, body) {
-        if (err) {
-          reject(err)
-        } else if (response.statusCode !== 200) {
-          reject(response.statusCode)
-        } else {
-          try {
-            // TODO: replace with request-json
-            body = JSON.parse(body)
-          } catch (e) {
-            reject(e)
-          }
-          if (body.error) {
-            reject(body)
-          } else {
-            resolve(body)
-          }
-        }
-      })
-    }, 100)
-  })
-}
-
-/**
- * Search for artist.
- *
- * [Reference](https://developer.spotify.com/web-api/search-item/#example).
- *
- * @param {string} artist - The artist to search for.
- * @return {Promise | JSON} A JSON response.
- */
-spotify.searchForArtist = function (artist) {
-  var url = 'https://api.spotify.com/v1/search?type=artist&q='
-  url += encodeURIComponent(artist)
-  return spotify.request(url).then(function (response) {
-    if (response &&
-        response.artists &&
-        response.artists.items[0] &&
-        response.artists.items[0].id) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Search for album.
- *
- * [Reference](https://developer.spotify.com/web-api/search-item/#example).
- *
- * @param {string} album - The album to search for.
- * @return {Promise | JSON} A JSON response.
- */
-spotify.searchForAlbum = function (album) {
-  var url = 'https://api.spotify.com/v1/search?type=album&q='
-  url += encodeURIComponent(album)
-  return spotify.request(url).then(function (response) {
-    if (response &&
-        response.albums &&
-        response.albums.items[0] &&
-        response.albums.items[0].id) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Search for related artists.
- *
- * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
- *
- * @param {string} id - The album ID.
- * @return {Promise | JSON} A JSON response.
- */
-spotify.searchForRelatedArtists = function (id) {
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/related-artists'
-  return spotify.request(url).then(function (response) {
-    if (response &&
-        response.artists) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Search for track.
- *
- * [Reference](https://developer.spotify.com/web-api/search-item/#example).
- *
- * @param {string} track - The track to search for.
- * @return {Promise | JSON} JSON response.
- */
-spotify.searchForTrack = function (track) {
-  var url = 'https://api.spotify.com/v1/search?type=track&limit=50&q='
-  url += encodeURIComponent(track)
-  return spotify.request(url).then(function (response) {
-    if (response.tracks &&
-        response.tracks.items[0] &&
-        response.tracks.items[0].uri) {
-      // Sort results by string similarity. This takes care of some
-      // odd cases where a random track from an album of the same name
-      // is returned as the first hit.
-      var similar = sort.similar(track)
-      response.tracks.items = response.tracks.items.sort(similar)
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-module.exports = spotify
-
-},{"./sort":9,"request":285}],11:[function(require,module,exports){
-var Artist = require('./artist')
-var Queue = require('./queue')
-var Track = require('./track')
-var spotify = require('./spotify')
-
-/**
- * Top entry.
- * @constructor
- * @param {string} entry - The artist to search for.
- */
-function Top (entry) {
-  /**
-   * Artist query.
-   */
-  this.artist = null
-
-  /**
-   * Entry string.
-   */
-  this.entry = null
-
-  /**
-   * Spotify ID.
-   */
-  this.id = -1
-
-  /**
-   * Number of tracks to fetch.
-   */
-  this.limit = null
-
-  /**
-   * Top tracks response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
-   */
-  this.topTracksResponse = null
-
-  this.entry = entry.trim()
-}
-
-/**
- * Create a queue of tracks.
- * @param {JSON} response - A JSON response object.
- * @return {Promise | Queue} A queue of tracks.
- */
-Top.prototype.createQueue = function () {
-  var self = this
-  var tracks = self.topTracksResponse.tracks.map(function (item) {
-    var track = new Track(self.entry)
-    track.setResponse(item)
-    return track
-  })
-  var trackQueue = new Queue(tracks)
-  if (self.limit) {
-    trackQueue = trackQueue.slice(0, self.limit)
-  }
-  return trackQueue
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Top.prototype.dispatch = function () {
-  var self = this
-  return this.searchForArtist().then(function () {
-    return self.fetchTopTracks()
-  }).then(function () {
-    return self.createQueue()
-  })
-}
-
-/**
- * Fetch top tracks.
- * @return {Promise | JSON} A JSON response.
- */
-Top.prototype.fetchTopTracks = function () {
-  var self = this
-  return spotify.getTopTracks(this.getID()).then(function (result) {
-    self.topTracksResponse = result
-    return self
-  })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Top.prototype.getID = function () {
-  return this.id
-}
-
-/**
- * Search for the artist's ID if not known.
- * @return {Promise} A Promise to perform the action.
- */
-Top.prototype.searchForArtist = function () {
-  if (this.getID() !== -1) {
-    return Promise.resolve(this.getID())
-  } else {
-    var self = this
-    this.artist = new Artist(this.entry)
-    return this.artist.searchForArtist().then(function () {
-      self.setID(self.artist.id())
-    })
-  }
-}
-
-/**
- * Set Spotify ID.
- * @param {string} id - The Spotify ID of the artist.
- */
-Top.prototype.setID = function (id) {
-  this.id = id
-}
-
-/**
- * Set the number of tracks to fetch.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Top.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.limit = limit
-  }
-}
-
-module.exports = Top
-
-},{"./artist":2,"./queue":7,"./spotify":10,"./track":12}],12:[function(require,module,exports){
-var defaults = require('./defaults')
-var lastfm = require('./lastfm')(defaults.api)
-var spotify = require('./spotify')
-
-/**
- * Create track entry.
- * @constructor
- * @param {string} entry - The track to search for.
- * @param {JSON} [response] - Track response object.
- * Should have the property `popularity`.
- * @param {JSON} [responseSimple] - Simplified track response object.
- */
-function Track (entry) {
-  /**
-   * Album name.
-   */
-  this.albumName = null
-
-  /**
-   * Entry string.
-   */
-  this.entry = entry.trim()
-
-  /**
-   * Full track object.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-full).
-   */
-  this.response = null
-
-  /**
-   * Simplified track object.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-simplified).
-   */
-  this.responseSimple = null
-}
-
-/**
- * Track album.
- * @return {string} The track album,
- * or the empty string if not available.
- */
-Track.prototype.album = function () {
-  if (this.albumName) {
-    return this.albumName
-  } else if (this.response &&
-      this.response.album &&
-      this.response.album.name) {
-    return this.response.album.name
-  } else {
-    return ''
-  }
-}
-
-/**
- * Track main artist.
- * @return {string} The main artist.
- */
-Track.prototype.artist = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.artists &&
-      response.artists[0] &&
-      response.artists[0].name) {
-    return response.artists[0].name.trim()
-  } else {
-    return ''
-  }
-}
-
-/**
- * Track artists.
- * @return {string} All the track artists, separated by `, `.
- */
-Track.prototype.artists = function () {
-  var artists = []
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.artists) {
-    artists = this.response.artists.map(function (artist) {
-      return artist.name.trim()
-    })
-  }
-  return artists.join(', ')
-}
-
-/**
- * Disc number.
- * @return {integer} The disc number.
- */
-Track.prototype.discNumber = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.disc_number) {
-    return response.disc_number
-  } else {
-    return -1
-  }
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.dispatch = function () {
-  if (this.response) {
-    return Promise.resolve(this)
-  } else if (this.responseSimple) {
-    return this.fetchTrack()
-  } else if (this.isURI(this.entry)) {
-    return this.fetchTrack()
-  } else if (this.isLink(this.entry)) {
-    return this.fetchTrack()
-  } else {
-    return this.searchForTrack()
-  }
-}
-
-/**
- * Track duration.
- * @return {integer} The track duration in ms.
- */
-Track.prototype.duration = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.duration_ms) {
-    return response.duration_ms
-  } else {
-    return -1
-  }
-}
-
-/**
- * Whether this track is identical to another track.
- * @param {Track} track - The track to compare against.
- * @return {boolean} `true` if the tracks are identical,
- * `false` otherwise.
- */
-Track.prototype.equals = function (track) {
-  var str1 = this.toString().toLowerCase()
-  var str2 = track.toString().toLowerCase()
-  return str1 === str2
-}
-
-/**
- * Fetch Last.fm information.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.fetchLastfm = function () {
-  var artist = this.artist()
-  var title = this.title()
-  var self = this
-  return lastfm.getInfo(artist, title).then(function (result) {
-    self.lastfmResponse = result
-    return self
-  })
-}
-
-/**
- * Fetch track metadata.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.fetchTrack = function () {
-  var self = this
-  return spotify.getTrack(this.id()).then(function (result) {
-    self.response = result
-    return self
-  })
-}
-
-/**
- * Whether the track has the given artist.
- * @param {string} artist - The artist.
- * @return {boolean} `true` the track has the artist,
- * `false` otherwise.
- */
-Track.prototype.hasArtist = function (artist) {
-  var response = this.response || this.responseSimple
-  var artists = response.artists.map(function (artist) {
-    return artist.name.trim().toLowerCase()
-  })
-  artist = artist.trim().toLowerCase()
-  for (var i in artists) {
-    if (artists[i].includes(artist)) {
-      return true
-    }
-  }
-  return false
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the track,
- * or `-1` if not available.
- */
-Track.prototype.id = function () {
-  if (this.response &&
-      this.response.id) {
-    return this.response.id
-  } else if (this.responseSimple &&
-             this.responseSimple.id) {
-    return this.responseSimple.id
-  } else if (this.isURI(this.entry)) {
-    return this.entry.substring(14)
-  } else if (this.isLink(this.entry)) {
-    return this.entry.split('/')[4]
-  } else {
-    return -1
-  }
-}
-
-/**
- * Whether a string is a Spotify link
- * on the form `http://open.spotify.com/track/ID`.
- * @param {string} str - A potential Spotify link.
- * @return {boolean} `true` if `str` is a link, `false` otherwise.
- */
-Track.prototype.isLink = function (str) {
-  return str.match(/^https?:\/\/open\.spotify\.com\/track\//i)
-}
-
-/**
- * Whether a string is a Spotify URI
- * on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`.
- * @return {boolean} `true`
- * or `-1` if not available.
- */
-Track.prototype.isURI = function (str) {
-  return str.match(/^spotify:track:/i)
-}
-
-/**
- * Last.fm playcount.
- * @return {integer} The playcount, or `-1` if not available.
- */
-Track.prototype.lastfm = function () {
-  if (this.lastfmResponse) {
-    return parseInt(this.lastfmResponse.track.playcount)
-  } else {
-    return -1
-  }
-}
-
-/**
- * Full track name.
- * @return {string} The track name, on the form `Title - Artist`.
- */
-Track.prototype.name = function () {
-  var title = this.title()
-  if (title !== '') {
-    var artist = this.artist()
-    if (artist !== '') {
-      return title + ' - ' + artist
-    } else {
-      return title
-    }
-  } else {
-    return ''
-  }
-}
-
-/**
- * Spotify popularity.
- * @return {int} The Spotify popularity, or `-1` if not available.
- */
-Track.prototype.popularity = function () {
-  if (this.response) {
-    return this.response.popularity
-  } else if (this.responseSimple &&
-             this.responseSimple.popularity) {
-    return this.responseSimple.popularity
-  } else {
-    return -1
-  }
-}
-
-/**
- * Refresh track metadata.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.refresh = function () {
-  var self = this
-  return self.dispatch().then(function () {
-    return self.dispatch()
-  })
-}
-
-/**
- * Search for track.
- * @param {string} query - The query text.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.searchForTrack = function () {
-  var self = this
-  return spotify.searchForTrack(this.entry).then(function (result) {
-    self.response = result.tracks.items[0]
-    return self
-  })
-}
-
-/**
- * Set album for track.
- * @param {string} album - The album name.
- */
-Track.prototype.setAlbum = function (album) {
-  this.albumName = album
-}
-
-/**
- * Track title.
- * @return {string} The track title.
- */
-Track.prototype.title = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.name) {
-    return response.name
-  } else {
-    return ''
-  }
-}
-
-/**
- * Track number.
- * @return {integer} The track number.
- */
-Track.prototype.trackNumber = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.track_number) {
-    return response.track_number
-  } else {
-    return -1
-  }
-}
-
-/**
- * Full track title.
- * @return {string} The track title, on the form `Title - Artist`.
- */
-Track.prototype.toString = function () {
-  var name = this.name()
-  if (name !== '') {
-    return name
-  } else {
-    return this.entry
-  }
-}
-
-/**
- * Spotify URI.
- * @return {string} The Spotify URI
- * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`),
- * or the empty string if not available.
- */
-Track.prototype.uri = function () {
-  if (this.response) {
-    return this.response.uri
-  } else if (this.responseSimple) {
-    return this.responseSimple.uri
-  } else {
-    return ''
-  }
-}
-
-/**
- * Set the JSON response.
- * @param {JSON} response - The response.
- */
-Track.prototype.setResponse = function (response) {
-  if (response &&
-      response.popularity) {
-    this.response = response
-  } else {
-    this.responseSimple = response
-  }
-}
-
-module.exports = Track
-
-},{"./defaults":4,"./lastfm":5,"./spotify":10}],13:[function(require,module,exports){
 // This file is autogenerated via the `commonjs` Grunt task. You can require() this file in a CommonJS environment.
 require('../../js/transition.js')
 require('../../js/alert.js')
@@ -2186,7 +12,7 @@ require('../../js/popover.js')
 require('../../js/scrollspy.js')
 require('../../js/tab.js')
 require('../../js/affix.js')
-},{"../../js/affix.js":14,"../../js/alert.js":15,"../../js/button.js":16,"../../js/carousel.js":17,"../../js/collapse.js":18,"../../js/dropdown.js":19,"../../js/modal.js":20,"../../js/popover.js":21,"../../js/scrollspy.js":22,"../../js/tab.js":23,"../../js/tooltip.js":24,"../../js/transition.js":25}],14:[function(require,module,exports){
+},{"../../js/affix.js":2,"../../js/alert.js":3,"../../js/button.js":4,"../../js/carousel.js":5,"../../js/collapse.js":6,"../../js/dropdown.js":7,"../../js/modal.js":8,"../../js/popover.js":9,"../../js/scrollspy.js":10,"../../js/tab.js":11,"../../js/tooltip.js":12,"../../js/transition.js":13}],2:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: affix.js v3.3.7
  * http://getbootstrap.com/javascript/#affix
@@ -2350,7 +176,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],15:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: alert.js v3.3.7
  * http://getbootstrap.com/javascript/#alerts
@@ -2446,7 +272,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],16:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: button.js v3.3.7
  * http://getbootstrap.com/javascript/#buttons
@@ -2573,7 +399,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],17:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: carousel.js v3.3.7
  * http://getbootstrap.com/javascript/#carousel
@@ -2812,7 +638,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],18:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: collapse.js v3.3.7
  * http://getbootstrap.com/javascript/#collapse
@@ -3026,7 +852,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],19:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: dropdown.js v3.3.7
  * http://getbootstrap.com/javascript/#dropdowns
@@ -3193,7 +1019,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],20:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: modal.js v3.3.7
  * http://getbootstrap.com/javascript/#modals
@@ -3534,7 +1360,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],21:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: popover.js v3.3.7
  * http://getbootstrap.com/javascript/#popovers
@@ -3644,7 +1470,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],22:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: scrollspy.js v3.3.7
  * http://getbootstrap.com/javascript/#scrollspy
@@ -3818,7 +1644,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],23:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tab.js v3.3.7
  * http://getbootstrap.com/javascript/#tabs
@@ -3975,7 +1801,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],24:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tooltip.js v3.3.7
  * http://getbootstrap.com/javascript/#tooltip
@@ -4497,7 +2323,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],25:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: transition.js v3.3.7
  * http://getbootstrap.com/javascript/#transitions
@@ -4558,9 +2384,9 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],26:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 
-},{}],27:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
 //
 // THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
@@ -4921,9 +2747,9 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-},{"util/":277}],28:[function(require,module,exports){
-arguments[4][26][0].apply(exports,arguments)
-},{"dup":26}],29:[function(require,module,exports){
+},{"util/":265}],16:[function(require,module,exports){
+arguments[4][14][0].apply(exports,arguments)
+},{"dup":14}],17:[function(require,module,exports){
 'use strict';
 
 
@@ -5027,7 +2853,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],30:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -5061,7 +2887,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],31:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 
@@ -5113,7 +2939,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],32:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -5156,7 +2982,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],33:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 var utils   = require('../utils/common');
@@ -7013,7 +4839,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":29,"./adler32":30,"./crc32":32,"./messages":37,"./trees":38}],34:[function(require,module,exports){
+},{"../utils/common":17,"./adler32":18,"./crc32":20,"./messages":25,"./trees":26}],22:[function(require,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -7341,7 +5167,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],35:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 
@@ -8881,7 +6707,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":29,"./adler32":30,"./crc32":32,"./inffast":34,"./inftrees":36}],36:[function(require,module,exports){
+},{"../utils/common":17,"./adler32":18,"./crc32":20,"./inffast":22,"./inftrees":24}],24:[function(require,module,exports){
 'use strict';
 
 
@@ -9210,7 +7036,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":29}],37:[function(require,module,exports){
+},{"../utils/common":17}],25:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -9225,7 +7051,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],38:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 
 
@@ -10429,7 +8255,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":29}],39:[function(require,module,exports){
+},{"../utils/common":17}],27:[function(require,module,exports){
 'use strict';
 
 
@@ -10460,7 +8286,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],40:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 (function (process,Buffer){
 var msg = require('pako/lib/zlib/messages');
 var zstream = require('pako/lib/zlib/zstream');
@@ -10700,7 +8526,7 @@ Zlib.prototype._error = function(status) {
 exports.Zlib = Zlib;
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":244,"buffer":42,"pako/lib/zlib/constants":31,"pako/lib/zlib/deflate.js":33,"pako/lib/zlib/inflate.js":35,"pako/lib/zlib/messages":37,"pako/lib/zlib/zstream":39}],41:[function(require,module,exports){
+},{"_process":232,"buffer":30,"pako/lib/zlib/constants":19,"pako/lib/zlib/deflate.js":21,"pako/lib/zlib/inflate.js":23,"pako/lib/zlib/messages":25,"pako/lib/zlib/zstream":27}],29:[function(require,module,exports){
 (function (process,Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -11314,7 +9140,7 @@ util.inherits(InflateRaw, Zlib);
 util.inherits(Unzip, Zlib);
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./binding":40,"_process":244,"_stream_transform":263,"assert":27,"buffer":42,"util":277}],42:[function(require,module,exports){
+},{"./binding":28,"_process":232,"_stream_transform":251,"assert":15,"buffer":30,"util":265}],30:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -13107,7 +10933,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":43,"ieee754":44,"isarray":45}],43:[function(require,module,exports){
+},{"base64-js":31,"ieee754":32,"isarray":33}],31:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -13223,7 +11049,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],44:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -13309,14 +11135,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],45:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],46:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict'
 
 exports.randomBytes = exports.rng = exports.pseudoRandomBytes = exports.prng = require('randombytes')
@@ -13395,7 +11221,7 @@ var publicEncrypt = require('public-encrypt')
   }
 })
 
-},{"browserify-cipher":47,"browserify-sign":77,"browserify-sign/algos":76,"create-ecdh":144,"create-hash":170,"create-hmac":183,"diffie-hellman":184,"pbkdf2":191,"public-encrypt":193,"randombytes":238}],47:[function(require,module,exports){
+},{"browserify-cipher":35,"browserify-sign":65,"browserify-sign/algos":64,"create-ecdh":132,"create-hash":158,"create-hmac":171,"diffie-hellman":172,"pbkdf2":179,"public-encrypt":181,"randombytes":226}],35:[function(require,module,exports){
 var ebtk = require('evp_bytestokey')
 var aes = require('browserify-aes/browser')
 var DES = require('browserify-des')
@@ -13470,7 +11296,7 @@ function getCiphers () {
 }
 exports.listCiphers = exports.getCiphers = getCiphers
 
-},{"browserify-aes/browser":50,"browserify-aes/modes":54,"browserify-des":65,"browserify-des/modes":66,"evp_bytestokey":75}],48:[function(require,module,exports){
+},{"browserify-aes/browser":38,"browserify-aes/modes":42,"browserify-des":53,"browserify-des/modes":54,"evp_bytestokey":63}],36:[function(require,module,exports){
 (function (Buffer){
 // based on the aes implimentation in triple sec
 // https://github.com/keybase/triplesec
@@ -13651,7 +11477,7 @@ AES.prototype._doCryptBlock = function (M, keySchedule, SUB_MIX, SBOX) {
 exports.AES = AES
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],49:[function(require,module,exports){
+},{"buffer":30}],37:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -13752,7 +11578,7 @@ function xorTest (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":48,"./ghash":53,"buffer":42,"buffer-xor":62,"cipher-base":63,"inherits":241}],50:[function(require,module,exports){
+},{"./aes":36,"./ghash":41,"buffer":30,"buffer-xor":50,"cipher-base":51,"inherits":229}],38:[function(require,module,exports){
 var ciphers = require('./encrypter')
 exports.createCipher = exports.Cipher = ciphers.createCipher
 exports.createCipheriv = exports.Cipheriv = ciphers.createCipheriv
@@ -13765,7 +11591,7 @@ function getCiphers () {
 }
 exports.listCiphers = exports.getCiphers = getCiphers
 
-},{"./decrypter":51,"./encrypter":52,"./modes":54}],51:[function(require,module,exports){
+},{"./decrypter":39,"./encrypter":40,"./modes":42}],39:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -13906,7 +11732,7 @@ exports.createDecipher = createDecipher
 exports.createDecipheriv = createDecipheriv
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":48,"./authCipher":49,"./modes":54,"./modes/cbc":55,"./modes/cfb":56,"./modes/cfb1":57,"./modes/cfb8":58,"./modes/ctr":59,"./modes/ecb":60,"./modes/ofb":61,"./streamCipher":64,"buffer":42,"cipher-base":63,"evp_bytestokey":75,"inherits":241}],52:[function(require,module,exports){
+},{"./aes":36,"./authCipher":37,"./modes":42,"./modes/cbc":43,"./modes/cfb":44,"./modes/cfb1":45,"./modes/cfb8":46,"./modes/ctr":47,"./modes/ecb":48,"./modes/ofb":49,"./streamCipher":52,"buffer":30,"cipher-base":51,"evp_bytestokey":63,"inherits":229}],40:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -14032,7 +11858,7 @@ exports.createCipheriv = createCipheriv
 exports.createCipher = createCipher
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":48,"./authCipher":49,"./modes":54,"./modes/cbc":55,"./modes/cfb":56,"./modes/cfb1":57,"./modes/cfb8":58,"./modes/ctr":59,"./modes/ecb":60,"./modes/ofb":61,"./streamCipher":64,"buffer":42,"cipher-base":63,"evp_bytestokey":75,"inherits":241}],53:[function(require,module,exports){
+},{"./aes":36,"./authCipher":37,"./modes":42,"./modes/cbc":43,"./modes/cfb":44,"./modes/cfb1":45,"./modes/cfb8":46,"./modes/ctr":47,"./modes/ecb":48,"./modes/ofb":49,"./streamCipher":52,"buffer":30,"cipher-base":51,"evp_bytestokey":63,"inherits":229}],41:[function(require,module,exports){
 (function (Buffer){
 var zeros = new Buffer(16)
 zeros.fill(0)
@@ -14134,7 +11960,7 @@ function xor (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],54:[function(require,module,exports){
+},{"buffer":30}],42:[function(require,module,exports){
 exports['aes-128-ecb'] = {
   cipher: 'AES',
   key: 128,
@@ -14307,7 +12133,7 @@ exports['aes-256-gcm'] = {
   type: 'auth'
 }
 
-},{}],55:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 var xor = require('buffer-xor')
 
 exports.encrypt = function (self, block) {
@@ -14326,7 +12152,7 @@ exports.decrypt = function (self, block) {
   return xor(out, pad)
 }
 
-},{"buffer-xor":62}],56:[function(require,module,exports){
+},{"buffer-xor":50}],44:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -14361,7 +12187,7 @@ function encryptStart (self, data, decrypt) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"buffer-xor":62}],57:[function(require,module,exports){
+},{"buffer":30,"buffer-xor":50}],45:[function(require,module,exports){
 (function (Buffer){
 function encryptByte (self, byteParam, decrypt) {
   var pad
@@ -14399,7 +12225,7 @@ function shiftIn (buffer, value) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],58:[function(require,module,exports){
+},{"buffer":30}],46:[function(require,module,exports){
 (function (Buffer){
 function encryptByte (self, byteParam, decrypt) {
   var pad = self._cipher.encryptBlock(self._prev)
@@ -14418,7 +12244,7 @@ exports.encrypt = function (self, chunk, decrypt) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],59:[function(require,module,exports){
+},{"buffer":30}],47:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -14453,7 +12279,7 @@ exports.encrypt = function (self, chunk) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"buffer-xor":62}],60:[function(require,module,exports){
+},{"buffer":30,"buffer-xor":50}],48:[function(require,module,exports){
 exports.encrypt = function (self, block) {
   return self._cipher.encryptBlock(block)
 }
@@ -14461,7 +12287,7 @@ exports.decrypt = function (self, block) {
   return self._cipher.decryptBlock(block)
 }
 
-},{}],61:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -14481,7 +12307,7 @@ exports.encrypt = function (self, chunk) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"buffer-xor":62}],62:[function(require,module,exports){
+},{"buffer":30,"buffer-xor":50}],50:[function(require,module,exports){
 (function (Buffer){
 module.exports = function xor (a, b) {
   var length = Math.min(a.length, b.length)
@@ -14495,7 +12321,7 @@ module.exports = function xor (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],63:[function(require,module,exports){
+},{"buffer":30}],51:[function(require,module,exports){
 (function (Buffer){
 var Transform = require('stream').Transform
 var inherits = require('inherits')
@@ -14589,7 +12415,7 @@ CipherBase.prototype._toString = function (value, enc, fin) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"inherits":241,"stream":265,"string_decoder":272}],64:[function(require,module,exports){
+},{"buffer":30,"inherits":229,"stream":253,"string_decoder":260}],52:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -14618,7 +12444,7 @@ StreamCipher.prototype._final = function () {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":48,"buffer":42,"cipher-base":63,"inherits":241}],65:[function(require,module,exports){
+},{"./aes":36,"buffer":30,"cipher-base":51,"inherits":229}],53:[function(require,module,exports){
 (function (Buffer){
 var CipherBase = require('cipher-base')
 var des = require('des.js')
@@ -14665,7 +12491,7 @@ DES.prototype._final = function () {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"cipher-base":67,"des.js":68,"inherits":241}],66:[function(require,module,exports){
+},{"buffer":30,"cipher-base":55,"des.js":56,"inherits":229}],54:[function(require,module,exports){
 exports['des-ecb'] = {
   key: 8,
   iv: 0
@@ -14691,9 +12517,9 @@ exports['des-ede'] = {
   iv: 0
 }
 
-},{}],67:[function(require,module,exports){
-arguments[4][63][0].apply(exports,arguments)
-},{"buffer":42,"dup":63,"inherits":241,"stream":265,"string_decoder":272}],68:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
+arguments[4][51][0].apply(exports,arguments)
+},{"buffer":30,"dup":51,"inherits":229,"stream":253,"string_decoder":260}],56:[function(require,module,exports){
 'use strict';
 
 exports.utils = require('./des/utils');
@@ -14702,7 +12528,7 @@ exports.DES = require('./des/des');
 exports.CBC = require('./des/cbc');
 exports.EDE = require('./des/ede');
 
-},{"./des/cbc":69,"./des/cipher":70,"./des/des":71,"./des/ede":72,"./des/utils":73}],69:[function(require,module,exports){
+},{"./des/cbc":57,"./des/cipher":58,"./des/des":59,"./des/ede":60,"./des/utils":61}],57:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -14769,7 +12595,7 @@ proto._update = function _update(inp, inOff, out, outOff) {
   }
 };
 
-},{"inherits":241,"minimalistic-assert":74}],70:[function(require,module,exports){
+},{"inherits":229,"minimalistic-assert":62}],58:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -14912,7 +12738,7 @@ Cipher.prototype._finalDecrypt = function _finalDecrypt() {
   return this._unpad(out);
 };
 
-},{"minimalistic-assert":74}],71:[function(require,module,exports){
+},{"minimalistic-assert":62}],59:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -15057,7 +12883,7 @@ DES.prototype._decrypt = function _decrypt(state, lStart, rStart, out, off) {
   utils.rip(l, r, out, off);
 };
 
-},{"../des":68,"inherits":241,"minimalistic-assert":74}],72:[function(require,module,exports){
+},{"../des":56,"inherits":229,"minimalistic-assert":62}],60:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -15114,7 +12940,7 @@ EDE.prototype._update = function _update(inp, inOff, out, outOff) {
 EDE.prototype._pad = DES.prototype._pad;
 EDE.prototype._unpad = DES.prototype._unpad;
 
-},{"../des":68,"inherits":241,"minimalistic-assert":74}],73:[function(require,module,exports){
+},{"../des":56,"inherits":229,"minimalistic-assert":62}],61:[function(require,module,exports){
 'use strict';
 
 exports.readUInt32BE = function readUInt32BE(bytes, off) {
@@ -15372,7 +13198,7 @@ exports.padSplit = function padSplit(num, size, group) {
   return out.join(' ');
 };
 
-},{}],74:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 module.exports = assert;
 
 function assert(val, msg) {
@@ -15385,7 +13211,7 @@ assert.equal = function assertEqual(l, r, msg) {
     throw new Error(msg || ('Assertion failed: ' + l + ' != ' + r));
 };
 
-},{}],75:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 (function (Buffer){
 var md5 = require('create-hash/md5')
 module.exports = EVP_BytesToKey
@@ -15457,7 +13283,7 @@ function EVP_BytesToKey (password, salt, keyLen, ivLen) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"create-hash/md5":172}],76:[function(require,module,exports){
+},{"buffer":30,"create-hash/md5":160}],64:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 exports['RSA-SHA224'] = exports.sha224WithRSAEncryption = {
@@ -15533,7 +13359,7 @@ exports['RSA-MD5'] = exports.md5WithRSAEncryption = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],77:[function(require,module,exports){
+},{"buffer":30}],65:[function(require,module,exports){
 (function (Buffer){
 var _algos = require('./algos')
 var createHash = require('create-hash')
@@ -15640,7 +13466,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./algos":76,"./sign":142,"./verify":143,"buffer":42,"create-hash":170,"inherits":241,"stream":265}],78:[function(require,module,exports){
+},{"./algos":64,"./sign":130,"./verify":131,"buffer":30,"create-hash":158,"inherits":229,"stream":253}],66:[function(require,module,exports){
 'use strict'
 exports['1.3.132.0.10'] = 'secp256k1'
 
@@ -15654,7 +13480,7 @@ exports['1.3.132.0.34'] = 'p384'
 
 exports['1.3.132.0.35'] = 'p521'
 
-},{}],79:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 (function (module, exports) {
   'use strict';
 
@@ -19083,7 +16909,7 @@ exports['1.3.132.0.35'] = 'p521'
   };
 })(typeof module === 'undefined' || module, this);
 
-},{}],80:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 var randomBytes = require('randombytes');
@@ -19127,7 +16953,7 @@ function getr(priv) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bn.js":79,"buffer":42,"randombytes":238}],81:[function(require,module,exports){
+},{"bn.js":67,"buffer":30,"randombytes":226}],69:[function(require,module,exports){
 'use strict';
 
 var elliptic = exports;
@@ -19143,7 +16969,7 @@ elliptic.curves = require('./elliptic/curves');
 elliptic.ec = require('./elliptic/ec');
 elliptic.eddsa = require('./elliptic/eddsa');
 
-},{"../package.json":104,"./elliptic/curve":84,"./elliptic/curves":87,"./elliptic/ec":88,"./elliptic/eddsa":91,"./elliptic/hmac-drbg":94,"./elliptic/utils":96,"brorand":97}],82:[function(require,module,exports){
+},{"../package.json":92,"./elliptic/curve":72,"./elliptic/curves":75,"./elliptic/ec":76,"./elliptic/eddsa":79,"./elliptic/hmac-drbg":82,"./elliptic/utils":84,"brorand":85}],70:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -19520,7 +17346,7 @@ BasePoint.prototype.dblp = function dblp(k) {
   return r;
 };
 
-},{"../../elliptic":81,"bn.js":79}],83:[function(require,module,exports){
+},{"../../elliptic":69,"bn.js":67}],71:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -19955,7 +17781,7 @@ Point.prototype.eqXToP = function eqXToP(x) {
 Point.prototype.toP = Point.prototype.normalize;
 Point.prototype.mixedAdd = Point.prototype.add;
 
-},{"../../elliptic":81,"../curve":84,"bn.js":79,"inherits":241}],84:[function(require,module,exports){
+},{"../../elliptic":69,"../curve":72,"bn.js":67,"inherits":229}],72:[function(require,module,exports){
 'use strict';
 
 var curve = exports;
@@ -19965,7 +17791,7 @@ curve.short = require('./short');
 curve.mont = require('./mont');
 curve.edwards = require('./edwards');
 
-},{"./base":82,"./edwards":83,"./mont":85,"./short":86}],85:[function(require,module,exports){
+},{"./base":70,"./edwards":71,"./mont":73,"./short":74}],73:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -20147,7 +17973,7 @@ Point.prototype.getX = function getX() {
   return this.x.fromRed();
 };
 
-},{"../../elliptic":81,"../curve":84,"bn.js":79,"inherits":241}],86:[function(require,module,exports){
+},{"../../elliptic":69,"../curve":72,"bn.js":67,"inherits":229}],74:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -21087,7 +18913,7 @@ JPoint.prototype.isInfinity = function isInfinity() {
   return this.z.cmpn(0) === 0;
 };
 
-},{"../../elliptic":81,"../curve":84,"bn.js":79,"inherits":241}],87:[function(require,module,exports){
+},{"../../elliptic":69,"../curve":72,"bn.js":67,"inherits":229}],75:[function(require,module,exports){
 'use strict';
 
 var curves = exports;
@@ -21294,7 +19120,7 @@ defineCurve('secp256k1', {
   ]
 });
 
-},{"../elliptic":81,"./precomputed/secp256k1":95,"hash.js":98}],88:[function(require,module,exports){
+},{"../elliptic":69,"./precomputed/secp256k1":83,"hash.js":86}],76:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -21533,7 +19359,7 @@ EC.prototype.getKeyRecoveryParam = function(e, signature, Q, enc) {
   throw new Error('Unable to find valid recovery factor');
 };
 
-},{"../../elliptic":81,"./key":89,"./signature":90,"bn.js":79}],89:[function(require,module,exports){
+},{"../../elliptic":69,"./key":77,"./signature":78,"bn.js":67}],77:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -21642,7 +19468,7 @@ KeyPair.prototype.inspect = function inspect() {
          ' pub: ' + (this.pub && this.pub.inspect()) + ' >';
 };
 
-},{"bn.js":79}],90:[function(require,module,exports){
+},{"bn.js":67}],78:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -21779,7 +19605,7 @@ Signature.prototype.toDER = function toDER(enc) {
   return utils.encode(res, enc);
 };
 
-},{"../../elliptic":81,"bn.js":79}],91:[function(require,module,exports){
+},{"../../elliptic":69,"bn.js":67}],79:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
@@ -21899,7 +19725,7 @@ EDDSA.prototype.isPoint = function isPoint(val) {
   return val instanceof this.pointClass;
 };
 
-},{"../../elliptic":81,"./key":92,"./signature":93,"hash.js":98}],92:[function(require,module,exports){
+},{"../../elliptic":69,"./key":80,"./signature":81,"hash.js":86}],80:[function(require,module,exports){
 'use strict';
 
 var elliptic = require('../../elliptic');
@@ -21997,7 +19823,7 @@ KeyPair.prototype.getPublic = function getPublic(enc) {
 
 module.exports = KeyPair;
 
-},{"../../elliptic":81}],93:[function(require,module,exports){
+},{"../../elliptic":69}],81:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -22065,7 +19891,7 @@ Signature.prototype.toHex = function toHex() {
 
 module.exports = Signature;
 
-},{"../../elliptic":81,"bn.js":79}],94:[function(require,module,exports){
+},{"../../elliptic":69,"bn.js":67}],82:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
@@ -22181,7 +20007,7 @@ HmacDRBG.prototype.generate = function generate(len, enc, add, addEnc) {
   return utils.encode(res, enc);
 };
 
-},{"../elliptic":81,"hash.js":98}],95:[function(require,module,exports){
+},{"../elliptic":69,"hash.js":86}],83:[function(require,module,exports){
 module.exports = {
   doubles: {
     step: 4,
@@ -22963,7 +20789,7 @@ module.exports = {
   }
 };
 
-},{}],96:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 'use strict';
 
 var utils = exports;
@@ -23137,7 +20963,7 @@ function intFromLE(bytes) {
 utils.intFromLE = intFromLE;
 
 
-},{"bn.js":79}],97:[function(require,module,exports){
+},{"bn.js":67}],85:[function(require,module,exports){
 var r;
 
 module.exports = function rand(len) {
@@ -23196,7 +21022,7 @@ if (typeof window === 'object') {
   }
 }
 
-},{"crypto":28}],98:[function(require,module,exports){
+},{"crypto":16}],86:[function(require,module,exports){
 var hash = exports;
 
 hash.utils = require('./hash/utils');
@@ -23213,7 +21039,7 @@ hash.sha384 = hash.sha.sha384;
 hash.sha512 = hash.sha.sha512;
 hash.ripemd160 = hash.ripemd.ripemd160;
 
-},{"./hash/common":99,"./hash/hmac":100,"./hash/ripemd":101,"./hash/sha":102,"./hash/utils":103}],99:[function(require,module,exports){
+},{"./hash/common":87,"./hash/hmac":88,"./hash/ripemd":89,"./hash/sha":90,"./hash/utils":91}],87:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 var assert = utils.assert;
@@ -23306,7 +21132,7 @@ BlockHash.prototype._pad = function pad() {
   return res;
 };
 
-},{"../hash":98}],100:[function(require,module,exports){
+},{"../hash":86}],88:[function(require,module,exports){
 var hmac = exports;
 
 var hash = require('../hash');
@@ -23356,7 +21182,7 @@ Hmac.prototype.digest = function digest(enc) {
   return this.outer.digest(enc);
 };
 
-},{"../hash":98}],101:[function(require,module,exports){
+},{"../hash":86}],89:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 
@@ -23502,7 +21328,7 @@ var sh = [
   8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
 ];
 
-},{"../hash":98}],102:[function(require,module,exports){
+},{"../hash":86}],90:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 var assert = utils.assert;
@@ -24068,7 +21894,7 @@ function g1_512_lo(xh, xl) {
   return r;
 }
 
-},{"../hash":98}],103:[function(require,module,exports){
+},{"../hash":86}],91:[function(require,module,exports){
 var utils = exports;
 var inherits = require('inherits');
 
@@ -24327,7 +22153,7 @@ function shr64_lo(ah, al, num) {
 };
 exports.shr64_lo = shr64_lo;
 
-},{"inherits":241}],104:[function(require,module,exports){
+},{"inherits":229}],92:[function(require,module,exports){
 module.exports={
   "name": "elliptic",
   "version": "6.3.2",
@@ -24413,7 +22239,7 @@ module.exports={
   "readme": "ERROR: No README data found!"
 }
 
-},{}],105:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 module.exports={"2.16.840.1.101.3.4.1.1": "aes-128-ecb",
 "2.16.840.1.101.3.4.1.2": "aes-128-cbc",
 "2.16.840.1.101.3.4.1.3": "aes-128-ofb",
@@ -24427,7 +22253,7 @@ module.exports={"2.16.840.1.101.3.4.1.1": "aes-128-ecb",
 "2.16.840.1.101.3.4.1.43": "aes-256-ofb",
 "2.16.840.1.101.3.4.1.44": "aes-256-cfb"
 }
-},{}],106:[function(require,module,exports){
+},{}],94:[function(require,module,exports){
 // from https://github.com/indutny/self-signed/blob/gh-pages/lib/asn1.js
 // Fedor, you are amazing.
 
@@ -24546,7 +22372,7 @@ exports.signature = asn1.define('signature', function () {
   )
 })
 
-},{"asn1.js":109}],107:[function(require,module,exports){
+},{"asn1.js":97}],95:[function(require,module,exports){
 (function (Buffer){
 // adapted from https://github.com/apatil/pemstrip
 var findProc = /Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: AES-((?:128)|(?:192)|(?:256))-CBC,([0-9A-H]+)\r?\n\r?\n([0-9A-z\n\r\+\/\=]+)\r?\n/m
@@ -24580,7 +22406,7 @@ module.exports = function (okey, password) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"browserify-aes":126,"buffer":42,"evp_bytestokey":141}],108:[function(require,module,exports){
+},{"browserify-aes":114,"buffer":30,"evp_bytestokey":129}],96:[function(require,module,exports){
 (function (Buffer){
 var asn1 = require('./asn1')
 var aesid = require('./aesid.json')
@@ -24685,7 +22511,7 @@ function decrypt (data, password) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aesid.json":105,"./asn1":106,"./fixProc":107,"browserify-aes":126,"buffer":42,"pbkdf2":191}],109:[function(require,module,exports){
+},{"./aesid.json":93,"./asn1":94,"./fixProc":95,"browserify-aes":114,"buffer":30,"pbkdf2":179}],97:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -24696,7 +22522,7 @@ asn1.constants = require('./asn1/constants');
 asn1.decoders = require('./asn1/decoders');
 asn1.encoders = require('./asn1/encoders');
 
-},{"./asn1/api":110,"./asn1/base":112,"./asn1/constants":116,"./asn1/decoders":118,"./asn1/encoders":121,"bn.js":79}],110:[function(require,module,exports){
+},{"./asn1/api":98,"./asn1/base":100,"./asn1/constants":104,"./asn1/decoders":106,"./asn1/encoders":109,"bn.js":67}],98:[function(require,module,exports){
 var asn1 = require('../asn1');
 var inherits = require('inherits');
 
@@ -24759,7 +22585,7 @@ Entity.prototype.encode = function encode(data, enc, /* internal */ reporter) {
   return this._getEncoder(enc).encode(data, reporter);
 };
 
-},{"../asn1":109,"inherits":241,"vm":278}],111:[function(require,module,exports){
+},{"../asn1":97,"inherits":229,"vm":266}],99:[function(require,module,exports){
 var inherits = require('inherits');
 var Reporter = require('../base').Reporter;
 var Buffer = require('buffer').Buffer;
@@ -24877,7 +22703,7 @@ EncoderBuffer.prototype.join = function join(out, offset) {
   return out;
 };
 
-},{"../base":112,"buffer":42,"inherits":241}],112:[function(require,module,exports){
+},{"../base":100,"buffer":30,"inherits":229}],100:[function(require,module,exports){
 var base = exports;
 
 base.Reporter = require('./reporter').Reporter;
@@ -24885,7 +22711,7 @@ base.DecoderBuffer = require('./buffer').DecoderBuffer;
 base.EncoderBuffer = require('./buffer').EncoderBuffer;
 base.Node = require('./node');
 
-},{"./buffer":111,"./node":113,"./reporter":114}],113:[function(require,module,exports){
+},{"./buffer":99,"./node":101,"./reporter":102}],101:[function(require,module,exports){
 var Reporter = require('../base').Reporter;
 var EncoderBuffer = require('../base').EncoderBuffer;
 var DecoderBuffer = require('../base').DecoderBuffer;
@@ -25521,7 +23347,7 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
   return /^[A-Za-z0-9 '\(\)\+,\-\.\/:=\?]*$/.test(str);
 };
 
-},{"../base":112,"minimalistic-assert":123}],114:[function(require,module,exports){
+},{"../base":100,"minimalistic-assert":111}],102:[function(require,module,exports){
 var inherits = require('inherits');
 
 function Reporter(options) {
@@ -25644,7 +23470,7 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
   return this;
 };
 
-},{"inherits":241}],115:[function(require,module,exports){
+},{"inherits":229}],103:[function(require,module,exports){
 var constants = require('../constants');
 
 exports.tagClass = {
@@ -25688,7 +23514,7 @@ exports.tag = {
 };
 exports.tagByName = constants._reverse(exports.tag);
 
-},{"../constants":116}],116:[function(require,module,exports){
+},{"../constants":104}],104:[function(require,module,exports){
 var constants = exports;
 
 // Helper
@@ -25709,7 +23535,7 @@ constants._reverse = function reverse(map) {
 
 constants.der = require('./der');
 
-},{"./der":115}],117:[function(require,module,exports){
+},{"./der":103}],105:[function(require,module,exports){
 var inherits = require('inherits');
 
 var asn1 = require('../../asn1');
@@ -26035,13 +23861,13 @@ function derDecodeLen(buf, primitive, fail) {
   return len;
 }
 
-},{"../../asn1":109,"inherits":241}],118:[function(require,module,exports){
+},{"../../asn1":97,"inherits":229}],106:[function(require,module,exports){
 var decoders = exports;
 
 decoders.der = require('./der');
 decoders.pem = require('./pem');
 
-},{"./der":117,"./pem":119}],119:[function(require,module,exports){
+},{"./der":105,"./pem":107}],107:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
@@ -26092,7 +23918,7 @@ PEMDecoder.prototype.decode = function decode(data, options) {
   return DERDecoder.prototype.decode.call(this, input, options);
 };
 
-},{"./der":117,"buffer":42,"inherits":241}],120:[function(require,module,exports){
+},{"./der":105,"buffer":30,"inherits":229}],108:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
@@ -26389,13 +24215,13 @@ function encodeTag(tag, primitive, cls, reporter) {
   return res;
 }
 
-},{"../../asn1":109,"buffer":42,"inherits":241}],121:[function(require,module,exports){
+},{"../../asn1":97,"buffer":30,"inherits":229}],109:[function(require,module,exports){
 var encoders = exports;
 
 encoders.der = require('./der');
 encoders.pem = require('./pem');
 
-},{"./der":120,"./pem":122}],122:[function(require,module,exports){
+},{"./der":108,"./pem":110}],110:[function(require,module,exports){
 var inherits = require('inherits');
 
 var DEREncoder = require('./der');
@@ -26418,45 +24244,45 @@ PEMEncoder.prototype.encode = function encode(data, options) {
   return out.join('\n');
 };
 
-},{"./der":120,"inherits":241}],123:[function(require,module,exports){
-arguments[4][74][0].apply(exports,arguments)
-},{"dup":74}],124:[function(require,module,exports){
-arguments[4][48][0].apply(exports,arguments)
-},{"buffer":42,"dup":48}],125:[function(require,module,exports){
-arguments[4][49][0].apply(exports,arguments)
-},{"./aes":124,"./ghash":129,"buffer":42,"buffer-xor":138,"cipher-base":139,"dup":49,"inherits":241}],126:[function(require,module,exports){
-arguments[4][50][0].apply(exports,arguments)
-},{"./decrypter":127,"./encrypter":128,"./modes":130,"dup":50}],127:[function(require,module,exports){
-arguments[4][51][0].apply(exports,arguments)
-},{"./aes":124,"./authCipher":125,"./modes":130,"./modes/cbc":131,"./modes/cfb":132,"./modes/cfb1":133,"./modes/cfb8":134,"./modes/ctr":135,"./modes/ecb":136,"./modes/ofb":137,"./streamCipher":140,"buffer":42,"cipher-base":139,"dup":51,"evp_bytestokey":141,"inherits":241}],128:[function(require,module,exports){
-arguments[4][52][0].apply(exports,arguments)
-},{"./aes":124,"./authCipher":125,"./modes":130,"./modes/cbc":131,"./modes/cfb":132,"./modes/cfb1":133,"./modes/cfb8":134,"./modes/ctr":135,"./modes/ecb":136,"./modes/ofb":137,"./streamCipher":140,"buffer":42,"cipher-base":139,"dup":52,"evp_bytestokey":141,"inherits":241}],129:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"buffer":42,"dup":53}],130:[function(require,module,exports){
-arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],131:[function(require,module,exports){
-arguments[4][55][0].apply(exports,arguments)
-},{"buffer-xor":138,"dup":55}],132:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"buffer":42,"buffer-xor":138,"dup":56}],133:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"buffer":42,"dup":57}],134:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"buffer":42,"dup":58}],135:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"buffer":42,"buffer-xor":138,"dup":59}],136:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60}],137:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"buffer":42,"buffer-xor":138,"dup":61}],138:[function(require,module,exports){
+},{"./der":108,"inherits":229}],111:[function(require,module,exports){
 arguments[4][62][0].apply(exports,arguments)
-},{"buffer":42,"dup":62}],139:[function(require,module,exports){
+},{"dup":62}],112:[function(require,module,exports){
+arguments[4][36][0].apply(exports,arguments)
+},{"buffer":30,"dup":36}],113:[function(require,module,exports){
+arguments[4][37][0].apply(exports,arguments)
+},{"./aes":112,"./ghash":117,"buffer":30,"buffer-xor":126,"cipher-base":127,"dup":37,"inherits":229}],114:[function(require,module,exports){
+arguments[4][38][0].apply(exports,arguments)
+},{"./decrypter":115,"./encrypter":116,"./modes":118,"dup":38}],115:[function(require,module,exports){
+arguments[4][39][0].apply(exports,arguments)
+},{"./aes":112,"./authCipher":113,"./modes":118,"./modes/cbc":119,"./modes/cfb":120,"./modes/cfb1":121,"./modes/cfb8":122,"./modes/ctr":123,"./modes/ecb":124,"./modes/ofb":125,"./streamCipher":128,"buffer":30,"cipher-base":127,"dup":39,"evp_bytestokey":129,"inherits":229}],116:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"./aes":112,"./authCipher":113,"./modes":118,"./modes/cbc":119,"./modes/cfb":120,"./modes/cfb1":121,"./modes/cfb8":122,"./modes/ctr":123,"./modes/ecb":124,"./modes/ofb":125,"./streamCipher":128,"buffer":30,"cipher-base":127,"dup":40,"evp_bytestokey":129,"inherits":229}],117:[function(require,module,exports){
+arguments[4][41][0].apply(exports,arguments)
+},{"buffer":30,"dup":41}],118:[function(require,module,exports){
+arguments[4][42][0].apply(exports,arguments)
+},{"dup":42}],119:[function(require,module,exports){
+arguments[4][43][0].apply(exports,arguments)
+},{"buffer-xor":126,"dup":43}],120:[function(require,module,exports){
+arguments[4][44][0].apply(exports,arguments)
+},{"buffer":30,"buffer-xor":126,"dup":44}],121:[function(require,module,exports){
+arguments[4][45][0].apply(exports,arguments)
+},{"buffer":30,"dup":45}],122:[function(require,module,exports){
+arguments[4][46][0].apply(exports,arguments)
+},{"buffer":30,"dup":46}],123:[function(require,module,exports){
+arguments[4][47][0].apply(exports,arguments)
+},{"buffer":30,"buffer-xor":126,"dup":47}],124:[function(require,module,exports){
+arguments[4][48][0].apply(exports,arguments)
+},{"dup":48}],125:[function(require,module,exports){
+arguments[4][49][0].apply(exports,arguments)
+},{"buffer":30,"buffer-xor":126,"dup":49}],126:[function(require,module,exports){
+arguments[4][50][0].apply(exports,arguments)
+},{"buffer":30,"dup":50}],127:[function(require,module,exports){
+arguments[4][51][0].apply(exports,arguments)
+},{"buffer":30,"dup":51,"inherits":229,"stream":253,"string_decoder":260}],128:[function(require,module,exports){
+arguments[4][52][0].apply(exports,arguments)
+},{"./aes":112,"buffer":30,"cipher-base":127,"dup":52,"inherits":229}],129:[function(require,module,exports){
 arguments[4][63][0].apply(exports,arguments)
-},{"buffer":42,"dup":63,"inherits":241,"stream":265,"string_decoder":272}],140:[function(require,module,exports){
-arguments[4][64][0].apply(exports,arguments)
-},{"./aes":124,"buffer":42,"cipher-base":139,"dup":64,"inherits":241}],141:[function(require,module,exports){
-arguments[4][75][0].apply(exports,arguments)
-},{"buffer":42,"create-hash/md5":172,"dup":75}],142:[function(require,module,exports){
+},{"buffer":30,"create-hash/md5":160,"dup":63}],130:[function(require,module,exports){
 (function (Buffer){
 // much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var createHmac = require('create-hmac')
@@ -26645,7 +24471,7 @@ module.exports.getKey = getKey
 module.exports.makeKey = makeKey
 
 }).call(this,require("buffer").Buffer)
-},{"./curves":78,"bn.js":79,"browserify-rsa":80,"buffer":42,"create-hmac":183,"elliptic":81,"parse-asn1":108}],143:[function(require,module,exports){
+},{"./curves":66,"bn.js":67,"browserify-rsa":68,"buffer":30,"create-hmac":171,"elliptic":69,"parse-asn1":96}],131:[function(require,module,exports){
 (function (Buffer){
 // much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var curves = require('./curves')
@@ -26752,7 +24578,7 @@ function checkValue (b, q) {
 module.exports = verify
 
 }).call(this,require("buffer").Buffer)
-},{"./curves":78,"bn.js":79,"buffer":42,"elliptic":81,"parse-asn1":108}],144:[function(require,module,exports){
+},{"./curves":66,"bn.js":67,"buffer":30,"elliptic":69,"parse-asn1":96}],132:[function(require,module,exports){
 (function (Buffer){
 var elliptic = require('elliptic');
 var BN = require('bn.js');
@@ -26878,55 +24704,55 @@ function formatReturnValue(bn, enc, len) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bn.js":145,"buffer":42,"elliptic":146}],145:[function(require,module,exports){
+},{"bn.js":133,"buffer":30,"elliptic":134}],133:[function(require,module,exports){
+arguments[4][67][0].apply(exports,arguments)
+},{"dup":67}],134:[function(require,module,exports){
+arguments[4][69][0].apply(exports,arguments)
+},{"../package.json":157,"./elliptic/curve":137,"./elliptic/curves":140,"./elliptic/ec":141,"./elliptic/eddsa":144,"./elliptic/hmac-drbg":147,"./elliptic/utils":149,"brorand":150,"dup":69}],135:[function(require,module,exports){
+arguments[4][70][0].apply(exports,arguments)
+},{"../../elliptic":134,"bn.js":133,"dup":70}],136:[function(require,module,exports){
+arguments[4][71][0].apply(exports,arguments)
+},{"../../elliptic":134,"../curve":137,"bn.js":133,"dup":71,"inherits":229}],137:[function(require,module,exports){
+arguments[4][72][0].apply(exports,arguments)
+},{"./base":135,"./edwards":136,"./mont":138,"./short":139,"dup":72}],138:[function(require,module,exports){
+arguments[4][73][0].apply(exports,arguments)
+},{"../../elliptic":134,"../curve":137,"bn.js":133,"dup":73,"inherits":229}],139:[function(require,module,exports){
+arguments[4][74][0].apply(exports,arguments)
+},{"../../elliptic":134,"../curve":137,"bn.js":133,"dup":74,"inherits":229}],140:[function(require,module,exports){
+arguments[4][75][0].apply(exports,arguments)
+},{"../elliptic":134,"./precomputed/secp256k1":148,"dup":75,"hash.js":151}],141:[function(require,module,exports){
+arguments[4][76][0].apply(exports,arguments)
+},{"../../elliptic":134,"./key":142,"./signature":143,"bn.js":133,"dup":76}],142:[function(require,module,exports){
+arguments[4][77][0].apply(exports,arguments)
+},{"bn.js":133,"dup":77}],143:[function(require,module,exports){
+arguments[4][78][0].apply(exports,arguments)
+},{"../../elliptic":134,"bn.js":133,"dup":78}],144:[function(require,module,exports){
 arguments[4][79][0].apply(exports,arguments)
-},{"dup":79}],146:[function(require,module,exports){
+},{"../../elliptic":134,"./key":145,"./signature":146,"dup":79,"hash.js":151}],145:[function(require,module,exports){
+arguments[4][80][0].apply(exports,arguments)
+},{"../../elliptic":134,"dup":80}],146:[function(require,module,exports){
 arguments[4][81][0].apply(exports,arguments)
-},{"../package.json":169,"./elliptic/curve":149,"./elliptic/curves":152,"./elliptic/ec":153,"./elliptic/eddsa":156,"./elliptic/hmac-drbg":159,"./elliptic/utils":161,"brorand":162,"dup":81}],147:[function(require,module,exports){
+},{"../../elliptic":134,"bn.js":133,"dup":81}],147:[function(require,module,exports){
 arguments[4][82][0].apply(exports,arguments)
-},{"../../elliptic":146,"bn.js":145,"dup":82}],148:[function(require,module,exports){
+},{"../elliptic":134,"dup":82,"hash.js":151}],148:[function(require,module,exports){
 arguments[4][83][0].apply(exports,arguments)
-},{"../../elliptic":146,"../curve":149,"bn.js":145,"dup":83,"inherits":241}],149:[function(require,module,exports){
+},{"dup":83}],149:[function(require,module,exports){
 arguments[4][84][0].apply(exports,arguments)
-},{"./base":147,"./edwards":148,"./mont":150,"./short":151,"dup":84}],150:[function(require,module,exports){
+},{"bn.js":133,"dup":84}],150:[function(require,module,exports){
 arguments[4][85][0].apply(exports,arguments)
-},{"../../elliptic":146,"../curve":149,"bn.js":145,"dup":85,"inherits":241}],151:[function(require,module,exports){
+},{"crypto":16,"dup":85}],151:[function(require,module,exports){
 arguments[4][86][0].apply(exports,arguments)
-},{"../../elliptic":146,"../curve":149,"bn.js":145,"dup":86,"inherits":241}],152:[function(require,module,exports){
+},{"./hash/common":152,"./hash/hmac":153,"./hash/ripemd":154,"./hash/sha":155,"./hash/utils":156,"dup":86}],152:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"../elliptic":146,"./precomputed/secp256k1":160,"dup":87,"hash.js":163}],153:[function(require,module,exports){
+},{"../hash":151,"dup":87}],153:[function(require,module,exports){
 arguments[4][88][0].apply(exports,arguments)
-},{"../../elliptic":146,"./key":154,"./signature":155,"bn.js":145,"dup":88}],154:[function(require,module,exports){
+},{"../hash":151,"dup":88}],154:[function(require,module,exports){
 arguments[4][89][0].apply(exports,arguments)
-},{"bn.js":145,"dup":89}],155:[function(require,module,exports){
+},{"../hash":151,"dup":89}],155:[function(require,module,exports){
 arguments[4][90][0].apply(exports,arguments)
-},{"../../elliptic":146,"bn.js":145,"dup":90}],156:[function(require,module,exports){
+},{"../hash":151,"dup":90}],156:[function(require,module,exports){
 arguments[4][91][0].apply(exports,arguments)
-},{"../../elliptic":146,"./key":157,"./signature":158,"dup":91,"hash.js":163}],157:[function(require,module,exports){
-arguments[4][92][0].apply(exports,arguments)
-},{"../../elliptic":146,"dup":92}],158:[function(require,module,exports){
-arguments[4][93][0].apply(exports,arguments)
-},{"../../elliptic":146,"bn.js":145,"dup":93}],159:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"../elliptic":146,"dup":94,"hash.js":163}],160:[function(require,module,exports){
-arguments[4][95][0].apply(exports,arguments)
-},{"dup":95}],161:[function(require,module,exports){
-arguments[4][96][0].apply(exports,arguments)
-},{"bn.js":145,"dup":96}],162:[function(require,module,exports){
-arguments[4][97][0].apply(exports,arguments)
-},{"crypto":28,"dup":97}],163:[function(require,module,exports){
-arguments[4][98][0].apply(exports,arguments)
-},{"./hash/common":164,"./hash/hmac":165,"./hash/ripemd":166,"./hash/sha":167,"./hash/utils":168,"dup":98}],164:[function(require,module,exports){
-arguments[4][99][0].apply(exports,arguments)
-},{"../hash":163,"dup":99}],165:[function(require,module,exports){
-arguments[4][100][0].apply(exports,arguments)
-},{"../hash":163,"dup":100}],166:[function(require,module,exports){
-arguments[4][101][0].apply(exports,arguments)
-},{"../hash":163,"dup":101}],167:[function(require,module,exports){
-arguments[4][102][0].apply(exports,arguments)
-},{"../hash":163,"dup":102}],168:[function(require,module,exports){
-arguments[4][103][0].apply(exports,arguments)
-},{"dup":103,"inherits":241}],169:[function(require,module,exports){
+},{"dup":91,"inherits":229}],157:[function(require,module,exports){
 module.exports={
   "name": "elliptic",
   "version": "6.3.2",
@@ -27011,7 +24837,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.3.2.tgz"
 }
 
-},{}],170:[function(require,module,exports){
+},{}],158:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var inherits = require('inherits')
@@ -27067,7 +24893,7 @@ module.exports = function createHash (alg) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./md5":172,"buffer":42,"cipher-base":173,"inherits":241,"ripemd160":174,"sha.js":176}],171:[function(require,module,exports){
+},{"./md5":160,"buffer":30,"cipher-base":161,"inherits":229,"ripemd160":162,"sha.js":164}],159:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var intSize = 4;
@@ -27104,7 +24930,7 @@ function hash(buf, fn, hashSize, bigEndian) {
 }
 exports.hash = hash;
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],172:[function(require,module,exports){
+},{"buffer":30}],160:[function(require,module,exports){
 'use strict';
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
@@ -27261,9 +25087,9 @@ function bit_rol(num, cnt)
 module.exports = function md5(buf) {
   return helpers.hash(buf, core_md5, 16);
 };
-},{"./helpers":171}],173:[function(require,module,exports){
-arguments[4][63][0].apply(exports,arguments)
-},{"buffer":42,"dup":63,"inherits":241,"stream":265,"string_decoder":272}],174:[function(require,module,exports){
+},{"./helpers":159}],161:[function(require,module,exports){
+arguments[4][51][0].apply(exports,arguments)
+},{"buffer":30,"dup":51,"inherits":229,"stream":253,"string_decoder":260}],162:[function(require,module,exports){
 (function (Buffer){
 /*
 CryptoJS v3.1.2
@@ -27477,7 +25303,7 @@ function ripemd160 (message) {
 module.exports = ripemd160
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],175:[function(require,module,exports){
+},{"buffer":30}],163:[function(require,module,exports){
 (function (Buffer){
 // prototype class for hash functions
 function Hash (blockSize, finalSize) {
@@ -27550,7 +25376,7 @@ Hash.prototype._update = function () {
 module.exports = Hash
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],176:[function(require,module,exports){
+},{"buffer":30}],164:[function(require,module,exports){
 var exports = module.exports = function SHA (algorithm) {
   algorithm = algorithm.toLowerCase()
 
@@ -27567,7 +25393,7 @@ exports.sha256 = require('./sha256')
 exports.sha384 = require('./sha384')
 exports.sha512 = require('./sha512')
 
-},{"./sha":177,"./sha1":178,"./sha224":179,"./sha256":180,"./sha384":181,"./sha512":182}],177:[function(require,module,exports){
+},{"./sha":165,"./sha1":166,"./sha224":167,"./sha256":168,"./sha384":169,"./sha512":170}],165:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-0, as defined
@@ -27664,7 +25490,7 @@ Sha.prototype._hash = function () {
 module.exports = Sha
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":175,"buffer":42,"inherits":241}],178:[function(require,module,exports){
+},{"./hash":163,"buffer":30,"inherits":229}],166:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
@@ -27766,7 +25592,7 @@ Sha1.prototype._hash = function () {
 module.exports = Sha1
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":175,"buffer":42,"inherits":241}],179:[function(require,module,exports){
+},{"./hash":163,"buffer":30,"inherits":229}],167:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -27822,7 +25648,7 @@ Sha224.prototype._hash = function () {
 module.exports = Sha224
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":175,"./sha256":180,"buffer":42,"inherits":241}],180:[function(require,module,exports){
+},{"./hash":163,"./sha256":168,"buffer":30,"inherits":229}],168:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -27960,7 +25786,7 @@ Sha256.prototype._hash = function () {
 module.exports = Sha256
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":175,"buffer":42,"inherits":241}],181:[function(require,module,exports){
+},{"./hash":163,"buffer":30,"inherits":229}],169:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var SHA512 = require('./sha512')
@@ -28020,7 +25846,7 @@ Sha384.prototype._hash = function () {
 module.exports = Sha384
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":175,"./sha512":182,"buffer":42,"inherits":241}],182:[function(require,module,exports){
+},{"./hash":163,"./sha512":170,"buffer":30,"inherits":229}],170:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var Hash = require('./hash')
@@ -28283,7 +26109,7 @@ Sha512.prototype._hash = function () {
 module.exports = Sha512
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":175,"buffer":42,"inherits":241}],183:[function(require,module,exports){
+},{"./hash":163,"buffer":30,"inherits":229}],171:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var createHash = require('create-hash/browser');
@@ -28355,7 +26181,7 @@ module.exports = function createHmac(alg, key) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"create-hash/browser":170,"inherits":241,"stream":265}],184:[function(require,module,exports){
+},{"buffer":30,"create-hash/browser":158,"inherits":229,"stream":253}],172:[function(require,module,exports){
 (function (Buffer){
 var generatePrime = require('./lib/generatePrime')
 var primes = require('./lib/primes.json')
@@ -28401,7 +26227,7 @@ exports.DiffieHellmanGroup = exports.createDiffieHellmanGroup = exports.getDiffi
 exports.createDiffieHellman = exports.DiffieHellman = createDiffieHellman
 
 }).call(this,require("buffer").Buffer)
-},{"./lib/dh":185,"./lib/generatePrime":186,"./lib/primes.json":187,"buffer":42}],185:[function(require,module,exports){
+},{"./lib/dh":173,"./lib/generatePrime":174,"./lib/primes.json":175,"buffer":30}],173:[function(require,module,exports){
 (function (Buffer){
 var BN = require('bn.js');
 var MillerRabin = require('miller-rabin');
@@ -28569,7 +26395,7 @@ function formatReturnValue(bn, enc) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./generatePrime":186,"bn.js":188,"buffer":42,"miller-rabin":189,"randombytes":238}],186:[function(require,module,exports){
+},{"./generatePrime":174,"bn.js":176,"buffer":30,"miller-rabin":177,"randombytes":226}],174:[function(require,module,exports){
 var randomBytes = require('randombytes');
 module.exports = findPrime;
 findPrime.simpleSieve = simpleSieve;
@@ -28676,7 +26502,7 @@ function findPrime(bits, gen) {
 
 }
 
-},{"bn.js":188,"miller-rabin":189,"randombytes":238}],187:[function(require,module,exports){
+},{"bn.js":176,"miller-rabin":177,"randombytes":226}],175:[function(require,module,exports){
 module.exports={
     "modp1": {
         "gen": "02",
@@ -28711,9 +26537,9 @@ module.exports={
         "prime": "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca18217c32905e462e36ce3be39e772c180e86039b2783a2ec07a28fb5c55df06f4c52c9de2bcbf6955817183995497cea956ae515d2261898fa051015728e5a8aaac42dad33170d04507a33a85521abdf1cba64ecfb850458dbef0a8aea71575d060c7db3970f85a6e1e4c7abf5ae8cdb0933d71e8c94e04a25619dcee3d2261ad2ee6bf12ffa06d98a0864d87602733ec86a64521f2b18177b200cbbe117577a615d6c770988c0bad946e208e24fa074e5ab3143db5bfce0fd108e4b82d120a92108011a723c12a787e6d788719a10bdba5b2699c327186af4e23c1a946834b6150bda2583e9ca2ad44ce8dbbbc2db04de8ef92e8efc141fbecaa6287c59474e6bc05d99b2964fa090c3a2233ba186515be7ed1f612970cee2d7afb81bdd762170481cd0069127d5b05aa993b4ea988d8fddc186ffb7dc90a6c08f4df435c93402849236c3fab4d27c7026c1d4dcb2602646dec9751e763dba37bdf8ff9406ad9e530ee5db382f413001aeb06a53ed9027d831179727b0865a8918da3edbebcf9b14ed44ce6cbaced4bb1bdb7f1447e6cc254b332051512bd7af426fb8f401378cd2bf5983ca01c64b92ecf032ea15d1721d03f482d7ce6e74fef6d55e702f46980c82b5a84031900b1c9e59e7c97fbec7e8f323a97a7e36cc88be0f1d45b7ff585ac54bd407b22b4154aacc8f6d7ebf48e1d814cc5ed20f8037e0a79715eef29be32806a1d58bb7c5da76f550aa3d8a1fbff0eb19ccb1a313d55cda56c9ec2ef29632387fe8d76e3c0468043e8f663f4860ee12bf2d5b0b7474d6e694f91e6dbe115974a3926f12fee5e438777cb6a932df8cd8bec4d073b931ba3bc832b68d9dd300741fa7bf8afc47ed2576f6936ba424663aab639c5ae4f5683423b4742bf1c978238f16cbe39d652de3fdb8befc848ad922222e04a4037c0713eb57a81a23f0c73473fc646cea306b4bcbc8862f8385ddfa9d4b7fa2c087e879683303ed5bdd3a062b3cf5b3a278a66d2a13f83f44f82ddf310ee074ab6a364597e899a0255dc164f31cc50846851df9ab48195ded7ea1b1d510bd7ee74d73faf36bc31ecfa268359046f4eb879f924009438b481c6cd7889a002ed5ee382bc9190da6fc026e479558e4475677e9aa9e3050e2765694dfc81f56e880b96e7160c980dd98edd3dfffffffffffffffff"
     }
 }
-},{}],188:[function(require,module,exports){
-arguments[4][79][0].apply(exports,arguments)
-},{"dup":79}],189:[function(require,module,exports){
+},{}],176:[function(require,module,exports){
+arguments[4][67][0].apply(exports,arguments)
+},{"dup":67}],177:[function(require,module,exports){
 var bn = require('bn.js');
 var brorand = require('brorand');
 
@@ -28828,9 +26654,9 @@ MillerRabin.prototype.getDivisor = function getDivisor(n, k) {
   return false;
 };
 
-},{"bn.js":188,"brorand":190}],190:[function(require,module,exports){
-arguments[4][97][0].apply(exports,arguments)
-},{"crypto":28,"dup":97}],191:[function(require,module,exports){
+},{"bn.js":176,"brorand":178}],178:[function(require,module,exports){
+arguments[4][85][0].apply(exports,arguments)
+},{"crypto":16,"dup":85}],179:[function(require,module,exports){
 (function (process,Buffer){
 var createHmac = require('create-hmac')
 var checkParameters = require('./precondition')
@@ -28902,7 +26728,7 @@ exports.pbkdf2Sync = function (password, salt, iterations, keylen, digest) {
 }
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./precondition":192,"_process":244,"buffer":42,"create-hmac":183}],192:[function(require,module,exports){
+},{"./precondition":180,"_process":232,"buffer":30,"create-hmac":171}],180:[function(require,module,exports){
 var MAX_ALLOC = Math.pow(2, 30) - 1 // default in iojs
 module.exports = function (iterations, keylen) {
   if (typeof iterations !== 'number') {
@@ -28922,7 +26748,7 @@ module.exports = function (iterations, keylen) {
   }
 }
 
-},{}],193:[function(require,module,exports){
+},{}],181:[function(require,module,exports){
 exports.publicEncrypt = require('./publicEncrypt');
 exports.privateDecrypt = require('./privateDecrypt');
 
@@ -28933,7 +26759,7 @@ exports.privateEncrypt = function privateEncrypt(key, buf) {
 exports.publicDecrypt = function publicDecrypt(key, buf) {
   return exports.privateDecrypt(key, buf, true);
 };
-},{"./privateDecrypt":234,"./publicEncrypt":235}],194:[function(require,module,exports){
+},{"./privateDecrypt":222,"./publicEncrypt":223}],182:[function(require,module,exports){
 (function (Buffer){
 var createHash = require('create-hash');
 module.exports = function (seed, len) {
@@ -28952,85 +26778,85 @@ function i2ops(c) {
   return out;
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"create-hash":170}],195:[function(require,module,exports){
-arguments[4][79][0].apply(exports,arguments)
-},{"dup":79}],196:[function(require,module,exports){
-arguments[4][80][0].apply(exports,arguments)
-},{"bn.js":195,"buffer":42,"dup":80,"randombytes":238}],197:[function(require,module,exports){
+},{"buffer":30,"create-hash":158}],183:[function(require,module,exports){
+arguments[4][67][0].apply(exports,arguments)
+},{"dup":67}],184:[function(require,module,exports){
+arguments[4][68][0].apply(exports,arguments)
+},{"bn.js":183,"buffer":30,"dup":68,"randombytes":226}],185:[function(require,module,exports){
+arguments[4][93][0].apply(exports,arguments)
+},{"dup":93}],186:[function(require,module,exports){
+arguments[4][94][0].apply(exports,arguments)
+},{"asn1.js":189,"dup":94}],187:[function(require,module,exports){
+arguments[4][95][0].apply(exports,arguments)
+},{"browserify-aes":206,"buffer":30,"dup":95,"evp_bytestokey":221}],188:[function(require,module,exports){
+arguments[4][96][0].apply(exports,arguments)
+},{"./aesid.json":185,"./asn1":186,"./fixProc":187,"browserify-aes":206,"buffer":30,"dup":96,"pbkdf2":179}],189:[function(require,module,exports){
+arguments[4][97][0].apply(exports,arguments)
+},{"./asn1/api":190,"./asn1/base":192,"./asn1/constants":196,"./asn1/decoders":198,"./asn1/encoders":201,"bn.js":183,"dup":97}],190:[function(require,module,exports){
+arguments[4][98][0].apply(exports,arguments)
+},{"../asn1":189,"dup":98,"inherits":229,"vm":266}],191:[function(require,module,exports){
+arguments[4][99][0].apply(exports,arguments)
+},{"../base":192,"buffer":30,"dup":99,"inherits":229}],192:[function(require,module,exports){
+arguments[4][100][0].apply(exports,arguments)
+},{"./buffer":191,"./node":193,"./reporter":194,"dup":100}],193:[function(require,module,exports){
+arguments[4][101][0].apply(exports,arguments)
+},{"../base":192,"dup":101,"minimalistic-assert":203}],194:[function(require,module,exports){
+arguments[4][102][0].apply(exports,arguments)
+},{"dup":102,"inherits":229}],195:[function(require,module,exports){
+arguments[4][103][0].apply(exports,arguments)
+},{"../constants":196,"dup":103}],196:[function(require,module,exports){
+arguments[4][104][0].apply(exports,arguments)
+},{"./der":195,"dup":104}],197:[function(require,module,exports){
 arguments[4][105][0].apply(exports,arguments)
-},{"dup":105}],198:[function(require,module,exports){
+},{"../../asn1":189,"dup":105,"inherits":229}],198:[function(require,module,exports){
 arguments[4][106][0].apply(exports,arguments)
-},{"asn1.js":201,"dup":106}],199:[function(require,module,exports){
+},{"./der":197,"./pem":199,"dup":106}],199:[function(require,module,exports){
 arguments[4][107][0].apply(exports,arguments)
-},{"browserify-aes":218,"buffer":42,"dup":107,"evp_bytestokey":233}],200:[function(require,module,exports){
+},{"./der":197,"buffer":30,"dup":107,"inherits":229}],200:[function(require,module,exports){
 arguments[4][108][0].apply(exports,arguments)
-},{"./aesid.json":197,"./asn1":198,"./fixProc":199,"browserify-aes":218,"buffer":42,"dup":108,"pbkdf2":191}],201:[function(require,module,exports){
+},{"../../asn1":189,"buffer":30,"dup":108,"inherits":229}],201:[function(require,module,exports){
 arguments[4][109][0].apply(exports,arguments)
-},{"./asn1/api":202,"./asn1/base":204,"./asn1/constants":208,"./asn1/decoders":210,"./asn1/encoders":213,"bn.js":195,"dup":109}],202:[function(require,module,exports){
+},{"./der":200,"./pem":202,"dup":109}],202:[function(require,module,exports){
 arguments[4][110][0].apply(exports,arguments)
-},{"../asn1":201,"dup":110,"inherits":241,"vm":278}],203:[function(require,module,exports){
-arguments[4][111][0].apply(exports,arguments)
-},{"../base":204,"buffer":42,"dup":111,"inherits":241}],204:[function(require,module,exports){
-arguments[4][112][0].apply(exports,arguments)
-},{"./buffer":203,"./node":205,"./reporter":206,"dup":112}],205:[function(require,module,exports){
-arguments[4][113][0].apply(exports,arguments)
-},{"../base":204,"dup":113,"minimalistic-assert":215}],206:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114,"inherits":241}],207:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"../constants":208,"dup":115}],208:[function(require,module,exports){
-arguments[4][116][0].apply(exports,arguments)
-},{"./der":207,"dup":116}],209:[function(require,module,exports){
-arguments[4][117][0].apply(exports,arguments)
-},{"../../asn1":201,"dup":117,"inherits":241}],210:[function(require,module,exports){
-arguments[4][118][0].apply(exports,arguments)
-},{"./der":209,"./pem":211,"dup":118}],211:[function(require,module,exports){
-arguments[4][119][0].apply(exports,arguments)
-},{"./der":209,"buffer":42,"dup":119,"inherits":241}],212:[function(require,module,exports){
-arguments[4][120][0].apply(exports,arguments)
-},{"../../asn1":201,"buffer":42,"dup":120,"inherits":241}],213:[function(require,module,exports){
-arguments[4][121][0].apply(exports,arguments)
-},{"./der":212,"./pem":214,"dup":121}],214:[function(require,module,exports){
-arguments[4][122][0].apply(exports,arguments)
-},{"./der":212,"dup":122,"inherits":241}],215:[function(require,module,exports){
-arguments[4][74][0].apply(exports,arguments)
-},{"dup":74}],216:[function(require,module,exports){
-arguments[4][48][0].apply(exports,arguments)
-},{"buffer":42,"dup":48}],217:[function(require,module,exports){
-arguments[4][49][0].apply(exports,arguments)
-},{"./aes":216,"./ghash":221,"buffer":42,"buffer-xor":230,"cipher-base":231,"dup":49,"inherits":241}],218:[function(require,module,exports){
-arguments[4][50][0].apply(exports,arguments)
-},{"./decrypter":219,"./encrypter":220,"./modes":222,"dup":50}],219:[function(require,module,exports){
-arguments[4][51][0].apply(exports,arguments)
-},{"./aes":216,"./authCipher":217,"./modes":222,"./modes/cbc":223,"./modes/cfb":224,"./modes/cfb1":225,"./modes/cfb8":226,"./modes/ctr":227,"./modes/ecb":228,"./modes/ofb":229,"./streamCipher":232,"buffer":42,"cipher-base":231,"dup":51,"evp_bytestokey":233,"inherits":241}],220:[function(require,module,exports){
-arguments[4][52][0].apply(exports,arguments)
-},{"./aes":216,"./authCipher":217,"./modes":222,"./modes/cbc":223,"./modes/cfb":224,"./modes/cfb1":225,"./modes/cfb8":226,"./modes/ctr":227,"./modes/ecb":228,"./modes/ofb":229,"./streamCipher":232,"buffer":42,"cipher-base":231,"dup":52,"evp_bytestokey":233,"inherits":241}],221:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"buffer":42,"dup":53}],222:[function(require,module,exports){
-arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],223:[function(require,module,exports){
-arguments[4][55][0].apply(exports,arguments)
-},{"buffer-xor":230,"dup":55}],224:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"buffer":42,"buffer-xor":230,"dup":56}],225:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"buffer":42,"dup":57}],226:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"buffer":42,"dup":58}],227:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"buffer":42,"buffer-xor":230,"dup":59}],228:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60}],229:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"buffer":42,"buffer-xor":230,"dup":61}],230:[function(require,module,exports){
+},{"./der":200,"dup":110,"inherits":229}],203:[function(require,module,exports){
 arguments[4][62][0].apply(exports,arguments)
-},{"buffer":42,"dup":62}],231:[function(require,module,exports){
+},{"dup":62}],204:[function(require,module,exports){
+arguments[4][36][0].apply(exports,arguments)
+},{"buffer":30,"dup":36}],205:[function(require,module,exports){
+arguments[4][37][0].apply(exports,arguments)
+},{"./aes":204,"./ghash":209,"buffer":30,"buffer-xor":218,"cipher-base":219,"dup":37,"inherits":229}],206:[function(require,module,exports){
+arguments[4][38][0].apply(exports,arguments)
+},{"./decrypter":207,"./encrypter":208,"./modes":210,"dup":38}],207:[function(require,module,exports){
+arguments[4][39][0].apply(exports,arguments)
+},{"./aes":204,"./authCipher":205,"./modes":210,"./modes/cbc":211,"./modes/cfb":212,"./modes/cfb1":213,"./modes/cfb8":214,"./modes/ctr":215,"./modes/ecb":216,"./modes/ofb":217,"./streamCipher":220,"buffer":30,"cipher-base":219,"dup":39,"evp_bytestokey":221,"inherits":229}],208:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"./aes":204,"./authCipher":205,"./modes":210,"./modes/cbc":211,"./modes/cfb":212,"./modes/cfb1":213,"./modes/cfb8":214,"./modes/ctr":215,"./modes/ecb":216,"./modes/ofb":217,"./streamCipher":220,"buffer":30,"cipher-base":219,"dup":40,"evp_bytestokey":221,"inherits":229}],209:[function(require,module,exports){
+arguments[4][41][0].apply(exports,arguments)
+},{"buffer":30,"dup":41}],210:[function(require,module,exports){
+arguments[4][42][0].apply(exports,arguments)
+},{"dup":42}],211:[function(require,module,exports){
+arguments[4][43][0].apply(exports,arguments)
+},{"buffer-xor":218,"dup":43}],212:[function(require,module,exports){
+arguments[4][44][0].apply(exports,arguments)
+},{"buffer":30,"buffer-xor":218,"dup":44}],213:[function(require,module,exports){
+arguments[4][45][0].apply(exports,arguments)
+},{"buffer":30,"dup":45}],214:[function(require,module,exports){
+arguments[4][46][0].apply(exports,arguments)
+},{"buffer":30,"dup":46}],215:[function(require,module,exports){
+arguments[4][47][0].apply(exports,arguments)
+},{"buffer":30,"buffer-xor":218,"dup":47}],216:[function(require,module,exports){
+arguments[4][48][0].apply(exports,arguments)
+},{"dup":48}],217:[function(require,module,exports){
+arguments[4][49][0].apply(exports,arguments)
+},{"buffer":30,"buffer-xor":218,"dup":49}],218:[function(require,module,exports){
+arguments[4][50][0].apply(exports,arguments)
+},{"buffer":30,"dup":50}],219:[function(require,module,exports){
+arguments[4][51][0].apply(exports,arguments)
+},{"buffer":30,"dup":51,"inherits":229,"stream":253,"string_decoder":260}],220:[function(require,module,exports){
+arguments[4][52][0].apply(exports,arguments)
+},{"./aes":204,"buffer":30,"cipher-base":219,"dup":52,"inherits":229}],221:[function(require,module,exports){
 arguments[4][63][0].apply(exports,arguments)
-},{"buffer":42,"dup":63,"inherits":241,"stream":265,"string_decoder":272}],232:[function(require,module,exports){
-arguments[4][64][0].apply(exports,arguments)
-},{"./aes":216,"buffer":42,"cipher-base":231,"dup":64,"inherits":241}],233:[function(require,module,exports){
-arguments[4][75][0].apply(exports,arguments)
-},{"buffer":42,"create-hash/md5":172,"dup":75}],234:[function(require,module,exports){
+},{"buffer":30,"create-hash/md5":160,"dup":63}],222:[function(require,module,exports){
 (function (Buffer){
 var parseKeys = require('parse-asn1');
 var mgf = require('./mgf');
@@ -29141,7 +26967,7 @@ function compare(a, b){
   return dif;
 }
 }).call(this,require("buffer").Buffer)
-},{"./mgf":194,"./withPublic":236,"./xor":237,"bn.js":195,"browserify-rsa":196,"buffer":42,"create-hash":170,"parse-asn1":200}],235:[function(require,module,exports){
+},{"./mgf":182,"./withPublic":224,"./xor":225,"bn.js":183,"browserify-rsa":184,"buffer":30,"create-hash":158,"parse-asn1":188}],223:[function(require,module,exports){
 (function (Buffer){
 var parseKeys = require('parse-asn1');
 var randomBytes = require('randombytes');
@@ -29239,7 +27065,7 @@ function nonZero(len, crypto) {
   return out;
 }
 }).call(this,require("buffer").Buffer)
-},{"./mgf":194,"./withPublic":236,"./xor":237,"bn.js":195,"browserify-rsa":196,"buffer":42,"create-hash":170,"parse-asn1":200,"randombytes":238}],236:[function(require,module,exports){
+},{"./mgf":182,"./withPublic":224,"./xor":225,"bn.js":183,"browserify-rsa":184,"buffer":30,"create-hash":158,"parse-asn1":188,"randombytes":226}],224:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 function withPublic(paddedMsg, key) {
@@ -29252,7 +27078,7 @@ function withPublic(paddedMsg, key) {
 
 module.exports = withPublic;
 }).call(this,require("buffer").Buffer)
-},{"bn.js":195,"buffer":42}],237:[function(require,module,exports){
+},{"bn.js":183,"buffer":30}],225:[function(require,module,exports){
 module.exports = function xor(a, b) {
   var len = a.length;
   var i = -1;
@@ -29261,7 +27087,7 @@ module.exports = function xor(a, b) {
   }
   return a
 };
-},{}],238:[function(require,module,exports){
+},{}],226:[function(require,module,exports){
 (function (process,global,Buffer){
 'use strict'
 
@@ -29301,7 +27127,7 @@ function randomBytes (size, cb) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"_process":244,"buffer":42}],239:[function(require,module,exports){
+},{"_process":232,"buffer":30}],227:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29605,7 +27431,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],240:[function(require,module,exports){
+},{}],228:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -29621,7 +27447,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":266}],241:[function(require,module,exports){
+},{"http":254}],229:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -29646,7 +27472,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],242:[function(require,module,exports){
+},{}],230:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -29669,7 +27495,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],243:[function(require,module,exports){
+},{}],231:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -29897,7 +27723,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":244}],244:[function(require,module,exports){
+},{"_process":232}],232:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -30079,7 +27905,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],245:[function(require,module,exports){
+},{}],233:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -30616,7 +28442,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],246:[function(require,module,exports){
+},{}],234:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30702,7 +28528,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],247:[function(require,module,exports){
+},{}],235:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30789,16 +28615,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],248:[function(require,module,exports){
+},{}],236:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":246,"./encode":247}],249:[function(require,module,exports){
+},{"./decode":234,"./encode":235}],237:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":250}],250:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":238}],238:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -30874,7 +28700,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":252,"./_stream_writable":254,"core-util-is":257,"inherits":241,"process-nextick-args":259}],251:[function(require,module,exports){
+},{"./_stream_readable":240,"./_stream_writable":242,"core-util-is":245,"inherits":229,"process-nextick-args":247}],239:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -30901,7 +28727,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":253,"core-util-is":257,"inherits":241}],252:[function(require,module,exports){
+},{"./_stream_transform":241,"core-util-is":245,"inherits":229}],240:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -31845,7 +29671,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":250,"./internal/streams/BufferList":255,"_process":244,"buffer":42,"buffer-shims":256,"core-util-is":257,"events":239,"inherits":241,"isarray":258,"process-nextick-args":259,"string_decoder/":272,"util":28}],253:[function(require,module,exports){
+},{"./_stream_duplex":238,"./internal/streams/BufferList":243,"_process":232,"buffer":30,"buffer-shims":244,"core-util-is":245,"events":227,"inherits":229,"isarray":246,"process-nextick-args":247,"string_decoder/":260,"util":16}],241:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -32028,7 +29854,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":250,"core-util-is":257,"inherits":241}],254:[function(require,module,exports){
+},{"./_stream_duplex":238,"core-util-is":245,"inherits":229}],242:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -32585,7 +30411,7 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":250,"_process":244,"buffer":42,"buffer-shims":256,"core-util-is":257,"events":239,"inherits":241,"process-nextick-args":259,"util-deprecate":260}],255:[function(require,module,exports){
+},{"./_stream_duplex":238,"_process":232,"buffer":30,"buffer-shims":244,"core-util-is":245,"events":227,"inherits":229,"process-nextick-args":247,"util-deprecate":248}],243:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('buffer').Buffer;
@@ -32650,7 +30476,7 @@ BufferList.prototype.concat = function (n) {
   }
   return ret;
 };
-},{"buffer":42,"buffer-shims":256}],256:[function(require,module,exports){
+},{"buffer":30,"buffer-shims":244}],244:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -32762,7 +30588,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"buffer":42}],257:[function(require,module,exports){
+},{"buffer":30}],245:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -32873,9 +30699,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":242}],258:[function(require,module,exports){
-arguments[4][45][0].apply(exports,arguments)
-},{"dup":45}],259:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":230}],246:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33}],247:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -32922,7 +30748,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":244}],260:[function(require,module,exports){
+},{"_process":232}],248:[function(require,module,exports){
 (function (global){
 
 /**
@@ -32993,10 +30819,10 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],261:[function(require,module,exports){
+},{}],249:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":251}],262:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":239}],250:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -33016,13 +30842,13 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":250,"./lib/_stream_passthrough.js":251,"./lib/_stream_readable.js":252,"./lib/_stream_transform.js":253,"./lib/_stream_writable.js":254,"_process":244}],263:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":238,"./lib/_stream_passthrough.js":239,"./lib/_stream_readable.js":240,"./lib/_stream_transform.js":241,"./lib/_stream_writable.js":242,"_process":232}],251:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":253}],264:[function(require,module,exports){
+},{"./lib/_stream_transform.js":241}],252:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":254}],265:[function(require,module,exports){
+},{"./lib/_stream_writable.js":242}],253:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -33151,7 +30977,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":239,"inherits":241,"readable-stream/duplex.js":249,"readable-stream/passthrough.js":261,"readable-stream/readable.js":262,"readable-stream/transform.js":263,"readable-stream/writable.js":264}],266:[function(require,module,exports){
+},{"events":227,"inherits":229,"readable-stream/duplex.js":237,"readable-stream/passthrough.js":249,"readable-stream/readable.js":250,"readable-stream/transform.js":251,"readable-stream/writable.js":252}],254:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -33233,7 +31059,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":268,"builtin-status-codes":270,"url":273,"xtend":280}],267:[function(require,module,exports){
+},{"./lib/request":256,"builtin-status-codes":258,"url":261,"xtend":268}],255:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -33277,7 +31103,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],268:[function(require,module,exports){
+},{}],256:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -33563,7 +31389,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":267,"./response":269,"_process":244,"buffer":42,"inherits":241,"readable-stream":262,"to-arraybuffer":271}],269:[function(require,module,exports){
+},{"./capability":255,"./response":257,"_process":232,"buffer":30,"inherits":229,"readable-stream":250,"to-arraybuffer":259}],257:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -33747,7 +31573,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":267,"_process":244,"buffer":42,"inherits":241,"readable-stream":262}],270:[function(require,module,exports){
+},{"./capability":255,"_process":232,"buffer":30,"inherits":229,"readable-stream":250}],258:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -33812,7 +31638,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],271:[function(require,module,exports){
+},{}],259:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -33841,7 +31667,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":42}],272:[function(require,module,exports){
+},{"buffer":30}],260:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -34064,7 +31890,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":42}],273:[function(require,module,exports){
+},{"buffer":30}],261:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -34798,7 +32624,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":274,"punycode":245,"querystring":248}],274:[function(require,module,exports){
+},{"./util":262,"punycode":233,"querystring":236}],262:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -34816,16 +32642,16 @@ module.exports = {
   }
 };
 
-},{}],275:[function(require,module,exports){
-arguments[4][241][0].apply(exports,arguments)
-},{"dup":241}],276:[function(require,module,exports){
+},{}],263:[function(require,module,exports){
+arguments[4][229][0].apply(exports,arguments)
+},{"dup":229}],264:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],277:[function(require,module,exports){
+},{}],265:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -35415,7 +33241,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":276,"_process":244,"inherits":275}],278:[function(require,module,exports){
+},{"./support/isBuffer":264,"_process":232,"inherits":263}],266:[function(require,module,exports){
 var indexOf = require('indexof');
 
 var Object_keys = function (obj) {
@@ -35555,7 +33381,7 @@ exports.createContext = Script.createContext = function (context) {
     return copy;
 };
 
-},{"indexof":279}],279:[function(require,module,exports){
+},{"indexof":267}],267:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -35566,7 +33392,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],280:[function(require,module,exports){
+},{}],268:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -35587,7 +33413,7 @@ function extend() {
     return target
 }
 
-},{}],281:[function(require,module,exports){
+},{}],269:[function(require,module,exports){
 (function (process){
 // Generated by CoffeeScript 1.10.0
 var Stringifier, get, stream, util;
@@ -35900,7 +33726,7 @@ Stringifier.prototype.stringify = function(line) {
 };
 
 }).call(this,require('_process'))
-},{"_process":244,"lodash.get":283,"stream":265,"util":277}],282:[function(require,module,exports){
+},{"_process":232,"lodash.get":271,"stream":253,"util":265}],270:[function(require,module,exports){
 (function (Buffer){
 // Generated by CoffeeScript 1.10.0
 var StringDecoder, stringify;
@@ -35934,7 +33760,7 @@ module.exports = function(records, options) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./index":281,"buffer":42,"string_decoder":272}],283:[function(require,module,exports){
+},{"./index":269,"buffer":30,"string_decoder":260}],271:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -36869,7 +34695,7 @@ function get(object, path, defaultValue) {
 module.exports = get;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],284:[function(require,module,exports){
+},{}],272:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v3.1.1
  * https://jquery.com/
@@ -47091,7 +44917,7 @@ if ( !noGlobal ) {
 return jQuery;
 } );
 
-},{}],285:[function(require,module,exports){
+},{}],273:[function(require,module,exports){
 // Copyright 2010-2012 Mikeal Rogers
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -47249,7 +45075,7 @@ Object.defineProperty(request, 'debug', {
   }
 })
 
-},{"./lib/cookies":287,"./lib/helpers":290,"./request":409,"extend":302}],286:[function(require,module,exports){
+},{"./lib/cookies":275,"./lib/helpers":278,"./request":397,"extend":290}],274:[function(require,module,exports){
 'use strict'
 
 var caseless = require('caseless')
@@ -47419,7 +45245,7 @@ Auth.prototype.onResponse = function (response) {
 
 exports.Auth = Auth
 
-},{"./helpers":290,"caseless":299,"uuid":408}],287:[function(require,module,exports){
+},{"./helpers":278,"caseless":287,"uuid":396}],275:[function(require,module,exports){
 'use strict'
 
 var tough = require('tough-cookie')
@@ -47460,7 +45286,7 @@ exports.jar = function(store) {
   return new RequestJar(store)
 }
 
-},{"tough-cookie":399}],288:[function(require,module,exports){
+},{"tough-cookie":387}],276:[function(require,module,exports){
 (function (process){
 'use strict'
 
@@ -47543,7 +45369,7 @@ function getProxyFromURI(uri) {
 module.exports = getProxyFromURI
 
 }).call(this,require('_process'))
-},{"_process":244}],289:[function(require,module,exports){
+},{"_process":232}],277:[function(require,module,exports){
 'use strict'
 
 var fs = require('fs')
@@ -47760,7 +45586,7 @@ Har.prototype.options = function (options) {
 
 exports.Har = Har
 
-},{"extend":302,"fs":26,"har-validator":306,"querystring":248}],290:[function(require,module,exports){
+},{"extend":290,"fs":14,"har-validator":294,"querystring":236}],278:[function(require,module,exports){
 (function (process,Buffer){
 'use strict'
 
@@ -47829,7 +45655,7 @@ exports.version               = version
 exports.defer                 = defer
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":244,"buffer":42,"crypto":46,"json-stringify-safe":388}],291:[function(require,module,exports){
+},{"_process":232,"buffer":30,"crypto":34,"json-stringify-safe":376}],279:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 
@@ -47945,7 +45771,7 @@ Multipart.prototype.onRequest = function (options) {
 exports.Multipart = Multipart
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"combined-stream":300,"isstream":387,"uuid":408}],292:[function(require,module,exports){
+},{"buffer":30,"combined-stream":288,"isstream":375,"uuid":396}],280:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 
@@ -48096,7 +45922,7 @@ OAuth.prototype.onRequest = function (_oauth) {
 exports.OAuth = OAuth
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"caseless":299,"crypto":46,"oauth-sign":392,"qs":394,"url":273,"uuid":408}],293:[function(require,module,exports){
+},{"buffer":30,"caseless":287,"crypto":34,"oauth-sign":380,"qs":382,"url":261,"uuid":396}],281:[function(require,module,exports){
 'use strict'
 
 var qs = require('qs')
@@ -48149,7 +45975,7 @@ Querystring.prototype.unescape = querystring.unescape
 
 exports.Querystring = Querystring
 
-},{"qs":394,"querystring":248}],294:[function(require,module,exports){
+},{"qs":382,"querystring":236}],282:[function(require,module,exports){
 'use strict'
 
 var url = require('url')
@@ -48308,7 +46134,7 @@ Redirect.prototype.onResponse = function (response) {
 
 exports.Redirect = Redirect
 
-},{"url":273}],295:[function(require,module,exports){
+},{"url":261}],283:[function(require,module,exports){
 'use strict'
 
 var url = require('url')
@@ -48486,7 +46312,7 @@ Tunnel.defaultProxyHeaderWhiteList = defaultProxyHeaderWhiteList
 Tunnel.defaultProxyHeaderExclusiveList = defaultProxyHeaderExclusiveList
 exports.Tunnel = Tunnel
 
-},{"tunnel-agent":406,"url":273}],296:[function(require,module,exports){
+},{"tunnel-agent":394,"url":261}],284:[function(require,module,exports){
 
 /*!
  *  Copyright 2010 LearnBoost <dev@learnboost.com>
@@ -48700,7 +46526,7 @@ function canonicalizeResource (resource) {
 }
 module.exports.canonicalizeResource = canonicalizeResource
 
-},{"crypto":46,"url":273}],297:[function(require,module,exports){
+},{"crypto":34,"url":261}],285:[function(require,module,exports){
 (function (process,Buffer){
 var aws4 = exports,
     url = require('url'),
@@ -49027,7 +46853,7 @@ aws4.sign = function(request, credentials) {
 }
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./lru":298,"_process":244,"buffer":42,"crypto":46,"querystring":248,"url":273}],298:[function(require,module,exports){
+},{"./lru":286,"_process":232,"buffer":30,"crypto":34,"querystring":236,"url":261}],286:[function(require,module,exports){
 module.exports = function(size) {
   return new LruCache(size)
 }
@@ -49125,7 +46951,7 @@ function DoublyLinkedNode(key, val) {
   this.next = null
 }
 
-},{}],299:[function(require,module,exports){
+},{}],287:[function(require,module,exports){
 function Caseless (dict) {
   this.dict = dict || {}
 }
@@ -49193,7 +47019,7 @@ module.exports.httpify = function (resp, headers) {
   return c
 }
 
-},{}],300:[function(require,module,exports){
+},{}],288:[function(require,module,exports){
 (function (Buffer){
 var util = require('util');
 var Stream = require('stream').Stream;
@@ -49385,7 +47211,7 @@ CombinedStream.prototype._emitError = function(err) {
 };
 
 }).call(this,{"isBuffer":require("../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":242,"delayed-stream":301,"stream":265,"util":277}],301:[function(require,module,exports){
+},{"../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":230,"delayed-stream":289,"stream":253,"util":265}],289:[function(require,module,exports){
 var Stream = require('stream').Stream;
 var util = require('util');
 
@@ -49494,7 +47320,7 @@ DelayedStream.prototype._checkIfMaxDataSizeExceeded = function() {
   this.emit('error', new Error(message));
 };
 
-},{"stream":265,"util":277}],302:[function(require,module,exports){
+},{"stream":253,"util":265}],290:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -49582,7 +47408,7 @@ module.exports = function extend() {
 };
 
 
-},{}],303:[function(require,module,exports){
+},{}],291:[function(require,module,exports){
 module.exports = ForeverAgent
 ForeverAgent.SSL = ForeverAgentSSL
 
@@ -49722,11 +47548,11 @@ function createConnectionSSL (port, host, options) {
   return tls.connect(options);
 }
 
-},{"http":266,"https":240,"net":26,"tls":26,"util":277}],304:[function(require,module,exports){
+},{"http":254,"https":228,"net":14,"tls":14,"util":265}],292:[function(require,module,exports){
 /* eslint-env browser */
 module.exports = typeof self == 'object' ? self.FormData : window.FormData;
 
-},{}],305:[function(require,module,exports){
+},{}],293:[function(require,module,exports){
 'use strict'
 
 function ValidationError (errors) {
@@ -49738,7 +47564,7 @@ ValidationError.prototype = Error.prototype
 
 module.exports = ValidationError
 
-},{}],306:[function(require,module,exports){
+},{}],294:[function(require,module,exports){
 'use strict'
 
 var Promise = require('pinkie-promise')
@@ -49762,7 +47588,7 @@ Object.keys(schemas).map(function (name) {
   module.exports[name] = promisify(schemas[name])
 })
 
-},{"./runner":307,"./schemas":315,"pinkie-promise":331}],307:[function(require,module,exports){
+},{"./runner":295,"./schemas":303,"pinkie-promise":319}],295:[function(require,module,exports){
 'use strict'
 
 var schemas = require('./schemas')
@@ -49793,7 +47619,7 @@ module.exports = function (schema, data, cb) {
   return valid
 }
 
-},{"./error":305,"./schemas":315,"is-my-json-valid":325}],308:[function(require,module,exports){
+},{"./error":293,"./schemas":303,"is-my-json-valid":313}],296:[function(require,module,exports){
 module.exports={
   "properties": {
     "beforeRequest": {
@@ -49808,7 +47634,7 @@ module.exports={
   }
 }
 
-},{}],309:[function(require,module,exports){
+},{}],297:[function(require,module,exports){
 module.exports={
   "oneOf": [{
     "type": "object",
@@ -49841,7 +47667,7 @@ module.exports={
   }]
 }
 
-},{}],310:[function(require,module,exports){
+},{}],298:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -49870,7 +47696,7 @@ module.exports={
   }
 }
 
-},{}],311:[function(require,module,exports){
+},{}],299:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -49906,7 +47732,7 @@ module.exports={
   }
 }
 
-},{}],312:[function(require,module,exports){
+},{}],300:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -49926,7 +47752,7 @@ module.exports={
   }
 }
 
-},{}],313:[function(require,module,exports){
+},{}],301:[function(require,module,exports){
 module.exports={
   "type": "object",
   "optional": true,
@@ -49979,7 +47805,7 @@ module.exports={
   }
 }
 
-},{}],314:[function(require,module,exports){
+},{}],302:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -49992,7 +47818,7 @@ module.exports={
   }
 }
 
-},{}],315:[function(require,module,exports){
+},{}],303:[function(require,module,exports){
 'use strict'
 
 var schemas = {
@@ -50043,7 +47869,7 @@ schemas.har.properties.log = schemas.log
 
 module.exports = schemas
 
-},{"./cache.json":308,"./cacheEntry.json":309,"./content.json":310,"./cookie.json":311,"./creator.json":312,"./entry.json":313,"./har.json":314,"./log.json":316,"./page.json":317,"./pageTimings.json":318,"./postData.json":319,"./record.json":320,"./request.json":321,"./response.json":322,"./timings.json":323}],316:[function(require,module,exports){
+},{"./cache.json":296,"./cacheEntry.json":297,"./content.json":298,"./cookie.json":299,"./creator.json":300,"./entry.json":301,"./har.json":302,"./log.json":304,"./page.json":305,"./pageTimings.json":306,"./postData.json":307,"./record.json":308,"./request.json":309,"./response.json":310,"./timings.json":311}],304:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -50079,7 +47905,7 @@ module.exports={
   }
 }
 
-},{}],317:[function(require,module,exports){
+},{}],305:[function(require,module,exports){
 module.exports={
   "type": "object",
   "optional": true,
@@ -50111,7 +47937,7 @@ module.exports={
   }
 }
 
-},{}],318:[function(require,module,exports){
+},{}],306:[function(require,module,exports){
 module.exports={
   "type": "object",
   "properties": {
@@ -50129,7 +47955,7 @@ module.exports={
   }
 }
 
-},{}],319:[function(require,module,exports){
+},{}],307:[function(require,module,exports){
 module.exports={
   "type": "object",
   "optional": true,
@@ -50172,7 +47998,7 @@ module.exports={
   }
 }
 
-},{}],320:[function(require,module,exports){
+},{}],308:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -50192,7 +48018,7 @@ module.exports={
   }
 }
 
-},{}],321:[function(require,module,exports){
+},{}],309:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -50249,7 +48075,7 @@ module.exports={
   }
 }
 
-},{}],322:[function(require,module,exports){
+},{}],310:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -50303,7 +48129,7 @@ module.exports={
   }
 }
 
-},{}],323:[function(require,module,exports){
+},{}],311:[function(require,module,exports){
 module.exports={
   "required": [
     "send",
@@ -50345,7 +48171,7 @@ module.exports={
   }
 }
 
-},{}],324:[function(require,module,exports){
+},{}],312:[function(require,module,exports){
 exports['date-time'] = /^\d{4}-(?:0[0-9]{1}|1[0-2]{1})-[0-9]{2}[tT ]\d{2}:\d{2}:\d{2}(\.\d+)?([zZ]|[+-]\d{2}:\d{2})$/
 exports['date'] = /^\d{4}-(?:0[0-9]{1}|1[0-2]{1})-[0-9]{2}$/
 exports['time'] = /^\d{2}:\d{2}:\d{2}$/
@@ -50361,7 +48187,7 @@ exports['style'] = /\s*(.+?):\s*([^;]+);?/g
 exports['phone'] = /^\+(?:[0-9] ?){6,14}[0-9]$/
 exports['utc-millisec'] = /^[0-9]{1,15}\.?[0-9]{0,15}$/
 
-},{}],325:[function(require,module,exports){
+},{}],313:[function(require,module,exports){
 var genobj = require('generate-object-property')
 var genfun = require('generate-function')
 var jsonpointer = require('jsonpointer')
@@ -50957,7 +48783,7 @@ module.exports.filter = function(schema, opts) {
   }
 }
 
-},{"./formats":324,"generate-function":326,"generate-object-property":327,"jsonpointer":329,"xtend":330}],326:[function(require,module,exports){
+},{"./formats":312,"generate-function":314,"generate-object-property":315,"jsonpointer":317,"xtend":318}],314:[function(require,module,exports){
 var util = require('util')
 
 var INDENT_START = /[\{\[]/
@@ -51020,7 +48846,7 @@ module.exports = function() {
   return line
 }
 
-},{"util":277}],327:[function(require,module,exports){
+},{"util":265}],315:[function(require,module,exports){
 var isProperty = require('is-property')
 
 var gen = function(obj, prop) {
@@ -51034,13 +48860,13 @@ gen.property = function (prop) {
 
 module.exports = gen
 
-},{"is-property":328}],328:[function(require,module,exports){
+},{"is-property":316}],316:[function(require,module,exports){
 "use strict"
 function isProperty(str) {
   return /^[$A-Z\_a-z\xaa\xb5\xba\xc0-\xd6\xd8-\xf6\xf8-\u02c1\u02c6-\u02d1\u02e0-\u02e4\u02ec\u02ee\u0370-\u0374\u0376\u0377\u037a-\u037d\u0386\u0388-\u038a\u038c\u038e-\u03a1\u03a3-\u03f5\u03f7-\u0481\u048a-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05d0-\u05ea\u05f0-\u05f2\u0620-\u064a\u066e\u066f\u0671-\u06d3\u06d5\u06e5\u06e6\u06ee\u06ef\u06fa-\u06fc\u06ff\u0710\u0712-\u072f\u074d-\u07a5\u07b1\u07ca-\u07ea\u07f4\u07f5\u07fa\u0800-\u0815\u081a\u0824\u0828\u0840-\u0858\u08a0\u08a2-\u08ac\u0904-\u0939\u093d\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097f\u0985-\u098c\u098f\u0990\u0993-\u09a8\u09aa-\u09b0\u09b2\u09b6-\u09b9\u09bd\u09ce\u09dc\u09dd\u09df-\u09e1\u09f0\u09f1\u0a05-\u0a0a\u0a0f\u0a10\u0a13-\u0a28\u0a2a-\u0a30\u0a32\u0a33\u0a35\u0a36\u0a38\u0a39\u0a59-\u0a5c\u0a5e\u0a72-\u0a74\u0a85-\u0a8d\u0a8f-\u0a91\u0a93-\u0aa8\u0aaa-\u0ab0\u0ab2\u0ab3\u0ab5-\u0ab9\u0abd\u0ad0\u0ae0\u0ae1\u0b05-\u0b0c\u0b0f\u0b10\u0b13-\u0b28\u0b2a-\u0b30\u0b32\u0b33\u0b35-\u0b39\u0b3d\u0b5c\u0b5d\u0b5f-\u0b61\u0b71\u0b83\u0b85-\u0b8a\u0b8e-\u0b90\u0b92-\u0b95\u0b99\u0b9a\u0b9c\u0b9e\u0b9f\u0ba3\u0ba4\u0ba8-\u0baa\u0bae-\u0bb9\u0bd0\u0c05-\u0c0c\u0c0e-\u0c10\u0c12-\u0c28\u0c2a-\u0c33\u0c35-\u0c39\u0c3d\u0c58\u0c59\u0c60\u0c61\u0c85-\u0c8c\u0c8e-\u0c90\u0c92-\u0ca8\u0caa-\u0cb3\u0cb5-\u0cb9\u0cbd\u0cde\u0ce0\u0ce1\u0cf1\u0cf2\u0d05-\u0d0c\u0d0e-\u0d10\u0d12-\u0d3a\u0d3d\u0d4e\u0d60\u0d61\u0d7a-\u0d7f\u0d85-\u0d96\u0d9a-\u0db1\u0db3-\u0dbb\u0dbd\u0dc0-\u0dc6\u0e01-\u0e30\u0e32\u0e33\u0e40-\u0e46\u0e81\u0e82\u0e84\u0e87\u0e88\u0e8a\u0e8d\u0e94-\u0e97\u0e99-\u0e9f\u0ea1-\u0ea3\u0ea5\u0ea7\u0eaa\u0eab\u0ead-\u0eb0\u0eb2\u0eb3\u0ebd\u0ec0-\u0ec4\u0ec6\u0edc-\u0edf\u0f00\u0f40-\u0f47\u0f49-\u0f6c\u0f88-\u0f8c\u1000-\u102a\u103f\u1050-\u1055\u105a-\u105d\u1061\u1065\u1066\u106e-\u1070\u1075-\u1081\u108e\u10a0-\u10c5\u10c7\u10cd\u10d0-\u10fa\u10fc-\u1248\u124a-\u124d\u1250-\u1256\u1258\u125a-\u125d\u1260-\u1288\u128a-\u128d\u1290-\u12b0\u12b2-\u12b5\u12b8-\u12be\u12c0\u12c2-\u12c5\u12c8-\u12d6\u12d8-\u1310\u1312-\u1315\u1318-\u135a\u1380-\u138f\u13a0-\u13f4\u1401-\u166c\u166f-\u167f\u1681-\u169a\u16a0-\u16ea\u16ee-\u16f0\u1700-\u170c\u170e-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176c\u176e-\u1770\u1780-\u17b3\u17d7\u17dc\u1820-\u1877\u1880-\u18a8\u18aa\u18b0-\u18f5\u1900-\u191c\u1950-\u196d\u1970-\u1974\u1980-\u19ab\u19c1-\u19c7\u1a00-\u1a16\u1a20-\u1a54\u1aa7\u1b05-\u1b33\u1b45-\u1b4b\u1b83-\u1ba0\u1bae\u1baf\u1bba-\u1be5\u1c00-\u1c23\u1c4d-\u1c4f\u1c5a-\u1c7d\u1ce9-\u1cec\u1cee-\u1cf1\u1cf5\u1cf6\u1d00-\u1dbf\u1e00-\u1f15\u1f18-\u1f1d\u1f20-\u1f45\u1f48-\u1f4d\u1f50-\u1f57\u1f59\u1f5b\u1f5d\u1f5f-\u1f7d\u1f80-\u1fb4\u1fb6-\u1fbc\u1fbe\u1fc2-\u1fc4\u1fc6-\u1fcc\u1fd0-\u1fd3\u1fd6-\u1fdb\u1fe0-\u1fec\u1ff2-\u1ff4\u1ff6-\u1ffc\u2071\u207f\u2090-\u209c\u2102\u2107\u210a-\u2113\u2115\u2119-\u211d\u2124\u2126\u2128\u212a-\u212d\u212f-\u2139\u213c-\u213f\u2145-\u2149\u214e\u2160-\u2188\u2c00-\u2c2e\u2c30-\u2c5e\u2c60-\u2ce4\u2ceb-\u2cee\u2cf2\u2cf3\u2d00-\u2d25\u2d27\u2d2d\u2d30-\u2d67\u2d6f\u2d80-\u2d96\u2da0-\u2da6\u2da8-\u2dae\u2db0-\u2db6\u2db8-\u2dbe\u2dc0-\u2dc6\u2dc8-\u2dce\u2dd0-\u2dd6\u2dd8-\u2dde\u2e2f\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303c\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fc-\u30ff\u3105-\u312d\u3131-\u318e\u31a0-\u31ba\u31f0-\u31ff\u3400-\u4db5\u4e00-\u9fcc\ua000-\ua48c\ua4d0-\ua4fd\ua500-\ua60c\ua610-\ua61f\ua62a\ua62b\ua640-\ua66e\ua67f-\ua697\ua6a0-\ua6ef\ua717-\ua71f\ua722-\ua788\ua78b-\ua78e\ua790-\ua793\ua7a0-\ua7aa\ua7f8-\ua801\ua803-\ua805\ua807-\ua80a\ua80c-\ua822\ua840-\ua873\ua882-\ua8b3\ua8f2-\ua8f7\ua8fb\ua90a-\ua925\ua930-\ua946\ua960-\ua97c\ua984-\ua9b2\ua9cf\uaa00-\uaa28\uaa40-\uaa42\uaa44-\uaa4b\uaa60-\uaa76\uaa7a\uaa80-\uaaaf\uaab1\uaab5\uaab6\uaab9-\uaabd\uaac0\uaac2\uaadb-\uaadd\uaae0-\uaaea\uaaf2-\uaaf4\uab01-\uab06\uab09-\uab0e\uab11-\uab16\uab20-\uab26\uab28-\uab2e\uabc0-\uabe2\uac00-\ud7a3\ud7b0-\ud7c6\ud7cb-\ud7fb\uf900-\ufa6d\ufa70-\ufad9\ufb00-\ufb06\ufb13-\ufb17\ufb1d\ufb1f-\ufb28\ufb2a-\ufb36\ufb38-\ufb3c\ufb3e\ufb40\ufb41\ufb43\ufb44\ufb46-\ufbb1\ufbd3-\ufd3d\ufd50-\ufd8f\ufd92-\ufdc7\ufdf0-\ufdfb\ufe70-\ufe74\ufe76-\ufefc\uff21-\uff3a\uff41-\uff5a\uff66-\uffbe\uffc2-\uffc7\uffca-\uffcf\uffd2-\uffd7\uffda-\uffdc][$A-Z\_a-z\xaa\xb5\xba\xc0-\xd6\xd8-\xf6\xf8-\u02c1\u02c6-\u02d1\u02e0-\u02e4\u02ec\u02ee\u0370-\u0374\u0376\u0377\u037a-\u037d\u0386\u0388-\u038a\u038c\u038e-\u03a1\u03a3-\u03f5\u03f7-\u0481\u048a-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05d0-\u05ea\u05f0-\u05f2\u0620-\u064a\u066e\u066f\u0671-\u06d3\u06d5\u06e5\u06e6\u06ee\u06ef\u06fa-\u06fc\u06ff\u0710\u0712-\u072f\u074d-\u07a5\u07b1\u07ca-\u07ea\u07f4\u07f5\u07fa\u0800-\u0815\u081a\u0824\u0828\u0840-\u0858\u08a0\u08a2-\u08ac\u0904-\u0939\u093d\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097f\u0985-\u098c\u098f\u0990\u0993-\u09a8\u09aa-\u09b0\u09b2\u09b6-\u09b9\u09bd\u09ce\u09dc\u09dd\u09df-\u09e1\u09f0\u09f1\u0a05-\u0a0a\u0a0f\u0a10\u0a13-\u0a28\u0a2a-\u0a30\u0a32\u0a33\u0a35\u0a36\u0a38\u0a39\u0a59-\u0a5c\u0a5e\u0a72-\u0a74\u0a85-\u0a8d\u0a8f-\u0a91\u0a93-\u0aa8\u0aaa-\u0ab0\u0ab2\u0ab3\u0ab5-\u0ab9\u0abd\u0ad0\u0ae0\u0ae1\u0b05-\u0b0c\u0b0f\u0b10\u0b13-\u0b28\u0b2a-\u0b30\u0b32\u0b33\u0b35-\u0b39\u0b3d\u0b5c\u0b5d\u0b5f-\u0b61\u0b71\u0b83\u0b85-\u0b8a\u0b8e-\u0b90\u0b92-\u0b95\u0b99\u0b9a\u0b9c\u0b9e\u0b9f\u0ba3\u0ba4\u0ba8-\u0baa\u0bae-\u0bb9\u0bd0\u0c05-\u0c0c\u0c0e-\u0c10\u0c12-\u0c28\u0c2a-\u0c33\u0c35-\u0c39\u0c3d\u0c58\u0c59\u0c60\u0c61\u0c85-\u0c8c\u0c8e-\u0c90\u0c92-\u0ca8\u0caa-\u0cb3\u0cb5-\u0cb9\u0cbd\u0cde\u0ce0\u0ce1\u0cf1\u0cf2\u0d05-\u0d0c\u0d0e-\u0d10\u0d12-\u0d3a\u0d3d\u0d4e\u0d60\u0d61\u0d7a-\u0d7f\u0d85-\u0d96\u0d9a-\u0db1\u0db3-\u0dbb\u0dbd\u0dc0-\u0dc6\u0e01-\u0e30\u0e32\u0e33\u0e40-\u0e46\u0e81\u0e82\u0e84\u0e87\u0e88\u0e8a\u0e8d\u0e94-\u0e97\u0e99-\u0e9f\u0ea1-\u0ea3\u0ea5\u0ea7\u0eaa\u0eab\u0ead-\u0eb0\u0eb2\u0eb3\u0ebd\u0ec0-\u0ec4\u0ec6\u0edc-\u0edf\u0f00\u0f40-\u0f47\u0f49-\u0f6c\u0f88-\u0f8c\u1000-\u102a\u103f\u1050-\u1055\u105a-\u105d\u1061\u1065\u1066\u106e-\u1070\u1075-\u1081\u108e\u10a0-\u10c5\u10c7\u10cd\u10d0-\u10fa\u10fc-\u1248\u124a-\u124d\u1250-\u1256\u1258\u125a-\u125d\u1260-\u1288\u128a-\u128d\u1290-\u12b0\u12b2-\u12b5\u12b8-\u12be\u12c0\u12c2-\u12c5\u12c8-\u12d6\u12d8-\u1310\u1312-\u1315\u1318-\u135a\u1380-\u138f\u13a0-\u13f4\u1401-\u166c\u166f-\u167f\u1681-\u169a\u16a0-\u16ea\u16ee-\u16f0\u1700-\u170c\u170e-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176c\u176e-\u1770\u1780-\u17b3\u17d7\u17dc\u1820-\u1877\u1880-\u18a8\u18aa\u18b0-\u18f5\u1900-\u191c\u1950-\u196d\u1970-\u1974\u1980-\u19ab\u19c1-\u19c7\u1a00-\u1a16\u1a20-\u1a54\u1aa7\u1b05-\u1b33\u1b45-\u1b4b\u1b83-\u1ba0\u1bae\u1baf\u1bba-\u1be5\u1c00-\u1c23\u1c4d-\u1c4f\u1c5a-\u1c7d\u1ce9-\u1cec\u1cee-\u1cf1\u1cf5\u1cf6\u1d00-\u1dbf\u1e00-\u1f15\u1f18-\u1f1d\u1f20-\u1f45\u1f48-\u1f4d\u1f50-\u1f57\u1f59\u1f5b\u1f5d\u1f5f-\u1f7d\u1f80-\u1fb4\u1fb6-\u1fbc\u1fbe\u1fc2-\u1fc4\u1fc6-\u1fcc\u1fd0-\u1fd3\u1fd6-\u1fdb\u1fe0-\u1fec\u1ff2-\u1ff4\u1ff6-\u1ffc\u2071\u207f\u2090-\u209c\u2102\u2107\u210a-\u2113\u2115\u2119-\u211d\u2124\u2126\u2128\u212a-\u212d\u212f-\u2139\u213c-\u213f\u2145-\u2149\u214e\u2160-\u2188\u2c00-\u2c2e\u2c30-\u2c5e\u2c60-\u2ce4\u2ceb-\u2cee\u2cf2\u2cf3\u2d00-\u2d25\u2d27\u2d2d\u2d30-\u2d67\u2d6f\u2d80-\u2d96\u2da0-\u2da6\u2da8-\u2dae\u2db0-\u2db6\u2db8-\u2dbe\u2dc0-\u2dc6\u2dc8-\u2dce\u2dd0-\u2dd6\u2dd8-\u2dde\u2e2f\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303c\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fc-\u30ff\u3105-\u312d\u3131-\u318e\u31a0-\u31ba\u31f0-\u31ff\u3400-\u4db5\u4e00-\u9fcc\ua000-\ua48c\ua4d0-\ua4fd\ua500-\ua60c\ua610-\ua61f\ua62a\ua62b\ua640-\ua66e\ua67f-\ua697\ua6a0-\ua6ef\ua717-\ua71f\ua722-\ua788\ua78b-\ua78e\ua790-\ua793\ua7a0-\ua7aa\ua7f8-\ua801\ua803-\ua805\ua807-\ua80a\ua80c-\ua822\ua840-\ua873\ua882-\ua8b3\ua8f2-\ua8f7\ua8fb\ua90a-\ua925\ua930-\ua946\ua960-\ua97c\ua984-\ua9b2\ua9cf\uaa00-\uaa28\uaa40-\uaa42\uaa44-\uaa4b\uaa60-\uaa76\uaa7a\uaa80-\uaaaf\uaab1\uaab5\uaab6\uaab9-\uaabd\uaac0\uaac2\uaadb-\uaadd\uaae0-\uaaea\uaaf2-\uaaf4\uab01-\uab06\uab09-\uab0e\uab11-\uab16\uab20-\uab26\uab28-\uab2e\uabc0-\uabe2\uac00-\ud7a3\ud7b0-\ud7c6\ud7cb-\ud7fb\uf900-\ufa6d\ufa70-\ufad9\ufb00-\ufb06\ufb13-\ufb17\ufb1d\ufb1f-\ufb28\ufb2a-\ufb36\ufb38-\ufb3c\ufb3e\ufb40\ufb41\ufb43\ufb44\ufb46-\ufbb1\ufbd3-\ufd3d\ufd50-\ufd8f\ufd92-\ufdc7\ufdf0-\ufdfb\ufe70-\ufe74\ufe76-\ufefc\uff21-\uff3a\uff41-\uff5a\uff66-\uffbe\uffc2-\uffc7\uffca-\uffcf\uffd2-\uffd7\uffda-\uffdc0-9\u0300-\u036f\u0483-\u0487\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7\u0610-\u061a\u064b-\u0669\u0670\u06d6-\u06dc\u06df-\u06e4\u06e7\u06e8\u06ea-\u06ed\u06f0-\u06f9\u0711\u0730-\u074a\u07a6-\u07b0\u07c0-\u07c9\u07eb-\u07f3\u0816-\u0819\u081b-\u0823\u0825-\u0827\u0829-\u082d\u0859-\u085b\u08e4-\u08fe\u0900-\u0903\u093a-\u093c\u093e-\u094f\u0951-\u0957\u0962\u0963\u0966-\u096f\u0981-\u0983\u09bc\u09be-\u09c4\u09c7\u09c8\u09cb-\u09cd\u09d7\u09e2\u09e3\u09e6-\u09ef\u0a01-\u0a03\u0a3c\u0a3e-\u0a42\u0a47\u0a48\u0a4b-\u0a4d\u0a51\u0a66-\u0a71\u0a75\u0a81-\u0a83\u0abc\u0abe-\u0ac5\u0ac7-\u0ac9\u0acb-\u0acd\u0ae2\u0ae3\u0ae6-\u0aef\u0b01-\u0b03\u0b3c\u0b3e-\u0b44\u0b47\u0b48\u0b4b-\u0b4d\u0b56\u0b57\u0b62\u0b63\u0b66-\u0b6f\u0b82\u0bbe-\u0bc2\u0bc6-\u0bc8\u0bca-\u0bcd\u0bd7\u0be6-\u0bef\u0c01-\u0c03\u0c3e-\u0c44\u0c46-\u0c48\u0c4a-\u0c4d\u0c55\u0c56\u0c62\u0c63\u0c66-\u0c6f\u0c82\u0c83\u0cbc\u0cbe-\u0cc4\u0cc6-\u0cc8\u0cca-\u0ccd\u0cd5\u0cd6\u0ce2\u0ce3\u0ce6-\u0cef\u0d02\u0d03\u0d3e-\u0d44\u0d46-\u0d48\u0d4a-\u0d4d\u0d57\u0d62\u0d63\u0d66-\u0d6f\u0d82\u0d83\u0dca\u0dcf-\u0dd4\u0dd6\u0dd8-\u0ddf\u0df2\u0df3\u0e31\u0e34-\u0e3a\u0e47-\u0e4e\u0e50-\u0e59\u0eb1\u0eb4-\u0eb9\u0ebb\u0ebc\u0ec8-\u0ecd\u0ed0-\u0ed9\u0f18\u0f19\u0f20-\u0f29\u0f35\u0f37\u0f39\u0f3e\u0f3f\u0f71-\u0f84\u0f86\u0f87\u0f8d-\u0f97\u0f99-\u0fbc\u0fc6\u102b-\u103e\u1040-\u1049\u1056-\u1059\u105e-\u1060\u1062-\u1064\u1067-\u106d\u1071-\u1074\u1082-\u108d\u108f-\u109d\u135d-\u135f\u1712-\u1714\u1732-\u1734\u1752\u1753\u1772\u1773\u17b4-\u17d3\u17dd\u17e0-\u17e9\u180b-\u180d\u1810-\u1819\u18a9\u1920-\u192b\u1930-\u193b\u1946-\u194f\u19b0-\u19c0\u19c8\u19c9\u19d0-\u19d9\u1a17-\u1a1b\u1a55-\u1a5e\u1a60-\u1a7c\u1a7f-\u1a89\u1a90-\u1a99\u1b00-\u1b04\u1b34-\u1b44\u1b50-\u1b59\u1b6b-\u1b73\u1b80-\u1b82\u1ba1-\u1bad\u1bb0-\u1bb9\u1be6-\u1bf3\u1c24-\u1c37\u1c40-\u1c49\u1c50-\u1c59\u1cd0-\u1cd2\u1cd4-\u1ce8\u1ced\u1cf2-\u1cf4\u1dc0-\u1de6\u1dfc-\u1dff\u200c\u200d\u203f\u2040\u2054\u20d0-\u20dc\u20e1\u20e5-\u20f0\u2cef-\u2cf1\u2d7f\u2de0-\u2dff\u302a-\u302f\u3099\u309a\ua620-\ua629\ua66f\ua674-\ua67d\ua69f\ua6f0\ua6f1\ua802\ua806\ua80b\ua823-\ua827\ua880\ua881\ua8b4-\ua8c4\ua8d0-\ua8d9\ua8e0-\ua8f1\ua900-\ua909\ua926-\ua92d\ua947-\ua953\ua980-\ua983\ua9b3-\ua9c0\ua9d0-\ua9d9\uaa29-\uaa36\uaa43\uaa4c\uaa4d\uaa50-\uaa59\uaa7b\uaab0\uaab2-\uaab4\uaab7\uaab8\uaabe\uaabf\uaac1\uaaeb-\uaaef\uaaf5\uaaf6\uabe3-\uabea\uabec\uabed\uabf0-\uabf9\ufb1e\ufe00-\ufe0f\ufe20-\ufe26\ufe33\ufe34\ufe4d-\ufe4f\uff10-\uff19\uff3f]*$/.test(str)
 }
 module.exports = isProperty
-},{}],329:[function(require,module,exports){
+},{}],317:[function(require,module,exports){
 var hasExcape = /~/
 var escapeMatcher = /~[01]/g
 function escapeReplacer (m) {
@@ -51135,14 +48961,14 @@ exports.get = get
 exports.set = set
 exports.compile = compile
 
-},{}],330:[function(require,module,exports){
-arguments[4][280][0].apply(exports,arguments)
-},{"dup":280}],331:[function(require,module,exports){
+},{}],318:[function(require,module,exports){
+arguments[4][268][0].apply(exports,arguments)
+},{"dup":268}],319:[function(require,module,exports){
 'use strict';
 
 module.exports = typeof Promise === 'function' ? Promise : require('pinkie');
 
-},{"pinkie":332}],332:[function(require,module,exports){
+},{"pinkie":320}],320:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -51438,7 +49264,7 @@ Promise.reject = function (reason) {
 module.exports = Promise;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],333:[function(require,module,exports){
+},{}],321:[function(require,module,exports){
 /*
     HTTP Hawk Authentication Scheme
     Copyright (c) 2012-2014, Eran Hammer <eran@hammer.io>
@@ -52077,7 +49903,7 @@ if (typeof module !== 'undefined' && module.exports) {
 /* eslint-enable */
 // $lab:coverage:on$
 
-},{}],334:[function(require,module,exports){
+},{}],322:[function(require,module,exports){
 // Copyright 2015 Joyent, Inc.
 
 var parser = require('./parser');
@@ -52108,7 +49934,7 @@ module.exports = {
   verifyHMAC: verify.verifyHMAC
 };
 
-},{"./parser":335,"./signer":336,"./utils":337,"./verify":338}],335:[function(require,module,exports){
+},{"./parser":323,"./signer":324,"./utils":325,"./verify":326}],323:[function(require,module,exports){
 // Copyright 2012 Joyent, Inc.  All rights reserved.
 
 var assert = require('assert-plus');
@@ -52428,7 +50254,7 @@ module.exports = {
 
 };
 
-},{"./utils":337,"assert-plus":339,"util":277}],336:[function(require,module,exports){
+},{"./utils":325,"assert-plus":327,"util":265}],324:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2012 Joyent, Inc.  All rights reserved.
 
@@ -52831,7 +50657,7 @@ module.exports = {
 };
 
 }).call(this,{"isBuffer":require("../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":242,"./utils":337,"assert-plus":339,"crypto":46,"http":266,"jsprim":340,"sshpk":361,"util":277}],337:[function(require,module,exports){
+},{"../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":230,"./utils":325,"assert-plus":327,"crypto":34,"http":254,"jsprim":328,"sshpk":349,"util":265}],325:[function(require,module,exports){
 // Copyright 2012 Joyent, Inc.  All rights reserved.
 
 var assert = require('assert-plus');
@@ -52945,7 +50771,7 @@ module.exports = {
   }
 };
 
-},{"assert-plus":339,"sshpk":361,"util":277}],338:[function(require,module,exports){
+},{"assert-plus":327,"sshpk":349,"util":265}],326:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -53037,7 +50863,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./utils":337,"assert-plus":339,"buffer":42,"crypto":46,"sshpk":361}],339:[function(require,module,exports){
+},{"./utils":325,"assert-plus":327,"buffer":30,"crypto":34,"sshpk":349}],327:[function(require,module,exports){
 (function (Buffer,process){
 // Copyright (c) 2012, Mark Cavage. All rights reserved.
 // Copyright 2015 Joyent, Inc.
@@ -53247,7 +51073,7 @@ function _setExports(ndebug) {
 module.exports = _setExports(process.env.NODE_NDEBUG);
 
 }).call(this,{"isBuffer":require("../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")},require('_process'))
-},{"../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":242,"_process":244,"assert":27,"stream":265,"util":277}],340:[function(require,module,exports){
+},{"../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":230,"_process":232,"assert":15,"stream":253,"util":265}],328:[function(require,module,exports){
 /*
  * lib/jsprim.js: utilities for primitive JavaScript types
  */
@@ -53737,7 +51563,7 @@ function mergeObjects(provided, overrides, defaults)
 	return (rv);
 }
 
-},{"assert":27,"extsprintf":341,"json-schema":342,"util":277,"verror":343}],341:[function(require,module,exports){
+},{"assert":15,"extsprintf":329,"json-schema":330,"util":265,"verror":331}],329:[function(require,module,exports){
 /*
  * extsprintf.js: extended POSIX-style sprintf
  */
@@ -53905,7 +51731,7 @@ function dumpException(ex)
 	return (ret);
 }
 
-},{"assert":27,"util":277}],342:[function(require,module,exports){
+},{"assert":15,"util":265}],330:[function(require,module,exports){
 /**
  * JSONSchema Validator - Validates JavaScript objects using JSON Schemas
  *	(http://www.json.com/json-schema-proposal/)
@@ -54180,7 +52006,7 @@ exports.mustBeValid = function(result){
 return exports;
 }));
 
-},{}],343:[function(require,module,exports){
+},{}],331:[function(require,module,exports){
 /*
  * verror.js: richer JavaScript errors
  */
@@ -54339,7 +52165,7 @@ WError.prototype.cause = function we_cause(c)
 	return (this.we_cause);
 };
 
-},{"assert":27,"extsprintf":341,"util":277}],344:[function(require,module,exports){
+},{"assert":15,"extsprintf":329,"util":265}],332:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -54511,7 +52337,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],345:[function(require,module,exports){
+},{"buffer":30}],333:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2016 Joyent, Inc.
 
@@ -54806,7 +52632,7 @@ Certificate._oldVersionDetect = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":344,"./errors":348,"./fingerprint":349,"./formats/openssh-cert":351,"./formats/x509":359,"./formats/x509-pem":358,"./identity":360,"./key":362,"./private-key":363,"./signature":364,"./utils":366,"assert-plus":373,"buffer":42,"crypto":46,"util":277}],346:[function(require,module,exports){
+},{"./algs":332,"./errors":336,"./fingerprint":337,"./formats/openssh-cert":339,"./formats/x509":347,"./formats/x509-pem":346,"./identity":348,"./key":350,"./private-key":351,"./signature":352,"./utils":354,"assert-plus":361,"buffer":30,"crypto":34,"util":265}],334:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -55121,7 +52947,7 @@ ECPrivate.prototype.deriveSharedSecret = function (pubKey) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":344,"./key":362,"./private-key":363,"./utils":366,"assert-plus":373,"buffer":42,"crypto":46,"ecc-jsbn":375,"ecc-jsbn/lib/ec":376,"jodid25519":378,"jsbn":384}],347:[function(require,module,exports){
+},{"./algs":332,"./key":350,"./private-key":351,"./utils":354,"assert-plus":361,"buffer":30,"crypto":34,"ecc-jsbn":363,"ecc-jsbn/lib/ec":364,"jodid25519":366,"jsbn":372}],335:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -55221,7 +53047,7 @@ Signer.prototype.sign = function () {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./signature":364,"assert-plus":373,"buffer":42,"stream":265,"tweetnacl":385,"util":277}],348:[function(require,module,exports){
+},{"./signature":352,"assert-plus":361,"buffer":30,"stream":253,"tweetnacl":373,"util":265}],336:[function(require,module,exports){
 // Copyright 2015 Joyent, Inc.
 
 var assert = require('assert-plus');
@@ -55307,7 +53133,7 @@ module.exports = {
 	CertificateParseError: CertificateParseError
 };
 
-},{"assert-plus":373,"util":277}],349:[function(require,module,exports){
+},{"assert-plus":361,"util":265}],337:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -55472,7 +53298,7 @@ Fingerprint._oldVersionDetect = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":344,"./certificate":345,"./errors":348,"./key":362,"./utils":366,"assert-plus":373,"buffer":42,"crypto":46}],350:[function(require,module,exports){
+},{"./algs":332,"./certificate":333,"./errors":336,"./key":350,"./utils":354,"assert-plus":361,"buffer":30,"crypto":34}],338:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -55549,7 +53375,7 @@ function write(key, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../key":362,"../private-key":363,"../utils":366,"./pem":352,"./rfc4253":355,"./ssh":357,"assert-plus":373,"buffer":42}],351:[function(require,module,exports){
+},{"../key":350,"../private-key":351,"../utils":354,"./pem":340,"./rfc4253":343,"./ssh":345,"assert-plus":361,"buffer":30}],339:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2016 Joyent, Inc.
 
@@ -55842,7 +53668,7 @@ function getCertType(key) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":344,"../certificate":345,"../identity":360,"../key":362,"../private-key":363,"../signature":364,"../ssh-buffer":365,"../utils":366,"./rfc4253":355,"assert-plus":373,"buffer":42,"crypto":46}],352:[function(require,module,exports){
+},{"../algs":332,"../certificate":333,"../identity":348,"../key":350,"../private-key":351,"../signature":352,"../ssh-buffer":353,"../utils":354,"./rfc4253":343,"assert-plus":361,"buffer":30,"crypto":34}],340:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -56032,7 +53858,7 @@ function write(key, options, type) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":344,"../errors":348,"../key":362,"../private-key":363,"../utils":366,"./pkcs1":353,"./pkcs8":354,"./rfc4253":355,"./ssh-private":356,"asn1":372,"assert-plus":373,"buffer":42,"crypto":46}],353:[function(require,module,exports){
+},{"../algs":332,"../errors":336,"../key":350,"../private-key":351,"../utils":354,"./pkcs1":341,"./pkcs8":342,"./rfc4253":343,"./ssh-private":344,"asn1":360,"assert-plus":361,"buffer":30,"crypto":34}],341:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -56356,7 +54182,7 @@ function writePkcs1ECDSAPrivate(der, key) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":344,"../key":362,"../private-key":363,"../utils":366,"./pem":352,"./pkcs8":354,"asn1":372,"assert-plus":373,"buffer":42}],354:[function(require,module,exports){
+},{"../algs":332,"../key":350,"../private-key":351,"../utils":354,"./pem":340,"./pkcs8":342,"asn1":360,"assert-plus":361,"buffer":30}],342:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -56865,7 +54691,7 @@ function writePkcs8ECDSAPrivate(key, der) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":344,"../key":362,"../private-key":363,"../utils":366,"./pem":352,"asn1":372,"assert-plus":373,"buffer":42}],355:[function(require,module,exports){
+},{"../algs":332,"../key":350,"../private-key":351,"../utils":354,"./pem":340,"asn1":360,"assert-plus":361,"buffer":30}],343:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -57015,7 +54841,7 @@ function write(key, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":344,"../key":362,"../private-key":363,"../ssh-buffer":365,"../utils":366,"assert-plus":373,"buffer":42}],356:[function(require,module,exports){
+},{"../algs":332,"../key":350,"../private-key":351,"../ssh-buffer":353,"../utils":354,"assert-plus":361,"buffer":30}],344:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -57280,7 +55106,7 @@ function write(key, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":344,"../errors":348,"../key":362,"../private-key":363,"../ssh-buffer":365,"../utils":366,"./pem":352,"./rfc4253":355,"asn1":372,"assert-plus":373,"bcrypt-pbkdf":374,"buffer":42,"crypto":46}],357:[function(require,module,exports){
+},{"../algs":332,"../errors":336,"../key":350,"../private-key":351,"../ssh-buffer":353,"../utils":354,"./pem":340,"./rfc4253":343,"asn1":360,"assert-plus":361,"bcrypt-pbkdf":362,"buffer":30,"crypto":34}],345:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -57398,7 +55224,7 @@ function write(key, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../key":362,"../private-key":363,"../utils":366,"./rfc4253":355,"./ssh-private":356,"assert-plus":373,"buffer":42}],358:[function(require,module,exports){
+},{"../key":350,"../private-key":351,"../utils":354,"./rfc4253":343,"./ssh-private":344,"assert-plus":361,"buffer":30}],346:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2016 Joyent, Inc.
 
@@ -57479,7 +55305,7 @@ function write(cert, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":344,"../certificate":345,"../identity":360,"../key":362,"../private-key":363,"../signature":364,"../utils":366,"./pem":352,"./x509":359,"asn1":372,"assert-plus":373,"buffer":42}],359:[function(require,module,exports){
+},{"../algs":332,"../certificate":333,"../identity":348,"../key":350,"../private-key":351,"../signature":352,"../utils":354,"./pem":340,"./x509":347,"asn1":360,"assert-plus":361,"buffer":30}],347:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2016 Joyent, Inc.
 
@@ -57967,7 +55793,7 @@ function writeTBSCert(cert, der) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":344,"../certificate":345,"../identity":360,"../key":362,"../private-key":363,"../signature":364,"../utils":366,"./pem":352,"./pkcs8":354,"asn1":372,"assert-plus":373,"buffer":42}],360:[function(require,module,exports){
+},{"../algs":332,"../certificate":333,"../identity":348,"../key":350,"../private-key":351,"../signature":352,"../utils":354,"./pem":340,"./pkcs8":342,"asn1":360,"assert-plus":361,"buffer":30}],348:[function(require,module,exports){
 // Copyright 2016 Joyent, Inc.
 
 module.exports = Identity;
@@ -58224,7 +56050,7 @@ Identity._oldVersionDetect = function (obj) {
 	return ([1, 0]);
 };
 
-},{"./algs":344,"./errors":348,"./fingerprint":349,"./signature":364,"./utils":366,"asn1":372,"assert-plus":373,"crypto":46,"util":277}],361:[function(require,module,exports){
+},{"./algs":332,"./errors":336,"./fingerprint":337,"./signature":352,"./utils":354,"asn1":360,"assert-plus":361,"crypto":34,"util":265}],349:[function(require,module,exports){
 // Copyright 2015 Joyent, Inc.
 
 var Key = require('./key');
@@ -58264,7 +56090,7 @@ module.exports = {
 	CertificateParseError: errs.CertificateParseError
 };
 
-},{"./certificate":345,"./errors":348,"./fingerprint":349,"./identity":360,"./key":362,"./private-key":363,"./signature":364}],362:[function(require,module,exports){
+},{"./certificate":333,"./errors":336,"./fingerprint":337,"./identity":348,"./key":350,"./private-key":351,"./signature":352}],350:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -58538,7 +56364,7 @@ Key._oldVersionDetect = function (obj) {
 };
 
 }).call(this,{"isBuffer":require("../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":242,"./algs":344,"./dhe":346,"./ed-compat":347,"./errors":348,"./fingerprint":349,"./formats/auto":350,"./formats/pem":352,"./formats/pkcs1":353,"./formats/pkcs8":354,"./formats/rfc4253":355,"./formats/ssh":357,"./formats/ssh-private":356,"./private-key":363,"./signature":364,"./utils":366,"assert-plus":373,"crypto":46}],363:[function(require,module,exports){
+},{"../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":230,"./algs":332,"./dhe":334,"./ed-compat":335,"./errors":336,"./fingerprint":337,"./formats/auto":338,"./formats/pem":340,"./formats/pkcs1":341,"./formats/pkcs8":342,"./formats/rfc4253":343,"./formats/ssh":345,"./formats/ssh-private":344,"./private-key":351,"./signature":352,"./utils":354,"assert-plus":361,"crypto":34}],351:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -58773,7 +56599,7 @@ PrivateKey._oldVersionDetect = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":344,"./ed-compat":347,"./errors":348,"./fingerprint":349,"./formats/auto":350,"./formats/pem":352,"./formats/pkcs1":353,"./formats/pkcs8":354,"./formats/rfc4253":355,"./formats/ssh-private":356,"./key":362,"./signature":364,"./utils":366,"assert-plus":373,"buffer":42,"crypto":46,"jodid25519":378,"util":277}],364:[function(require,module,exports){
+},{"./algs":332,"./ed-compat":335,"./errors":336,"./fingerprint":337,"./formats/auto":338,"./formats/pem":340,"./formats/pkcs1":341,"./formats/pkcs8":342,"./formats/rfc4253":343,"./formats/ssh-private":344,"./key":350,"./signature":352,"./utils":354,"assert-plus":361,"buffer":30,"crypto":34,"jodid25519":366,"util":265}],352:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -59022,7 +56848,7 @@ Signature._oldVersionDetect = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":344,"./errors":348,"./ssh-buffer":365,"./utils":366,"asn1":372,"assert-plus":373,"buffer":42,"crypto":46}],365:[function(require,module,exports){
+},{"./algs":332,"./errors":336,"./ssh-buffer":353,"./utils":354,"asn1":360,"assert-plus":361,"buffer":30,"crypto":34}],353:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -59174,7 +57000,7 @@ SSHBuffer.prototype.write = function (buf) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert-plus":373,"buffer":42}],366:[function(require,module,exports){
+},{"assert-plus":361,"buffer":30}],354:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -59466,7 +57292,7 @@ function opensshCipherInfo(cipher) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./private-key":363,"assert-plus":373,"buffer":42,"crypto":46,"jsbn":384}],367:[function(require,module,exports){
+},{"./private-key":351,"assert-plus":361,"buffer":30,"crypto":34,"jsbn":372}],355:[function(require,module,exports){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 
@@ -59481,7 +57307,7 @@ module.exports = {
 
 };
 
-},{}],368:[function(require,module,exports){
+},{}],356:[function(require,module,exports){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 var errors = require('./errors');
@@ -59510,7 +57336,7 @@ for (var e in errors) {
     module.exports[e] = errors[e];
 }
 
-},{"./errors":367,"./reader":369,"./types":370,"./writer":371}],369:[function(require,module,exports){
+},{"./errors":355,"./reader":357,"./types":358,"./writer":359}],357:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
@@ -59775,7 +57601,7 @@ Reader.prototype._readTag = function(tag) {
 module.exports = Reader;
 
 }).call(this,require("buffer").Buffer)
-},{"./errors":367,"./types":370,"assert":27,"buffer":42}],370:[function(require,module,exports){
+},{"./errors":355,"./types":358,"assert":15,"buffer":30}],358:[function(require,module,exports){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 
@@ -59813,7 +57639,7 @@ module.exports = {
   Context: 128
 };
 
-},{}],371:[function(require,module,exports){
+},{}],359:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
@@ -60133,7 +57959,7 @@ Writer.prototype._ensure = function(len) {
 module.exports = Writer;
 
 }).call(this,require("buffer").Buffer)
-},{"./errors":367,"./types":370,"assert":27,"buffer":42}],372:[function(require,module,exports){
+},{"./errors":355,"./types":358,"assert":15,"buffer":30}],360:[function(require,module,exports){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 // If you have no idea what ASN.1 or BER is, see this:
@@ -60155,7 +57981,7 @@ module.exports = {
 
 };
 
-},{"./ber/index":368}],373:[function(require,module,exports){
+},{"./ber/index":356}],361:[function(require,module,exports){
 (function (Buffer,process){
 // Copyright (c) 2012, Mark Cavage. All rights reserved.
 // Copyright 2015 Joyent, Inc.
@@ -60370,7 +58196,7 @@ function _setExports(ndebug) {
 module.exports = _setExports(process.env.NODE_NDEBUG);
 
 }).call(this,{"isBuffer":require("../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")},require('_process'))
-},{"../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":242,"_process":244,"assert":27,"stream":265,"util":277}],374:[function(require,module,exports){
+},{"../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":230,"_process":232,"assert":15,"stream":253,"util":265}],362:[function(require,module,exports){
 'use strict';
 
 var crypto_hash_sha512 = require('tweetnacl').lowlevel.crypto_hash;
@@ -60931,7 +58757,7 @@ module.exports = {
       pbkdf: bcrypt_pbkdf
 };
 
-},{"tweetnacl":385}],375:[function(require,module,exports){
+},{"tweetnacl":373}],363:[function(require,module,exports){
 (function (Buffer){
 var crypto = require("crypto");
 var BigInteger = require("jsbn").BigInteger;
@@ -60992,7 +58818,7 @@ exports.ECKey = function(curve, key, isPublic)
 
 
 }).call(this,require("buffer").Buffer)
-},{"./lib/ec.js":376,"./lib/sec.js":377,"buffer":42,"crypto":46,"jsbn":384}],376:[function(require,module,exports){
+},{"./lib/ec.js":364,"./lib/sec.js":365,"buffer":30,"crypto":34,"jsbn":372}],364:[function(require,module,exports){
 // Basic Javascript Elliptic Curve implementation
 // Ported loosely from BouncyCastle's Java EC code
 // Only Fp curves implemented for now
@@ -61555,7 +59381,7 @@ var exports = {
 
 module.exports = exports
 
-},{"jsbn":384}],377:[function(require,module,exports){
+},{"jsbn":372}],365:[function(require,module,exports){
 // Named EC curves
 
 // Requires ec.js, jsbn.js, and jsbn2.js
@@ -61727,7 +59553,7 @@ module.exports = {
   "secp256r1":secp256r1
 }
 
-},{"./ec.js":376,"jsbn":384}],378:[function(require,module,exports){
+},{"./ec.js":364,"jsbn":372}],366:[function(require,module,exports){
 "use strict";
 
 /*
@@ -61764,7 +59590,7 @@ var utils = require('./lib/utils');
 
 module.exports = ns;
 
-},{"./lib/curve255":380,"./lib/dh":381,"./lib/eddsa":382,"./lib/utils":383}],379:[function(require,module,exports){
+},{"./lib/curve255":368,"./lib/dh":369,"./lib/eddsa":370,"./lib/utils":371}],367:[function(require,module,exports){
 "use strict";
 /**
  * @fileOverview
@@ -62247,7 +60073,7 @@ var crypto = require('crypto');
 
 module.exports = ns;
 
-},{"crypto":46}],380:[function(require,module,exports){
+},{"crypto":34}],368:[function(require,module,exports){
 "use strict";
 /**
  * @fileOverview
@@ -62470,7 +60296,7 @@ var utils = require('./utils');
 
 module.exports = ns;
 
-},{"./core":379,"./utils":383}],381:[function(require,module,exports){
+},{"./core":367,"./utils":371}],369:[function(require,module,exports){
 (function (Buffer){
 "use strict";
 /**
@@ -62585,7 +60411,7 @@ var curve255 = require('./curve255');
 module.exports = ns;
 
 }).call(this,require("buffer").Buffer)
-},{"./core":379,"./curve255":380,"./utils":383,"buffer":42}],382:[function(require,module,exports){
+},{"./core":367,"./curve255":368,"./utils":371,"buffer":30}],370:[function(require,module,exports){
 (function (Buffer){
 "use strict";
 /**
@@ -63162,7 +60988,7 @@ var crypto = require('crypto');
 module.exports = ns;
 
 }).call(this,{"isBuffer":require("../../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":242,"./core":379,"./curve255":380,"./utils":383,"crypto":46,"jsbn":384}],383:[function(require,module,exports){
+},{"../../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":230,"./core":367,"./curve255":368,"./utils":371,"crypto":34,"jsbn":372}],371:[function(require,module,exports){
 "use strict";
 /**
  * @fileOverview
@@ -63362,7 +61188,7 @@ var core = require('./core');
 
 module.exports = ns;
 
-},{"./core":379}],384:[function(require,module,exports){
+},{"./core":367}],372:[function(require,module,exports){
 (function(){
 
     // Copyright (c) 2005  Tom Wu
@@ -64722,7 +62548,7 @@ module.exports = ns;
 
 }).call(this);
 
-},{}],385:[function(require,module,exports){
+},{}],373:[function(require,module,exports){
 (function(nacl) {
 'use strict';
 
@@ -67112,7 +64938,7 @@ nacl.setPRNG = function(fn) {
 
 })(typeof module !== 'undefined' && module.exports ? module.exports : (self.nacl = self.nacl || {}));
 
-},{"crypto":28}],386:[function(require,module,exports){
+},{"crypto":16}],374:[function(require,module,exports){
 module.exports      = isTypedArray
 isTypedArray.strict = isStrictTypedArray
 isTypedArray.loose  = isLooseTypedArray
@@ -67155,7 +64981,7 @@ function isLooseTypedArray(arr) {
   return names[toString.call(arr)]
 }
 
-},{}],387:[function(require,module,exports){
+},{}],375:[function(require,module,exports){
 var stream = require('stream')
 
 
@@ -67184,7 +65010,7 @@ module.exports.isReadable = isReadable
 module.exports.isWritable = isWritable
 module.exports.isDuplex   = isDuplex
 
-},{"stream":265}],388:[function(require,module,exports){
+},{"stream":253}],376:[function(require,module,exports){
 exports = module.exports = stringify
 exports.getSerialize = serializer
 
@@ -67213,7 +65039,7 @@ function serializer(replacer, cycleReplacer) {
   }
 }
 
-},{}],389:[function(require,module,exports){
+},{}],377:[function(require,module,exports){
 /*!
  * mime-types
  * Copyright(c) 2014 Jonathan Ong
@@ -67403,7 +65229,7 @@ function populateMaps (extensions, types) {
   })
 }
 
-},{"mime-db":391,"path":243}],390:[function(require,module,exports){
+},{"mime-db":379,"path":231}],378:[function(require,module,exports){
 module.exports={
   "application/1d-interleaved-parityfec": {
     "source": "iana"
@@ -74117,7 +71943,7 @@ module.exports={
   }
 }
 
-},{}],391:[function(require,module,exports){
+},{}],379:[function(require,module,exports){
 /*!
  * mime-db
  * Copyright(c) 2014 Jonathan Ong
@@ -74130,7 +71956,7 @@ module.exports={
 
 module.exports = require('./db.json')
 
-},{"./db.json":390}],392:[function(require,module,exports){
+},{"./db.json":378}],380:[function(require,module,exports){
 var crypto = require('crypto')
   , qs = require('querystring')
   ;
@@ -74268,7 +72094,7 @@ exports.rfc3986 = rfc3986
 exports.generateBase = generateBase
 
 
-},{"crypto":46,"querystring":248}],393:[function(require,module,exports){
+},{"crypto":34,"querystring":236}],381:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -74288,7 +72114,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],394:[function(require,module,exports){
+},{}],382:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -74301,7 +72127,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":393,"./parse":395,"./stringify":396}],395:[function(require,module,exports){
+},{"./formats":381,"./parse":383,"./stringify":384}],383:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -74469,7 +72295,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":397}],396:[function(require,module,exports){
+},{"./utils":385}],384:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -74658,7 +72484,7 @@ module.exports = function (object, opts) {
     return keys.join(delimiter);
 };
 
-},{"./formats":393,"./utils":397}],397:[function(require,module,exports){
+},{"./formats":381,"./utils":385}],385:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
@@ -74840,7 +72666,7 @@ exports.isBuffer = function (obj) {
     return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
 };
 
-},{}],398:[function(require,module,exports){
+},{}],386:[function(require,module,exports){
 (function (Buffer){
 var util = require('util')
 var Stream = require('stream')
@@ -74946,7 +72772,7 @@ function alignedWrite(buffer) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"stream":265,"string_decoder":272,"util":277}],399:[function(require,module,exports){
+},{"buffer":30,"stream":253,"string_decoder":260,"util":265}],387:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -76284,7 +74110,7 @@ module.exports = {
   canonicalDomain: canonicalDomain
 };
 
-},{"../package.json":405,"./memstore":400,"./pathMatch":401,"./permuteDomain":402,"./pubsuffix":403,"./store":404,"net":26,"punycode":245,"url":273}],400:[function(require,module,exports){
+},{"../package.json":393,"./memstore":388,"./pathMatch":389,"./permuteDomain":390,"./pubsuffix":391,"./store":392,"net":14,"punycode":233,"url":261}],388:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -76456,7 +74282,7 @@ MemoryCookieStore.prototype.getAllCookies = function(cb) {
   cb(null, cookies);
 };
 
-},{"./pathMatch":401,"./permuteDomain":402,"./store":404,"util":277}],401:[function(require,module,exports){
+},{"./pathMatch":389,"./permuteDomain":390,"./store":392,"util":265}],389:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -76519,7 +74345,7 @@ function pathMatch (reqPath, cookiePath) {
 
 exports.pathMatch = pathMatch;
 
-},{}],402:[function(require,module,exports){
+},{}],390:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -76577,7 +74403,7 @@ function permuteDomain (domain) {
 
 exports.permuteDomain = permuteDomain;
 
-},{"./pubsuffix":403}],403:[function(require,module,exports){
+},{"./pubsuffix":391}],391:[function(require,module,exports){
 /****************************************************
  * AUTOMATICALLY GENERATED by generate-pubsuffix.js *
  *                  DO NOT EDIT!                    *
@@ -76677,7 +74503,7 @@ var index = module.exports.index = Object.freeze(
 
 // END of automatically generated file
 
-},{"punycode":245}],404:[function(require,module,exports){
+},{"punycode":233}],392:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -76750,7 +74576,7 @@ Store.prototype.getAllCookies = function(cb) {
   throw new Error('getAllCookies is not implemented (therefore jar cannot be serialized)');
 };
 
-},{}],405:[function(require,module,exports){
+},{}],393:[function(require,module,exports){
 module.exports={
   "author": {
     "name": "Jeremy Stashewsky",
@@ -76853,7 +74679,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.3.2.tgz"
 }
 
-},{}],406:[function(require,module,exports){
+},{}],394:[function(require,module,exports){
 (function (process,Buffer){
 'use strict'
 
@@ -77100,7 +74926,7 @@ if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
 exports.debug = debug // for test
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":244,"assert":27,"buffer":42,"events":239,"http":266,"https":240,"net":26,"tls":26,"util":277}],407:[function(require,module,exports){
+},{"_process":232,"assert":15,"buffer":30,"events":227,"http":254,"https":228,"net":14,"tls":14,"util":265}],395:[function(require,module,exports){
 (function (global){
 
 var rng;
@@ -77136,7 +74962,7 @@ module.exports = rng;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],408:[function(require,module,exports){
+},{}],396:[function(require,module,exports){
 // Unique ID creation requires a high quality random # generator.  We feature
 // detect to determine the best RNG source, normalizing to a function that
 // returns 128-bits of randomness, since that's what's usually required
@@ -77295,7 +75121,7 @@ uuid.v4 = v4;
 
 module.exports = uuid;
 
-},{"./lib/rng":407}],409:[function(require,module,exports){
+},{"./lib/rng":395}],397:[function(require,module,exports){
 (function (process,Buffer){
 'use strict'
 
@@ -78774,7 +76600,7 @@ Request.prototype.toJSON = requestToJSON
 module.exports = Request
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./lib/auth":286,"./lib/cookies":287,"./lib/getProxyFromURI":288,"./lib/har":289,"./lib/helpers":290,"./lib/multipart":291,"./lib/oauth":292,"./lib/querystring":293,"./lib/redirect":294,"./lib/tunnel":295,"_process":244,"aws-sign2":296,"aws4":297,"buffer":42,"caseless":299,"extend":302,"forever-agent":303,"form-data":304,"hawk":333,"http":266,"http-signature":334,"https":240,"is-typedarray":386,"isstream":387,"mime-types":389,"stream":265,"stringstream":398,"url":273,"util":277,"zlib":41}],410:[function(require,module,exports){
+},{"./lib/auth":274,"./lib/cookies":275,"./lib/getProxyFromURI":276,"./lib/har":277,"./lib/helpers":278,"./lib/multipart":279,"./lib/oauth":280,"./lib/querystring":281,"./lib/redirect":282,"./lib/tunnel":283,"_process":232,"aws-sign2":284,"aws4":285,"buffer":30,"caseless":287,"extend":290,"forever-agent":291,"form-data":292,"hawk":321,"http":254,"http-signature":322,"https":228,"is-typedarray":374,"isstream":375,"mime-types":377,"stream":253,"stringstream":386,"url":261,"util":265,"zlib":29}],398:[function(require,module,exports){
 var _forEach = require('lodash/forEach');
 var _map = require('lodash/map');
 var _every = require('lodash/every');
@@ -78849,7 +76675,7 @@ function findBestMatch(mainString, targetStrings) {
   }
 }
 
-},{"lodash/every":521,"lodash/flattenDeep":522,"lodash/forEach":523,"lodash/map":538,"lodash/maxBy":539}],411:[function(require,module,exports){
+},{"lodash/every":509,"lodash/flattenDeep":510,"lodash/forEach":511,"lodash/map":526,"lodash/maxBy":527}],399:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -78858,7 +76684,7 @@ var DataView = getNative(root, 'DataView');
 
 module.exports = DataView;
 
-},{"./_getNative":471,"./_root":508}],412:[function(require,module,exports){
+},{"./_getNative":459,"./_root":496}],400:[function(require,module,exports){
 var hashClear = require('./_hashClear'),
     hashDelete = require('./_hashDelete'),
     hashGet = require('./_hashGet'),
@@ -78892,7 +76718,7 @@ Hash.prototype.set = hashSet;
 
 module.exports = Hash;
 
-},{"./_hashClear":477,"./_hashDelete":478,"./_hashGet":479,"./_hashHas":480,"./_hashSet":481}],413:[function(require,module,exports){
+},{"./_hashClear":465,"./_hashDelete":466,"./_hashGet":467,"./_hashHas":468,"./_hashSet":469}],401:[function(require,module,exports){
 var listCacheClear = require('./_listCacheClear'),
     listCacheDelete = require('./_listCacheDelete'),
     listCacheGet = require('./_listCacheGet'),
@@ -78926,7 +76752,7 @@ ListCache.prototype.set = listCacheSet;
 
 module.exports = ListCache;
 
-},{"./_listCacheClear":490,"./_listCacheDelete":491,"./_listCacheGet":492,"./_listCacheHas":493,"./_listCacheSet":494}],414:[function(require,module,exports){
+},{"./_listCacheClear":478,"./_listCacheDelete":479,"./_listCacheGet":480,"./_listCacheHas":481,"./_listCacheSet":482}],402:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -78935,7 +76761,7 @@ var Map = getNative(root, 'Map');
 
 module.exports = Map;
 
-},{"./_getNative":471,"./_root":508}],415:[function(require,module,exports){
+},{"./_getNative":459,"./_root":496}],403:[function(require,module,exports){
 var mapCacheClear = require('./_mapCacheClear'),
     mapCacheDelete = require('./_mapCacheDelete'),
     mapCacheGet = require('./_mapCacheGet'),
@@ -78969,7 +76795,7 @@ MapCache.prototype.set = mapCacheSet;
 
 module.exports = MapCache;
 
-},{"./_mapCacheClear":495,"./_mapCacheDelete":496,"./_mapCacheGet":497,"./_mapCacheHas":498,"./_mapCacheSet":499}],416:[function(require,module,exports){
+},{"./_mapCacheClear":483,"./_mapCacheDelete":484,"./_mapCacheGet":485,"./_mapCacheHas":486,"./_mapCacheSet":487}],404:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -78978,7 +76804,7 @@ var Promise = getNative(root, 'Promise');
 
 module.exports = Promise;
 
-},{"./_getNative":471,"./_root":508}],417:[function(require,module,exports){
+},{"./_getNative":459,"./_root":496}],405:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -78987,7 +76813,7 @@ var Set = getNative(root, 'Set');
 
 module.exports = Set;
 
-},{"./_getNative":471,"./_root":508}],418:[function(require,module,exports){
+},{"./_getNative":459,"./_root":496}],406:[function(require,module,exports){
 var MapCache = require('./_MapCache'),
     setCacheAdd = require('./_setCacheAdd'),
     setCacheHas = require('./_setCacheHas');
@@ -79016,7 +76842,7 @@ SetCache.prototype.has = setCacheHas;
 
 module.exports = SetCache;
 
-},{"./_MapCache":415,"./_setCacheAdd":509,"./_setCacheHas":510}],419:[function(require,module,exports){
+},{"./_MapCache":403,"./_setCacheAdd":497,"./_setCacheHas":498}],407:[function(require,module,exports){
 var ListCache = require('./_ListCache'),
     stackClear = require('./_stackClear'),
     stackDelete = require('./_stackDelete'),
@@ -79045,7 +76871,7 @@ Stack.prototype.set = stackSet;
 
 module.exports = Stack;
 
-},{"./_ListCache":413,"./_stackClear":512,"./_stackDelete":513,"./_stackGet":514,"./_stackHas":515,"./_stackSet":516}],420:[function(require,module,exports){
+},{"./_ListCache":401,"./_stackClear":500,"./_stackDelete":501,"./_stackGet":502,"./_stackHas":503,"./_stackSet":504}],408:[function(require,module,exports){
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -79053,7 +76879,7 @@ var Symbol = root.Symbol;
 
 module.exports = Symbol;
 
-},{"./_root":508}],421:[function(require,module,exports){
+},{"./_root":496}],409:[function(require,module,exports){
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -79061,7 +76887,7 @@ var Uint8Array = root.Uint8Array;
 
 module.exports = Uint8Array;
 
-},{"./_root":508}],422:[function(require,module,exports){
+},{"./_root":496}],410:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -79070,7 +76896,7 @@ var WeakMap = getNative(root, 'WeakMap');
 
 module.exports = WeakMap;
 
-},{"./_getNative":471,"./_root":508}],423:[function(require,module,exports){
+},{"./_getNative":459,"./_root":496}],411:[function(require,module,exports){
 /**
  * A specialized version of `_.forEach` for arrays without support for
  * iteratee shorthands.
@@ -79094,7 +76920,7 @@ function arrayEach(array, iteratee) {
 
 module.exports = arrayEach;
 
-},{}],424:[function(require,module,exports){
+},{}],412:[function(require,module,exports){
 /**
  * A specialized version of `_.every` for arrays without support for
  * iteratee shorthands.
@@ -79119,7 +76945,7 @@ function arrayEvery(array, predicate) {
 
 module.exports = arrayEvery;
 
-},{}],425:[function(require,module,exports){
+},{}],413:[function(require,module,exports){
 /**
  * A specialized version of `_.filter` for arrays without support for
  * iteratee shorthands.
@@ -79146,7 +76972,7 @@ function arrayFilter(array, predicate) {
 
 module.exports = arrayFilter;
 
-},{}],426:[function(require,module,exports){
+},{}],414:[function(require,module,exports){
 var baseTimes = require('./_baseTimes'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray'),
@@ -79197,7 +77023,7 @@ function arrayLikeKeys(value, inherited) {
 
 module.exports = arrayLikeKeys;
 
-},{"./_baseTimes":455,"./_isIndex":483,"./isArguments":527,"./isArray":528,"./isBuffer":530,"./isTypedArray":536}],427:[function(require,module,exports){
+},{"./_baseTimes":443,"./_isIndex":471,"./isArguments":515,"./isArray":516,"./isBuffer":518,"./isTypedArray":524}],415:[function(require,module,exports){
 /**
  * A specialized version of `_.map` for arrays without support for iteratee
  * shorthands.
@@ -79220,7 +77046,7 @@ function arrayMap(array, iteratee) {
 
 module.exports = arrayMap;
 
-},{}],428:[function(require,module,exports){
+},{}],416:[function(require,module,exports){
 /**
  * Appends the elements of `values` to `array`.
  *
@@ -79242,7 +77068,7 @@ function arrayPush(array, values) {
 
 module.exports = arrayPush;
 
-},{}],429:[function(require,module,exports){
+},{}],417:[function(require,module,exports){
 /**
  * A specialized version of `_.some` for arrays without support for iteratee
  * shorthands.
@@ -79267,7 +77093,7 @@ function arraySome(array, predicate) {
 
 module.exports = arraySome;
 
-},{}],430:[function(require,module,exports){
+},{}],418:[function(require,module,exports){
 var eq = require('./eq');
 
 /**
@@ -79290,7 +77116,7 @@ function assocIndexOf(array, key) {
 
 module.exports = assocIndexOf;
 
-},{"./eq":520}],431:[function(require,module,exports){
+},{"./eq":508}],419:[function(require,module,exports){
 var baseForOwn = require('./_baseForOwn'),
     createBaseEach = require('./_createBaseEach');
 
@@ -79306,7 +77132,7 @@ var baseEach = createBaseEach(baseForOwn);
 
 module.exports = baseEach;
 
-},{"./_baseForOwn":436,"./_createBaseEach":462}],432:[function(require,module,exports){
+},{"./_baseForOwn":424,"./_createBaseEach":450}],420:[function(require,module,exports){
 var baseEach = require('./_baseEach');
 
 /**
@@ -79329,7 +77155,7 @@ function baseEvery(collection, predicate) {
 
 module.exports = baseEvery;
 
-},{"./_baseEach":431}],433:[function(require,module,exports){
+},{"./_baseEach":419}],421:[function(require,module,exports){
 var isSymbol = require('./isSymbol');
 
 /**
@@ -79363,7 +77189,7 @@ function baseExtremum(array, iteratee, comparator) {
 
 module.exports = baseExtremum;
 
-},{"./isSymbol":535}],434:[function(require,module,exports){
+},{"./isSymbol":523}],422:[function(require,module,exports){
 var arrayPush = require('./_arrayPush'),
     isFlattenable = require('./_isFlattenable');
 
@@ -79403,7 +77229,7 @@ function baseFlatten(array, depth, predicate, isStrict, result) {
 
 module.exports = baseFlatten;
 
-},{"./_arrayPush":428,"./_isFlattenable":482}],435:[function(require,module,exports){
+},{"./_arrayPush":416,"./_isFlattenable":470}],423:[function(require,module,exports){
 var createBaseFor = require('./_createBaseFor');
 
 /**
@@ -79421,7 +77247,7 @@ var baseFor = createBaseFor();
 
 module.exports = baseFor;
 
-},{"./_createBaseFor":463}],436:[function(require,module,exports){
+},{"./_createBaseFor":451}],424:[function(require,module,exports){
 var baseFor = require('./_baseFor'),
     keys = require('./keys');
 
@@ -79439,7 +77265,7 @@ function baseForOwn(object, iteratee) {
 
 module.exports = baseForOwn;
 
-},{"./_baseFor":435,"./keys":537}],437:[function(require,module,exports){
+},{"./_baseFor":423,"./keys":525}],425:[function(require,module,exports){
 var castPath = require('./_castPath'),
     toKey = require('./_toKey');
 
@@ -79465,7 +77291,7 @@ function baseGet(object, path) {
 
 module.exports = baseGet;
 
-},{"./_castPath":460,"./_toKey":518}],438:[function(require,module,exports){
+},{"./_castPath":448,"./_toKey":506}],426:[function(require,module,exports){
 var arrayPush = require('./_arrayPush'),
     isArray = require('./isArray');
 
@@ -79487,7 +77313,7 @@ function baseGetAllKeys(object, keysFunc, symbolsFunc) {
 
 module.exports = baseGetAllKeys;
 
-},{"./_arrayPush":428,"./isArray":528}],439:[function(require,module,exports){
+},{"./_arrayPush":416,"./isArray":516}],427:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     getRawTag = require('./_getRawTag'),
     objectToString = require('./_objectToString');
@@ -79517,7 +77343,7 @@ function baseGetTag(value) {
 
 module.exports = baseGetTag;
 
-},{"./_Symbol":420,"./_getRawTag":472,"./_objectToString":506}],440:[function(require,module,exports){
+},{"./_Symbol":408,"./_getRawTag":460,"./_objectToString":494}],428:[function(require,module,exports){
 /**
  * The base implementation of `_.gt` which doesn't coerce arguments.
  *
@@ -79533,7 +77359,7 @@ function baseGt(value, other) {
 
 module.exports = baseGt;
 
-},{}],441:[function(require,module,exports){
+},{}],429:[function(require,module,exports){
 /**
  * The base implementation of `_.hasIn` without support for deep paths.
  *
@@ -79548,7 +77374,7 @@ function baseHasIn(object, key) {
 
 module.exports = baseHasIn;
 
-},{}],442:[function(require,module,exports){
+},{}],430:[function(require,module,exports){
 var baseGetTag = require('./_baseGetTag'),
     isObjectLike = require('./isObjectLike');
 
@@ -79568,7 +77394,7 @@ function baseIsArguments(value) {
 
 module.exports = baseIsArguments;
 
-},{"./_baseGetTag":439,"./isObjectLike":534}],443:[function(require,module,exports){
+},{"./_baseGetTag":427,"./isObjectLike":522}],431:[function(require,module,exports){
 var baseIsEqualDeep = require('./_baseIsEqualDeep'),
     isObjectLike = require('./isObjectLike');
 
@@ -79598,7 +77424,7 @@ function baseIsEqual(value, other, bitmask, customizer, stack) {
 
 module.exports = baseIsEqual;
 
-},{"./_baseIsEqualDeep":444,"./isObjectLike":534}],444:[function(require,module,exports){
+},{"./_baseIsEqualDeep":432,"./isObjectLike":522}],432:[function(require,module,exports){
 var Stack = require('./_Stack'),
     equalArrays = require('./_equalArrays'),
     equalByTag = require('./_equalByTag'),
@@ -79683,7 +77509,7 @@ function baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
 
 module.exports = baseIsEqualDeep;
 
-},{"./_Stack":419,"./_equalArrays":464,"./_equalByTag":465,"./_equalObjects":466,"./_getTag":474,"./isArray":528,"./isBuffer":530,"./isTypedArray":536}],445:[function(require,module,exports){
+},{"./_Stack":407,"./_equalArrays":452,"./_equalByTag":453,"./_equalObjects":454,"./_getTag":462,"./isArray":516,"./isBuffer":518,"./isTypedArray":524}],433:[function(require,module,exports){
 var Stack = require('./_Stack'),
     baseIsEqual = require('./_baseIsEqual');
 
@@ -79747,7 +77573,7 @@ function baseIsMatch(object, source, matchData, customizer) {
 
 module.exports = baseIsMatch;
 
-},{"./_Stack":419,"./_baseIsEqual":443}],446:[function(require,module,exports){
+},{"./_Stack":407,"./_baseIsEqual":431}],434:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isMasked = require('./_isMasked'),
     isObject = require('./isObject'),
@@ -79796,7 +77622,7 @@ function baseIsNative(value) {
 
 module.exports = baseIsNative;
 
-},{"./_isMasked":487,"./_toSource":519,"./isFunction":531,"./isObject":533}],447:[function(require,module,exports){
+},{"./_isMasked":475,"./_toSource":507,"./isFunction":519,"./isObject":521}],435:[function(require,module,exports){
 var baseGetTag = require('./_baseGetTag'),
     isLength = require('./isLength'),
     isObjectLike = require('./isObjectLike');
@@ -79858,7 +77684,7 @@ function baseIsTypedArray(value) {
 
 module.exports = baseIsTypedArray;
 
-},{"./_baseGetTag":439,"./isLength":532,"./isObjectLike":534}],448:[function(require,module,exports){
+},{"./_baseGetTag":427,"./isLength":520,"./isObjectLike":522}],436:[function(require,module,exports){
 var baseMatches = require('./_baseMatches'),
     baseMatchesProperty = require('./_baseMatchesProperty'),
     identity = require('./identity'),
@@ -79891,7 +77717,7 @@ function baseIteratee(value) {
 
 module.exports = baseIteratee;
 
-},{"./_baseMatches":451,"./_baseMatchesProperty":452,"./identity":526,"./isArray":528,"./property":541}],449:[function(require,module,exports){
+},{"./_baseMatches":439,"./_baseMatchesProperty":440,"./identity":514,"./isArray":516,"./property":529}],437:[function(require,module,exports){
 var isPrototype = require('./_isPrototype'),
     nativeKeys = require('./_nativeKeys');
 
@@ -79923,7 +77749,7 @@ function baseKeys(object) {
 
 module.exports = baseKeys;
 
-},{"./_isPrototype":488,"./_nativeKeys":504}],450:[function(require,module,exports){
+},{"./_isPrototype":476,"./_nativeKeys":492}],438:[function(require,module,exports){
 var baseEach = require('./_baseEach'),
     isArrayLike = require('./isArrayLike');
 
@@ -79947,7 +77773,7 @@ function baseMap(collection, iteratee) {
 
 module.exports = baseMap;
 
-},{"./_baseEach":431,"./isArrayLike":529}],451:[function(require,module,exports){
+},{"./_baseEach":419,"./isArrayLike":517}],439:[function(require,module,exports){
 var baseIsMatch = require('./_baseIsMatch'),
     getMatchData = require('./_getMatchData'),
     matchesStrictComparable = require('./_matchesStrictComparable');
@@ -79971,7 +77797,7 @@ function baseMatches(source) {
 
 module.exports = baseMatches;
 
-},{"./_baseIsMatch":445,"./_getMatchData":470,"./_matchesStrictComparable":501}],452:[function(require,module,exports){
+},{"./_baseIsMatch":433,"./_getMatchData":458,"./_matchesStrictComparable":489}],440:[function(require,module,exports){
 var baseIsEqual = require('./_baseIsEqual'),
     get = require('./get'),
     hasIn = require('./hasIn'),
@@ -80006,7 +77832,7 @@ function baseMatchesProperty(path, srcValue) {
 
 module.exports = baseMatchesProperty;
 
-},{"./_baseIsEqual":443,"./_isKey":485,"./_isStrictComparable":489,"./_matchesStrictComparable":501,"./_toKey":518,"./get":524,"./hasIn":525}],453:[function(require,module,exports){
+},{"./_baseIsEqual":431,"./_isKey":473,"./_isStrictComparable":477,"./_matchesStrictComparable":489,"./_toKey":506,"./get":512,"./hasIn":513}],441:[function(require,module,exports){
 /**
  * The base implementation of `_.property` without support for deep paths.
  *
@@ -80022,7 +77848,7 @@ function baseProperty(key) {
 
 module.exports = baseProperty;
 
-},{}],454:[function(require,module,exports){
+},{}],442:[function(require,module,exports){
 var baseGet = require('./_baseGet');
 
 /**
@@ -80040,7 +77866,7 @@ function basePropertyDeep(path) {
 
 module.exports = basePropertyDeep;
 
-},{"./_baseGet":437}],455:[function(require,module,exports){
+},{"./_baseGet":425}],443:[function(require,module,exports){
 /**
  * The base implementation of `_.times` without support for iteratee shorthands
  * or max array length checks.
@@ -80062,7 +77888,7 @@ function baseTimes(n, iteratee) {
 
 module.exports = baseTimes;
 
-},{}],456:[function(require,module,exports){
+},{}],444:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     arrayMap = require('./_arrayMap'),
     isArray = require('./isArray'),
@@ -80101,7 +77927,7 @@ function baseToString(value) {
 
 module.exports = baseToString;
 
-},{"./_Symbol":420,"./_arrayMap":427,"./isArray":528,"./isSymbol":535}],457:[function(require,module,exports){
+},{"./_Symbol":408,"./_arrayMap":415,"./isArray":516,"./isSymbol":523}],445:[function(require,module,exports){
 /**
  * The base implementation of `_.unary` without support for storing metadata.
  *
@@ -80117,7 +77943,7 @@ function baseUnary(func) {
 
 module.exports = baseUnary;
 
-},{}],458:[function(require,module,exports){
+},{}],446:[function(require,module,exports){
 /**
  * Checks if a `cache` value for `key` exists.
  *
@@ -80132,7 +77958,7 @@ function cacheHas(cache, key) {
 
 module.exports = cacheHas;
 
-},{}],459:[function(require,module,exports){
+},{}],447:[function(require,module,exports){
 var identity = require('./identity');
 
 /**
@@ -80148,7 +77974,7 @@ function castFunction(value) {
 
 module.exports = castFunction;
 
-},{"./identity":526}],460:[function(require,module,exports){
+},{"./identity":514}],448:[function(require,module,exports){
 var isArray = require('./isArray'),
     isKey = require('./_isKey'),
     stringToPath = require('./_stringToPath'),
@@ -80171,7 +77997,7 @@ function castPath(value, object) {
 
 module.exports = castPath;
 
-},{"./_isKey":485,"./_stringToPath":517,"./isArray":528,"./toString":544}],461:[function(require,module,exports){
+},{"./_isKey":473,"./_stringToPath":505,"./isArray":516,"./toString":532}],449:[function(require,module,exports){
 var root = require('./_root');
 
 /** Used to detect overreaching core-js shims. */
@@ -80179,7 +78005,7 @@ var coreJsData = root['__core-js_shared__'];
 
 module.exports = coreJsData;
 
-},{"./_root":508}],462:[function(require,module,exports){
+},{"./_root":496}],450:[function(require,module,exports){
 var isArrayLike = require('./isArrayLike');
 
 /**
@@ -80213,7 +78039,7 @@ function createBaseEach(eachFunc, fromRight) {
 
 module.exports = createBaseEach;
 
-},{"./isArrayLike":529}],463:[function(require,module,exports){
+},{"./isArrayLike":517}],451:[function(require,module,exports){
 /**
  * Creates a base function for methods like `_.forIn` and `_.forOwn`.
  *
@@ -80240,7 +78066,7 @@ function createBaseFor(fromRight) {
 
 module.exports = createBaseFor;
 
-},{}],464:[function(require,module,exports){
+},{}],452:[function(require,module,exports){
 var SetCache = require('./_SetCache'),
     arraySome = require('./_arraySome'),
     cacheHas = require('./_cacheHas');
@@ -80325,7 +78151,7 @@ function equalArrays(array, other, bitmask, customizer, equalFunc, stack) {
 
 module.exports = equalArrays;
 
-},{"./_SetCache":418,"./_arraySome":429,"./_cacheHas":458}],465:[function(require,module,exports){
+},{"./_SetCache":406,"./_arraySome":417,"./_cacheHas":446}],453:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     Uint8Array = require('./_Uint8Array'),
     eq = require('./eq'),
@@ -80439,7 +78265,7 @@ function equalByTag(object, other, tag, bitmask, customizer, equalFunc, stack) {
 
 module.exports = equalByTag;
 
-},{"./_Symbol":420,"./_Uint8Array":421,"./_equalArrays":464,"./_mapToArray":500,"./_setToArray":511,"./eq":520}],466:[function(require,module,exports){
+},{"./_Symbol":408,"./_Uint8Array":409,"./_equalArrays":452,"./_mapToArray":488,"./_setToArray":499,"./eq":508}],454:[function(require,module,exports){
 var getAllKeys = require('./_getAllKeys');
 
 /** Used to compose bitmasks for value comparisons. */
@@ -80530,7 +78356,7 @@ function equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
 
 module.exports = equalObjects;
 
-},{"./_getAllKeys":468}],467:[function(require,module,exports){
+},{"./_getAllKeys":456}],455:[function(require,module,exports){
 (function (global){
 /** Detect free variable `global` from Node.js. */
 var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
@@ -80538,7 +78364,7 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 module.exports = freeGlobal;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],468:[function(require,module,exports){
+},{}],456:[function(require,module,exports){
 var baseGetAllKeys = require('./_baseGetAllKeys'),
     getSymbols = require('./_getSymbols'),
     keys = require('./keys');
@@ -80556,7 +78382,7 @@ function getAllKeys(object) {
 
 module.exports = getAllKeys;
 
-},{"./_baseGetAllKeys":438,"./_getSymbols":473,"./keys":537}],469:[function(require,module,exports){
+},{"./_baseGetAllKeys":426,"./_getSymbols":461,"./keys":525}],457:[function(require,module,exports){
 var isKeyable = require('./_isKeyable');
 
 /**
@@ -80576,7 +78402,7 @@ function getMapData(map, key) {
 
 module.exports = getMapData;
 
-},{"./_isKeyable":486}],470:[function(require,module,exports){
+},{"./_isKeyable":474}],458:[function(require,module,exports){
 var isStrictComparable = require('./_isStrictComparable'),
     keys = require('./keys');
 
@@ -80602,7 +78428,7 @@ function getMatchData(object) {
 
 module.exports = getMatchData;
 
-},{"./_isStrictComparable":489,"./keys":537}],471:[function(require,module,exports){
+},{"./_isStrictComparable":477,"./keys":525}],459:[function(require,module,exports){
 var baseIsNative = require('./_baseIsNative'),
     getValue = require('./_getValue');
 
@@ -80621,7 +78447,7 @@ function getNative(object, key) {
 
 module.exports = getNative;
 
-},{"./_baseIsNative":446,"./_getValue":475}],472:[function(require,module,exports){
+},{"./_baseIsNative":434,"./_getValue":463}],460:[function(require,module,exports){
 var Symbol = require('./_Symbol');
 
 /** Used for built-in method references. */
@@ -80669,7 +78495,7 @@ function getRawTag(value) {
 
 module.exports = getRawTag;
 
-},{"./_Symbol":420}],473:[function(require,module,exports){
+},{"./_Symbol":408}],461:[function(require,module,exports){
 var arrayFilter = require('./_arrayFilter'),
     stubArray = require('./stubArray');
 
@@ -80701,7 +78527,7 @@ var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
 
 module.exports = getSymbols;
 
-},{"./_arrayFilter":425,"./stubArray":542}],474:[function(require,module,exports){
+},{"./_arrayFilter":413,"./stubArray":530}],462:[function(require,module,exports){
 var DataView = require('./_DataView'),
     Map = require('./_Map'),
     Promise = require('./_Promise'),
@@ -80761,7 +78587,7 @@ if ((DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag) ||
 
 module.exports = getTag;
 
-},{"./_DataView":411,"./_Map":414,"./_Promise":416,"./_Set":417,"./_WeakMap":422,"./_baseGetTag":439,"./_toSource":519}],475:[function(require,module,exports){
+},{"./_DataView":399,"./_Map":402,"./_Promise":404,"./_Set":405,"./_WeakMap":410,"./_baseGetTag":427,"./_toSource":507}],463:[function(require,module,exports){
 /**
  * Gets the value at `key` of `object`.
  *
@@ -80776,7 +78602,7 @@ function getValue(object, key) {
 
 module.exports = getValue;
 
-},{}],476:[function(require,module,exports){
+},{}],464:[function(require,module,exports){
 var castPath = require('./_castPath'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray'),
@@ -80817,7 +78643,7 @@ function hasPath(object, path, hasFunc) {
 
 module.exports = hasPath;
 
-},{"./_castPath":460,"./_isIndex":483,"./_toKey":518,"./isArguments":527,"./isArray":528,"./isLength":532}],477:[function(require,module,exports){
+},{"./_castPath":448,"./_isIndex":471,"./_toKey":506,"./isArguments":515,"./isArray":516,"./isLength":520}],465:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /**
@@ -80834,7 +78660,7 @@ function hashClear() {
 
 module.exports = hashClear;
 
-},{"./_nativeCreate":503}],478:[function(require,module,exports){
+},{"./_nativeCreate":491}],466:[function(require,module,exports){
 /**
  * Removes `key` and its value from the hash.
  *
@@ -80853,7 +78679,7 @@ function hashDelete(key) {
 
 module.exports = hashDelete;
 
-},{}],479:[function(require,module,exports){
+},{}],467:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used to stand-in for `undefined` hash values. */
@@ -80885,7 +78711,7 @@ function hashGet(key) {
 
 module.exports = hashGet;
 
-},{"./_nativeCreate":503}],480:[function(require,module,exports){
+},{"./_nativeCreate":491}],468:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used for built-in method references. */
@@ -80910,7 +78736,7 @@ function hashHas(key) {
 
 module.exports = hashHas;
 
-},{"./_nativeCreate":503}],481:[function(require,module,exports){
+},{"./_nativeCreate":491}],469:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used to stand-in for `undefined` hash values. */
@@ -80935,7 +78761,7 @@ function hashSet(key, value) {
 
 module.exports = hashSet;
 
-},{"./_nativeCreate":503}],482:[function(require,module,exports){
+},{"./_nativeCreate":491}],470:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray');
@@ -80957,7 +78783,7 @@ function isFlattenable(value) {
 
 module.exports = isFlattenable;
 
-},{"./_Symbol":420,"./isArguments":527,"./isArray":528}],483:[function(require,module,exports){
+},{"./_Symbol":408,"./isArguments":515,"./isArray":516}],471:[function(require,module,exports){
 /** Used as references for various `Number` constants. */
 var MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -80981,7 +78807,7 @@ function isIndex(value, length) {
 
 module.exports = isIndex;
 
-},{}],484:[function(require,module,exports){
+},{}],472:[function(require,module,exports){
 var eq = require('./eq'),
     isArrayLike = require('./isArrayLike'),
     isIndex = require('./_isIndex'),
@@ -81013,7 +78839,7 @@ function isIterateeCall(value, index, object) {
 
 module.exports = isIterateeCall;
 
-},{"./_isIndex":483,"./eq":520,"./isArrayLike":529,"./isObject":533}],485:[function(require,module,exports){
+},{"./_isIndex":471,"./eq":508,"./isArrayLike":517,"./isObject":521}],473:[function(require,module,exports){
 var isArray = require('./isArray'),
     isSymbol = require('./isSymbol');
 
@@ -81044,7 +78870,7 @@ function isKey(value, object) {
 
 module.exports = isKey;
 
-},{"./isArray":528,"./isSymbol":535}],486:[function(require,module,exports){
+},{"./isArray":516,"./isSymbol":523}],474:[function(require,module,exports){
 /**
  * Checks if `value` is suitable for use as unique object key.
  *
@@ -81061,7 +78887,7 @@ function isKeyable(value) {
 
 module.exports = isKeyable;
 
-},{}],487:[function(require,module,exports){
+},{}],475:[function(require,module,exports){
 var coreJsData = require('./_coreJsData');
 
 /** Used to detect methods masquerading as native. */
@@ -81083,7 +78909,7 @@ function isMasked(func) {
 
 module.exports = isMasked;
 
-},{"./_coreJsData":461}],488:[function(require,module,exports){
+},{"./_coreJsData":449}],476:[function(require,module,exports){
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -81103,7 +78929,7 @@ function isPrototype(value) {
 
 module.exports = isPrototype;
 
-},{}],489:[function(require,module,exports){
+},{}],477:[function(require,module,exports){
 var isObject = require('./isObject');
 
 /**
@@ -81120,7 +78946,7 @@ function isStrictComparable(value) {
 
 module.exports = isStrictComparable;
 
-},{"./isObject":533}],490:[function(require,module,exports){
+},{"./isObject":521}],478:[function(require,module,exports){
 /**
  * Removes all key-value entries from the list cache.
  *
@@ -81135,7 +78961,7 @@ function listCacheClear() {
 
 module.exports = listCacheClear;
 
-},{}],491:[function(require,module,exports){
+},{}],479:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /** Used for built-in method references. */
@@ -81172,7 +78998,7 @@ function listCacheDelete(key) {
 
 module.exports = listCacheDelete;
 
-},{"./_assocIndexOf":430}],492:[function(require,module,exports){
+},{"./_assocIndexOf":418}],480:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -81193,7 +79019,7 @@ function listCacheGet(key) {
 
 module.exports = listCacheGet;
 
-},{"./_assocIndexOf":430}],493:[function(require,module,exports){
+},{"./_assocIndexOf":418}],481:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -81211,7 +79037,7 @@ function listCacheHas(key) {
 
 module.exports = listCacheHas;
 
-},{"./_assocIndexOf":430}],494:[function(require,module,exports){
+},{"./_assocIndexOf":418}],482:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -81239,7 +79065,7 @@ function listCacheSet(key, value) {
 
 module.exports = listCacheSet;
 
-},{"./_assocIndexOf":430}],495:[function(require,module,exports){
+},{"./_assocIndexOf":418}],483:[function(require,module,exports){
 var Hash = require('./_Hash'),
     ListCache = require('./_ListCache'),
     Map = require('./_Map');
@@ -81262,7 +79088,7 @@ function mapCacheClear() {
 
 module.exports = mapCacheClear;
 
-},{"./_Hash":412,"./_ListCache":413,"./_Map":414}],496:[function(require,module,exports){
+},{"./_Hash":400,"./_ListCache":401,"./_Map":402}],484:[function(require,module,exports){
 var getMapData = require('./_getMapData');
 
 /**
@@ -81282,7 +79108,7 @@ function mapCacheDelete(key) {
 
 module.exports = mapCacheDelete;
 
-},{"./_getMapData":469}],497:[function(require,module,exports){
+},{"./_getMapData":457}],485:[function(require,module,exports){
 var getMapData = require('./_getMapData');
 
 /**
@@ -81300,7 +79126,7 @@ function mapCacheGet(key) {
 
 module.exports = mapCacheGet;
 
-},{"./_getMapData":469}],498:[function(require,module,exports){
+},{"./_getMapData":457}],486:[function(require,module,exports){
 var getMapData = require('./_getMapData');
 
 /**
@@ -81318,7 +79144,7 @@ function mapCacheHas(key) {
 
 module.exports = mapCacheHas;
 
-},{"./_getMapData":469}],499:[function(require,module,exports){
+},{"./_getMapData":457}],487:[function(require,module,exports){
 var getMapData = require('./_getMapData');
 
 /**
@@ -81342,7 +79168,7 @@ function mapCacheSet(key, value) {
 
 module.exports = mapCacheSet;
 
-},{"./_getMapData":469}],500:[function(require,module,exports){
+},{"./_getMapData":457}],488:[function(require,module,exports){
 /**
  * Converts `map` to its key-value pairs.
  *
@@ -81362,7 +79188,7 @@ function mapToArray(map) {
 
 module.exports = mapToArray;
 
-},{}],501:[function(require,module,exports){
+},{}],489:[function(require,module,exports){
 /**
  * A specialized version of `matchesProperty` for source values suitable
  * for strict equality comparisons, i.e. `===`.
@@ -81384,7 +79210,7 @@ function matchesStrictComparable(key, srcValue) {
 
 module.exports = matchesStrictComparable;
 
-},{}],502:[function(require,module,exports){
+},{}],490:[function(require,module,exports){
 var memoize = require('./memoize');
 
 /** Used as the maximum memoize cache size. */
@@ -81412,7 +79238,7 @@ function memoizeCapped(func) {
 
 module.exports = memoizeCapped;
 
-},{"./memoize":540}],503:[function(require,module,exports){
+},{"./memoize":528}],491:[function(require,module,exports){
 var getNative = require('./_getNative');
 
 /* Built-in method references that are verified to be native. */
@@ -81420,7 +79246,7 @@ var nativeCreate = getNative(Object, 'create');
 
 module.exports = nativeCreate;
 
-},{"./_getNative":471}],504:[function(require,module,exports){
+},{"./_getNative":459}],492:[function(require,module,exports){
 var overArg = require('./_overArg');
 
 /* Built-in method references for those with the same name as other `lodash` methods. */
@@ -81428,7 +79254,7 @@ var nativeKeys = overArg(Object.keys, Object);
 
 module.exports = nativeKeys;
 
-},{"./_overArg":507}],505:[function(require,module,exports){
+},{"./_overArg":495}],493:[function(require,module,exports){
 var freeGlobal = require('./_freeGlobal');
 
 /** Detect free variable `exports`. */
@@ -81452,7 +79278,7 @@ var nodeUtil = (function() {
 
 module.exports = nodeUtil;
 
-},{"./_freeGlobal":467}],506:[function(require,module,exports){
+},{"./_freeGlobal":455}],494:[function(require,module,exports){
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -81476,7 +79302,7 @@ function objectToString(value) {
 
 module.exports = objectToString;
 
-},{}],507:[function(require,module,exports){
+},{}],495:[function(require,module,exports){
 /**
  * Creates a unary function that invokes `func` with its argument transformed.
  *
@@ -81493,7 +79319,7 @@ function overArg(func, transform) {
 
 module.exports = overArg;
 
-},{}],508:[function(require,module,exports){
+},{}],496:[function(require,module,exports){
 var freeGlobal = require('./_freeGlobal');
 
 /** Detect free variable `self`. */
@@ -81504,7 +79330,7 @@ var root = freeGlobal || freeSelf || Function('return this')();
 
 module.exports = root;
 
-},{"./_freeGlobal":467}],509:[function(require,module,exports){
+},{"./_freeGlobal":455}],497:[function(require,module,exports){
 /** Used to stand-in for `undefined` hash values. */
 var HASH_UNDEFINED = '__lodash_hash_undefined__';
 
@@ -81525,7 +79351,7 @@ function setCacheAdd(value) {
 
 module.exports = setCacheAdd;
 
-},{}],510:[function(require,module,exports){
+},{}],498:[function(require,module,exports){
 /**
  * Checks if `value` is in the array cache.
  *
@@ -81541,7 +79367,7 @@ function setCacheHas(value) {
 
 module.exports = setCacheHas;
 
-},{}],511:[function(require,module,exports){
+},{}],499:[function(require,module,exports){
 /**
  * Converts `set` to an array of its values.
  *
@@ -81561,7 +79387,7 @@ function setToArray(set) {
 
 module.exports = setToArray;
 
-},{}],512:[function(require,module,exports){
+},{}],500:[function(require,module,exports){
 var ListCache = require('./_ListCache');
 
 /**
@@ -81578,7 +79404,7 @@ function stackClear() {
 
 module.exports = stackClear;
 
-},{"./_ListCache":413}],513:[function(require,module,exports){
+},{"./_ListCache":401}],501:[function(require,module,exports){
 /**
  * Removes `key` and its value from the stack.
  *
@@ -81598,7 +79424,7 @@ function stackDelete(key) {
 
 module.exports = stackDelete;
 
-},{}],514:[function(require,module,exports){
+},{}],502:[function(require,module,exports){
 /**
  * Gets the stack value for `key`.
  *
@@ -81614,7 +79440,7 @@ function stackGet(key) {
 
 module.exports = stackGet;
 
-},{}],515:[function(require,module,exports){
+},{}],503:[function(require,module,exports){
 /**
  * Checks if a stack value for `key` exists.
  *
@@ -81630,7 +79456,7 @@ function stackHas(key) {
 
 module.exports = stackHas;
 
-},{}],516:[function(require,module,exports){
+},{}],504:[function(require,module,exports){
 var ListCache = require('./_ListCache'),
     Map = require('./_Map'),
     MapCache = require('./_MapCache');
@@ -81666,7 +79492,7 @@ function stackSet(key, value) {
 
 module.exports = stackSet;
 
-},{"./_ListCache":413,"./_Map":414,"./_MapCache":415}],517:[function(require,module,exports){
+},{"./_ListCache":401,"./_Map":402,"./_MapCache":403}],505:[function(require,module,exports){
 var memoizeCapped = require('./_memoizeCapped');
 
 /** Used to match property names within property paths. */
@@ -81696,7 +79522,7 @@ var stringToPath = memoizeCapped(function(string) {
 
 module.exports = stringToPath;
 
-},{"./_memoizeCapped":502}],518:[function(require,module,exports){
+},{"./_memoizeCapped":490}],506:[function(require,module,exports){
 var isSymbol = require('./isSymbol');
 
 /** Used as references for various `Number` constants. */
@@ -81719,7 +79545,7 @@ function toKey(value) {
 
 module.exports = toKey;
 
-},{"./isSymbol":535}],519:[function(require,module,exports){
+},{"./isSymbol":523}],507:[function(require,module,exports){
 /** Used for built-in method references. */
 var funcProto = Function.prototype;
 
@@ -81747,7 +79573,7 @@ function toSource(func) {
 
 module.exports = toSource;
 
-},{}],520:[function(require,module,exports){
+},{}],508:[function(require,module,exports){
 /**
  * Performs a
  * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
@@ -81786,7 +79612,7 @@ function eq(value, other) {
 
 module.exports = eq;
 
-},{}],521:[function(require,module,exports){
+},{}],509:[function(require,module,exports){
 var arrayEvery = require('./_arrayEvery'),
     baseEvery = require('./_baseEvery'),
     baseIteratee = require('./_baseIteratee'),
@@ -81844,7 +79670,7 @@ function every(collection, predicate, guard) {
 
 module.exports = every;
 
-},{"./_arrayEvery":424,"./_baseEvery":432,"./_baseIteratee":448,"./_isIterateeCall":484,"./isArray":528}],522:[function(require,module,exports){
+},{"./_arrayEvery":412,"./_baseEvery":420,"./_baseIteratee":436,"./_isIterateeCall":472,"./isArray":516}],510:[function(require,module,exports){
 var baseFlatten = require('./_baseFlatten');
 
 /** Used as references for various `Number` constants. */
@@ -81871,7 +79697,7 @@ function flattenDeep(array) {
 
 module.exports = flattenDeep;
 
-},{"./_baseFlatten":434}],523:[function(require,module,exports){
+},{"./_baseFlatten":422}],511:[function(require,module,exports){
 var arrayEach = require('./_arrayEach'),
     baseEach = require('./_baseEach'),
     castFunction = require('./_castFunction'),
@@ -81914,7 +79740,7 @@ function forEach(collection, iteratee) {
 
 module.exports = forEach;
 
-},{"./_arrayEach":423,"./_baseEach":431,"./_castFunction":459,"./isArray":528}],524:[function(require,module,exports){
+},{"./_arrayEach":411,"./_baseEach":419,"./_castFunction":447,"./isArray":516}],512:[function(require,module,exports){
 var baseGet = require('./_baseGet');
 
 /**
@@ -81949,7 +79775,7 @@ function get(object, path, defaultValue) {
 
 module.exports = get;
 
-},{"./_baseGet":437}],525:[function(require,module,exports){
+},{"./_baseGet":425}],513:[function(require,module,exports){
 var baseHasIn = require('./_baseHasIn'),
     hasPath = require('./_hasPath');
 
@@ -81985,7 +79811,7 @@ function hasIn(object, path) {
 
 module.exports = hasIn;
 
-},{"./_baseHasIn":441,"./_hasPath":476}],526:[function(require,module,exports){
+},{"./_baseHasIn":429,"./_hasPath":464}],514:[function(require,module,exports){
 /**
  * This method returns the first argument it receives.
  *
@@ -82008,7 +79834,7 @@ function identity(value) {
 
 module.exports = identity;
 
-},{}],527:[function(require,module,exports){
+},{}],515:[function(require,module,exports){
 var baseIsArguments = require('./_baseIsArguments'),
     isObjectLike = require('./isObjectLike');
 
@@ -82046,7 +79872,7 @@ var isArguments = baseIsArguments(function() { return arguments; }()) ? baseIsAr
 
 module.exports = isArguments;
 
-},{"./_baseIsArguments":442,"./isObjectLike":534}],528:[function(require,module,exports){
+},{"./_baseIsArguments":430,"./isObjectLike":522}],516:[function(require,module,exports){
 /**
  * Checks if `value` is classified as an `Array` object.
  *
@@ -82074,7 +79900,7 @@ var isArray = Array.isArray;
 
 module.exports = isArray;
 
-},{}],529:[function(require,module,exports){
+},{}],517:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isLength = require('./isLength');
 
@@ -82109,7 +79935,7 @@ function isArrayLike(value) {
 
 module.exports = isArrayLike;
 
-},{"./isFunction":531,"./isLength":532}],530:[function(require,module,exports){
+},{"./isFunction":519,"./isLength":520}],518:[function(require,module,exports){
 var root = require('./_root'),
     stubFalse = require('./stubFalse');
 
@@ -82149,7 +79975,7 @@ var isBuffer = nativeIsBuffer || stubFalse;
 
 module.exports = isBuffer;
 
-},{"./_root":508,"./stubFalse":543}],531:[function(require,module,exports){
+},{"./_root":496,"./stubFalse":531}],519:[function(require,module,exports){
 var baseGetTag = require('./_baseGetTag'),
     isObject = require('./isObject');
 
@@ -82188,7 +80014,7 @@ function isFunction(value) {
 
 module.exports = isFunction;
 
-},{"./_baseGetTag":439,"./isObject":533}],532:[function(require,module,exports){
+},{"./_baseGetTag":427,"./isObject":521}],520:[function(require,module,exports){
 /** Used as references for various `Number` constants. */
 var MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -82225,7 +80051,7 @@ function isLength(value) {
 
 module.exports = isLength;
 
-},{}],533:[function(require,module,exports){
+},{}],521:[function(require,module,exports){
 /**
  * Checks if `value` is the
  * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
@@ -82258,7 +80084,7 @@ function isObject(value) {
 
 module.exports = isObject;
 
-},{}],534:[function(require,module,exports){
+},{}],522:[function(require,module,exports){
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
@@ -82289,7 +80115,7 @@ function isObjectLike(value) {
 
 module.exports = isObjectLike;
 
-},{}],535:[function(require,module,exports){
+},{}],523:[function(require,module,exports){
 var baseGetTag = require('./_baseGetTag'),
     isObjectLike = require('./isObjectLike');
 
@@ -82320,7 +80146,7 @@ function isSymbol(value) {
 
 module.exports = isSymbol;
 
-},{"./_baseGetTag":439,"./isObjectLike":534}],536:[function(require,module,exports){
+},{"./_baseGetTag":427,"./isObjectLike":522}],524:[function(require,module,exports){
 var baseIsTypedArray = require('./_baseIsTypedArray'),
     baseUnary = require('./_baseUnary'),
     nodeUtil = require('./_nodeUtil');
@@ -82349,7 +80175,7 @@ var isTypedArray = nodeIsTypedArray ? baseUnary(nodeIsTypedArray) : baseIsTypedA
 
 module.exports = isTypedArray;
 
-},{"./_baseIsTypedArray":447,"./_baseUnary":457,"./_nodeUtil":505}],537:[function(require,module,exports){
+},{"./_baseIsTypedArray":435,"./_baseUnary":445,"./_nodeUtil":493}],525:[function(require,module,exports){
 var arrayLikeKeys = require('./_arrayLikeKeys'),
     baseKeys = require('./_baseKeys'),
     isArrayLike = require('./isArrayLike');
@@ -82388,7 +80214,7 @@ function keys(object) {
 
 module.exports = keys;
 
-},{"./_arrayLikeKeys":426,"./_baseKeys":449,"./isArrayLike":529}],538:[function(require,module,exports){
+},{"./_arrayLikeKeys":414,"./_baseKeys":437,"./isArrayLike":517}],526:[function(require,module,exports){
 var arrayMap = require('./_arrayMap'),
     baseIteratee = require('./_baseIteratee'),
     baseMap = require('./_baseMap'),
@@ -82443,7 +80269,7 @@ function map(collection, iteratee) {
 
 module.exports = map;
 
-},{"./_arrayMap":427,"./_baseIteratee":448,"./_baseMap":450,"./isArray":528}],539:[function(require,module,exports){
+},{"./_arrayMap":415,"./_baseIteratee":436,"./_baseMap":438,"./isArray":516}],527:[function(require,module,exports){
 var baseExtremum = require('./_baseExtremum'),
     baseGt = require('./_baseGt'),
     baseIteratee = require('./_baseIteratee');
@@ -82479,7 +80305,7 @@ function maxBy(array, iteratee) {
 
 module.exports = maxBy;
 
-},{"./_baseExtremum":433,"./_baseGt":440,"./_baseIteratee":448}],540:[function(require,module,exports){
+},{"./_baseExtremum":421,"./_baseGt":428,"./_baseIteratee":436}],528:[function(require,module,exports){
 var MapCache = require('./_MapCache');
 
 /** Error message constants. */
@@ -82554,7 +80380,7 @@ memoize.Cache = MapCache;
 
 module.exports = memoize;
 
-},{"./_MapCache":415}],541:[function(require,module,exports){
+},{"./_MapCache":403}],529:[function(require,module,exports){
 var baseProperty = require('./_baseProperty'),
     basePropertyDeep = require('./_basePropertyDeep'),
     isKey = require('./_isKey'),
@@ -82588,7 +80414,7 @@ function property(path) {
 
 module.exports = property;
 
-},{"./_baseProperty":453,"./_basePropertyDeep":454,"./_isKey":485,"./_toKey":518}],542:[function(require,module,exports){
+},{"./_baseProperty":441,"./_basePropertyDeep":442,"./_isKey":473,"./_toKey":506}],530:[function(require,module,exports){
 /**
  * This method returns a new empty array.
  *
@@ -82613,7 +80439,7 @@ function stubArray() {
 
 module.exports = stubArray;
 
-},{}],543:[function(require,module,exports){
+},{}],531:[function(require,module,exports){
 /**
  * This method returns `false`.
  *
@@ -82633,7 +80459,7 @@ function stubFalse() {
 
 module.exports = stubFalse;
 
-},{}],544:[function(require,module,exports){
+},{}],532:[function(require,module,exports){
 var baseToString = require('./_baseToString');
 
 /**
@@ -82663,10 +80489,2184 @@ function toString(value) {
 
 module.exports = toString;
 
-},{"./_baseToString":456}],545:[function(require,module,exports){
+},{"./_baseToString":444}],533:[function(require,module,exports){
+var Queue = require('./queue')
+var Track = require('./track')
+var spotify = require('./spotify')
+
+/**
+ * Create album entry.
+ * @constructor
+ * @param {string} entry - The album to search for.
+ * @param {string} [response] - JSON album object.
+ */
+function Album (entry, limit) {
+  /**
+   * Album response.
+   *
+   * [Reference](https://developer.spotify.com/web-api/object-model/#album-object-full).
+   */
+  this.albumResponse = null
+
+  /**
+   * Entry string.
+   */
+  this.entry = entry.trim()
+
+  /**
+   * Number of albums to fetch.
+   */
+  this.limit = null
+
+  /**
+   * Search response.
+   *
+   * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+   */
+  this.searchResponse = null
+
+  /**
+   * Whether to fetch tracks.
+   */
+  this.fetchTracks = true
+
+  this.setLimit(limit)
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {JSON} response - A JSON response object.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Album.prototype.createQueue = function () {
+  var self = this
+  var tracks = this.albumResponse.tracks.items.map(function (item) {
+    var track = new Track(self.entry)
+    track.setResponse(item)
+    track.setAlbum(self.title())
+    return track
+  })
+  var queue = new Queue(tracks)
+  if (self.limit) {
+    queue = queue.slice(0, self.limit)
+  }
+  return queue
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Album.prototype.dispatch = function () {
+  if (this.fetchTracks) {
+    var self = this
+    return this.searchForAlbum().then(function () {
+      return self.fetchAlbum()
+    }).then(function () {
+      return self.createQueue()
+    })
+  } else {
+    return this.searchForAlbum()
+  }
+}
+
+/**
+ * Fetch album metadata.
+ * @return {Promise | JSON} A JSON response.
+ */
+Album.prototype.fetchAlbum = function () {
+  var self = this
+  return spotify.getAlbum(this.id()).then(function (response) {
+    self.albumResponse = response
+    return self
+  })
+}
+
+/**
+ * Spotify ID.
+ * @return {string} The Spotify ID of the album,
+ * or `-1` if not available.
+ */
+Album.prototype.id = function () {
+  if (this.albumResponse &&
+      this.albumResponse.id) {
+    return this.albumResponse.id
+  } else if (this.searchResponse &&
+             this.searchResponse.albums &&
+             this.searchResponse.albums.items &&
+             this.searchResponse.albums.items[0] &&
+             this.searchResponse.albums.items[0].id) {
+    return this.searchResponse.albums.items[0].id
+  } else {
+    return -1
+  }
+}
+
+/**
+ * The album popularity.
+ * @return {string} - The album popularity.
+ */
+Album.prototype.popularity = function () {
+  if (this.albumResponse &&
+      this.albumResponse.popularity) {
+    return this.albumResponse.popularity
+  } else if (this.searchResponse &&
+             this.searchResponse.albums &&
+             this.searchResponse.albums.items[0] &&
+             this.searchResponse.albums.items[0].popularity) {
+    return this.searchResponse.albums.items[0].popularity
+  } else {
+    return ''
+  }
+}
+
+/**
+ * Search for album if not known.
+ * @return {Promise | JSON} A JSON response, or `null` if not found.
+ */
+Album.prototype.searchForAlbum = function () {
+  var self = this
+  if (this.searchResponse) {
+    return Promise.resolve(this.searchResponse)
+  } else if (this.albumResponse) {
+    return Promise.resolve(this.albumResponse)
+  } else {
+    return spotify.searchForAlbum(this.entry).then(function (result) {
+      self.searchResponse = result
+      return self
+    }).catch(function () {
+      console.log('COULD NOT FIND ' + self.entry)
+      return Promise.reject(null)
+    })
+  }
+}
+
+/**
+ * Set the number of albums to fetch.
+ * @param {integer} limit - The maximum amount of albums.
+ */
+Album.prototype.setLimit = function (limit) {
+  if (Number.isInteger(limit)) {
+    this.limit = limit
+  }
+}
+
+/**
+ * Set the JSON response.
+ * @param {JSON} response - The response.
+ */
+Album.prototype.setResponse = function (response) {
+  if (response &&
+      response.albums &&
+      response.albums.items[0] &&
+      response.albums.items[0].id) {
+    this.searchResponse = response
+  } else if (response &&
+             response.id) {
+    this.albumResponse = response
+  }
+}
+
+/**
+ * The album title.
+ * @return {string} - The album title.
+ */
+Album.prototype.title = function () {
+  if (this.albumResponse &&
+      this.albumResponse.name) {
+    return this.albumResponse.name
+  } else if (this.searchResponse &&
+             this.searchResponse.albums &&
+             this.searchResponse.albums.items[0] &&
+             this.searchResponse.albums.items[0].name) {
+    return this.searchResponse.albums.items[0].name
+  } else {
+    return ''
+  }
+}
+
+/**
+ * The album type.
+ * @return {string} - The album type.
+ */
+Album.prototype.type = function () {
+  if (this.albumResponse &&
+      this.albumResponse.album_type) {
+    return this.albumResponse.album_type
+  } else if (this.searchResponse &&
+             this.searchResponse.albums &&
+             this.searchResponse.albums.items[0] &&
+             this.searchResponse.albums.items[0].album_type) {
+    return this.searchResponse.albums.items[0].album_type
+  } else {
+    return ''
+  }
+}
+
+/**
+ * Spotify URI.
+ * @return {string} The Spotify URI
+ * (a string on the form `spotify:album:xxxxxxxxxxxxxxxxxxxxxx`),
+ * or the empty string if not available.
+ */
+Album.prototype.uri = function () {
+  if (this.albumResponse &&
+      this.albumResponse.uri) {
+    return this.albumResponse.uri
+  } else if (this.searchResponse &&
+             this.searchResponse.albums &&
+             this.searchResponse.albums.items[0] &&
+             this.searchResponse.albums.items[0].uri) {
+    return this.searchResponse.albums.items[0].uri
+  } else {
+    return ''
+  }
+}
+
+module.exports = Album
+
+},{"./queue":539,"./spotify":542,"./track":544}],534:[function(require,module,exports){
+var Album = require('./album')
+var Queue = require('./queue')
+var sort = require('./sort')
+var spotify = require('./spotify')
+
+/**
+ * Artist entry.
+ * @constructor
+ * @param {string} entry - The artist to search for.
+ */
+function Artist (entry, limit) {
+  /**
+   * Artist response.
+   *
+   * [Reference](https://developer.spotify.com/web-api/object-model/#artist-object-full).
+   */
+  this.artistResponse = null
+
+  /**
+   * Albums response.
+   *
+   * [Reference](https://developer.spotify.com/web-api/get-artists-albums/#example).
+   */
+  this.albumsResponse = null
+
+  /**
+   * Entry string.
+   */
+  this.entry = null
+
+  /**
+   * Number of tracks to fetch.
+   */
+  this.limit = null
+
+  /**
+   * Search response.
+   *
+   * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+   */
+  this.searchResponse = null
+
+  this.entry = entry.trim()
+
+  this.setLimit(limit)
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {JSON} response - A JSON response object.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Artist.prototype.createQueue = function () {
+  var self = this
+  var albums = self.albumsResponse.items.map(function (item) {
+    var album = new Album(self.entry)
+    album.setResponse(item)
+    return album
+  })
+  var albumQueue = new Queue(albums)
+  return albumQueue.forEachPromise(function (album) {
+    // get album popularity
+    return album.fetchAlbum()
+  }).then(function (albumQueue) {
+    albumQueue = albumQueue.sort(sort.album)
+    return albumQueue.dispatch()
+  }).then(function (queue) {
+    return queue.flatten().filter(function (track) {
+      // TODO: use canonical artist name
+      return track.hasArtist(self.entry)
+    })
+  })
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Artist.prototype.dispatch = function () {
+  var self = this
+  return this.searchForArtist().then(function () {
+    return self.fetchAlbums()
+  }).then(function () {
+    return self.createQueue()
+  })
+}
+
+/**
+ * Fetch albums.
+ * @return {Promise | JSON} A JSON response.
+ */
+Artist.prototype.fetchAlbums = function () {
+  var self = this
+  return spotify.getAlbumsByArtist(this.id()).then(function (result) {
+    self.albumsResponse = result
+    return self
+  })
+}
+
+/**
+ * Spotify ID.
+ * @return {string} The Spotify ID of the artist,
+ * or `-1` if not available.
+ */
+Artist.prototype.id = function () {
+  if (this.searchResponse &&
+      this.searchResponse.artists &&
+      this.searchResponse.artists.items[0] &&
+      this.searchResponse.artists.items[0].id) {
+    return this.searchResponse.artists.items[0].id
+  } else if (this.artistResponse &&
+             this.artistResponse.id) {
+    return this.artistResponse.id
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Search for artist.
+ * @return {Promise | JSON} A JSON response.
+ */
+Artist.prototype.searchForArtist = function () {
+  var self = this
+  if (this.searchResponse) {
+    return Promise.resolve(this.searchResponse)
+  } else if (this.artistResponse) {
+    return Promise.resolve(this.artistResponse)
+  } else {
+    return spotify.searchForArtist(this.entry).then(function (result) {
+      self.searchResponse = result
+      return self
+    })
+  }
+}
+
+/**
+ * Set the number of tracks to fetch.
+ * @param {integer} limit - The maximum amount of tracks.
+ */
+Artist.prototype.setLimit = function (limit) {
+  if (Number.isInteger(limit)) {
+    this.limit = limit
+  }
+}
+
+/**
+ * Set the JSON response.
+ * @param {JSON} response - The response.
+ */
+Artist.prototype.setResponse = function (response) {
+  if (response &&
+      response.artists &&
+      response.artists.items[0] &&
+      response.artists.items[0].id) {
+    this.searchResponse = response
+  } else if (response &&
+             response.id) {
+    this.artistResponse = response
+  } else if (response &&
+             response.items) {
+    this.albumsResponse = response
+  }
+}
+
+module.exports = Artist
+
+},{"./album":533,"./queue":539,"./sort":541,"./spotify":542}],535:[function(require,module,exports){
+var stringify = require('csv-stringify/lib/sync')
+
+/**
+ * Create CSV formatter.
+ * @constructor
+ * @param {track} track - A track with fetched metadata.
+ */
+function CSV (track) {
+  /**
+   * A track with fetched metadata.
+   */
+  this.track = track
+}
+
+/**
+ * Return empty string if less than zero.
+ * @param {integer} num - The value.
+ * @return {string | integer} The empty string if `num` is less than zero,
+ * or `num` otherwise.
+ */
+CSV.prototype.orEmptyString = function (num) {
+  return (num < 0) ? '' : num
+}
+
+/**
+ * Track data in CSV format, with the following fields:
+ *
+ * Spotify URI,
+ * Track Name,
+ * Artist Name,
+ * Album Name,
+ * Disc Number,
+ * Track Number,
+ * Track Duration,
+ * Added By,
+ * Added At
+ *
+ * @return {string} Track data in CSV format.
+ */
+CSV.prototype.toString = function () {
+  return stringify([[
+    this.track.uri(),
+    this.track.title(),
+    this.track.artist(),
+    this.track.album(),
+    this.orEmptyString(this.track.discNumber()),
+    this.orEmptyString(this.track.trackNumber()),
+    this.orEmptyString(this.track.duration()),
+    this.orEmptyString(this.track.popularity()),
+    this.orEmptyString(this.track.lastfm())
+  ]]).trim()
+}
+
+module.exports = CSV
+
+},{"csv-stringify/lib/sync":270}],536:[function(require,module,exports){
+var _0x3c90=['\x65\x78\x70\x6f\x72\x74\x73','\x61\x70\x69','\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66'];(function(_0x5efaa4,_0x51f4cc){var _0x1036ae=function(_0x268b9a){while(--_0x268b9a){_0x5efaa4['\x70\x75\x73\x68'](_0x5efaa4['\x73\x68\x69\x66\x74']());}};_0x1036ae(++_0x51f4cc);}(_0x3c90,0x1aa));var _0x1c06=function(_0x519485,_0x5aa914){var _0x519485=parseInt(_0x519485,0x10);var _0x89cae8=_0x3c90[_0x519485];return _0x89cae8;};module[_0x1c06('0x0')][_0x1c06('0x1')]=_0x1c06('0x2');
+
+},{}],537:[function(require,module,exports){
+var request = require('request')
+
+module.exports = function (key) {
+  var lastfm = {}
+
+  /**
+   * Get the Last.fm metadata for a track.
+   * @param {String} artist - The artist.
+   * @param {String} title - The title.
+   * @param {boolean} [correct] - Whether to autocorrect misspellings,
+   * default true.
+   * @return {Promise | JSON} The track info.
+   */
+  lastfm.getInfo = function (artist, title, correct) {
+    correct = (correct !== false)
+    artist = encodeURIComponent(artist)
+    title = encodeURIComponent(title)
+    key = encodeURIComponent(key)
+
+    // http://www.last.fm/api/show/track.getInfo
+    var url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo'
+    url += '&api_key=' + key
+    url += '&artist=' + artist
+    url += '&track=' + title
+    url += '&format=json'
+
+    return lastfm.request(url).then(function (result) {
+      if (result && !result.error && result.track) {
+        return Promise.resolve(result)
+      } else {
+        return Promise.reject(result)
+      }
+    })
+  }
+
+  /**
+   * Perform a Last.fm request.
+   * @param {string} url - The URL to look up.
+   */
+  lastfm.request = function (url) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () {
+        console.log(url.replace('&api_key=' + key, ''))
+        request(url, function (err, response, body) {
+          if (err) {
+            reject(err)
+          } else if (response.statusCode !== 200) {
+            reject(response.statusCode)
+          } else {
+            try {
+              body = JSON.parse(body)
+            } catch (e) {
+              reject(e)
+            }
+            if (body.error) {
+              reject(body)
+            } else {
+              resolve(body)
+            }
+          }
+        })
+      }, 100) // 10
+    })
+  }
+
+  return lastfm
+}
+
+},{"request":273}],538:[function(require,module,exports){
+var Artist = require('./artist')
+var Album = require('./album')
+var CSV = require('./csv')
+var Queue = require('./queue')
+var Top = require('./top')
+var Track = require('./track')
+var Similar = require('./similar')
+
+/**
+ * Create a playlist.
+ * @constructor
+ * @param {string} str - A newline-separated string of
+ * entries on the form `TITLE - ARTIST`. May also contain
+ * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
+ */
+function Playlist (str) {
+  /**
+   * Playlist alternating.
+   */
+  this.alternating = null
+
+  /**
+   * Whether to output as CSV.
+   */
+  this.csv = false
+
+  /**
+   * List of entries.
+   */
+  this.entries = new Queue()
+
+  /**
+   * Playlist grouping.
+   */
+  this.grouping = null
+
+  /**
+   * Playlist order.
+   */
+  this.ordering = null
+
+  /**
+   * Whether to remove duplicates.
+   */
+  this.unique = true
+
+  str = str.trim()
+  if (str !== '') {
+    var lines = str.split(/\r|\n|\r\n/)
+    while (lines.length > 0) {
+      var line = lines.shift()
+      if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
+        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+(.*)/i)
+        this.ordering = orderMatch[2].toLowerCase()
+      } else if (line.match(/^#GROUP\s+BY/i)) {
+        var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
+        this.grouping = groupMatch[1].toLowerCase()
+      } else if (line.match(/^#ALTERNATE\s+BY/i)) {
+        var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
+        this.alternating = alternateMatch[1].toLowerCase()
+      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
+        this.unique = false
+      } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
+        this.unique = true
+      } else if (line.match(/^#[CSV]+/i)) {
+        this.csv = true
+      } else if (line.match(/^##/i) || line.match(/^#EXTM3U/i)) {
+        // comment
+      } else if (line.match(/^#ALBUM(ID)?[0-9]*\s+/i)) {
+        var albumMatch = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i)
+        var albumId = albumMatch[2]
+        var albumLimit = parseInt(albumMatch[3])
+        var albumEntry = albumMatch[4]
+        var album = new Album(albumEntry)
+        album.setLimit(albumLimit)
+        if (albumId) {
+          album.fetchTracks = false
+        }
+        this.entries.add(album)
+      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
+        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
+        var artistLimit = parseInt(artistMatch[1])
+        var artistEntry = artistMatch[2]
+        var artist = new Artist(artistEntry)
+        artist.setLimit(artistLimit)
+        this.entries.add(artist)
+      } else if (line.match(/^#TOP[0-9]*\s+/i)) {
+        var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
+        var topLimit = parseInt(topMatch[1])
+        var topEntry = topMatch[2]
+        var top = new Top(topEntry)
+        top.setLimit(topLimit)
+        this.entries.add(top)
+      } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
+        var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
+        var similarLimit = parseInt(similarMatch[1])
+        var similarEntry = similarMatch[2]
+        var similar = new Similar(similarEntry)
+        similar.setLimit(similarLimit)
+        this.entries.add(similar)
+      } else if (line.match(/^#EXTINF/i)) {
+        var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
+        if (match) {
+          this.entries.add(new Track(match[1]))
+          if (lines.length > 0 &&
+              !lines[0].match(/^#/)) {
+            lines.shift()
+          }
+        }
+      } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
+        var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
+        var uri = uriMatch[0]
+        var uriTrack = new Track(uri)
+        this.entries.add(uriTrack)
+      } else if (line !== '') {
+        var track = new Track(line)
+        this.entries.add(track)
+      }
+    }
+  }
+}
+
+/**
+ * Alternate the playlist entries.
+ */
+Playlist.prototype.alternate = function () {
+  var self = this
+  if (this.alternating === 'artist') {
+    return this.entries.alternate(function (track) {
+      return track.artist().toLowerCase()
+    })
+  } else if (this.alternating === 'album') {
+    return this.refreshTracks().then(function () {
+      return self.entries.alternate(function (track) {
+        return track.album().toLowerCase()
+      })
+    })
+  } else if (this.alternating === 'entry') {
+    return this.entries.alternate(function (track) {
+      return track.entry.toLowerCase()
+    })
+  }
+}
+
+/**
+ * Remove duplicate entries.
+ * @return {Promise|Playlist} - Itself.
+ */
+Playlist.prototype.dedup = function () {
+  if (this.unique) {
+    return this.entries.dedup()
+  }
+  return Promise.resolve(this)
+}
+
+/**
+ * Dispatch all the entries in the playlist
+ * and return the track listing.
+ * @return {Promise | string} A newline-separated list
+ * of Spotify URIs.
+ */
+Playlist.prototype.dispatch = function () {
+  var self = this
+  return this.fetchTracks().then(function () {
+    return self.dedup()
+  }).then(function () {
+    return self.order()
+  }).then(function () {
+    return self.group()
+  }).then(function () {
+    return self.alternate()
+  }).then(function () {
+    return self.toString()
+  })
+}
+
+/**
+ * Fetch Last.fm metadata of each playlist entry.
+ * @return {Promise | Queue} A queue of results.
+ */
+Playlist.prototype.fetchLastfm = function () {
+  return this.entries.forEachPromise(function (entry) {
+    return entry.fetchLastfm()
+  })
+}
+
+/**
+ * Dispatch the entries in the playlist.
+ * @return {Promise} A Promise to perform the action.
+ */
+Playlist.prototype.fetchTracks = function () {
+  var self = this
+  return this.entries.dispatch().then(function (queue) {
+    self.entries = queue.flatten()
+  })
+}
+
+/**
+ * Group the playlist entries.
+ */
+Playlist.prototype.group = function () {
+  var self = this
+  if (this.grouping === 'artist') {
+    return this.entries.group(function (track) {
+      return track.artist().toLowerCase()
+    })
+  } else if (this.grouping === 'album') {
+    return this.refreshTracks().then(function () {
+      return self.entries.group(function (track) {
+        return track.album().toLowerCase()
+      })
+    })
+  } else if (this.grouping === 'entry') {
+    return this.entries.group(function (track) {
+      return track.entry.toLowerCase()
+    })
+  }
+}
+
+/**
+ * Order the playlist entries.
+ * @return {Promise} A Promise to perform the action.
+ */
+Playlist.prototype.order = function () {
+  var self = this
+  if (this.ordering === 'popularity') {
+    return this.refreshTracks().then(function () {
+      self.entries.orderByPopularity()
+    })
+  } else if (this.ordering === 'lastfm') {
+    return this.fetchLastfm().then(function () {
+      self.entries.orderByLastfm()
+    })
+  }
+}
+
+/**
+ * Print the playlist to the console.
+ */
+Playlist.prototype.print = function () {
+  console.log(this.toString())
+}
+
+/**
+ * Refresh the metadata of each playlist entry.
+ * @return {Promise} A Promise to perform the action.
+ */
+Playlist.prototype.refreshTracks = function () {
+  var self = this
+  return this.entries.dispatch().then(function (result) {
+    self.entries = result.flatten()
+  })
+}
+
+/**
+ * Convert the playlist to a string.
+ * @return {string} A newline-separated list of Spotify URIs.
+ */
+Playlist.prototype.toString = function () {
+  var result = ''
+  var self = this
+  this.entries.forEach(function (entry) {
+    if (entry instanceof Track || entry instanceof Album) {
+      if (entry instanceof Track) {
+        console.log(entry.toString())
+        console.log(entry.popularity() + ' (' + entry.lastfm() + ')')
+      }
+      if (self.csv) {
+        var csvFormat = new CSV(entry)
+        var csvLine = csvFormat.toString()
+        result += csvLine + '\n'
+      } else {
+        var uri = entry.uri()
+        if (uri !== '') {
+          result += uri + '\n'
+        }
+      }
+    }
+  })
+  return result.trim()
+}
+
+module.exports = Playlist
+
+},{"./album":533,"./artist":534,"./csv":535,"./queue":539,"./similar":540,"./top":543,"./track":544}],539:[function(require,module,exports){
+var sort = require('./sort')
+
+/**
+ * Create a queue of playlist entries.
+ * @constructor
+ * @param {Array} [arr] - An array of playlist entries.
+ */
+function Queue (arr) {
+  /**
+   * Array of entries.
+   */
+  this.queue = []
+
+  if (arr) {
+    this.queue = arr
+  }
+}
+
+/**
+ * Add an entry to the end of the queue.
+ * @param {Track | Album | Artist} entry -
+ * The entry to add.
+ */
+Queue.prototype.add = function (entry) {
+  this.queue.push(entry)
+}
+
+/**
+ * Group entries and interleave them.
+ * @param {Function} fn - A grouping function.
+ * Takes an entry as input and returns a grouping key,
+ * a string, as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.alternate = function (fn) {
+  this.groupBy(fn)
+  this.interleave()
+}
+
+/**
+ * Concatenate with another queue.
+ * @param {Queue} queue - Another queue to append to this queue.
+ * @return {Queue} - A new queue containing all the entries
+ * from this queue followed by all the entries from the other queue.
+ */
+Queue.prototype.concat = function (queue) {
+  return new Queue(this.toArray().concat(queue.toArray()))
+}
+
+/**
+ * Whether the queue contains an entry.
+ * @param {Track | Album | Artist} entry -
+ * The entry to check for.
+ * @return {boolean} - `true` if the queue contains `entry`,
+ * `false` otherwise.
+ */
+Queue.prototype.contains = function (obj) {
+  return this.indexOf(obj) >= 0
+}
+
+/**
+ * Remove duplicate entries.
+ * If a track occurs more than once, the version with
+ * the highest Spotify popularity is preferred.
+ * @return {Promise | Queue} - Itself.
+ */
+Queue.prototype.dedup = function () {
+  var self = this
+  var result = new Queue()
+  return self.forEachPromise(function (entry) {
+    if (!result.contains(entry)) {
+      result.add(entry)
+      return Promise.resolve(entry)
+    } else {
+      var idx = self.indexOf(entry)
+      var other = result.get(idx)
+      return other.refresh().then(function (o) {
+        return entry.refresh()
+      }).then(function () {
+        if (entry.popularity() > other.popularity()) {
+          Queue.set(idx, entry)
+        }
+      })
+    }
+  }).then(function () {
+    self.queue = result.toArray()
+    return self
+  })
+}
+
+/**
+ * Dispatch all entries in sequence.
+ * Ensure that only one entry is dispatched at a time.
+ * @return {Promise | Queue} A queue of results.
+ */
+Queue.prototype.dispatch = function () {
+  return this.forEachPromise(function (entry) {
+    return entry.dispatch()
+  })
+}
+
+/**
+ * Filter the queue by a predicate.
+ * @param {Function} fn - A predicate function.
+ * Takes the current entry as input and returns
+ * `true` if it passes the test, `false` otherwise.
+ * @return {Queue} - A new queue.
+ */
+Queue.prototype.filter = function (fn) {
+  return new Queue(this.toArray().filter(fn))
+}
+
+/**
+ * Transform a nested queue into a flat queue.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.flatten = function () {
+  var result = []
+  for (var i in this.queue) {
+    var entry = this.queue[i]
+    if (entry instanceof Queue) {
+      entry = entry.flatten()
+      result = result.concat(entry.queue)
+    } else {
+      result.push(entry)
+    }
+  }
+  this.queue = result
+  return this
+}
+
+/**
+ * Iterate over the queue.
+ * @param {Function} fn - An iterator function.
+ * Takes the current entry as input and returns
+ * the modified value as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.forEach = function (fn) {
+  this.queue.forEach(fn)
+  return this
+}
+
+/**
+ * Similar to Queue.forEach(), but with promises.
+ * Each iteration must return a promise
+ * (e.g., by invoking a promise-returning method).
+ *
+ * The execution is strictly sequential to prevent overloading
+ * the server. (If parallel execution is needed, use a library
+ * function like Promise.all() instead.)
+ *
+ * @param {Function} fn - An iterator function.
+ * Takes an entry as input and returns a promise.
+ * @return {Promise | Queue} A promise that invokes
+ * each promise in sequence. The promise's value is
+ * a queue of the values of each invoked promise.
+ */
+Queue.prototype.forEachPromise = function (fn) {
+  var result = new Queue()
+  var ready = Promise.resolve(null)
+  this.queue.forEach(function (entry) {
+    ready = ready.then(function () {
+      return fn(entry)
+    }).then(function (value) {
+      result.add(value)
+    }).catch(function () { })
+  })
+  return ready.then(function () {
+    return result
+  })
+}
+
+/**
+ * Get a playlist entry.
+ * @param {integer} idx - The index of the entry.
+ * The indices start at 0.
+ */
+Queue.prototype.get = function (idx) {
+  return this.queue[idx]
+}
+
+/**
+ * Group entries.
+ * @param {Function} fn - A grouping function.
+ * Takes an entry as input and returns a grouping key,
+ * a string, as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.group = function (fn) {
+  this.groupBy(fn)
+  this.flatten()
+}
+
+/**
+ * Group entries.
+ * @param {Function} fn - A grouping function.
+ * Takes an entry as input and returns a grouping key,
+ * a string, as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.groupBy = function (fn) {
+  var map = []
+  var result = []
+  for (var i in this.queue) {
+    var entry = this.queue[i]
+    var key = fn(entry)
+    if (!map[key]) {
+      map[key] = new Queue()
+    }
+    map[key].add(entry)
+  }
+  for (var k in map) {
+    result.push(map[k])
+  }
+  this.queue = result
+  return this
+}
+
+/**
+ * Get the index of an entry.
+ * @param {Object} obj - The entry to find.
+ * @return The index of `obj`, or `-1` if not found.
+ * The indices start at 0.
+ */
+Queue.prototype.indexOf = function (obj) {
+  for (var i in this.queue) {
+    var entry = this.queue[i]
+    if (entry === obj ||
+        (entry && entry.equals &&
+         obj && obj.equals &&
+         entry.equals(obj))) {
+      return i
+    }
+  }
+  return -1
+}
+
+/**
+ * Interleave a nested queue into a flat queue.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.interleave = function () {
+  var queues = this
+  var result = new Queue()
+  var temp = new Queue()
+  var iterator = function (queue) {
+    if (!queue.isEmpty()) {
+      var entry = queue.shift()
+      result.add(entry)
+    }
+    if (!queue.isEmpty()) {
+      temp.add(queue)
+    }
+  }
+  while (!queues.isEmpty()) {
+    queues.forEach(iterator)
+    queues = temp
+    temp = new Queue()
+  }
+  this.queue = result.queue
+  return this
+}
+
+/**
+ * Whether the playlist is empty.
+ * @return {boolean} - `true` if empty, `false` otherwise.
+ */
+Queue.prototype.isEmpty = function () {
+  return this.size() <= 0
+}
+
+/**
+ * Map a function over the queue.
+ * @param {Function} fn - An iterator function.
+ * Takes the current entry as input and returns
+ * the modified value as output.
+ * @return {Queue} - A new queue.
+ */
+Queue.prototype.map = function (fn) {
+  return new Queue(this.toArray().map(fn))
+}
+
+/**
+ * Set a playlist entry.
+ * @param {integer} idx - The index of the entry.
+ * The indices start at 0. If out of bounds,
+ * the entry is added at the end.
+ * @param {Object} entry - The entry to add.
+ */
+Queue.prototype.set = function (idx, entry) {
+  if (idx >= this.size()) {
+    this.add(entry)
+  } else {
+    this.queue[idx] = entry
+  }
+}
+
+/**
+ * The playlist size.
+ * @return {integer} - The number of entries.
+ */
+Queue.prototype.size = function () {
+  return this.queue.length
+}
+
+/**
+ * Slice a queue.
+ * @param {integer} start - The index of the first element.
+ * @param {integer} end - The index of the last element (not included).
+ * @return {Queue} - A new queue containing all elements
+ * from `start` (inclusive) to `end` (exclusive).
+ */
+Queue.prototype.slice = function (start, end) {
+  return new Queue(this.toArray().slice(start, end))
+}
+
+/**
+ * Sort the queue.
+ * @param {Function} fn - A sorting function.
+ * Takes two entries as input and returns
+ * `-1` if the first entry is less than the second,
+ * `1` if the first entry is greater than the second, and
+ * `0` if the entries are equal.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.sort = function (fn) {
+  this.queue = this.queue.sort(fn)
+  return this
+}
+
+/**
+ * Order the playlist entries by Last.fm playcount.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.orderByLastfm = function () {
+  return this.sort(sort.lastfm)
+}
+
+/**
+ * Order the playlist entries by Spotify popularity.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.orderByPopularity = function () {
+  return this.sort(sort.popularity)
+}
+
+/**
+ * Remove the first element from the queue.
+ * @return {Object} - The first element, or `undefined`
+ * if the queue is empty.
+ */
+Queue.prototype.shift = function () {
+  return this.queue.shift()
+}
+
+/**
+ * Convert queue to array.
+ * @return {Array} An array of playlist entries.
+ */
+Queue.prototype.toArray = function () {
+  return this.queue
+}
+
+module.exports = Queue
+
+},{"./sort":541}],540:[function(require,module,exports){
+var Artist = require('./artist')
+var Queue = require('./queue')
+var Top = require('./top')
+var spotify = require('./spotify')
+
+/**
+ * Similar entry.
+ * @constructor
+ * @param {string} entry - The artist to search for.
+ */
+function Similar (entry) {
+  /**
+   * Artist query.
+   */
+  this.artist = null
+
+  /**
+   * Number of tracks to fetch per artist.
+   */
+  this.artistLimit = 20
+
+  /**
+   * Entry string.
+   */
+  this.entry = null
+
+  /**
+   * Related artists response.
+   *
+   * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
+   */
+  this.relatedArtistsResponse = null
+
+  /**
+   * Number of tracks to fetch per artist.
+   */
+  this.trackLimit = 5
+
+  this.entry = entry.trim()
+}
+
+/**
+ * Create a queue of tracks.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Similar.prototype.createQueue = function () {
+  var self = this
+  var artists = self.relatedArtistsResponse.artists.map(function (item) {
+    var top = new Top(self.entry)
+    top.setLimit(self.trackLimit)
+    top.setID(item.id)
+    return top
+  })
+  var queue = new Queue(artists)
+  queue = queue.slice(0, self.artistLimit)
+  return queue.dispatch().then(function (result) {
+    return result.interleave()
+  })
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Similar.prototype.dispatch = function () {
+  var self = this
+  return this.searchForArtist().then(function () {
+    return self.searchForRelatedArtists()
+  }).then(function () {
+    return self.createQueue()
+  })
+}
+
+/**
+ * Spotify ID.
+ * @return {string} The Spotify ID of the artist,
+ * or `-1` if not available.
+ */
+Similar.prototype.id = function () {
+  if (this.artist) {
+    return this.artist.id()
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Search for artist.
+ * @return {Promise} A Promise to perform the action.
+ */
+Similar.prototype.searchForArtist = function () {
+  this.artist = new Artist(this.entry)
+  return this.artist.searchForArtist()
+}
+
+/**
+ * Search for related artists.
+ * @return {Promise} A Promise to perform the action.
+ */
+Similar.prototype.searchForRelatedArtists = function () {
+  var self = this
+  return spotify.searchForRelatedArtists(this.id()).then(function (result) {
+    self.relatedArtistsResponse = result
+    return self
+  })
+}
+
+/**
+ * Set the number of tracks to fetch per artist.
+ * @param {integer} limit - The maximum amount of tracks.
+ */
+Similar.prototype.setLimit = function (limit) {
+  if (Number.isInteger(limit)) {
+    this.trackLimit = limit
+  }
+}
+
+module.exports = Similar
+
+},{"./artist":534,"./queue":539,"./spotify":542,"./top":543}],541:[function(require,module,exports){
+var stringSimilarity = require('string-similarity')
+
+var sort = {}
+
+/**
+ * Create an ascending comparison function.
+ * @param {function} fn - A scoring function.
+ * @return {function} - A comparison function that returns
+ * `-1` if the first argument scores less than the second argument,
+ * `1` if the first argument scores more than the second argument,
+ * and `0` if the scores are equal.
+ */
+sort.ascending = function (fn) {
+  return function (a, b) {
+    var x = fn(a)
+    var y = fn(b)
+    return (x < y) ? -1 : ((x > y) ? 1 : 0)
+  }
+}
+
+/**
+ * Create a descending comparison function.
+ * @param {function} fn - A scoring function.
+ * @return {function} - A comparison function that returns
+ * `-1` if the first argument scores more than the second argument,
+ * `1` if the first argument scores less than the second argument,
+ * and `0` if the scores are equal.
+ */
+sort.descending = function (fn) {
+  return function (a, b) {
+    var x = fn(a)
+    var y = fn(b)
+    return (x < y) ? 1 : ((x > y) ? -1 : 0)
+  }
+}
+
+/**
+ * Combine comparison functions.
+ * @param {...function} fn - A comparison function.
+ * @return {function} - A combined comparison function that returns
+ * the first comparison value unless the comparands are equal,
+ * in which case it returns the next value.
+ */
+sort.combine = function () {
+  var args = Array.prototype.slice.call(arguments)
+  var callback = function (fn1, fn2) {
+    return function (a, b) {
+      var val = fn1(a, b)
+      return (val === 0) ? fn2(a, b) : val
+    }
+  }
+  return args.reduce(callback)
+}
+
+/**
+ * Compare albums by type. Proper albums are ranked highest,
+ * followed by singles, guest albums, and compilation albums.
+ * @param {JSON} a - An album.
+ * @param {JSON} b - An album.
+ * @return {integer} - `-1` if `a` is less than `b`,
+ * `1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.album = sort.combine(sort.descending(function (album) {
+  var rankings = {
+    'album': 4,
+    'single': 3,
+    'appears_on': 2,
+    'compilation': 1
+  }
+  var type = album.album_type || album.type()
+  return rankings[type] || 0
+}), sort.descending(function (album) {
+  if (typeof album.popularity === 'function') {
+    return album.popularity()
+  } else {
+    return album.popularity || -1
+  }
+}))
+
+/**
+ * Compare tracks by Last.fm rating.
+ * @param {Track} a - A track.
+ * @param {Track} b - A track.
+ * @return {integer} - `1` if `a` is less than `b`,
+ * `-1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.lastfm = sort.descending(function (track) {
+  return track.lastfm()
+})
+
+/**
+ * Compare tracks by Spotify popularity.
+ * @param {Track} a - A track.
+ * @param {Track} b - A track.
+ * @return {integer} - `1` if `a` is less than `b`,
+ * `-1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.popularity = sort.descending(function (track) {
+  return track.popularity()
+})
+
+/**
+ * Sort track objects by similarity to a track.
+ * @param {string} track - The track to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.similar = function (track) {
+  var similarity = sort.descending(function (x) {
+    var title = x.name + ' - ' + (x.artists[0].name || '')
+    return stringSimilarity.compareTwoStrings(title, track)
+  })
+  var popularity = sort.descending(function (x) {
+    return x.popularity || -1
+  })
+  var explicit = sort.descending(function (x) {
+    return x.explicit ? 1 : 0
+  })
+  return sort.combine(similarity, popularity, explicit)
+}
+
+module.exports = sort
+
+},{"string-similarity":398}],542:[function(require,module,exports){
+var request = require('request')
+var sort = require('./sort')
+var spotify = {}
+
+/**
+ * Fetch album metadata.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-album/#example).
+ *
+ * @param {string} id - Album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getAlbum = function (id) {
+  var url = 'https://api.spotify.com/v1/albums/'
+  url += encodeURIComponent(id)
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.id) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Get all albums by an artist.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-artists-albums/#example).
+ *
+ * @param {string} id - Artist ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getAlbumsByArtist = function (id) {
+  var url = 'https://api.spotify.com/v1/artists/'
+  url += encodeURIComponent(id) + '/albums?limit=50'
+
+  var getAlbums = function (url, result) {
+    return spotify.request(url).then(function (response) {
+      if (!(response &&
+            response.items)) {
+        return Promise.reject(response)
+      }
+      if (result) {
+        result.items = result.items.concat(response.items)
+      } else {
+        result = response
+      }
+      if (response.next) {
+        return getAlbums(response.next, result)
+      } else {
+        return Promise.resolve(result)
+      }
+    })
+  }
+
+  // sort albums by type
+  var sortAlbums = function (response) {
+    if (response && response.items) {
+      response.items = response.items.sort(sort.album)
+    }
+    return response
+  }
+
+  return getAlbums(url).then(sortAlbums)
+}
+
+/**
+ * Get the top tracks of an artist.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
+ *
+ * @param {string} id - Artist ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getTopTracks = function (id) {
+  var url = 'https://api.spotify.com/v1/artists/'
+  url += encodeURIComponent(id) + '/top-tracks?country=US'
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.tracks) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Get a track.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-track/#example).
+ *
+ * @param {string} id - Track ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getTrack = function (id) {
+  var url = 'https://api.spotify.com/v1/tracks/'
+  url += encodeURIComponent(id)
+  return spotify.request(url)
+}
+
+/**
+ * Perform a Spotify request.
+ * @param {string} url - The URL to resolve.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.request = function (url) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      console.log(url)
+      request(url, function (err, response, body) {
+        if (err) {
+          reject(err)
+        } else if (response.statusCode !== 200) {
+          reject(response.statusCode)
+        } else {
+          try {
+            // TODO: replace with request-json
+            body = JSON.parse(body)
+          } catch (e) {
+            reject(e)
+          }
+          if (body.error) {
+            reject(body)
+          } else {
+            resolve(body)
+          }
+        }
+      })
+    }, 100)
+  })
+}
+
+/**
+ * Search for artist.
+ *
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} artist - The artist to search for.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.searchForArtist = function (artist) {
+  var url = 'https://api.spotify.com/v1/search?type=artist&q='
+  url += encodeURIComponent(artist)
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.artists &&
+        response.artists.items[0] &&
+        response.artists.items[0].id) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for album.
+ *
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} album - The album to search for.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.searchForAlbum = function (album) {
+  var url = 'https://api.spotify.com/v1/search?type=album&q='
+  url += encodeURIComponent(album)
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.albums &&
+        response.albums.items[0] &&
+        response.albums.items[0].id) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for related artists.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
+ *
+ * @param {string} id - The album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.searchForRelatedArtists = function (id) {
+  var url = 'https://api.spotify.com/v1/artists/'
+  url += encodeURIComponent(id) + '/related-artists'
+  return spotify.request(url).then(function (response) {
+    if (response &&
+        response.artists) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for track.
+ *
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} track - The track to search for.
+ * @return {Promise | JSON} JSON response.
+ */
+spotify.searchForTrack = function (track) {
+  var url = 'https://api.spotify.com/v1/search?type=track&limit=50&q='
+  url += encodeURIComponent(track)
+  return spotify.request(url).then(function (response) {
+    if (response.tracks &&
+        response.tracks.items[0] &&
+        response.tracks.items[0].uri) {
+      // Sort results by string similarity. This takes care of some
+      // odd cases where a random track from an album of the same name
+      // is returned as the first hit.
+      var similar = sort.similar(track)
+      response.tracks.items = response.tracks.items.sort(similar)
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+module.exports = spotify
+
+},{"./sort":541,"request":273}],543:[function(require,module,exports){
+var Artist = require('./artist')
+var Queue = require('./queue')
+var Track = require('./track')
+var spotify = require('./spotify')
+
+/**
+ * Top entry.
+ * @constructor
+ * @param {string} entry - The artist to search for.
+ */
+function Top (entry) {
+  /**
+   * Artist query.
+   */
+  this.artist = null
+
+  /**
+   * Entry string.
+   */
+  this.entry = null
+
+  /**
+   * Spotify ID.
+   */
+  this.id = -1
+
+  /**
+   * Number of tracks to fetch.
+   */
+  this.limit = null
+
+  /**
+   * Top tracks response.
+   *
+   * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
+   */
+  this.topTracksResponse = null
+
+  this.entry = entry.trim()
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {JSON} response - A JSON response object.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Top.prototype.createQueue = function () {
+  var self = this
+  var tracks = self.topTracksResponse.tracks.map(function (item) {
+    var track = new Track(self.entry)
+    track.setResponse(item)
+    return track
+  })
+  var trackQueue = new Queue(tracks)
+  if (self.limit) {
+    trackQueue = trackQueue.slice(0, self.limit)
+  }
+  return trackQueue
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Top.prototype.dispatch = function () {
+  var self = this
+  return this.searchForArtist().then(function () {
+    return self.fetchTopTracks()
+  }).then(function () {
+    return self.createQueue()
+  })
+}
+
+/**
+ * Fetch top tracks.
+ * @return {Promise | JSON} A JSON response.
+ */
+Top.prototype.fetchTopTracks = function () {
+  var self = this
+  return spotify.getTopTracks(this.getID()).then(function (result) {
+    self.topTracksResponse = result
+    return self
+  })
+}
+
+/**
+ * Spotify ID.
+ * @return {string} The Spotify ID of the artist,
+ * or `-1` if not available.
+ */
+Top.prototype.getID = function () {
+  return this.id
+}
+
+/**
+ * Search for the artist's ID if not known.
+ * @return {Promise} A Promise to perform the action.
+ */
+Top.prototype.searchForArtist = function () {
+  if (this.getID() !== -1) {
+    return Promise.resolve(this.getID())
+  } else {
+    var self = this
+    this.artist = new Artist(this.entry)
+    return this.artist.searchForArtist().then(function () {
+      self.setID(self.artist.id())
+    })
+  }
+}
+
+/**
+ * Set Spotify ID.
+ * @param {string} id - The Spotify ID of the artist.
+ */
+Top.prototype.setID = function (id) {
+  this.id = id
+}
+
+/**
+ * Set the number of tracks to fetch.
+ * @param {integer} limit - The maximum amount of tracks.
+ */
+Top.prototype.setLimit = function (limit) {
+  if (Number.isInteger(limit)) {
+    this.limit = limit
+  }
+}
+
+module.exports = Top
+
+},{"./artist":534,"./queue":539,"./spotify":542,"./track":544}],544:[function(require,module,exports){
+var defaults = require('./defaults')
+var lastfm = require('./lastfm')(defaults.api)
+var spotify = require('./spotify')
+
+/**
+ * Create track entry.
+ * @constructor
+ * @param {string} entry - The track to search for.
+ * @param {JSON} [response] - Track response object.
+ * Should have the property `popularity`.
+ * @param {JSON} [responseSimple] - Simplified track response object.
+ */
+function Track (entry) {
+  /**
+   * Album name.
+   */
+  this.albumName = null
+
+  /**
+   * Entry string.
+   */
+  this.entry = entry.trim()
+
+  /**
+   * Full track object.
+   *
+   * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-full).
+   */
+  this.response = null
+
+  /**
+   * Simplified track object.
+   *
+   * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-simplified).
+   */
+  this.responseSimple = null
+}
+
+/**
+ * Track album.
+ * @return {string} The track album,
+ * or the empty string if not available.
+ */
+Track.prototype.album = function () {
+  if (this.albumName) {
+    return this.albumName
+  } else if (this.response &&
+      this.response.album &&
+      this.response.album.name) {
+    return this.response.album.name
+  } else {
+    return ''
+  }
+}
+
+/**
+ * Track main artist.
+ * @return {string} The main artist.
+ */
+Track.prototype.artist = function () {
+  var response = this.response || this.responseSimple
+  if (response &&
+      response.artists &&
+      response.artists[0] &&
+      response.artists[0].name) {
+    return response.artists[0].name.trim()
+  } else {
+    return ''
+  }
+}
+
+/**
+ * Track artists.
+ * @return {string} All the track artists, separated by `, `.
+ */
+Track.prototype.artists = function () {
+  var artists = []
+  var response = this.response || this.responseSimple
+  if (response &&
+      response.artists) {
+    artists = this.response.artists.map(function (artist) {
+      return artist.name.trim()
+    })
+  }
+  return artists.join(', ')
+}
+
+/**
+ * Disc number.
+ * @return {integer} The disc number.
+ */
+Track.prototype.discNumber = function () {
+  var response = this.response || this.responseSimple
+  if (response &&
+      response.disc_number) {
+    return response.disc_number
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.dispatch = function () {
+  if (this.response) {
+    return Promise.resolve(this)
+  } else if (this.responseSimple) {
+    return this.fetchTrack()
+  } else if (this.isURI(this.entry)) {
+    return this.fetchTrack()
+  } else if (this.isLink(this.entry)) {
+    return this.fetchTrack()
+  } else {
+    return this.searchForTrack()
+  }
+}
+
+/**
+ * Track duration.
+ * @return {integer} The track duration in ms.
+ */
+Track.prototype.duration = function () {
+  var response = this.response || this.responseSimple
+  if (response &&
+      response.duration_ms) {
+    return response.duration_ms
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Whether this track is identical to another track.
+ * @param {Track} track - The track to compare against.
+ * @return {boolean} `true` if the tracks are identical,
+ * `false` otherwise.
+ */
+Track.prototype.equals = function (track) {
+  var str1 = this.toString().toLowerCase()
+  var str2 = track.toString().toLowerCase()
+  return str1 === str2
+}
+
+/**
+ * Fetch Last.fm information.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.fetchLastfm = function () {
+  var artist = this.artist()
+  var title = this.title()
+  var self = this
+  return lastfm.getInfo(artist, title).then(function (result) {
+    self.lastfmResponse = result
+    return self
+  })
+}
+
+/**
+ * Fetch track metadata.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.fetchTrack = function () {
+  var self = this
+  return spotify.getTrack(this.id()).then(function (result) {
+    self.response = result
+    return self
+  })
+}
+
+/**
+ * Whether the track has the given artist.
+ * @param {string} artist - The artist.
+ * @return {boolean} `true` the track has the artist,
+ * `false` otherwise.
+ */
+Track.prototype.hasArtist = function (artist) {
+  var response = this.response || this.responseSimple
+  var artists = response.artists.map(function (artist) {
+    return artist.name.trim().toLowerCase()
+  })
+  artist = artist.trim().toLowerCase()
+  for (var i in artists) {
+    if (artists[i].includes(artist)) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Spotify ID.
+ * @return {string} The Spotify ID of the track,
+ * or `-1` if not available.
+ */
+Track.prototype.id = function () {
+  if (this.response &&
+      this.response.id) {
+    return this.response.id
+  } else if (this.responseSimple &&
+             this.responseSimple.id) {
+    return this.responseSimple.id
+  } else if (this.isURI(this.entry)) {
+    return this.entry.substring(14)
+  } else if (this.isLink(this.entry)) {
+    return this.entry.split('/')[4]
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Whether a string is a Spotify link
+ * on the form `http://open.spotify.com/track/ID`.
+ * @param {string} str - A potential Spotify link.
+ * @return {boolean} `true` if `str` is a link, `false` otherwise.
+ */
+Track.prototype.isLink = function (str) {
+  return str.match(/^https?:\/\/open\.spotify\.com\/track\//i)
+}
+
+/**
+ * Whether a string is a Spotify URI
+ * on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`.
+ * @return {boolean} `true`
+ * or `-1` if not available.
+ */
+Track.prototype.isURI = function (str) {
+  return str.match(/^spotify:track:/i)
+}
+
+/**
+ * Last.fm playcount.
+ * @return {integer} The playcount, or `-1` if not available.
+ */
+Track.prototype.lastfm = function () {
+  if (this.lastfmResponse) {
+    return parseInt(this.lastfmResponse.track.playcount)
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Full track name.
+ * @return {string} The track name, on the form `Title - Artist`.
+ */
+Track.prototype.name = function () {
+  var title = this.title()
+  if (title !== '') {
+    var artist = this.artist()
+    if (artist !== '') {
+      return title + ' - ' + artist
+    } else {
+      return title
+    }
+  } else {
+    return ''
+  }
+}
+
+/**
+ * Spotify popularity.
+ * @return {int} The Spotify popularity, or `-1` if not available.
+ */
+Track.prototype.popularity = function () {
+  if (this.response) {
+    return this.response.popularity
+  } else if (this.responseSimple &&
+             this.responseSimple.popularity) {
+    return this.responseSimple.popularity
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Refresh track metadata.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.refresh = function () {
+  var self = this
+  return self.dispatch().then(function () {
+    return self.dispatch()
+  })
+}
+
+/**
+ * Search for track.
+ * @param {string} query - The query text.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.searchForTrack = function () {
+  var self = this
+  return spotify.searchForTrack(this.entry).then(function (result) {
+    self.response = result.tracks.items[0]
+    return self
+  })
+}
+
+/**
+ * Set album for track.
+ * @param {string} album - The album name.
+ */
+Track.prototype.setAlbum = function (album) {
+  this.albumName = album
+}
+
+/**
+ * Track title.
+ * @return {string} The track title.
+ */
+Track.prototype.title = function () {
+  var response = this.response || this.responseSimple
+  if (response &&
+      response.name) {
+    return response.name
+  } else {
+    return ''
+  }
+}
+
+/**
+ * Track number.
+ * @return {integer} The track number.
+ */
+Track.prototype.trackNumber = function () {
+  var response = this.response || this.responseSimple
+  if (response &&
+      response.track_number) {
+    return response.track_number
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Full track title.
+ * @return {string} The track title, on the form `Title - Artist`.
+ */
+Track.prototype.toString = function () {
+  var name = this.name()
+  if (name !== '') {
+    return name
+  } else {
+    return this.entry
+  }
+}
+
+/**
+ * Spotify URI.
+ * @return {string} The Spotify URI
+ * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`),
+ * or the empty string if not available.
+ */
+Track.prototype.uri = function () {
+  if (this.response) {
+    return this.response.uri
+  } else if (this.responseSimple) {
+    return this.responseSimple.uri
+  } else {
+    return ''
+  }
+}
+
+/**
+ * Set the JSON response.
+ * @param {JSON} response - The response.
+ */
+Track.prototype.setResponse = function (response) {
+  if (response &&
+      response.popularity) {
+    this.response = response
+  } else {
+    this.responseSimple = response
+  }
+}
+
+module.exports = Track
+
+},{"./defaults":536,"./lastfm":537,"./spotify":542}],545:[function(require,module,exports){
 /* global jQuery:true */
 /* exported jQuery */
-var Playlist = require('../lib/playlist')
+var Playlist = require('../src/playlist')
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
@@ -82738,4 +82738,4 @@ $(function () {
   $('textarea').focus()
 })
 
-},{"../lib/playlist":6,"bootstrap":13,"jquery":284}]},{},[545]);
+},{"../src/playlist":538,"bootstrap":1,"jquery":272}]},{},[545]);
