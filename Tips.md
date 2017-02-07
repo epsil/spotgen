@@ -1,8 +1,6 @@
 Tips
 ====
 
-The input should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a [Spotify search](https://support.spotify.com/us/using_spotify/search_play/advanced-search1/). One can even add [field filters](https://developer.spotify.com/web-api/search-item/).
-
 Recipes
 -------
 
@@ -24,7 +22,7 @@ Recipes
     #top ...
     ...
 
-### Order albums by Last.fm rating
+### Albums ordered by Last.fm rating
 
     #order by lastfm
     #group by entry
@@ -33,7 +31,7 @@ Recipes
     #album ...
     ...
 
-### Pick first track from each album
+### First track from each album
 
     #alternate by album
     spotify:track:xxxxxxxxxxxxxxxxxxxxxx
@@ -98,6 +96,11 @@ to the compatible text file
 Since file name standards vary, the transformation requires some personal judgment; that is why it is not built into the script. See this [blog post](https://epsil.github.io/2013/11/23/) for more examples.
 
 Note that other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advanced_Stream_Redirector), [PLS](https://en.wikipedia.org/wiki/PLS_%28file_format%29), [WPL](https://en.wikipedia.org/wiki/Windows_Media_Player_Playlist) and [XSPF](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format), are difficult to work with directly. Therefore, it is recommended to save to M3U format and proceed as outlined above.
+
+Miscellaneous
+-------------
+
+The input should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a [Spotify search](https://support.spotify.com/us/using_spotify/search_play/advanced-search1/). One can even add [field filters](https://developer.spotify.com/web-api/search-item/).
 
 <!--
 Food for thought ...
