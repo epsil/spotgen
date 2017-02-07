@@ -16,7 +16,7 @@
     "spotify": "node spotify",
     "dump": "node spotify > output.txt && cat output.txt",
     "build": "npm run browser && npm run jsdoc",
-    "dist": "npm run minify && cp -r doc web && cp -r test web",
+    "dist": "npm run build && npm run minify && cp -r doc web && cp -r test web",
     "lint": "jshint index.js src/album.js src/artist.js src/csv.js src/lastfm.js src/playlist.js src/queue.js src/similar.js src/sort.js src/spotify.js src/top.js src/track.js web/web.js test/test.js && standard index.js src/album.js src/artist.js src/csv.js src/lastfm.js src/playlist.js src/queue.js src/similar.js src/sort.js src/spotify.js src/top.js src/track.js web/web.js test/test.js",
     "test": "mocha test/test.js",
     "tests": "npm run lint && npm run test",
