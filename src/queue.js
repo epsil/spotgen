@@ -289,7 +289,7 @@ Queue.prototype.map = function (fn) {
  * @param {Object} entry - The entry to add.
  */
 Queue.prototype.set = function (idx, entry) {
-  if (idx >= this.size()) {
+  if (idx < 0 || idx >= this.size()) {
     this.add(entry)
   } else {
     this.queue[idx] = entry
