@@ -201,18 +201,24 @@ Queue.prototype.group = function (fn) {
  */
 Queue.prototype.groupBy = function (fn) {
   var map = []
+  var rest = []
   var result = []
   for (var i in this.queue) {
     var entry = this.queue[i]
     var key = fn(entry)
-    if (!map[key]) {
-      map[key] = new Queue()
+    if (typeof key !== 'string' || key.trim() === '') {
+      rest.push(entry)
+    } else {
+      if (!map[key]) {
+        map[key] = new Queue()
+      }
+      map[key].add(entry)
     }
-    map[key].add(entry)
   }
   for (var k in map) {
     result.push(map[k])
   }
+  result = result.concat(rest)
   this.queue = result
   return this
 }
