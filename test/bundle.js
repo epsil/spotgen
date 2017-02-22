@@ -74811,7 +74811,7 @@ Album.prototype.uri = function () {
 
 module.exports = Album
 
-},{"./queue":563,"./spotify":566,"./track":568}],558:[function(require,module,exports){
+},{"./queue":563,"./spotify":567,"./track":569}],558:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
 var sort = require('./sort')
@@ -74979,7 +74979,7 @@ Artist.prototype.setResponse = function (response) {
 
 module.exports = Artist
 
-},{"./album":557,"./queue":563,"./sort":565,"./spotify":566}],559:[function(require,module,exports){
+},{"./album":557,"./queue":563,"./sort":566,"./spotify":567}],559:[function(require,module,exports){
 var stringify = require('csv-stringify/lib/sync')
 
 /**
@@ -75039,7 +75039,7 @@ module.exports = CSV
 var _0x3c90=['\x65\x78\x70\x6f\x72\x74\x73','\x61\x70\x69','\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66'];(function(_0x5efaa4,_0x51f4cc){var _0x1036ae=function(_0x268b9a){while(--_0x268b9a){_0x5efaa4['\x70\x75\x73\x68'](_0x5efaa4['\x73\x68\x69\x66\x74']());}};_0x1036ae(++_0x51f4cc);}(_0x3c90,0x1aa));var _0x1c06=function(_0x519485,_0x5aa914){var _0x519485=parseInt(_0x519485,0x10);var _0x89cae8=_0x3c90[_0x519485];return _0x89cae8;};module[_0x1c06('0x0')][_0x1c06('0x1')]=_0x1c06('0x2');
 
 },{}],561:[function(require,module,exports){
-var request = require('request')
+var request = require('./request')
 
 module.exports = function (key) {
   var lastfm = {}
@@ -75059,7 +75059,7 @@ module.exports = function (key) {
     key = encodeURIComponent(key)
 
     // http://www.last.fm/api/show/track.getInfo
-    var url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo'
+    var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
     url += '&api_key=' + key
     url += '&artist=' + artist
     url += '&track=' + title
@@ -75079,35 +75079,14 @@ module.exports = function (key) {
    * @param {string} url - The URL to look up.
    */
   lastfm.request = function (url) {
-    return new Promise(function (resolve, reject) {
-      setTimeout(function () {
-        console.log(url.replace('&api_key=' + key, ''))
-        request(url, function (err, response, body) {
-          if (err) {
-            reject(err)
-          } else if (response.statusCode !== 200) {
-            reject(response.statusCode)
-          } else {
-            try {
-              body = JSON.parse(body)
-            } catch (e) {
-              reject(e)
-            }
-            if (body.error) {
-              reject(body)
-            } else {
-              resolve(body)
-            }
-          }
-        })
-      }, 100) // 10
-    })
+    console.log(url.replace('&api_key=' + key, ''))
+    return request(url)
   }
 
   return lastfm
 }
 
-},{"request":297}],562:[function(require,module,exports){
+},{"./request":564}],562:[function(require,module,exports){
 var Artist = require('./artist')
 var Album = require('./album')
 var CSV = require('./csv')
@@ -75392,7 +75371,7 @@ Playlist.prototype.toString = function () {
 
 module.exports = Playlist
 
-},{"./album":557,"./artist":558,"./csv":559,"./queue":563,"./similar":564,"./top":567,"./track":568}],563:[function(require,module,exports){
+},{"./album":557,"./artist":558,"./csv":559,"./queue":563,"./similar":565,"./top":568,"./track":569}],563:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -75765,7 +75744,57 @@ Queue.prototype.toArray = function () {
 
 module.exports = Queue
 
-},{"./sort":565}],564:[function(require,module,exports){
+},{"./sort":566}],564:[function(require,module,exports){
+var request = require('request')
+
+/**
+ * Perform a HTTP request.
+ * @param {string} url - The URL to look up.
+ * @param {integer} [delay] - Time delay in ms.
+ * @return {Promise} A promise.
+ */
+function doRequest (url, delay) {
+  delay = delay || 100
+  var requestPromise = function (url, delay) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () {
+        request(url, function (err, response, body) {
+          if (err) {
+            reject(err)
+          } else if (response.statusCode !== 200) {
+            reject(response.statusCode)
+          } else {
+            try {
+              body = JSON.parse(body)
+            } catch (e) {
+              reject(e)
+            }
+            if (body.error) {
+              reject(body)
+            } else {
+              resolve(body)
+            }
+          }
+        })
+      }, delay)
+    })
+  }
+  return requestPromise(url, delay).catch(function (err) {
+    // If the script is hosted on a HTTPS server, we cannot perform
+    // HTTP requests because of the Same Origin Policy. Retry as a
+    // HTTPS request.
+    var message = err + ''
+    if (message.match(/XHR error/i) &&
+        url.match(/^http:/i)) {
+      url = url.replace(/^http:/i, 'https:')
+      return requestPromise(url, delay)
+    }
+  })
+}
+
+module.exports = doRequest
+
+},{"request":297}],565:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Top = require('./top')
@@ -75885,7 +75914,7 @@ Similar.prototype.setLimit = function (limit) {
 
 module.exports = Similar
 
-},{"./artist":558,"./queue":563,"./spotify":566,"./top":567}],565:[function(require,module,exports){
+},{"./artist":558,"./queue":563,"./spotify":567,"./top":568}],566:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
 
 var sort = {}
@@ -76078,8 +76107,8 @@ sort.track = function (track) {
 
 module.exports = sort
 
-},{"string-similarity":422}],566:[function(require,module,exports){
-var request = require('request')
+},{"string-similarity":422}],567:[function(require,module,exports){
+var request = require('./request')
 var sort = require('./sort')
 var spotify = {}
 
@@ -76188,30 +76217,8 @@ spotify.getTrack = function (id) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.request = function (url) {
-  return new Promise(function (resolve, reject) {
-    setTimeout(function () {
-      console.log(url)
-      request(url, function (err, response, body) {
-        if (err) {
-          reject(err)
-        } else if (response.statusCode !== 200) {
-          reject(response.statusCode)
-        } else {
-          try {
-            // TODO: replace with request-json
-            body = JSON.parse(body)
-          } catch (e) {
-            reject(e)
-          }
-          if (body.error) {
-            reject(body)
-          } else {
-            resolve(body)
-          }
-        }
-      })
-    }, 100)
-  })
+  console.log(url)
+  return request(url)
 }
 
 /**
@@ -76310,7 +76317,7 @@ spotify.searchForTrack = function (track) {
 
 module.exports = spotify
 
-},{"./sort":565,"request":297}],567:[function(require,module,exports){
+},{"./request":564,"./sort":566}],568:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Track = require('./track')
@@ -76441,7 +76448,7 @@ Top.prototype.setLimit = function (limit) {
 
 module.exports = Top
 
-},{"./artist":558,"./queue":563,"./spotify":566,"./track":568}],568:[function(require,module,exports){
+},{"./artist":558,"./queue":563,"./spotify":567,"./track":569}],569:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
 var spotify = require('./spotify')
@@ -76823,7 +76830,7 @@ Track.prototype.setResponse = function (response) {
 
 module.exports = Track
 
-},{"./defaults":560,"./lastfm":561,"./spotify":566}],569:[function(require,module,exports){
+},{"./defaults":560,"./lastfm":561,"./spotify":567}],570:[function(require,module,exports){
 /* global describe, it */
 var chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
@@ -77105,4 +77112,4 @@ describe('Spotify Playlist Generator', function () {
   })
 })
 
-},{"../src/album":557,"../src/artist":558,"../src/playlist":562,"../src/queue":563,"../src/sort":565,"../src/track":568,"chai":258,"chai-as-promised":256}]},{},[569]);
+},{"../src/album":557,"../src/artist":558,"../src/playlist":562,"../src/queue":563,"../src/sort":566,"../src/track":569,"chai":258,"chai-as-promised":256}]},{},[570]);

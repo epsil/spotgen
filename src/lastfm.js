@@ -1,4 +1,4 @@
-var request = require('request')
+var request = require('./request')
 
 module.exports = function (key) {
   var lastfm = {}
@@ -18,7 +18,7 @@ module.exports = function (key) {
     key = encodeURIComponent(key)
 
     // http://www.last.fm/api/show/track.getInfo
-    var url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo'
+    var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
     url += '&api_key=' + key
     url += '&artist=' + artist
     url += '&track=' + title
@@ -38,29 +38,8 @@ module.exports = function (key) {
    * @param {string} url - The URL to look up.
    */
   lastfm.request = function (url) {
-    return new Promise(function (resolve, reject) {
-      setTimeout(function () {
-        console.log(url.replace('&api_key=' + key, ''))
-        request(url, function (err, response, body) {
-          if (err) {
-            reject(err)
-          } else if (response.statusCode !== 200) {
-            reject(response.statusCode)
-          } else {
-            try {
-              body = JSON.parse(body)
-            } catch (e) {
-              reject(e)
-            }
-            if (body.error) {
-              reject(body)
-            } else {
-              resolve(body)
-            }
-          }
-        })
-      }, 100) // 10
-    })
+    console.log(url.replace('&api_key=' + key, ''))
+    return request(url)
   }
 
   return lastfm

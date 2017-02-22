@@ -80725,7 +80725,7 @@ Album.prototype.uri = function () {
 
 module.exports = Album
 
-},{"./queue":539,"./spotify":542,"./track":544}],534:[function(require,module,exports){
+},{"./queue":539,"./spotify":543,"./track":545}],534:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
 var sort = require('./sort')
@@ -80893,7 +80893,7 @@ Artist.prototype.setResponse = function (response) {
 
 module.exports = Artist
 
-},{"./album":533,"./queue":539,"./sort":541,"./spotify":542}],535:[function(require,module,exports){
+},{"./album":533,"./queue":539,"./sort":542,"./spotify":543}],535:[function(require,module,exports){
 var stringify = require('csv-stringify/lib/sync')
 
 /**
@@ -80953,7 +80953,7 @@ module.exports = CSV
 var _0x3c90=['\x65\x78\x70\x6f\x72\x74\x73','\x61\x70\x69','\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66'];(function(_0x5efaa4,_0x51f4cc){var _0x1036ae=function(_0x268b9a){while(--_0x268b9a){_0x5efaa4['\x70\x75\x73\x68'](_0x5efaa4['\x73\x68\x69\x66\x74']());}};_0x1036ae(++_0x51f4cc);}(_0x3c90,0x1aa));var _0x1c06=function(_0x519485,_0x5aa914){var _0x519485=parseInt(_0x519485,0x10);var _0x89cae8=_0x3c90[_0x519485];return _0x89cae8;};module[_0x1c06('0x0')][_0x1c06('0x1')]=_0x1c06('0x2');
 
 },{}],537:[function(require,module,exports){
-var request = require('request')
+var request = require('./request')
 
 module.exports = function (key) {
   var lastfm = {}
@@ -80973,7 +80973,7 @@ module.exports = function (key) {
     key = encodeURIComponent(key)
 
     // http://www.last.fm/api/show/track.getInfo
-    var url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo'
+    var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
     url += '&api_key=' + key
     url += '&artist=' + artist
     url += '&track=' + title
@@ -80993,35 +80993,14 @@ module.exports = function (key) {
    * @param {string} url - The URL to look up.
    */
   lastfm.request = function (url) {
-    return new Promise(function (resolve, reject) {
-      setTimeout(function () {
-        console.log(url.replace('&api_key=' + key, ''))
-        request(url, function (err, response, body) {
-          if (err) {
-            reject(err)
-          } else if (response.statusCode !== 200) {
-            reject(response.statusCode)
-          } else {
-            try {
-              body = JSON.parse(body)
-            } catch (e) {
-              reject(e)
-            }
-            if (body.error) {
-              reject(body)
-            } else {
-              resolve(body)
-            }
-          }
-        })
-      }, 100) // 10
-    })
+    console.log(url.replace('&api_key=' + key, ''))
+    return request(url)
   }
 
   return lastfm
 }
 
-},{"request":273}],538:[function(require,module,exports){
+},{"./request":540}],538:[function(require,module,exports){
 var Artist = require('./artist')
 var Album = require('./album')
 var CSV = require('./csv')
@@ -81306,7 +81285,7 @@ Playlist.prototype.toString = function () {
 
 module.exports = Playlist
 
-},{"./album":533,"./artist":534,"./csv":535,"./queue":539,"./similar":540,"./top":543,"./track":544}],539:[function(require,module,exports){
+},{"./album":533,"./artist":534,"./csv":535,"./queue":539,"./similar":541,"./top":544,"./track":545}],539:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -81679,7 +81658,57 @@ Queue.prototype.toArray = function () {
 
 module.exports = Queue
 
-},{"./sort":541}],540:[function(require,module,exports){
+},{"./sort":542}],540:[function(require,module,exports){
+var request = require('request')
+
+/**
+ * Perform a HTTP request.
+ * @param {string} url - The URL to look up.
+ * @param {integer} [delay] - Time delay in ms.
+ * @return {Promise} A promise.
+ */
+function doRequest (url, delay) {
+  delay = delay || 100
+  var requestPromise = function (url, delay) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () {
+        request(url, function (err, response, body) {
+          if (err) {
+            reject(err)
+          } else if (response.statusCode !== 200) {
+            reject(response.statusCode)
+          } else {
+            try {
+              body = JSON.parse(body)
+            } catch (e) {
+              reject(e)
+            }
+            if (body.error) {
+              reject(body)
+            } else {
+              resolve(body)
+            }
+          }
+        })
+      }, delay)
+    })
+  }
+  return requestPromise(url, delay).catch(function (err) {
+    // If the script is hosted on a HTTPS server, we cannot perform
+    // HTTP requests because of the Same Origin Policy. Retry as a
+    // HTTPS request.
+    var message = err + ''
+    if (message.match(/XHR error/i) &&
+        url.match(/^http:/i)) {
+      url = url.replace(/^http:/i, 'https:')
+      return requestPromise(url, delay)
+    }
+  })
+}
+
+module.exports = doRequest
+
+},{"request":273}],541:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Top = require('./top')
@@ -81799,7 +81828,7 @@ Similar.prototype.setLimit = function (limit) {
 
 module.exports = Similar
 
-},{"./artist":534,"./queue":539,"./spotify":542,"./top":543}],541:[function(require,module,exports){
+},{"./artist":534,"./queue":539,"./spotify":543,"./top":544}],542:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
 
 var sort = {}
@@ -81992,8 +82021,8 @@ sort.track = function (track) {
 
 module.exports = sort
 
-},{"string-similarity":398}],542:[function(require,module,exports){
-var request = require('request')
+},{"string-similarity":398}],543:[function(require,module,exports){
+var request = require('./request')
 var sort = require('./sort')
 var spotify = {}
 
@@ -82102,30 +82131,8 @@ spotify.getTrack = function (id) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.request = function (url) {
-  return new Promise(function (resolve, reject) {
-    setTimeout(function () {
-      console.log(url)
-      request(url, function (err, response, body) {
-        if (err) {
-          reject(err)
-        } else if (response.statusCode !== 200) {
-          reject(response.statusCode)
-        } else {
-          try {
-            // TODO: replace with request-json
-            body = JSON.parse(body)
-          } catch (e) {
-            reject(e)
-          }
-          if (body.error) {
-            reject(body)
-          } else {
-            resolve(body)
-          }
-        }
-      })
-    }, 100)
-  })
+  console.log(url)
+  return request(url)
 }
 
 /**
@@ -82224,7 +82231,7 @@ spotify.searchForTrack = function (track) {
 
 module.exports = spotify
 
-},{"./sort":541,"request":273}],543:[function(require,module,exports){
+},{"./request":540,"./sort":542}],544:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Track = require('./track')
@@ -82355,7 +82362,7 @@ Top.prototype.setLimit = function (limit) {
 
 module.exports = Top
 
-},{"./artist":534,"./queue":539,"./spotify":542,"./track":544}],544:[function(require,module,exports){
+},{"./artist":534,"./queue":539,"./spotify":543,"./track":545}],545:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
 var spotify = require('./spotify')
@@ -82737,7 +82744,7 @@ Track.prototype.setResponse = function (response) {
 
 module.exports = Track
 
-},{"./defaults":536,"./lastfm":537,"./spotify":542}],545:[function(require,module,exports){
+},{"./defaults":536,"./lastfm":537,"./spotify":543}],546:[function(require,module,exports){
 /* global jQuery:true */
 /* exported jQuery */
 var Playlist = require('../src/playlist')
@@ -82747,6 +82754,7 @@ require('bootstrap')
 
 console.log = function (message) {
   if (typeof message === 'string') {
+    // message = $('.log').text() + message + '\n'
     $('.log').text(message)
   }
 }
@@ -82812,4 +82820,4 @@ $(function () {
   $('textarea').focus()
 })
 
-},{"../src/playlist":538,"bootstrap":1,"jquery":272}]},{},[545]);
+},{"../src/playlist":538,"bootstrap":1,"jquery":272}]},{},[546]);

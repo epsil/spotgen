@@ -1,4 +1,4 @@
-var request = require('request')
+var request = require('./request')
 var sort = require('./sort')
 var spotify = {}
 
@@ -107,30 +107,8 @@ spotify.getTrack = function (id) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.request = function (url) {
-  return new Promise(function (resolve, reject) {
-    setTimeout(function () {
-      console.log(url)
-      request(url, function (err, response, body) {
-        if (err) {
-          reject(err)
-        } else if (response.statusCode !== 200) {
-          reject(response.statusCode)
-        } else {
-          try {
-            // TODO: replace with request-json
-            body = JSON.parse(body)
-          } catch (e) {
-            reject(e)
-          }
-          if (body.error) {
-            reject(body)
-          } else {
-            resolve(body)
-          }
-        }
-      })
-    }, 100)
-  })
+  console.log(url)
+  return request(url)
 }
 
 /**

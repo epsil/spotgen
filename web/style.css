@@ -126,11 +126,15 @@ textarea, textarea:focus {
     margin-bottom: 2em !important;
 }
 .log {
+    background-color: inherit !important;
+    border: none !important;
     color: #999;
+    font-family: inherit;
+    height: 3em;
     margin-top: 0.5em;
     min-height: 3em;
-    height: 3em;
     overflow: hidden;
+    white-space: pre;
 }
 .footer {
     background-color: #20252b;
