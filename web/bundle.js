@@ -81383,7 +81383,7 @@ Queue.prototype.dedup = function () {
     } else {
       var idx = self.indexOf(entry)
       var other = result.get(idx)
-      return other.refresh().then(function (o) {
+      return other.refresh().then(function () {
         return entry.refresh()
       }).then(function () {
         if (entry.popularity() > other.popularity()) {
@@ -81510,18 +81510,24 @@ Queue.prototype.group = function (fn) {
  */
 Queue.prototype.groupBy = function (fn) {
   var map = []
+  var rest = []
   var result = []
   for (var i in this.queue) {
     var entry = this.queue[i]
     var key = fn(entry)
-    if (!map[key]) {
-      map[key] = new Queue()
+    if (typeof key !== 'string' || key.trim() === '') {
+      rest.push(entry)
+    } else {
+      if (!map[key]) {
+        map[key] = new Queue()
+      }
+      map[key].add(entry)
     }
-    map[key].add(entry)
   }
   for (var k in map) {
     result.push(map[k])
   }
+  result = result.concat(rest)
   this.queue = result
   return this
 }
@@ -81598,7 +81604,7 @@ Queue.prototype.map = function (fn) {
  * @param {Object} entry - The entry to add.
  */
 Queue.prototype.set = function (idx, entry) {
-  if (idx >= this.size()) {
+  if (idx < 0 || idx >= this.size()) {
     this.add(entry)
   } else {
     this.queue[idx] = entry
@@ -81634,7 +81640,7 @@ Queue.prototype.slice = function (start, end) {
  * @return {Queue} - Itself.
  */
 Queue.prototype.sort = function (fn) {
-  this.queue = this.queue.sort(fn)
+  this.queue = sort.stableSort(this.queue, fn)
   return this
 }
 
@@ -81799,6 +81805,45 @@ var stringSimilarity = require('string-similarity')
 var sort = {}
 
 /**
+ * Stable sort, preserving original order.
+ * @param {Array} arr - The array to sort.
+ * @param {function} [fn] - A comparison function that returns
+ * `-1` if the first argument scores less than the second argument,
+ * `1` if the first argument scores more than the second argument,
+ * and `0` if the scores are equal.
+ * @return {Array} - A new array that is sorted.
+ */
+sort.stableSort = function (arr, fn) {
+  fn = fn || sort.ascending()
+  var i = 0
+  var pair = function (x) {
+    return {key: i++, val: x}
+  }
+  var key = function (x) {
+    return x.key
+  }
+  var val = function (x) {
+    return x.val
+  }
+  var cmp = sort.combine(function (a, b) {
+    return fn(a.val, b.val)
+  }, sort.ascending(key))
+  var pairs = arr.map(pair)
+  pairs = pairs.sort(cmp)
+  arr = pairs.map(val)
+  return arr
+}
+
+/**
+ * Identity function.
+ * @param {Object} x - A value.
+ * @return {Object} - The same value.
+ */
+sort.identity = function (x) {
+  return x
+}
+
+/**
  * Create an ascending comparison function.
  * @param {function} fn - A scoring function.
  * @return {function} - A comparison function that returns
@@ -81807,6 +81852,7 @@ var sort = {}
  * and `0` if the scores are equal.
  */
 sort.ascending = function (fn) {
+  fn = fn || sort.identity
   return function (a, b) {
     var x = fn(a)
     var y = fn(b)
@@ -81823,6 +81869,7 @@ sort.ascending = function (fn) {
  * and `0` if the scores are equal.
  */
 sort.descending = function (fn) {
+  fn = fn || sort.identity
   return function (a, b) {
     var x = fn(a)
     var y = fn(b)
@@ -82005,7 +82052,7 @@ spotify.getAlbumsByArtist = function (id) {
   // sort albums by type
   var sortAlbums = function (response) {
     if (response && response.items) {
-      response.items = response.items.sort(sort.album)
+      response.items = sort.stableSort(response.items, sort.album)
     }
     return response
   }
@@ -82027,7 +82074,7 @@ spotify.getTopTracks = function (id) {
   return spotify.request(url).then(function (response) {
     if (response &&
         response.tracks) {
-      response.tracks = response.tracks.sort(sort.popularity)
+      response.tracks = sort.stableSort(response.tracks, sort.popularity)
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -82166,8 +82213,8 @@ spotify.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      var similar = sort.track(track)
-      response.tracks.items = response.tracks.items.sort(similar)
+      response.tracks.items = sort.stableSort(response.tracks.items,
+                                              sort.track(track))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)

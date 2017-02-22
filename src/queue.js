@@ -331,7 +331,7 @@ Queue.prototype.slice = function (start, end) {
  * @return {Queue} - Itself.
  */
 Queue.prototype.sort = function (fn) {
-  this.queue = this.queue.sort(fn)
+  this.queue = sort.stableSort(this.queue, fn)
   return this
 }
 

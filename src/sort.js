@@ -3,6 +3,45 @@ var stringSimilarity = require('string-similarity')
 var sort = {}
 
 /**
+ * Stable sort, preserving original order.
+ * @param {Array} arr - The array to sort.
+ * @param {function} [fn] - A comparison function that returns
+ * `-1` if the first argument scores less than the second argument,
+ * `1` if the first argument scores more than the second argument,
+ * and `0` if the scores are equal.
+ * @return {Array} - A new array that is sorted.
+ */
+sort.stableSort = function (arr, fn) {
+  fn = fn || sort.ascending()
+  var i = 0
+  var pair = function (x) {
+    return {key: i++, val: x}
+  }
+  var key = function (x) {
+    return x.key
+  }
+  var val = function (x) {
+    return x.val
+  }
+  var cmp = sort.combine(function (a, b) {
+    return fn(a.val, b.val)
+  }, sort.ascending(key))
+  var pairs = arr.map(pair)
+  pairs = pairs.sort(cmp)
+  arr = pairs.map(val)
+  return arr
+}
+
+/**
+ * Identity function.
+ * @param {Object} x - A value.
+ * @return {Object} - The same value.
+ */
+sort.identity = function (x) {
+  return x
+}
+
+/**
  * Create an ascending comparison function.
  * @param {function} fn - A scoring function.
  * @return {function} - A comparison function that returns
@@ -11,6 +50,7 @@ var sort = {}
  * and `0` if the scores are equal.
  */
 sort.ascending = function (fn) {
+  fn = fn || sort.identity
   return function (a, b) {
     var x = fn(a)
     var y = fn(b)
@@ -27,6 +67,7 @@ sort.ascending = function (fn) {
  * and `0` if the scores are equal.
  */
 sort.descending = function (fn) {
+  fn = fn || sort.identity
   return function (a, b) {
     var x = fn(a)
     var y = fn(b)
