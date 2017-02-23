@@ -81925,18 +81925,6 @@ sort.combine = function () {
 }
 
 /**
- * Compare tracks by Last.fm rating.
- * @param {Track} a - A track.
- * @param {Track} b - A track.
- * @return {integer} - `1` if `a` is less than `b`,
- * `-1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.lastfm = sort.descending(function (x) {
-  return x.lastfm()
-})
-
-/**
  * Compare tracks by Spotify popularity.
  * @param {Track} a - A track.
  * @param {Track} b - A track.
@@ -81951,6 +81939,18 @@ sort.popularity = sort.descending(function (x) {
     return x.popularity || -1
   }
 })
+
+/**
+ * Compare tracks by Last.fm rating.
+ * @param {Track} a - A track.
+ * @param {Track} b - A track.
+ * @return {integer} - `1` if `a` is less than `b`,
+ * `-1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.lastfm = sort.combine(sort.descending(function (x) {
+  return x.lastfm()
+}), sort.popularity)
 
 /**
  * Compare albums by type. Proper albums are ranked highest,
