@@ -76905,6 +76905,7 @@ var chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 chai.should()
 
+var eol = require('eol')
 var Artist = require('../src/artist')
 var Album = require('../src/album')
 var Playlist = require('../src/playlist')
@@ -76934,13 +76935,13 @@ describe('Spotify Playlist Generator', function () {
       }).should.eql([1, 2, 4, 8])
     })
 
-    it('should work with a generated comparison function', function () {
+    it('should work with an ascending comparison function', function () {
       sort([1, 4, 2, 8], sort.ascending(function (x) {
         return x
       })).should.eql([1, 2, 4, 8])
     })
 
-    it('should work with a generated comparison function', function () {
+    it('should work with a descending comparison function', function () {
       sort([1, 4, 2, 8], sort.descending(function (x) {
         return x
       })).should.eql([8, 4, 2, 1])
@@ -77116,10 +77117,11 @@ describe('Spotify Playlist Generator', function () {
 
     it('should create an ordered playlist', function () {
       var playlist = new Playlist('#ORDER BY POPULARITY\ntest1\ntest2')
-      var promise = playlist.dispatch()
-      // FIXME: this is really brittle
-      return promise.should.eventually.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
-                                           'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
+      return playlist.dispatch().then(function (str) {
+        // FIXME: this is really brittle
+        eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
+                               'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
+      })
     })
 
     it('should parse album entries', function () {
@@ -77136,10 +77138,11 @@ describe('Spotify Playlist Generator', function () {
 
     it('should dispatch all entries', function () {
       var playlist = new Playlist('test1\ntest2')
-      var promise = playlist.dispatch()
-      // FIXME: this is really brittle
-      return promise.should.eventually.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
-                                           'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
+      return playlist.dispatch().then(function (str) {
+        // FIXME: this is really brittle
+        eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
+                               'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
+      })
     })
   })
 
@@ -77182,4 +77185,4 @@ describe('Spotify Playlist Generator', function () {
   })
 })
 
-},{"../src/album":558,"../src/artist":559,"../src/playlist":564,"../src/queue":565,"../src/sort":567,"../src/track":570,"chai":258,"chai-as-promised":256}]},{},[571]);
+},{"../src/album":558,"../src/artist":559,"../src/playlist":564,"../src/queue":565,"../src/sort":567,"../src/track":570,"chai":258,"chai-as-promised":256,"eol":297}]},{},[571]);
