@@ -134,6 +134,7 @@ textarea, textarea:focus {
     margin-top: 0.5em;
     min-height: 3em;
     overflow: hidden;
+    padding: 0;
     white-space: pre;
 }
 .footer {
