@@ -1,4 +1,4 @@
-var request = require('./request')
+var http = require('./http')
 var sort = require('./sort')
 var spotify = {}
 
@@ -57,7 +57,7 @@ spotify.getAlbumsByArtist = function (id) {
   // sort albums by type
   var sortAlbums = function (response) {
     if (response && response.items) {
-      response.items = sort.stableSort(response.items, sort.album)
+      response.items = sort(response.items, sort.album)
     }
     return response
   }
@@ -79,7 +79,7 @@ spotify.getTopTracks = function (id) {
   return spotify.request(url).then(function (response) {
     if (response &&
         response.tracks) {
-      response.tracks = sort.stableSort(response.tracks, sort.popularity)
+      response.tracks = sort(response.tracks, sort.popularity)
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -108,7 +108,7 @@ spotify.getTrack = function (id) {
  */
 spotify.request = function (url) {
   console.log(url)
-  return request(url)
+  return http.json(url)
 }
 
 /**
@@ -196,8 +196,8 @@ spotify.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      response.tracks.items = sort.stableSort(response.tracks.items,
-                                              sort.track(track))
+      response.tracks.items = sort(response.tracks.items,
+                                   sort.track(track))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)

@@ -1,10 +1,13 @@
-var request = require('./request')
+var http = require('./http')
 
 module.exports = function (key) {
   var lastfm = {}
 
   /**
    * Get the Last.fm metadata for a track.
+   *
+   * [Reference](http://www.last.fm/api/show/track.getInfo).
+   *
    * @param {String} artist - The artist.
    * @param {String} title - The title.
    * @param {boolean} [correct] - Whether to autocorrect misspellings,
@@ -17,7 +20,6 @@ module.exports = function (key) {
     title = encodeURIComponent(title)
     key = encodeURIComponent(key)
 
-    // http://www.last.fm/api/show/track.getInfo
     var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
     url += '&api_key=' + key
     url += '&artist=' + artist
@@ -38,8 +40,8 @@ module.exports = function (key) {
    * @param {string} url - The URL to look up.
    */
   lastfm.request = function (url) {
-    console.log(url.replace('&api_key=' + key, ''))
-    return request(url)
+    console.log(url.replace(/&api_key=[^&]*/i, ''))
+    return http.json(url)
   }
 
   return lastfm

@@ -80725,7 +80725,7 @@ Album.prototype.uri = function () {
 
 module.exports = Album
 
-},{"./queue":539,"./spotify":543,"./track":545}],534:[function(require,module,exports){
+},{"./queue":540,"./spotify":543,"./track":545}],534:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
 var sort = require('./sort')
@@ -80893,7 +80893,7 @@ Artist.prototype.setResponse = function (response) {
 
 module.exports = Artist
 
-},{"./album":533,"./queue":539,"./sort":542,"./spotify":543}],535:[function(require,module,exports){
+},{"./album":533,"./queue":540,"./sort":542,"./spotify":543}],535:[function(require,module,exports){
 var stringify = require('csv-stringify/lib/sync')
 
 /**
@@ -80953,13 +80953,91 @@ module.exports = CSV
 var _0x3c90=['\x65\x78\x70\x6f\x72\x74\x73','\x61\x70\x69','\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66'];(function(_0x5efaa4,_0x51f4cc){var _0x1036ae=function(_0x268b9a){while(--_0x268b9a){_0x5efaa4['\x70\x75\x73\x68'](_0x5efaa4['\x73\x68\x69\x66\x74']());}};_0x1036ae(++_0x51f4cc);}(_0x3c90,0x1aa));var _0x1c06=function(_0x519485,_0x5aa914){var _0x519485=parseInt(_0x519485,0x10);var _0x89cae8=_0x3c90[_0x519485];return _0x89cae8;};module[_0x1c06('0x0')][_0x1c06('0x1')]=_0x1c06('0x2');
 
 },{}],537:[function(require,module,exports){
-var request = require('./request')
+var request = require('request')
+
+/**
+ * Perform a HTTP request.
+ * @param {string} url - The URL to look up.
+ * @param {integer} [delay] - Time delay in ms.
+ * @return {Promise} A promise.
+ */
+function http (url, delay) {
+  delay = delay || 100
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      request(url, function (err, response, body) {
+        if (err) {
+          reject(err)
+        } else if (response.statusCode !== 200) {
+          reject(response.statusCode)
+        } else {
+          resolve(body)
+        }
+      })
+    }, delay)
+  })
+}
+
+/**
+ * Perform a HTTP(S) request.
+ *
+ * If the script is hosted on a HTTPS server, we cannot perform
+ * HTTP requests because of the Same Origin Policy. Therefore,
+ * this function falls back to HTTPS if HTTP fails.
+ *
+ * @param {string} url - The URL to look up.
+ * @param {integer} [delay] - Time delay in ms.
+ * @return {Promise} A promise.
+ */
+http.s = function (url, delay) {
+  delay = delay || 100
+  return http(url, delay).catch(function (err) {
+    var message = err + ''
+    if (message.match(/XHR error/i)) {
+      if (url.match(/^http:/i)) {
+        return http(url.replace(/^http:/i, 'https:'), delay)
+      } else if (url.match(/^https:/i)) {
+        return http(url.replace(/^https:/i, 'http:'), delay)
+      }
+    }
+  })
+}
+
+/**
+ * Perform a HTTP JSON request.
+ * @param {string} url - The URL to look up.
+ * @param {integer} [delay] - Time delay in ms.
+ * @return {Promise | JSON} A JSON response.
+ */
+http.json = function (url, delay) {
+  delay = delay || 100
+  return http.s(url, delay).then(function (response) {
+    try {
+      response = JSON.parse(response)
+    } catch (e) {
+      return Promise.reject(e)
+    }
+    if (response.error) {
+      return Promise.reject(response)
+    } else {
+      return Promise.resolve(response)
+    }
+  })
+}
+
+module.exports = http
+
+},{"request":273}],538:[function(require,module,exports){
+var http = require('./http')
 
 module.exports = function (key) {
   var lastfm = {}
 
   /**
    * Get the Last.fm metadata for a track.
+   *
+   * [Reference](http://www.last.fm/api/show/track.getInfo).
+   *
    * @param {String} artist - The artist.
    * @param {String} title - The title.
    * @param {boolean} [correct] - Whether to autocorrect misspellings,
@@ -80972,7 +81050,6 @@ module.exports = function (key) {
     title = encodeURIComponent(title)
     key = encodeURIComponent(key)
 
-    // http://www.last.fm/api/show/track.getInfo
     var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
     url += '&api_key=' + key
     url += '&artist=' + artist
@@ -80993,14 +81070,14 @@ module.exports = function (key) {
    * @param {string} url - The URL to look up.
    */
   lastfm.request = function (url) {
-    console.log(url.replace('&api_key=' + key, ''))
-    return request(url)
+    console.log(url.replace(/&api_key=[^&]*/i, ''))
+    return http.json(url)
   }
 
   return lastfm
 }
 
-},{"./request":540}],538:[function(require,module,exports){
+},{"./http":537}],539:[function(require,module,exports){
 var Artist = require('./artist')
 var Album = require('./album')
 var CSV = require('./csv')
@@ -81285,7 +81362,7 @@ Playlist.prototype.toString = function () {
 
 module.exports = Playlist
 
-},{"./album":533,"./artist":534,"./csv":535,"./queue":539,"./similar":541,"./top":544,"./track":545}],539:[function(require,module,exports){
+},{"./album":533,"./artist":534,"./csv":535,"./queue":540,"./similar":541,"./top":544,"./track":545}],540:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -81619,7 +81696,7 @@ Queue.prototype.slice = function (start, end) {
  * @return {Queue} - Itself.
  */
 Queue.prototype.sort = function (fn) {
-  this.queue = sort.stableSort(this.queue, fn)
+  this.queue = sort(this.queue, fn)
   return this
 }
 
@@ -81658,57 +81735,7 @@ Queue.prototype.toArray = function () {
 
 module.exports = Queue
 
-},{"./sort":542}],540:[function(require,module,exports){
-var request = require('request')
-
-/**
- * Perform a HTTP request.
- * @param {string} url - The URL to look up.
- * @param {integer} [delay] - Time delay in ms.
- * @return {Promise} A promise.
- */
-function doRequest (url, delay) {
-  delay = delay || 100
-  var requestPromise = function (url, delay) {
-    return new Promise(function (resolve, reject) {
-      setTimeout(function () {
-        request(url, function (err, response, body) {
-          if (err) {
-            reject(err)
-          } else if (response.statusCode !== 200) {
-            reject(response.statusCode)
-          } else {
-            try {
-              body = JSON.parse(body)
-            } catch (e) {
-              reject(e)
-            }
-            if (body.error) {
-              reject(body)
-            } else {
-              resolve(body)
-            }
-          }
-        })
-      }, delay)
-    })
-  }
-  return requestPromise(url, delay).catch(function (err) {
-    // If the script is hosted on a HTTPS server, we cannot perform
-    // HTTP requests because of the Same Origin Policy. Retry as a
-    // HTTPS request.
-    var message = err + ''
-    if (message.match(/XHR error/i) &&
-        url.match(/^http:/i)) {
-      url = url.replace(/^http:/i, 'https:')
-      return requestPromise(url, delay)
-    }
-  })
-}
-
-module.exports = doRequest
-
-},{"request":273}],541:[function(require,module,exports){
+},{"./sort":542}],541:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Top = require('./top')
@@ -81828,10 +81855,8 @@ Similar.prototype.setLimit = function (limit) {
 
 module.exports = Similar
 
-},{"./artist":534,"./queue":539,"./spotify":543,"./top":544}],542:[function(require,module,exports){
+},{"./artist":534,"./queue":540,"./spotify":543,"./top":544}],542:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
-
-var sort = {}
 
 /**
  * Stable sort, preserving original order.
@@ -81842,7 +81867,7 @@ var sort = {}
  * and `0` if the scores are equal.
  * @return {Array} - A new array that is sorted.
  */
-sort.stableSort = function (arr, fn) {
+function sort (arr, fn) {
   fn = fn || sort.ascending()
   var i = 0
   var pair = function (x) {
@@ -82022,7 +82047,7 @@ sort.track = function (track) {
 module.exports = sort
 
 },{"string-similarity":398}],543:[function(require,module,exports){
-var request = require('./request')
+var http = require('./http')
 var sort = require('./sort')
 var spotify = {}
 
@@ -82081,7 +82106,7 @@ spotify.getAlbumsByArtist = function (id) {
   // sort albums by type
   var sortAlbums = function (response) {
     if (response && response.items) {
-      response.items = sort.stableSort(response.items, sort.album)
+      response.items = sort(response.items, sort.album)
     }
     return response
   }
@@ -82103,7 +82128,7 @@ spotify.getTopTracks = function (id) {
   return spotify.request(url).then(function (response) {
     if (response &&
         response.tracks) {
-      response.tracks = sort.stableSort(response.tracks, sort.popularity)
+      response.tracks = sort(response.tracks, sort.popularity)
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -82132,7 +82157,7 @@ spotify.getTrack = function (id) {
  */
 spotify.request = function (url) {
   console.log(url)
-  return request(url)
+  return http.json(url)
 }
 
 /**
@@ -82220,8 +82245,8 @@ spotify.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      response.tracks.items = sort.stableSort(response.tracks.items,
-                                              sort.track(track))
+      response.tracks.items = sort(response.tracks.items,
+                                   sort.track(track))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -82231,7 +82256,7 @@ spotify.searchForTrack = function (track) {
 
 module.exports = spotify
 
-},{"./request":540,"./sort":542}],544:[function(require,module,exports){
+},{"./http":537,"./sort":542}],544:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Track = require('./track')
@@ -82362,7 +82387,7 @@ Top.prototype.setLimit = function (limit) {
 
 module.exports = Top
 
-},{"./artist":534,"./queue":539,"./spotify":543,"./track":545}],545:[function(require,module,exports){
+},{"./artist":534,"./queue":540,"./spotify":543,"./track":545}],545:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
 var spotify = require('./spotify')
@@ -82744,7 +82769,7 @@ Track.prototype.setResponse = function (response) {
 
 module.exports = Track
 
-},{"./defaults":536,"./lastfm":537,"./spotify":543}],546:[function(require,module,exports){
+},{"./defaults":536,"./lastfm":538,"./spotify":543}],546:[function(require,module,exports){
 /* global jQuery:true */
 /* exported jQuery */
 var Playlist = require('../src/playlist')
@@ -82820,4 +82845,4 @@ $(function () {
   $('textarea').focus()
 })
 
-},{"../src/playlist":538,"bootstrap":1,"jquery":272}]},{},[546]);
+},{"../src/playlist":539,"bootstrap":1,"jquery":272}]},{},[546]);

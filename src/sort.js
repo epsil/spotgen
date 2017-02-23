@@ -1,7 +1,5 @@
 var stringSimilarity = require('string-similarity')
 
-var sort = {}
-
 /**
  * Stable sort, preserving original order.
  * @param {Array} arr - The array to sort.
@@ -11,7 +9,7 @@ var sort = {}
  * and `0` if the scores are equal.
  * @return {Array} - A new array that is sorted.
  */
-sort.stableSort = function (arr, fn) {
+function sort (arr, fn) {
   fn = fn || sort.ascending()
   var i = 0
   var pair = function (x) {

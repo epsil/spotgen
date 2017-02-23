@@ -12,43 +12,45 @@ var Track = require('../src/track')
 var sort = require('../src/sort')
 
 describe('Spotify Playlist Generator', function () {
-  this.timeout(99999)
+  this.timeout(999999)
 
   describe('Sorting', function () {
     it('should handle empty lists', function () {
-      sort.stableSort([], function (a, b) {
+      sort([], function (a, b) {
         return (a < b) ? -1 : ((a > b) ? 1 : 0)
       }).should.eql([])
     })
 
     it('should handle singleton lists', function () {
-      sort.stableSort([1], function (a, b) {
+      sort([1], function (a, b) {
         return (a < b) ? -1 : ((a > b) ? 1 : 0)
       }).should.eql([1])
     })
 
     it('should stably sort the list', function () {
-      sort.stableSort([1, 4, 2, 8], function (a, b) {
+      sort([1, 4, 2, 8], function (a, b) {
         return (a < b) ? -1 : ((a > b) ? 1 : 0)
       }).should.eql([1, 2, 4, 8])
     })
 
     it('should work with a generated comparison function', function () {
-      sort.stableSort([1, 4, 2, 8], sort.ascending(function (x) {
+      sort([1, 4, 2, 8], sort.ascending(function (x) {
         return x
       })).should.eql([1, 2, 4, 8])
     })
 
     it('should work with a generated comparison function', function () {
-      sort.stableSort([1, 4, 2, 8], sort.descending(function (x) {
+      sort([1, 4, 2, 8], sort.descending(function (x) {
         return x
       })).should.eql([8, 4, 2, 1])
     })
 
     it('should preserve the order of duplicate elements', function () {
-      sort.stableSort([1, 4, 2, 4, 8], function (a, b) {
-        return (a < b) ? -1 : ((a > b) ? 1 : 0)
-      }).should.eql([1, 2, 4, 4, 8])
+      sort([[1, 0], [4, 1], [2, 2], [4, 3], [8, 4]], function (a, b) {
+        var x = a[0]
+        var y = b[0]
+        return (x < y) ? -1 : ((x > y) ? 1 : 0)
+      }).should.eql([[1, 0], [2, 2], [4, 1], [4, 3], [8, 4]])
     })
   })
 
