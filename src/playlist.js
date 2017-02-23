@@ -1,3 +1,4 @@
+var eol = require('eol')
 var Artist = require('./artist')
 var Album = require('./album')
 var CSV = require('./csv')
@@ -46,7 +47,7 @@ function Playlist (str) {
 
   str = str.trim()
   if (str !== '') {
-    var lines = str.split(/\r|\n|\r\n/)
+    var lines = eol.split(str)
     while (lines.length > 0) {
       var line = lines.shift()
       if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
@@ -277,7 +278,8 @@ Playlist.prototype.toString = function () {
       }
     }
   })
-  return result.trim()
+  result = eol.auto(result.trim())
+  return result
 }
 
 module.exports = Playlist
