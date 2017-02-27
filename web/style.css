@@ -135,7 +135,7 @@ textarea, textarea:focus {
     min-height: 3em;
     overflow: hidden;
     padding: 0;
-    white-space: pre;
+    white-space: pre-wrap;
 }
 .footer {
     background-color: #20252b;
