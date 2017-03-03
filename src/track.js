@@ -138,9 +138,9 @@ Track.prototype.duration = function () {
  * `false` otherwise.
  */
 Track.prototype.equals = function (track) {
-  var str1 = this.toString().toLowerCase()
-  var str2 = track.toString().toLowerCase()
-  return str1 === str2
+  var uri1 = this.uri()
+  var uri2 = track.uri()
+  return uri1 !== '' && uri2 !== '' && uri1 === uri2
 }
 
 /**
@@ -208,18 +208,6 @@ Track.prototype.id = function () {
   } else {
     return -1
   }
-}
-
-/**
- * Whether this track is identical to another track.
- * @param {Track} track - The track to compare against.
- * @return {boolean} `true` if the tracks are identical,
- * `false` otherwise.
- */
-Track.prototype.identicalTo = function (track) {
-  var uri1 = this.uri()
-  var uri2 = track.uri()
-  return uri1 !== '' && uri2 !== '' && uri1 === uri2
 }
 
 /**
@@ -327,6 +315,22 @@ Track.prototype.searchForTrack = function () {
  */
 Track.prototype.setAlbum = function (album) {
   this.albumName = album
+}
+
+/**
+ * Whether this track is similar to another track.
+ * @param {Track} track - The track to compare against.
+ * @return {boolean} `true` if the tracks are similar,
+ * `false` otherwise.
+ */
+Track.prototype.similarTo = function (track) {
+  if (this.equals(track)) {
+    return true
+  } else {
+    var str1 = this.toString().toLowerCase()
+    var str2 = track.toString().toLowerCase()
+    return str1 === str2
+  }
 }
 
 /**

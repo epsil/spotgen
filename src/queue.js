@@ -74,7 +74,7 @@ Queue.prototype.dedup = function () {
     } else {
       var idx = self.indexOf(entry)
       var other = result.get(idx)
-      if (entry.identicalTo(other)) {
+      if (entry.equals(other)) {
         return Promise.resolve(other)
       } else {
         return other.refresh().then(function () {
@@ -237,9 +237,9 @@ Queue.prototype.indexOf = function (obj) {
   for (var i in this.queue) {
     var entry = this.queue[i]
     if (entry === obj ||
-        (entry && entry.equals &&
-         obj && obj.equals &&
-         entry.equals(obj))) {
+        (entry && entry.similarTo &&
+         obj && obj.similarTo &&
+         entry.similarTo(obj))) {
       return i
     }
   }
