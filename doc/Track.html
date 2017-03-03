@@ -1155,7 +1155,7 @@ or the empty string if not available.</p>
 
 
 <div class="description">
-    <p>Whether this track is identical to another track.</p>
+    <p>Whether this track is equal to another track.</p>
 </div>
 
 
@@ -1275,7 +1275,7 @@ or the empty string if not available.</p>
 
         
 <div class="param-desc">
-    <p><code>true</code> if the tracks are identical,
+    <p><code>true</code> if the tracks are equal,
 <code>false</code> otherwise.</p>
 </div>
 
@@ -2347,6 +2347,113 @@ or <code>-1</code> if not available.</p>
 
     
 
+    <h4 class="name" id="popularityPromise"><span class="type-signature"></span>popularityPromise<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|int}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Spotify popularity as a promise.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line282">line 282</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>The Spotify popularity, or <code>-1</code> if not available.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type">int</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="refresh"><span class="type-signature"></span>refresh<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|<a href="Track.html">Track</a>}</span></h4>
 
     
@@ -2398,7 +2505,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line282">line 282</a>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line292">line 292</a>
     </li></ul></dd>
     
 
@@ -2554,7 +2661,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line294">line 294</a>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line304">line 304</a>
     </li></ul></dd>
     
 
@@ -2710,7 +2817,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line306">line 306</a>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line316">line 316</a>
     </li></ul></dd>
     
 
@@ -2841,7 +2948,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line371">line 371</a>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line397">line 397</a>
     </li></ul></dd>
     
 
@@ -2864,6 +2971,160 @@ or <code>-1</code> if not available.</p>
 
 
 
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="similarTo"><span class="type-signature"></span>similarTo<span class="signature">(track)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Whether this track is similar to another track.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>track</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Track.html">Track</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The track to compare against.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line326">line 326</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p><code>true</code> if the tracks are similar,
+<code>false</code> otherwise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -2923,7 +3184,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line314">line 314</a>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line340">line 340</a>
     </li></ul></dd>
     
 
@@ -3027,7 +3288,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line342">line 342</a>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line368">line 368</a>
     </li></ul></dd>
     
 
@@ -3131,7 +3392,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line328">line 328</a>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line354">line 354</a>
     </li></ul></dd>
     
 
@@ -3235,7 +3496,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line357">line 357</a>
+        <a href="src_track.js.html">src/track.js</a>, <a href="src_track.js.html#line383">line 383</a>
     </li></ul></dd>
     
 
@@ -3307,7 +3568,7 @@ or the empty string if not available.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Feb 28 2017 09:25:39 GMT+0100 (Vest-Europa (normaltid))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Mar 03 2017 16:38:14 GMT+0100 (Vest-Europa (normaltid))
 </footer>
 
 <script> prettyPrint(); </script>

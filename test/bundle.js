@@ -75568,13 +75568,17 @@ Queue.prototype.dedup = function () {
     } else {
       var idx = self.indexOf(entry)
       var other = result.get(idx)
-      return other.refresh().then(function () {
-        return entry.refresh()
-      }).then(function () {
-        if (entry.popularity() > other.popularity()) {
-          Queue.set(idx, entry)
-        }
-      })
+      if (entry.equals(other)) {
+        return Promise.resolve(other)
+      } else {
+        return other.refresh().then(function () {
+          return entry.refresh()
+        }).then(function () {
+          if (entry.popularity() > other.popularity()) {
+            Queue.set(idx, entry)
+          }
+        })
+      }
     }
   }).then(function () {
     self.queue = result.toArray()
@@ -75727,9 +75731,9 @@ Queue.prototype.indexOf = function (obj) {
   for (var i in this.queue) {
     var entry = this.queue[i]
     if (entry === obj ||
-        (entry && entry.equals &&
-         obj && obj.equals &&
-         entry.equals(obj))) {
+        (entry && entry.similarTo &&
+         obj && obj.similarTo &&
+         entry.similarTo(obj))) {
       return i
     }
   }
@@ -76651,15 +76655,15 @@ Track.prototype.duration = function () {
 }
 
 /**
- * Whether this track is identical to another track.
+ * Whether this track is equal to another track.
  * @param {Track} track - The track to compare against.
- * @return {boolean} `true` if the tracks are identical,
+ * @return {boolean} `true` if the tracks are equal,
  * `false` otherwise.
  */
 Track.prototype.equals = function (track) {
-  var str1 = this.toString().toLowerCase()
-  var str2 = track.toString().toLowerCase()
-  return str1 === str2
+  var uri1 = this.uri()
+  var uri2 = track.uri()
+  return uri1 !== '' && uri2 !== '' && uri1 === uri2
 }
 
 /**
@@ -76795,6 +76799,16 @@ Track.prototype.popularity = function () {
 }
 
 /**
+ * Spotify popularity as a promise.
+ * @return {Promise | int} The Spotify popularity, or `-1` if not available.
+ */
+Track.prototype.popularityPromise = function () {
+  return this.refresh().then(function () {
+    return Promise.resolve(this.popularity())
+  })
+}
+
+/**
  * Refresh track metadata.
  * @return {Promise | Track} Itself.
  */
@@ -76824,6 +76838,22 @@ Track.prototype.searchForTrack = function () {
  */
 Track.prototype.setAlbum = function (album) {
   this.albumName = album
+}
+
+/**
+ * Whether this track is similar to another track.
+ * @param {Track} track - The track to compare against.
+ * @return {boolean} `true` if the tracks are similar,
+ * `false` otherwise.
+ */
+Track.prototype.similarTo = function (track) {
+  if (this.equals(track)) {
+    return true
+  } else {
+    var str1 = this.toString().toLowerCase()
+    var str2 = track.toString().toLowerCase()
+    return str1 === str2
+  }
 }
 
 /**
