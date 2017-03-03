@@ -74,13 +74,17 @@ Queue.prototype.dedup = function () {
     } else {
       var idx = self.indexOf(entry)
       var other = result.get(idx)
-      return other.refresh().then(function () {
-        return entry.refresh()
-      }).then(function () {
-        if (entry.popularity() > other.popularity()) {
-          Queue.set(idx, entry)
-        }
-      })
+      if (entry.identicalTo(other)) {
+        return Promise.resolve(other)
+      } else {
+        return other.refresh().then(function () {
+          return entry.refresh()
+        }).then(function () {
+          if (entry.popularity() > other.popularity()) {
+            Queue.set(idx, entry)
+          }
+        })
+      }
     }
   }).then(function () {
     self.queue = result.toArray()

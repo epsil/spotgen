@@ -132,9 +132,9 @@ Track.prototype.duration = function () {
 }
 
 /**
- * Whether this track is identical to another track.
+ * Whether this track is equal to another track.
  * @param {Track} track - The track to compare against.
- * @return {boolean} `true` if the tracks are identical,
+ * @return {boolean} `true` if the tracks are equal,
  * `false` otherwise.
  */
 Track.prototype.equals = function (track) {
@@ -211,6 +211,18 @@ Track.prototype.id = function () {
 }
 
 /**
+ * Whether this track is identical to another track.
+ * @param {Track} track - The track to compare against.
+ * @return {boolean} `true` if the tracks are identical,
+ * `false` otherwise.
+ */
+Track.prototype.identicalTo = function (track) {
+  var uri1 = this.uri()
+  var uri2 = track.uri()
+  return uri1 !== '' && uri2 !== '' && uri1 === uri2
+}
+
+/**
  * Whether a string is a Spotify link
  * on the form `http://open.spotify.com/track/ID`.
  * @param {string} str - A potential Spotify link.
@@ -273,6 +285,16 @@ Track.prototype.popularity = function () {
   } else {
     return -1
   }
+}
+
+/**
+ * Spotify popularity as a promise.
+ * @return {Promise | int} The Spotify popularity, or `-1` if not available.
+ */
+Track.prototype.popularityPromise = function () {
+  return this.refresh().then(function () {
+    return Promise.resolve(this.popularity())
+  })
 }
 
 /**
