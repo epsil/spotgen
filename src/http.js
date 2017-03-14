@@ -1,4 +1,4 @@
-var request = require('request')
+var preq = require('preq')
 
 /**
  * Perform a HTTP request.
@@ -6,20 +6,15 @@ var request = require('request')
  * @param {integer} [delay] - Time delay in ms.
  * @return {Promise} A promise.
  */
-function http (url, delay) {
-  delay = delay || 100
-  return new Promise(function (resolve, reject) {
-    setTimeout(function () {
-      request(url, function (err, response, body) {
-        if (err) {
-          reject(err)
-        } else if (response.statusCode !== 200) {
-          reject(response.statusCode)
-        } else {
-          resolve(body)
-        }
-      })
-    }, delay)
+function http (url, options) {
+  options = options || {}
+  options.uri = options.uri || url
+  options.delay = options.delay || 100
+  var delay = new Promise(function (resolve) {
+    setTimeout(resolve, options.delay)
+  })
+  return delay.then(function () {
+    return preq.get(options)
   })
 }
 
@@ -34,15 +29,14 @@ function http (url, delay) {
  * @param {integer} [delay] - Time delay in ms.
  * @return {Promise} A promise.
  */
-http.s = function (url, delay) {
-  delay = delay || 100
-  return http(url, delay).catch(function (err) {
+http.s = function (url, options) {
+  return http(url, options).catch(function (err) {
     var message = err + ''
     if (message.match(/XHR error/i)) {
       if (url.match(/^http:/i)) {
-        return http(url.replace(/^http:/i, 'https:'), delay)
+        return http(url.replace(/^http:/i, 'https:'), options)
       } else if (url.match(/^https:/i)) {
-        return http(url.replace(/^https:/i, 'http:'), delay)
+        return http(url.replace(/^https:/i, 'http:'), options)
       }
     }
   })
@@ -54,18 +48,17 @@ http.s = function (url, delay) {
  * @param {integer} [delay] - Time delay in ms.
  * @return {Promise | JSON} A JSON response.
  */
-http.json = function (url, delay) {
-  delay = delay || 100
-  return http.s(url, delay).then(function (response) {
+http.json = function (url, options) {
+  return http.s(url, options).then(function (res) {
     try {
-      response = JSON.parse(response)
+      res = res.body
     } catch (e) {
       return Promise.reject(e)
     }
-    if (response.error) {
-      return Promise.reject(response)
+    if (res.error) {
+      return Promise.reject(res)
     } else {
-      return Promise.resolve(response)
+      return Promise.resolve(res)
     }
   })
 }
