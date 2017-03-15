@@ -8,12 +8,15 @@ var preq = require('preq')
  */
 function http (url, options) {
   options = options || {}
-  options.uri = options.uri || url
+  options.uri = url || options.uri
   options.delay = options.delay || 100
-  var delay = new Promise(function (resolve) {
-    setTimeout(resolve, options.delay)
-  })
-  return delay.then(function () {
+  options.retries = options.retries || 5
+  var delay = function (time) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, time)
+    })
+  }
+  return delay(options.delay).then(function () {
     return preq.get(options)
   }).then(function (res) {
     return res.body
