@@ -22,6 +22,11 @@ function Track (entry) {
   this.entry = entry.trim()
 
   /**
+   * Last.fm user.
+   */
+  this.lastfmUser = null
+
+  /**
    * Full track object.
    *
    * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-full).
@@ -150,6 +155,7 @@ Track.prototype.equals = function (track) {
 Track.prototype.fetchLastfm = function (user) {
   var artist = this.artist()
   var title = this.title()
+  this.lastfmUser = user
   var self = this
   return lastfm.getInfo(artist, title, user).then(function (result) {
     self.lastfmResponse = result
@@ -236,10 +242,14 @@ Track.prototype.isURI = function (str) {
  */
 Track.prototype.lastfm = function () {
   if (this.lastfmResponse) {
-    if (this.lastfmResponse.track.userplaycount) {
-      return parseInt(this.lastfmResponse.track.userplaycount)
+    var playcount = this.lastfmResponse.track.playcount
+    if (this.lastfmUser) {
+      playcount = this.lastfmResponse.track.userplaycount
+    }
+    if (playcount) {
+      return parseInt(playcount)
     } else {
-      return parseInt(this.lastfmResponse.track.playcount)
+      return -1
     }
   } else {
     return -1
