@@ -98,9 +98,14 @@ To order the tracks by Spotify popularity, use `#order by`:
     #order by popularity
     #artist Beach House
 
-To order the tracks by [Last.fm](http://last.fm/) playcount, add the line `#order by lastfm`:
+To order by [Last.fm](http://last.fm/) playcount, add the line `#order by lastfm`:
 
     #order by lastfm
+    #artist Beach House
+
+To order by Last.fm user playcount, add the Last.fm username at the end:
+
+    #order by lastfm username
     #artist Beach House
 
 ### Group
