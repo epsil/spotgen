@@ -36,6 +36,11 @@ function Playlist (str) {
   this.grouping = null
 
   /**
+   * Last.fm user.
+   */
+  this.lastfmUser = null
+
+  /**
    * Playlist order.
    */
   this.ordering = null
@@ -51,8 +56,9 @@ function Playlist (str) {
     while (lines.length > 0) {
       var line = lines.shift()
       if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
-        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+(.*)/i)
+        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i)
         this.ordering = orderMatch[2].toLowerCase()
+        this.lastfmUser = orderMatch[4]
       } else if (line.match(/^#GROUP\s+BY/i)) {
         var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
         this.grouping = groupMatch[1].toLowerCase()
@@ -180,8 +186,9 @@ Playlist.prototype.dispatch = function () {
  * @return {Promise | Queue} A queue of results.
  */
 Playlist.prototype.fetchLastfm = function () {
+  var self = this
   return this.entries.forEachPromise(function (entry) {
-    return entry.fetchLastfm()
+    return entry.fetchLastfm(self.lastfmUser)
   })
 }
 

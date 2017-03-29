@@ -147,11 +147,11 @@ Track.prototype.equals = function (track) {
  * Fetch Last.fm information.
  * @return {Promise | Track} Itself.
  */
-Track.prototype.fetchLastfm = function () {
+Track.prototype.fetchLastfm = function (user) {
   var artist = this.artist()
   var title = this.title()
   var self = this
-  return lastfm.getInfo(artist, title).then(function (result) {
+  return lastfm.getInfo(artist, title, user).then(function (result) {
     self.lastfmResponse = result
     return self
   })
@@ -236,7 +236,11 @@ Track.prototype.isURI = function (str) {
  */
 Track.prototype.lastfm = function () {
   if (this.lastfmResponse) {
-    return parseInt(this.lastfmResponse.track.playcount)
+    if (this.lastfmResponse.track.userplaycount) {
+      return parseInt(this.lastfmResponse.track.userplaycount)
+    } else {
+      return parseInt(this.lastfmResponse.track.playcount)
+    }
   } else {
     return -1
   }

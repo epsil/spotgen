@@ -14,18 +14,15 @@ module.exports = function (key) {
    * default true.
    * @return {Promise | JSON} The track info.
    */
-  lastfm.getInfo = function (artist, title, correct) {
-    correct = (correct !== false)
-    artist = encodeURIComponent(artist)
-    title = encodeURIComponent(title)
-    key = encodeURIComponent(key)
-
+  lastfm.getInfo = function (artist, title, user, correct) {
     var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
-    url += '&api_key=' + key
-    url += '&artist=' + artist
-    url += '&track=' + title
+    correct = (correct === undefined) ? true : correct
+    url += '&api_key=' + encodeURIComponent(key)
+    url += '&artist=' + encodeURIComponent(artist)
+    url += '&track=' + encodeURIComponent(title)
+    url += user ? ('&username=' + encodeURIComponent(user)) : ''
+    url += '&autocorrect=' + (correct ? 1 : 0)
     url += '&format=json'
-
     return lastfm.request(url).then(function (result) {
       if (result && !result.error && result.track) {
         return Promise.resolve(result)
