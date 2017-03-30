@@ -8,15 +8,15 @@ var Track = require('./track')
 var Similar = require('./similar')
 
 /**
- * Create a playlist.
+ * Create a generator.
  * @constructor
  * @param {string} str - A newline-separated string of
  * entries on the form `TITLE - ARTIST`. May also contain
  * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
  */
-function Playlist (str) {
+function Generator (str) {
   /**
-   * Playlist alternating.
+   * Generator alternating.
    */
   this.alternating = null
 
@@ -31,7 +31,7 @@ function Playlist (str) {
   this.entries = new Queue()
 
   /**
-   * Playlist grouping.
+   * Generator grouping.
    */
   this.grouping = null
 
@@ -41,7 +41,7 @@ function Playlist (str) {
   this.lastfmUser = null
 
   /**
-   * Playlist order.
+   * Generator order.
    */
   this.ordering = null
 
@@ -128,9 +128,9 @@ function Playlist (str) {
 }
 
 /**
- * Alternate the playlist entries.
+ * Alternate the generator entries.
  */
-Playlist.prototype.alternate = function () {
+Generator.prototype.alternate = function () {
   var self = this
   if (this.alternating === 'artist') {
     return this.entries.alternate(function (track) {
@@ -151,9 +151,9 @@ Playlist.prototype.alternate = function () {
 
 /**
  * Remove duplicate entries.
- * @return {Promise|Playlist} - Itself.
+ * @return {Promise|Generator} - Itself.
  */
-Playlist.prototype.dedup = function () {
+Generator.prototype.dedup = function () {
   if (this.unique) {
     return this.entries.dedup()
   }
@@ -161,12 +161,12 @@ Playlist.prototype.dedup = function () {
 }
 
 /**
- * Dispatch all the entries in the playlist
+ * Dispatch all the entries in the generator
  * and return the track listing.
  * @return {Promise | string} A newline-separated list
  * of Spotify URIs.
  */
-Playlist.prototype.dispatch = function () {
+Generator.prototype.dispatch = function () {
   var self = this
   return this.fetchTracks().then(function () {
     return self.dedup()
@@ -182,10 +182,10 @@ Playlist.prototype.dispatch = function () {
 }
 
 /**
- * Fetch Last.fm metadata of each playlist entry.
+ * Fetch Last.fm metadata of each generator entry.
  * @return {Promise | Queue} A queue of results.
  */
-Playlist.prototype.fetchLastfm = function () {
+Generator.prototype.fetchLastfm = function () {
   var self = this
   return this.entries.forEachPromise(function (entry) {
     return entry.fetchLastfm(self.lastfmUser)
@@ -193,10 +193,10 @@ Playlist.prototype.fetchLastfm = function () {
 }
 
 /**
- * Dispatch the entries in the playlist.
+ * Dispatch the entries in the generator.
  * @return {Promise} A Promise to perform the action.
  */
-Playlist.prototype.fetchTracks = function () {
+Generator.prototype.fetchTracks = function () {
   var self = this
   return this.entries.dispatch().then(function (queue) {
     self.entries = queue.flatten()
@@ -204,9 +204,9 @@ Playlist.prototype.fetchTracks = function () {
 }
 
 /**
- * Group the playlist entries.
+ * Group the generator entries.
  */
-Playlist.prototype.group = function () {
+Generator.prototype.group = function () {
   var self = this
   if (this.grouping === 'artist') {
     return this.entries.group(function (track) {
@@ -226,10 +226,10 @@ Playlist.prototype.group = function () {
 }
 
 /**
- * Order the playlist entries.
+ * Order the generator entries.
  * @return {Promise} A Promise to perform the action.
  */
-Playlist.prototype.order = function () {
+Generator.prototype.order = function () {
   var self = this
   if (this.ordering === 'popularity') {
     return this.refreshTracks().then(function () {
@@ -243,17 +243,17 @@ Playlist.prototype.order = function () {
 }
 
 /**
- * Print the playlist to the console.
+ * Print the generator to the console.
  */
-Playlist.prototype.print = function () {
+Generator.prototype.print = function () {
   console.log(this.toString())
 }
 
 /**
- * Refresh the metadata of each playlist entry.
+ * Refresh the metadata of each generator entry.
  * @return {Promise} A Promise to perform the action.
  */
-Playlist.prototype.refreshTracks = function () {
+Generator.prototype.refreshTracks = function () {
   var self = this
   return this.entries.dispatch().then(function (result) {
     self.entries = result.flatten()
@@ -261,10 +261,10 @@ Playlist.prototype.refreshTracks = function () {
 }
 
 /**
- * Convert the playlist to a string.
+ * Convert the generator to a string.
  * @return {string} A newline-separated list of Spotify URIs.
  */
-Playlist.prototype.toString = function () {
+Generator.prototype.toString = function () {
   var result = ''
   var self = this
   this.entries.forEach(function (entry) {
@@ -289,4 +289,4 @@ Playlist.prototype.toString = function () {
   return result
 }
 
-module.exports = Playlist
+module.exports = Generator

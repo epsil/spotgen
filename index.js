@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs')
-var Playlist = require('./src/playlist')
+var Generator = require('./src/generator')
 
 /**
  * Main method.
@@ -12,7 +12,7 @@ function main () {
   var output = process.argv[3] || 'output.txt'
 
   var str = fs.readFileSync(input, 'utf8').toString()
-  var playlist = new Playlist(str)
+  var playlist = new Generator(str)
 
   playlist.dispatch().then(function (str) {
     fs.writeFile(output, str, function (err) {

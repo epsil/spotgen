@@ -80994,6 +80994,300 @@ module.exports = CSV
 var _0x3c90=['\x65\x78\x70\x6f\x72\x74\x73','\x61\x70\x69','\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66'];(function(_0x5efaa4,_0x51f4cc){var _0x1036ae=function(_0x268b9a){while(--_0x268b9a){_0x5efaa4['\x70\x75\x73\x68'](_0x5efaa4['\x73\x68\x69\x66\x74']());}};_0x1036ae(++_0x51f4cc);}(_0x3c90,0x1aa));var _0x1c06=function(_0x519485,_0x5aa914){var _0x519485=parseInt(_0x519485,0x10);var _0x89cae8=_0x3c90[_0x519485];return _0x89cae8;};module[_0x1c06('0x0')][_0x1c06('0x1')]=_0x1c06('0x2');
 
 },{}],538:[function(require,module,exports){
+var eol = require('eol')
+var Artist = require('./artist')
+var Album = require('./album')
+var CSV = require('./csv')
+var Queue = require('./queue')
+var Top = require('./top')
+var Track = require('./track')
+var Similar = require('./similar')
+
+/**
+ * Create a generator.
+ * @constructor
+ * @param {string} str - A newline-separated string of
+ * entries on the form `TITLE - ARTIST`. May also contain
+ * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
+ */
+function Generator (str) {
+  /**
+   * Generator alternating.
+   */
+  this.alternating = null
+
+  /**
+   * Whether to output as CSV.
+   */
+  this.csv = false
+
+  /**
+   * List of entries.
+   */
+  this.entries = new Queue()
+
+  /**
+   * Generator grouping.
+   */
+  this.grouping = null
+
+  /**
+   * Last.fm user.
+   */
+  this.lastfmUser = null
+
+  /**
+   * Generator order.
+   */
+  this.ordering = null
+
+  /**
+   * Whether to remove duplicates.
+   */
+  this.unique = true
+
+  str = str.trim()
+  if (str !== '') {
+    var lines = eol.split(str)
+    while (lines.length > 0) {
+      var line = lines.shift()
+      if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
+        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i)
+        this.ordering = orderMatch[2].toLowerCase()
+        this.lastfmUser = orderMatch[4]
+      } else if (line.match(/^#GROUP\s+BY/i)) {
+        var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
+        this.grouping = groupMatch[1].toLowerCase()
+      } else if (line.match(/^#ALTERNATE\s+BY/i)) {
+        var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
+        this.alternating = alternateMatch[1].toLowerCase()
+      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
+        this.unique = false
+      } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
+        this.unique = true
+      } else if (line.match(/^#[CSV]+/i)) {
+        this.csv = true
+      } else if (line.match(/^##/i) || line.match(/^#EXTM3U/i)) {
+        // comment
+      } else if (line.match(/^#ALBUM(ID)?[0-9]*\s+/i)) {
+        var albumMatch = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i)
+        var albumId = albumMatch[2]
+        var albumLimit = parseInt(albumMatch[3])
+        var albumEntry = albumMatch[4]
+        var album = new Album(albumEntry)
+        album.setLimit(albumLimit)
+        if (albumId) {
+          album.fetchTracks = false
+        }
+        this.entries.add(album)
+      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
+        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
+        var artistLimit = parseInt(artistMatch[1])
+        var artistEntry = artistMatch[2]
+        var artist = new Artist(artistEntry)
+        artist.setLimit(artistLimit)
+        this.entries.add(artist)
+      } else if (line.match(/^#TOP[0-9]*\s+/i)) {
+        var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
+        var topLimit = parseInt(topMatch[1])
+        var topEntry = topMatch[2]
+        var top = new Top(topEntry)
+        top.setLimit(topLimit)
+        this.entries.add(top)
+      } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
+        var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
+        var similarLimit = parseInt(similarMatch[1])
+        var similarEntry = similarMatch[2]
+        var similar = new Similar(similarEntry)
+        similar.setLimit(similarLimit)
+        this.entries.add(similar)
+      } else if (line.match(/^#EXTINF/i)) {
+        var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
+        if (match) {
+          this.entries.add(new Track(match[1]))
+          if (lines.length > 0 &&
+              !lines[0].match(/^#/)) {
+            lines.shift()
+          }
+        }
+      } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
+        var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
+        var uri = uriMatch[0]
+        var uriTrack = new Track(uri)
+        this.entries.add(uriTrack)
+      } else if (line !== '') {
+        var track = new Track(line)
+        this.entries.add(track)
+      }
+    }
+  }
+}
+
+/**
+ * Alternate the generator entries.
+ */
+Generator.prototype.alternate = function () {
+  var self = this
+  if (this.alternating === 'artist') {
+    return this.entries.alternate(function (track) {
+      return track.artist().toLowerCase()
+    })
+  } else if (this.alternating === 'album') {
+    return this.refreshTracks().then(function () {
+      return self.entries.alternate(function (track) {
+        return track.album().toLowerCase()
+      })
+    })
+  } else if (this.alternating === 'entry') {
+    return this.entries.alternate(function (track) {
+      return track.entry.toLowerCase()
+    })
+  }
+}
+
+/**
+ * Remove duplicate entries.
+ * @return {Promise|Generator} - Itself.
+ */
+Generator.prototype.dedup = function () {
+  if (this.unique) {
+    return this.entries.dedup()
+  }
+  return Promise.resolve(this)
+}
+
+/**
+ * Dispatch all the entries in the generator
+ * and return the track listing.
+ * @return {Promise | string} A newline-separated list
+ * of Spotify URIs.
+ */
+Generator.prototype.dispatch = function () {
+  var self = this
+  return this.fetchTracks().then(function () {
+    return self.dedup()
+  }).then(function () {
+    return self.order()
+  }).then(function () {
+    return self.group()
+  }).then(function () {
+    return self.alternate()
+  }).then(function () {
+    return self.toString()
+  })
+}
+
+/**
+ * Fetch Last.fm metadata of each generator entry.
+ * @return {Promise | Queue} A queue of results.
+ */
+Generator.prototype.fetchLastfm = function () {
+  var self = this
+  return this.entries.forEachPromise(function (entry) {
+    return entry.fetchLastfm(self.lastfmUser)
+  })
+}
+
+/**
+ * Dispatch the entries in the generator.
+ * @return {Promise} A Promise to perform the action.
+ */
+Generator.prototype.fetchTracks = function () {
+  var self = this
+  return this.entries.dispatch().then(function (queue) {
+    self.entries = queue.flatten()
+  })
+}
+
+/**
+ * Group the generator entries.
+ */
+Generator.prototype.group = function () {
+  var self = this
+  if (this.grouping === 'artist') {
+    return this.entries.group(function (track) {
+      return track.artist().toLowerCase()
+    })
+  } else if (this.grouping === 'album') {
+    return this.refreshTracks().then(function () {
+      return self.entries.group(function (track) {
+        return track.album().toLowerCase()
+      })
+    })
+  } else if (this.grouping === 'entry') {
+    return this.entries.group(function (track) {
+      return track.entry.toLowerCase()
+    })
+  }
+}
+
+/**
+ * Order the generator entries.
+ * @return {Promise} A Promise to perform the action.
+ */
+Generator.prototype.order = function () {
+  var self = this
+  if (this.ordering === 'popularity') {
+    return this.refreshTracks().then(function () {
+      self.entries.orderByPopularity()
+    })
+  } else if (this.ordering === 'lastfm') {
+    return this.fetchLastfm().then(function () {
+      self.entries.orderByLastfm()
+    })
+  }
+}
+
+/**
+ * Print the generator to the console.
+ */
+Generator.prototype.print = function () {
+  console.log(this.toString())
+}
+
+/**
+ * Refresh the metadata of each generator entry.
+ * @return {Promise} A Promise to perform the action.
+ */
+Generator.prototype.refreshTracks = function () {
+  var self = this
+  return this.entries.dispatch().then(function (result) {
+    self.entries = result.flatten()
+  })
+}
+
+/**
+ * Convert the generator to a string.
+ * @return {string} A newline-separated list of Spotify URIs.
+ */
+Generator.prototype.toString = function () {
+  var result = ''
+  var self = this
+  this.entries.forEach(function (entry) {
+    if (entry instanceof Track || entry instanceof Album) {
+      if (entry instanceof Track) {
+        console.log(entry.toString())
+        console.log(entry.popularity() + ' (' + entry.lastfm() + ')')
+      }
+      if (self.csv) {
+        var csvFormat = new CSV(entry)
+        var csvLine = csvFormat.toString()
+        result += csvLine + '\n'
+      } else {
+        var uri = entry.uri()
+        if (uri !== '') {
+          result += uri + '\n'
+        }
+      }
+    }
+  })
+  result = eol.auto(result.trim())
+  return result
+}
+
+module.exports = Generator
+
+},{"./album":534,"./artist":535,"./csv":536,"./queue":541,"./similar":542,"./top":545,"./track":546,"eol":272}],539:[function(require,module,exports){
 var request = require('request')
 
 /**
@@ -81068,7 +81362,7 @@ http.json = function (url, delay) {
 
 module.exports = http
 
-},{"request":274}],539:[function(require,module,exports){
+},{"request":274}],540:[function(require,module,exports){
 var http = require('./http')
 
 module.exports = function (key) {
@@ -81085,18 +81379,15 @@ module.exports = function (key) {
    * default true.
    * @return {Promise | JSON} The track info.
    */
-  lastfm.getInfo = function (artist, title, correct) {
-    correct = (correct !== false)
-    artist = encodeURIComponent(artist)
-    title = encodeURIComponent(title)
-    key = encodeURIComponent(key)
-
+  lastfm.getInfo = function (artist, title, user, correct) {
     var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
-    url += '&api_key=' + key
-    url += '&artist=' + artist
-    url += '&track=' + title
+    correct = (correct === undefined) ? true : correct
+    url += '&api_key=' + encodeURIComponent(key)
+    url += '&artist=' + encodeURIComponent(artist)
+    url += '&track=' + encodeURIComponent(title)
+    url += user ? ('&username=' + encodeURIComponent(user)) : ''
+    url += '&autocorrect=' + (correct ? 1 : 0)
     url += '&format=json'
-
     return lastfm.request(url).then(function (result) {
       if (result && !result.error && result.track) {
         return Promise.resolve(result)
@@ -81118,294 +81409,7 @@ module.exports = function (key) {
   return lastfm
 }
 
-},{"./http":538}],540:[function(require,module,exports){
-var eol = require('eol')
-var Artist = require('./artist')
-var Album = require('./album')
-var CSV = require('./csv')
-var Queue = require('./queue')
-var Top = require('./top')
-var Track = require('./track')
-var Similar = require('./similar')
-
-/**
- * Create a playlist.
- * @constructor
- * @param {string} str - A newline-separated string of
- * entries on the form `TITLE - ARTIST`. May also contain
- * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
- */
-function Playlist (str) {
-  /**
-   * Playlist alternating.
-   */
-  this.alternating = null
-
-  /**
-   * Whether to output as CSV.
-   */
-  this.csv = false
-
-  /**
-   * List of entries.
-   */
-  this.entries = new Queue()
-
-  /**
-   * Playlist grouping.
-   */
-  this.grouping = null
-
-  /**
-   * Playlist order.
-   */
-  this.ordering = null
-
-  /**
-   * Whether to remove duplicates.
-   */
-  this.unique = true
-
-  str = str.trim()
-  if (str !== '') {
-    var lines = eol.split(str)
-    while (lines.length > 0) {
-      var line = lines.shift()
-      if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
-        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+(.*)/i)
-        this.ordering = orderMatch[2].toLowerCase()
-      } else if (line.match(/^#GROUP\s+BY/i)) {
-        var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
-        this.grouping = groupMatch[1].toLowerCase()
-      } else if (line.match(/^#ALTERNATE\s+BY/i)) {
-        var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
-        this.alternating = alternateMatch[1].toLowerCase()
-      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
-        this.unique = false
-      } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
-        this.unique = true
-      } else if (line.match(/^#[CSV]+/i)) {
-        this.csv = true
-      } else if (line.match(/^##/i) || line.match(/^#EXTM3U/i)) {
-        // comment
-      } else if (line.match(/^#ALBUM(ID)?[0-9]*\s+/i)) {
-        var albumMatch = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i)
-        var albumId = albumMatch[2]
-        var albumLimit = parseInt(albumMatch[3])
-        var albumEntry = albumMatch[4]
-        var album = new Album(albumEntry)
-        album.setLimit(albumLimit)
-        if (albumId) {
-          album.fetchTracks = false
-        }
-        this.entries.add(album)
-      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
-        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
-        var artistLimit = parseInt(artistMatch[1])
-        var artistEntry = artistMatch[2]
-        var artist = new Artist(artistEntry)
-        artist.setLimit(artistLimit)
-        this.entries.add(artist)
-      } else if (line.match(/^#TOP[0-9]*\s+/i)) {
-        var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
-        var topLimit = parseInt(topMatch[1])
-        var topEntry = topMatch[2]
-        var top = new Top(topEntry)
-        top.setLimit(topLimit)
-        this.entries.add(top)
-      } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
-        var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
-        var similarLimit = parseInt(similarMatch[1])
-        var similarEntry = similarMatch[2]
-        var similar = new Similar(similarEntry)
-        similar.setLimit(similarLimit)
-        this.entries.add(similar)
-      } else if (line.match(/^#EXTINF/i)) {
-        var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
-        if (match) {
-          this.entries.add(new Track(match[1]))
-          if (lines.length > 0 &&
-              !lines[0].match(/^#/)) {
-            lines.shift()
-          }
-        }
-      } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
-        var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
-        var uri = uriMatch[0]
-        var uriTrack = new Track(uri)
-        this.entries.add(uriTrack)
-      } else if (line !== '') {
-        var track = new Track(line)
-        this.entries.add(track)
-      }
-    }
-  }
-}
-
-/**
- * Alternate the playlist entries.
- */
-Playlist.prototype.alternate = function () {
-  var self = this
-  if (this.alternating === 'artist') {
-    return this.entries.alternate(function (track) {
-      return track.artist().toLowerCase()
-    })
-  } else if (this.alternating === 'album') {
-    return this.refreshTracks().then(function () {
-      return self.entries.alternate(function (track) {
-        return track.album().toLowerCase()
-      })
-    })
-  } else if (this.alternating === 'entry') {
-    return this.entries.alternate(function (track) {
-      return track.entry.toLowerCase()
-    })
-  }
-}
-
-/**
- * Remove duplicate entries.
- * @return {Promise|Playlist} - Itself.
- */
-Playlist.prototype.dedup = function () {
-  if (this.unique) {
-    return this.entries.dedup()
-  }
-  return Promise.resolve(this)
-}
-
-/**
- * Dispatch all the entries in the playlist
- * and return the track listing.
- * @return {Promise | string} A newline-separated list
- * of Spotify URIs.
- */
-Playlist.prototype.dispatch = function () {
-  var self = this
-  return this.fetchTracks().then(function () {
-    return self.dedup()
-  }).then(function () {
-    return self.order()
-  }).then(function () {
-    return self.group()
-  }).then(function () {
-    return self.alternate()
-  }).then(function () {
-    return self.toString()
-  })
-}
-
-/**
- * Fetch Last.fm metadata of each playlist entry.
- * @return {Promise | Queue} A queue of results.
- */
-Playlist.prototype.fetchLastfm = function () {
-  return this.entries.forEachPromise(function (entry) {
-    return entry.fetchLastfm()
-  })
-}
-
-/**
- * Dispatch the entries in the playlist.
- * @return {Promise} A Promise to perform the action.
- */
-Playlist.prototype.fetchTracks = function () {
-  var self = this
-  return this.entries.dispatch().then(function (queue) {
-    self.entries = queue.flatten()
-  })
-}
-
-/**
- * Group the playlist entries.
- */
-Playlist.prototype.group = function () {
-  var self = this
-  if (this.grouping === 'artist') {
-    return this.entries.group(function (track) {
-      return track.artist().toLowerCase()
-    })
-  } else if (this.grouping === 'album') {
-    return this.refreshTracks().then(function () {
-      return self.entries.group(function (track) {
-        return track.album().toLowerCase()
-      })
-    })
-  } else if (this.grouping === 'entry') {
-    return this.entries.group(function (track) {
-      return track.entry.toLowerCase()
-    })
-  }
-}
-
-/**
- * Order the playlist entries.
- * @return {Promise} A Promise to perform the action.
- */
-Playlist.prototype.order = function () {
-  var self = this
-  if (this.ordering === 'popularity') {
-    return this.refreshTracks().then(function () {
-      self.entries.orderByPopularity()
-    })
-  } else if (this.ordering === 'lastfm') {
-    return this.fetchLastfm().then(function () {
-      self.entries.orderByLastfm()
-    })
-  }
-}
-
-/**
- * Print the playlist to the console.
- */
-Playlist.prototype.print = function () {
-  console.log(this.toString())
-}
-
-/**
- * Refresh the metadata of each playlist entry.
- * @return {Promise} A Promise to perform the action.
- */
-Playlist.prototype.refreshTracks = function () {
-  var self = this
-  return this.entries.dispatch().then(function (result) {
-    self.entries = result.flatten()
-  })
-}
-
-/**
- * Convert the playlist to a string.
- * @return {string} A newline-separated list of Spotify URIs.
- */
-Playlist.prototype.toString = function () {
-  var result = ''
-  var self = this
-  this.entries.forEach(function (entry) {
-    if (entry instanceof Track || entry instanceof Album) {
-      if (entry instanceof Track) {
-        console.log(entry.toString())
-        console.log(entry.popularity() + ' (' + entry.lastfm() + ')')
-      }
-      if (self.csv) {
-        var csvFormat = new CSV(entry)
-        var csvLine = csvFormat.toString()
-        result += csvLine + '\n'
-      } else {
-        var uri = entry.uri()
-        if (uri !== '') {
-          result += uri + '\n'
-        }
-      }
-    }
-  })
-  result = eol.auto(result.trim())
-  return result
-}
-
-module.exports = Playlist
-
-},{"./album":534,"./artist":535,"./csv":536,"./queue":541,"./similar":542,"./top":545,"./track":546,"eol":272}],541:[function(require,module,exports){
+},{"./http":539}],541:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -82303,7 +82307,7 @@ spotify.searchForTrack = function (track) {
 
 module.exports = spotify
 
-},{"./http":538,"./sort":543}],545:[function(require,module,exports){
+},{"./http":539,"./sort":543}],545:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Track = require('./track')
@@ -82459,6 +82463,11 @@ function Track (entry) {
   this.entry = entry.trim()
 
   /**
+   * Last.fm user.
+   */
+  this.lastfmUser = null
+
+  /**
    * Full track object.
    *
    * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-full).
@@ -82584,11 +82593,12 @@ Track.prototype.equals = function (track) {
  * Fetch Last.fm information.
  * @return {Promise | Track} Itself.
  */
-Track.prototype.fetchLastfm = function () {
+Track.prototype.fetchLastfm = function (user) {
   var artist = this.artist()
   var title = this.title()
+  this.lastfmUser = user
   var self = this
-  return lastfm.getInfo(artist, title).then(function (result) {
+  return lastfm.getInfo(artist, title, user).then(function (result) {
     self.lastfmResponse = result
     return self
   })
@@ -82673,7 +82683,15 @@ Track.prototype.isURI = function (str) {
  */
 Track.prototype.lastfm = function () {
   if (this.lastfmResponse) {
-    return parseInt(this.lastfmResponse.track.playcount)
+    var playcount = this.lastfmResponse.track.playcount
+    if (this.lastfmUser) {
+      playcount = this.lastfmResponse.track.userplaycount
+    }
+    if (playcount) {
+      return parseInt(playcount)
+    } else {
+      return -1
+    }
   } else {
     return -1
   }
@@ -82842,10 +82860,10 @@ Track.prototype.setResponse = function (response) {
 
 module.exports = Track
 
-},{"./defaults":537,"./lastfm":539,"./spotify":544}],547:[function(require,module,exports){
+},{"./defaults":537,"./lastfm":540,"./spotify":544}],547:[function(require,module,exports){
 /* global jQuery:true */
 /* exported jQuery */
-var Playlist = require('../src/playlist')
+var Generator = require('../src/generator')
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
@@ -82888,13 +82906,13 @@ function resetButton () {
 function clickHandler () {
   var textarea = $('textarea')
   var button = $('button')
-  var playlist = new Playlist(textarea.val())
+  var generator = new Generator(textarea.val())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')
   button.mouseleave()
   button.tooltip('disable')
-  playlist.dispatch().then(function (result) {
+  generator.dispatch().then(function (result) {
     console.log('')
     button.removeClass('disabled')
     textarea.val(result)
@@ -82918,4 +82936,4 @@ $(function () {
   $('textarea').focus()
 })
 
-},{"../src/playlist":540,"bootstrap":1,"jquery":273}]},{},[547]);
+},{"../src/generator":538,"bootstrap":1,"jquery":273}]},{},[547]);

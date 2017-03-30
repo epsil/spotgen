@@ -1,6 +1,6 @@
 /* global jQuery:true */
 /* exported jQuery */
-var Playlist = require('../src/playlist')
+var Generator = require('../src/generator')
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
@@ -43,13 +43,13 @@ function resetButton () {
 function clickHandler () {
   var textarea = $('textarea')
   var button = $('button')
-  var playlist = new Playlist(textarea.val())
+  var generator = new Generator(textarea.val())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')
   button.mouseleave()
   button.tooltip('disable')
-  playlist.dispatch().then(function (result) {
+  generator.dispatch().then(function (result) {
     console.log('')
     button.removeClass('disabled')
     textarea.val(result)
