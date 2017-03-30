@@ -66,6 +66,22 @@ spotify.getAlbumsByArtist = function (id) {
 }
 
 /**
+ * Get a playlist.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-playlists-tracks/#example).
+ *
+ * @param {string} user - User ID.
+ * @param {string} playlist - Playlist ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+spotify.getPlaylist = function (user, playlist) {
+  var url = 'https://api.spotify.com/v1/users/'
+  url += encodeURIComponent(user)
+  url += '/playlists/' + encodeURIComponent(playlist) + '/tracks'
+  return spotify.request(url)
+}
+
+/**
  * Get the top tracks of an artist.
  *
  * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).

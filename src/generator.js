@@ -2,6 +2,7 @@ var eol = require('eol')
 var Artist = require('./artist')
 var Album = require('./album')
 var CSV = require('./csv')
+var Playlist = require('./playlist')
 var Queue = require('./queue')
 var Top = require('./top')
 var Track = require('./track')
@@ -105,6 +106,12 @@ function Generator (str) {
         var similar = new Similar(similarEntry)
         similar.setLimit(similarLimit)
         this.entries.add(similar)
+      } else if (line.match(/^#PLAYLIST/i)) {
+        var playlistMatch = line.match(/^#PLAYLIST\s+([^\s]*)\s+([^\s]*)/i)
+        var user = playlistMatch[1]
+        var playlist = playlistMatch[2]
+        var playlistEntry = new Playlist(user, playlist)
+        this.entries.add(playlistEntry)
       } else if (line.match(/^#EXTINF/i)) {
         var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
         if (match) {
