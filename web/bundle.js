@@ -81067,7 +81067,9 @@ function Generator (str) {
         this.unique = true
       } else if (line.match(/^#[CSV]+/i)) {
         this.csv = true
-      } else if (line.match(/^##/i) || line.match(/^#EXTM3U/i)) {
+      } else if (line.match(/^##/i) ||
+                 line.match(/^#EXTM3U/i) ||
+                 line.match(/^sep=,/i)) {
         // comment
       } else if (line.match(/^#ALBUM(ID)?[0-9]*\s+/i)) {
         var albumMatch = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i)
@@ -81261,8 +81263,8 @@ Generator.prototype.refreshTracks = function () {
  * @return {string} A newline-separated list of Spotify URIs.
  */
 Generator.prototype.toString = function () {
-  var result = ''
   var self = this
+  var result = self.csv ? 'sep=,\n' : ''
   this.entries.forEach(function (entry) {
     if (entry instanceof Track || entry instanceof Album) {
       if (entry instanceof Track) {

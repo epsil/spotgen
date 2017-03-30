@@ -172,7 +172,7 @@ This produces a file on the format used by [Exportify](https://github.com/watson
     spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
     spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,
 
-The generator can also read files in this format. (Microsoft Excel can import them as well, although it might be necessary to add the line `sep=,` at the top.)
+The generator can also read files in this format. CSV files can be edited with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc.
 
 ### Import existing Spotify playlists
 
