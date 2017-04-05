@@ -206,6 +206,8 @@ Run the script with `./index.js` or `node index`:
 
     $ ./index.js input.txt output.txt
 
+[More on the command-line version](Tips.md#multiple-playlists).
+
 Links
 -----
 
