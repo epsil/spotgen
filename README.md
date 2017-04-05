@@ -1,8 +1,7 @@
 [Spotify Playlist Generator](https://epsil.github.io/spotify/)
 ==============================================================
 
-> A tool for converting, processing and generating Spotify playlists,
-> as well as leveraging Last.fm user data.
+> A tool for converting, processing and generating [Spotify](http://www.spotify.com/) playlists, as well as leveraging [Last.fm](http://last.fm/) user data.
 >
 > <https://epsil.github.io/spotify/>
 
@@ -85,7 +84,7 @@ To order the tracks by Spotify popularity, use `#order by`:
     #order by popularity
     #artist Beach House
 
-The generator also provides Last.fm support. To order by [Last.fm](http://last.fm/) playcount, add the line `#order by lastfm`:
+The generator also provides [Last.fm](http://last.fm/) support. To order by Last.fm playcount, add the line `#order by lastfm`:
 
     #order by lastfm
     #artist Beach House
