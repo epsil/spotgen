@@ -185,6 +185,8 @@ The generator translates this to:
     Revival - Deerhunter
     Twilight at Carbon Lake - Deerhunter
 
+[More on M3U playlists](Tips.md#m3u-playlists).
+
 ### Comma-separated values
 
 The generator supports the comma-separated format used by [Exportify](https://github.com/watsonbox/exportify):
