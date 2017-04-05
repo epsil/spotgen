@@ -74852,7 +74852,7 @@ Album.prototype.uri = function () {
 
 module.exports = Album
 
-},{"./queue":565,"./spotify":568,"./track":570}],559:[function(require,module,exports){
+},{"./queue":566,"./spotify":569,"./track":571}],559:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
 var sort = require('./sort')
@@ -75020,7 +75020,7 @@ Artist.prototype.setResponse = function (response) {
 
 module.exports = Artist
 
-},{"./album":558,"./queue":565,"./sort":567,"./spotify":568}],560:[function(require,module,exports){
+},{"./album":558,"./queue":566,"./sort":568,"./spotify":569}],560:[function(require,module,exports){
 var stringify = require('csv-stringify/lib/sync')
 
 /**
@@ -75081,24 +75081,21 @@ var _0x3c90=['\x65\x78\x70\x6f\x72\x74\x73','\x61\x70\x69','\x38\x30\x33\x64\x33
 
 },{}],562:[function(require,module,exports){
 var eol = require('eol')
-var Artist = require('./artist')
 var Album = require('./album')
 var CSV = require('./csv')
 var Queue = require('./queue')
-var Top = require('./top')
 var Track = require('./track')
-var Similar = require('./similar')
 
 /**
- * Create a generator.
+ * Create a playlist generator.
  * @constructor
  * @param {string} str - A newline-separated string of
  * entries on the form `TITLE - ARTIST`. May also contain
  * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
  */
-function Generator (str) {
+function Generator () {
   /**
-   * Generator alternating.
+   * Playlist alternating.
    */
   this.alternating = null
 
@@ -75113,7 +75110,7 @@ function Generator (str) {
   this.entries = new Queue()
 
   /**
-   * Generator grouping.
+   * Playlist grouping.
    */
   this.grouping = null
 
@@ -75123,7 +75120,7 @@ function Generator (str) {
   this.lastfmUser = null
 
   /**
-   * Generator order.
+   * Playlist order.
    */
   this.ordering = null
 
@@ -75131,84 +75128,6 @@ function Generator (str) {
    * Whether to remove duplicates.
    */
   this.unique = true
-
-  str = str.trim()
-  if (str !== '') {
-    var lines = eol.split(str)
-    while (lines.length > 0) {
-      var line = lines.shift()
-      if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
-        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i)
-        this.ordering = orderMatch[2].toLowerCase()
-        this.lastfmUser = orderMatch[4]
-      } else if (line.match(/^#GROUP\s+BY/i)) {
-        var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
-        this.grouping = groupMatch[1].toLowerCase()
-      } else if (line.match(/^#ALTERNATE\s+BY/i)) {
-        var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
-        this.alternating = alternateMatch[1].toLowerCase()
-      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
-        this.unique = false
-      } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
-        this.unique = true
-      } else if (line.match(/^#(CSV|CVS)/i)) {
-        this.csv = true
-      } else if (line.match(/^##/i) ||
-                 line.match(/^#EXTM3U/i) ||
-                 line.match(/^sep=,/i)) {
-        // comment
-      } else if (line.match(/^#ALBUM(ID)?[0-9]*\s+/i)) {
-        var albumMatch = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i)
-        var albumId = albumMatch[2]
-        var albumLimit = parseInt(albumMatch[3])
-        var albumEntry = albumMatch[4]
-        var album = new Album(albumEntry)
-        album.setLimit(albumLimit)
-        if (albumId) {
-          album.fetchTracks = false
-        }
-        this.entries.add(album)
-      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
-        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
-        var artistLimit = parseInt(artistMatch[1])
-        var artistEntry = artistMatch[2]
-        var artist = new Artist(artistEntry)
-        artist.setLimit(artistLimit)
-        this.entries.add(artist)
-      } else if (line.match(/^#TOP[0-9]*\s+/i)) {
-        var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
-        var topLimit = parseInt(topMatch[1])
-        var topEntry = topMatch[2]
-        var top = new Top(topEntry)
-        top.setLimit(topLimit)
-        this.entries.add(top)
-      } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
-        var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
-        var similarLimit = parseInt(similarMatch[1])
-        var similarEntry = similarMatch[2]
-        var similar = new Similar(similarEntry)
-        similar.setLimit(similarLimit)
-        this.entries.add(similar)
-      } else if (line.match(/^#EXTINF/i)) {
-        var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
-        if (match) {
-          this.entries.add(new Track(match[1]))
-          if (lines.length > 0 &&
-              !lines[0].match(/^#/)) {
-            lines.shift()
-          }
-        }
-      } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
-        var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
-        var uri = uriMatch[0]
-        var uriTrack = new Track(uri)
-        this.entries.add(uriTrack)
-      } else if (line !== '') {
-        var track = new Track(line)
-        this.entries.add(track)
-      }
-    }
-  }
 }
 
 /**
@@ -75375,7 +75294,7 @@ Generator.prototype.toString = function () {
 
 module.exports = Generator
 
-},{"./album":558,"./artist":559,"./csv":560,"./queue":565,"./similar":566,"./top":569,"./track":570,"eol":297}],563:[function(require,module,exports){
+},{"./album":558,"./csv":560,"./queue":566,"./track":571,"eol":297}],563:[function(require,module,exports){
 var request = require('request')
 
 /**
@@ -75498,6 +75417,107 @@ module.exports = function (key) {
 }
 
 },{"./http":563}],565:[function(require,module,exports){
+var eol = require('eol')
+var Artist = require('./artist')
+var Album = require('./album')
+var Generator = require('./generator')
+var Top = require('./top')
+var Track = require('./track')
+var Similar = require('./similar')
+
+/**
+ * Parse a string and create a playlist generator.
+ * @constructor
+ * @param {string} str - A newline-separated string of
+ * entries on the form `TITLE - ARTIST`. May also contain
+ * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
+ * @return {Generator} A playlist generator.
+ */
+function Parser (str) {
+  var generator = new Generator()
+  str = str.trim()
+  if (str !== '') {
+    var lines = eol.split(str)
+    while (lines.length > 0) {
+      var line = lines.shift()
+      if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
+        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i)
+        generator.ordering = orderMatch[2].toLowerCase()
+        generator.lastfmUser = orderMatch[4]
+      } else if (line.match(/^#GROUP\s+BY/i)) {
+        var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
+        generator.grouping = groupMatch[1].toLowerCase()
+      } else if (line.match(/^#ALTERNATE\s+BY/i)) {
+        var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
+        generator.alternating = alternateMatch[1].toLowerCase()
+      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
+        generator.unique = false
+      } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
+        generator.unique = true
+      } else if (line.match(/^#(CSV|CVS)/i)) {
+        generator.csv = true
+      } else if (line.match(/^##/i) ||
+                 line.match(/^#EXTM3U/i) ||
+                 line.match(/^sep=,/i)) {
+        // comment
+      } else if (line.match(/^#ALBUM(ID)?[0-9]*\s+/i)) {
+        var albumMatch = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i)
+        var albumId = albumMatch[2]
+        var albumLimit = parseInt(albumMatch[3])
+        var albumEntry = albumMatch[4]
+        var album = new Album(albumEntry)
+        album.setLimit(albumLimit)
+        if (albumId) {
+          album.fetchTracks = false
+        }
+        generator.entries.add(album)
+      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
+        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
+        var artistLimit = parseInt(artistMatch[1])
+        var artistEntry = artistMatch[2]
+        var artist = new Artist(artistEntry)
+        artist.setLimit(artistLimit)
+        generator.entries.add(artist)
+      } else if (line.match(/^#TOP[0-9]*\s+/i)) {
+        var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
+        var topLimit = parseInt(topMatch[1])
+        var topEntry = topMatch[2]
+        var top = new Top(topEntry)
+        top.setLimit(topLimit)
+        generator.entries.add(top)
+      } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
+        var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
+        var similarLimit = parseInt(similarMatch[1])
+        var similarEntry = similarMatch[2]
+        var similar = new Similar(similarEntry)
+        similar.setLimit(similarLimit)
+        generator.entries.add(similar)
+      } else if (line.match(/^#EXTINF/i)) {
+        var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
+        if (match) {
+          generator.entries.add(new Track(match[1]))
+          if (lines.length > 0 &&
+              !lines[0].match(/^#/)) {
+            lines.shift()
+          }
+        }
+      } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
+        var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
+        var uri = uriMatch[0]
+        var uriTrack = new Track(uri)
+        generator.entries.add(uriTrack)
+      } else if (line !== '') {
+        var track = new Track(line)
+        generator.entries.add(track)
+      }
+    }
+  }
+  return generator
+}
+
+module.exports = Parser
+
+},{"./album":558,"./artist":559,"./generator":562,"./similar":567,"./top":570,"./track":571,"eol":297}],566:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -75874,7 +75894,7 @@ Queue.prototype.toArray = function () {
 
 module.exports = Queue
 
-},{"./sort":567}],566:[function(require,module,exports){
+},{"./sort":568}],567:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Top = require('./top')
@@ -75994,7 +76014,7 @@ Similar.prototype.setLimit = function (limit) {
 
 module.exports = Similar
 
-},{"./artist":559,"./queue":565,"./spotify":568,"./top":569}],567:[function(require,module,exports){
+},{"./artist":559,"./queue":566,"./spotify":569,"./top":570}],568:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
 
 /**
@@ -76185,7 +76205,7 @@ sort.track = function (track) {
 
 module.exports = sort
 
-},{"string-similarity":423}],568:[function(require,module,exports){
+},{"string-similarity":423}],569:[function(require,module,exports){
 var http = require('./http')
 var sort = require('./sort')
 var spotify = {}
@@ -76395,7 +76415,7 @@ spotify.searchForTrack = function (track) {
 
 module.exports = spotify
 
-},{"./http":563,"./sort":567}],569:[function(require,module,exports){
+},{"./http":563,"./sort":568}],570:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var Track = require('./track')
@@ -76526,7 +76546,7 @@ Top.prototype.setLimit = function (limit) {
 
 module.exports = Top
 
-},{"./artist":559,"./queue":565,"./spotify":568,"./track":570}],570:[function(require,module,exports){
+},{"./artist":559,"./queue":566,"./spotify":569,"./track":571}],571:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
 var spotify = require('./spotify')
@@ -76948,7 +76968,7 @@ Track.prototype.setResponse = function (response) {
 
 module.exports = Track
 
-},{"./defaults":561,"./lastfm":564,"./spotify":568}],571:[function(require,module,exports){
+},{"./defaults":561,"./lastfm":564,"./spotify":569}],572:[function(require,module,exports){
 /* global describe, it */
 var chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
@@ -76958,7 +76978,7 @@ chai.should()
 var eol = require('eol')
 var Artist = require('../src/artist')
 var Album = require('../src/album')
-var Generator = require('../src/generator')
+var Parser = require('../src/parser')
 var Queue = require('../src/queue')
 var Track = require('../src/track')
 var sort = require('../src/sort')
@@ -77130,44 +77150,44 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Generator', function () {
     it('should create empty playlist when passed empty string', function () {
-      var playlist = new Generator('')
-      playlist.should.have.deep.property('entries.queue').that.eql([])
+      var generator = Parser('')
+      generator.should.have.deep.property('entries.queue').that.eql([])
     })
 
     it('should create a one-entry playlist', function () {
-      var playlist = new Generator('test')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test')
+      var generator = Parser('test')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test')
     })
 
     it('should create a two-entry playlist', function () {
-      var playlist = new Generator('test1\ntest2')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test1')
-      playlist.should.have.deep.property('entries.queue[1].entry', 'test2')
+      var generator = Parser('test1\ntest2')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
     })
 
     it('should ignore empty lines', function () {
-      var playlist = new Generator('test1\n\n\n\ntest2')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test1')
-      playlist.should.have.deep.property('entries.queue[1].entry', 'test2')
+      var generator = Parser('test1\n\n\n\ntest2')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
     })
 
     it('should order tracks by Spotify popularity', function () {
-      var playlist = new Generator('#ORDER BY POPULARITY\ntest1\ntest2')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test1')
-      playlist.should.have.deep.property('entries.queue[1].entry', 'test2')
-      playlist.should.have.property('ordering', 'popularity')
+      var generator = Parser('#ORDER BY POPULARITY\ntest1\ntest2')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
+      generator.should.have.property('ordering', 'popularity')
     })
 
     it('should order tracks by Last.fm rating', function () {
-      var playlist = new Generator('#ORDER BY LASTFM\ntest1\ntest2')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test1')
-      playlist.should.have.deep.property('entries.queue[1].entry', 'test2')
-      playlist.should.have.property('ordering', 'lastfm')
+      var generator = Parser('#ORDER BY LASTFM\ntest1\ntest2')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
+      generator.should.have.property('ordering', 'lastfm')
     })
 
     it('should create an ordered playlist', function () {
-      var playlist = new Generator('#ORDER BY POPULARITY\ntest1\ntest2')
-      return playlist.dispatch().then(function (str) {
+      var generator = Parser('#ORDER BY POPULARITY\ntest1\ntest2')
+      return generator.dispatch().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
                                'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
@@ -77175,20 +77195,20 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should parse album entries', function () {
-      var playlist = new Generator('#ALBUM test')
-      playlist.should.have.deep.property('entries.queue[0]')
+      var generator = Parser('#ALBUM test')
+      generator.should.have.deep.property('entries.queue[0]')
         .that.is.instanceof(Album)
     })
 
     it('should parse artist entries', function () {
-      var playlist = new Generator('#ARTIST test')
-      playlist.should.have.deep.property('entries.queue[0]')
+      var generator = Parser('#ARTIST test')
+      generator.should.have.deep.property('entries.queue[0]')
         .that.is.instanceof(Artist)
     })
 
     it('should dispatch all entries', function () {
-      var playlist = new Generator('test1\ntest2')
-      return playlist.dispatch().then(function (str) {
+      var generator = Parser('test1\ntest2')
+      return generator.dispatch().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
                                'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
@@ -77235,4 +77255,4 @@ describe('Spotify Playlist Generator', function () {
   })
 })
 
-},{"../src/album":558,"../src/artist":559,"../src/generator":562,"../src/queue":565,"../src/sort":567,"../src/track":570,"chai":258,"chai-as-promised":256,"eol":297}]},{},[571]);
+},{"../src/album":558,"../src/artist":559,"../src/parser":565,"../src/queue":566,"../src/sort":568,"../src/track":571,"chai":258,"chai-as-promised":256,"eol":297}]},{},[572]);

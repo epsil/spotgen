@@ -5,7 +5,7 @@ var Queue = require('./queue')
 var Track = require('./track')
 
 /**
- * Create a generator.
+ * Create a playlist generator.
  * @constructor
  * @param {string} str - A newline-separated string of
  * entries on the form `TITLE - ARTIST`. May also contain
