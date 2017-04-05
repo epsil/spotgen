@@ -221,7 +221,8 @@ Links
 
 ### See also
 
--   [Exportify](https://github.com/watsonbox/exportify), the opposite (export Spotify playlists to CSV format)
+-   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr)), feature-rich AngularJS conversion app
+-   [Exportify](https://github.com/watsonbox/exportify), for exporting Spotify playlists to CSV format
 -   [last.py](https://github.com/epsil/lastpy), a Python script for sorting playlists by Last.fm rating
 
 #### Recommendations
@@ -233,5 +234,4 @@ Links
 #### Conversion
 
 -   [Yet Another Spotify Playlist Converter](http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/) ([source](https://github.com/bertique/YetAnotherSpotifyPlaylistConverter))
--   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr))
 -   [Playlist Converter](http://www.playlist-converter.net/)
