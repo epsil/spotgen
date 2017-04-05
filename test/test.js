@@ -7,7 +7,7 @@ chai.should()
 var eol = require('eol')
 var Artist = require('../src/artist')
 var Album = require('../src/album')
-var Generator = require('../src/generator')
+var Parser = require('../src/parser')
 var Queue = require('../src/queue')
 var Track = require('../src/track')
 var sort = require('../src/sort')
@@ -179,44 +179,44 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Generator', function () {
     it('should create empty playlist when passed empty string', function () {
-      var playlist = new Generator('')
-      playlist.should.have.deep.property('entries.queue').that.eql([])
+      var generator = Parser('')
+      generator.should.have.deep.property('entries.queue').that.eql([])
     })
 
     it('should create a one-entry playlist', function () {
-      var playlist = new Generator('test')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test')
+      var generator = Parser('test')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test')
     })
 
     it('should create a two-entry playlist', function () {
-      var playlist = new Generator('test1\ntest2')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test1')
-      playlist.should.have.deep.property('entries.queue[1].entry', 'test2')
+      var generator = Parser('test1\ntest2')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
     })
 
     it('should ignore empty lines', function () {
-      var playlist = new Generator('test1\n\n\n\ntest2')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test1')
-      playlist.should.have.deep.property('entries.queue[1].entry', 'test2')
+      var generator = Parser('test1\n\n\n\ntest2')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
     })
 
     it('should order tracks by Spotify popularity', function () {
-      var playlist = new Generator('#ORDER BY POPULARITY\ntest1\ntest2')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test1')
-      playlist.should.have.deep.property('entries.queue[1].entry', 'test2')
-      playlist.should.have.property('ordering', 'popularity')
+      var generator = Parser('#ORDER BY POPULARITY\ntest1\ntest2')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
+      generator.should.have.property('ordering', 'popularity')
     })
 
     it('should order tracks by Last.fm rating', function () {
-      var playlist = new Generator('#ORDER BY LASTFM\ntest1\ntest2')
-      playlist.should.have.deep.property('entries.queue[0].entry', 'test1')
-      playlist.should.have.deep.property('entries.queue[1].entry', 'test2')
-      playlist.should.have.property('ordering', 'lastfm')
+      var generator = Parser('#ORDER BY LASTFM\ntest1\ntest2')
+      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
+      generator.should.have.property('ordering', 'lastfm')
     })
 
     it('should create an ordered playlist', function () {
-      var playlist = new Generator('#ORDER BY POPULARITY\ntest1\ntest2')
-      return playlist.dispatch().then(function (str) {
+      var generator = Parser('#ORDER BY POPULARITY\ntest1\ntest2')
+      return generator.dispatch().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
                                'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
@@ -224,20 +224,20 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should parse album entries', function () {
-      var playlist = new Generator('#ALBUM test')
-      playlist.should.have.deep.property('entries.queue[0]')
+      var generator = Parser('#ALBUM test')
+      generator.should.have.deep.property('entries.queue[0]')
         .that.is.instanceof(Album)
     })
 
     it('should parse artist entries', function () {
-      var playlist = new Generator('#ARTIST test')
-      playlist.should.have.deep.property('entries.queue[0]')
+      var generator = Parser('#ARTIST test')
+      generator.should.have.deep.property('entries.queue[0]')
         .that.is.instanceof(Artist)
     })
 
     it('should dispatch all entries', function () {
-      var playlist = new Generator('test1\ntest2')
-      return playlist.dispatch().then(function (str) {
+      var generator = Parser('test1\ntest2')
+      return generator.dispatch().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
                                'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')

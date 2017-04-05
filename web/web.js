@@ -1,6 +1,6 @@
 /* global jQuery:true */
 /* exported jQuery */
-var Generator = require('../src/generator')
+var Parser = require('../src/parser')
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
@@ -43,7 +43,7 @@ function resetButton () {
 function clickHandler () {
   var textarea = $('textarea')
   var button = $('button')
-  var generator = new Generator(textarea.val())
+  var generator = Parser(textarea.val())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')

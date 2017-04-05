@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var fs = require('fs')
-var Generator = require('./src/generator')
+var Parser = require('./src/parser')
 
 /**
  * Main method.
@@ -12,9 +12,9 @@ function main () {
   var output = process.argv[3] || 'output.txt'
 
   var str = fs.readFileSync(input, 'utf8').toString()
-  var playlist = new Generator(str)
+  var generator = Parser(str)
 
-  playlist.dispatch().then(function (str) {
+  generator.dispatch().then(function (str) {
     fs.writeFile(output, str, function (err) {
       if (err) { return }
       console.log('Wrote to ' + output)
