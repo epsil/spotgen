@@ -69,6 +69,8 @@ To add a single track to the playlist, add a line on the form `TITLE - ARTIST`:
     Troublemaker - Beach House
     Wishes - Beach House
 
+[More on single tracks](Tips.md#miscellaneous).
+
 ### Duplicates
 
 By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:
