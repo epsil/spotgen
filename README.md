@@ -111,7 +111,8 @@ To group the tracks and then interleave them, use `#alternate by`:
 
 This will create a Last.fm-ordered playlist of artists similar to Beach House and Hooverphonic, with each track having a different artist from the previous track.
 
-### Supported formats
+Supported formats
+-----------------
 
 The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV files. By default, the generator outputs a list of Spotify URIs.
 
