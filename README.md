@@ -39,27 +39,27 @@ To retrieve only the top 5 tracks, use `#top5`.
 
 ### Similar artists
 
-To add tracks from similar artists:
+To find similar artists:
 
     #similar Aphex Twin
 
 This will generate a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.
 
-### Artists
-
-To add the entire discography of an artist:
-
-    #artist Beach House
-
 ### Albums
 
-To add an entire album to the playlist:
+To add an album:
 
     #album Substrata - Biosphere
 
+### Artists
+
+To add all the albums of an artist:
+
+    #artist Beach House
+
 ### Tracks
 
-To add a track to the playlist, add a line on the form `TITLE - ARTIST`:
+To add a single track to the playlist, add a line on the form `TITLE - ARTIST`:
 
     Walk in the Park - Beach House
     Irene - Beach House
