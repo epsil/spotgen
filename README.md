@@ -29,11 +29,13 @@ To import the playlist into Spotify:
 
 ### Top tracks
 
-To add the top 10 tracks of an artist:
+To retrieve the top 10 tracks of an artist, pass the following to the generator:
 
     #top Aphex Twin
 
-This will create a playlist consisting of ten most popular tracks of Aphex Twin. To add only the top 5 tracks, use `#top5`.
+The generator will output a playlist consisting of ten most popular tracks of Aphex Twin, which can then be [imported](#usage) into Spotify.
+
+To retrieve only the top 5 tracks, use `#top5`.
 
 ### Similar artists
 
@@ -41,7 +43,7 @@ To add tracks from similar artists:
 
     #similar Aphex Twin
 
-This will create a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.
+This will generate a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.
 
 ### Artists
 
@@ -49,25 +51,11 @@ To add the entire discography of an artist:
 
     #artist Beach House
 
-Result:
-
-    spotify:track:<Beach House Track #1>
-    spotify:track:<Beach House Track #2>
-    spotify:track:<Beach House Track #3>
-    ...
-
 ### Albums
 
 To add an entire album to the playlist:
 
     #album Substrata - Biosphere
-
-Result:
-
-    spotify:track:<Substrata Track #1>
-    spotify:track:<Substrata Track #2>
-    spotify:track:<Substrata Track #3>
-    ...
 
 ### Tracks
 
@@ -78,14 +66,6 @@ To add a track to the playlist, add a line on the form `TITLE - ARTIST`:
     Other People - Beach House
     Troublemaker - Beach House
     Wishes - Beach House
-
-Result:
-
-    spotify:track:4oNXgGnumnu5oIXXyP8StH
-    spotify:track:7rAjeWkQM6cLqbPjZtXxl2
-    spotify:track:2Nt4Uw91pQLXSJ28SttDdF
-    spotify:track:4qbCRlvE5Bb9XNBjxARjoP
-    spotify:track:7x4tFmih1JBITx0e2ucGrT
 
 ### Duplicates
 
