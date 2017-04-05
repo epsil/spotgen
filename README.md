@@ -43,7 +43,9 @@ To find similar artists:
 
     #similar Aphex Twin
 
-This will generate a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.
+This will generate a 100-track playlist consisting of the 5 most popular tracks from the 20 most similar artists to Aphex Twin.
+
+To retrieve more tracks, use `#similar10`.
 
 ### Albums
 

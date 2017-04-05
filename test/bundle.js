@@ -75892,7 +75892,7 @@ function Similar (entry) {
   this.artist = null
 
   /**
-   * Number of tracks to fetch per artist.
+   * Number of artists to fetch.
    */
   this.artistLimit = 20
 

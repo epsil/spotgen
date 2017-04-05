@@ -57,37 +57,27 @@
 <li><a href="examples/rateyourmusic-top-shoegaze-albums.spotify.txt">Rate Your Music's Top Shoegaze Albums</a> (<a href="examples/rateyourmusic-top-shoegaze-albums.txt">source</a>)</li>
 <li><a href="examples/rollingstone-500-greatest-songs-of-all-time.spotify.txt">Rolling Stone's 500 Greatest Songs of All Time</a> (<a href="examples/rollingstone-500-greatest-songs-of-all-time.txt">source</a>)</li>
 </ul>
+<p><a href="Tips.md#recipes">More examples</a>.</p>
 <h2>Usage</h2><p>To import the playlist into Spotify:</p>
 <ol>
 <li><strong>Copy the output of the generator:</strong> Choose <em>Edit -&gt; Copy</em> (<kbd>Ctrl</kbd> + <kbd>C</kbd>).</li>
 <li><strong>Create a new playlist in Spotify:</strong> Choose <em>File -&gt; New Playlist</em> (<kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
 <li><strong>Paste into the playlist:</strong> Select the playlist and choose <em>Edit -&gt; Paste</em> (<kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
 </ol>
-<h3>Top tracks</h3><p>To add the top 10 tracks of an artist:</p>
-<pre class="prettyprint source"><code>#top Aphex Twin</code></pre><p>This will create a playlist consisting of ten most popular tracks of Aphex Twin. To add only the top 5 tracks, use <code>#top5</code>.</p>
-<h3>Similar artists</h3><p>To add tracks from similar artists:</p>
-<pre class="prettyprint source"><code>#similar Aphex Twin</code></pre><p>This will create a playlist consisting of the most popular tracks from the most similar artists to Aphex Twin.</p>
-<h3>Artists</h3><p>To add the entire discography of an artist:</p>
-<pre class="prettyprint source"><code>#artist Beach House</code></pre><p>Result:</p>
-<pre class="prettyprint source"><code>spotify:track:&lt;Beach House Track #1>
-spotify:track:&lt;Beach House Track #2>
-spotify:track:&lt;Beach House Track #3>
-...</code></pre><h3>Albums</h3><p>To add an entire album to the playlist:</p>
-<pre class="prettyprint source"><code>#album Substrata - Biosphere</code></pre><p>Result:</p>
-<pre class="prettyprint source"><code>spotify:track:&lt;Substrata Track #1>
-spotify:track:&lt;Substrata Track #2>
-spotify:track:&lt;Substrata Track #3>
-...</code></pre><h3>Tracks</h3><p>To add a track to the playlist, add a line on the form <code>TITLE - ARTIST</code>:</p>
+<h3>Top tracks</h3><p>To retrieve the top 10 tracks of an artist, pass the following to the generator:</p>
+<pre class="prettyprint source"><code>#top Aphex Twin</code></pre><p>The generator will output a playlist consisting of ten most popular tracks of Aphex Twin, which can then be <a href="#usage">imported</a> into Spotify.</p>
+<p>To retrieve only the top 5 tracks, use <code>#top5</code>.</p>
+<h3>Similar artists</h3><p>To find similar artists:</p>
+<pre class="prettyprint source"><code>#similar Aphex Twin</code></pre><p>This will generate a 100-track playlist consisting of the 5 most popular tracks from the 20 most similar artists to Aphex Twin.</p>
+<p>To retrieve more tracks, use <code>#similar10</code>.</p>
+<h3>Albums</h3><p>To add an album:</p>
+<pre class="prettyprint source"><code>#album Substrata - Biosphere</code></pre><h3>Artists</h3><p>To add all the albums of an artist:</p>
+<pre class="prettyprint source"><code>#artist Beach House</code></pre><h3>Tracks</h3><p>To add a single track to the playlist, add a line on the form <code>TITLE - ARTIST</code>:</p>
 <pre class="prettyprint source"><code>Walk in the Park - Beach House
 Irene - Beach House
 Other People - Beach House
 Troublemaker - Beach House
-Wishes - Beach House</code></pre><p>Result:</p>
-<pre class="prettyprint source"><code>spotify:track:4oNXgGnumnu5oIXXyP8StH
-spotify:track:7rAjeWkQM6cLqbPjZtXxl2
-spotify:track:2Nt4Uw91pQLXSJ28SttDdF
-spotify:track:4qbCRlvE5Bb9XNBjxARjoP
-spotify:track:7x4tFmih1JBITx0e2ucGrT</code></pre><h3>Duplicates</h3><p>By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:</p>
+Wishes - Beach House</code></pre><h3>Duplicates</h3><p>By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:</p>
 <pre class="prettyprint source"><code>#duplicates</code></pre><h3>Order</h3><p>To order the tracks by Spotify popularity, use <code>#order by</code>:</p>
 <pre class="prettyprint source"><code>#order by popularity
 #artist Beach House</code></pre><p>To order by <a href="http://last.fm/">Last.fm</a> playcount, add the line <code>#order by lastfm</code>:</p>
@@ -103,7 +93,23 @@ spotify:track:7x4tFmih1JBITx0e2ucGrT</code></pre><h3>Duplicates</h3><p>By defaul
 #alternate by artist
 #similar Beach House
 #similar Hooverphonic</code></pre><p>This will create a Last.fm-ordered playlist of artists similar to Beach House and Hooverphonic, with each track having a different artist from the previous track.</p>
-<h3>M3U playlists</h3><p>One can easily import <a href="https://en.wikipedia.org/wiki/M3U">M3U</a> playlists (with the file extension <code>.m3u</code> or <code>.m3u8</code>), provided they contain <code>EXTM3U</code> metadata. That is, the playlist should be on the form:</p>
+<h2>Supported formats</h2><p>The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV files. By default, the generator outputs a list of Spotify URIs.</p>
+<h3>Import existing Spotify playlists</h3><p>One can easily work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of Spotify links:</p>
+<pre class="prettyprint source"><code>https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
+https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
+https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
+...</code></pre><p>One can easily apply <code>#order by popularity</code> to such a list:</p>
+<pre class="prettyprint source"><code>#order by popularity
+https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
+https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
+https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
+...</code></pre><p>Likewise, spotify URIs are handled as well:</p>
+<pre class="prettyprint source"><code>#order by popularity
+#alternate by album
+spotify:track:4oNXgGnumnu5oIXXyP8StH
+spotify:track:7rAjeWkQM6cLqbPjZtXxl2
+spotify:track:2Nt4Uw91pQLXSJ28SttDdF
+...</code></pre><h3>M3U playlists</h3><p>One can also import <a href="https://en.wikipedia.org/wiki/M3U">M3U</a> playlists (with the file extension <code>.m3u</code> or <code>.m3u8</code>), provided they contain <code>EXTM3U</code> metadata. That is, the playlist should be on the form:</p>
 <pre class="prettyprint source"><code>#EXTM3U
 #EXTINF:404,Desire Lines - Deerhunter
 Deerhunter/Halcyon Digest/06 Desire Lines.mp3
@@ -119,34 +125,20 @@ Deerhunter/Microcastle/12 Twilight at Carbon Lake.mp3</code></pre><p>The generat
 Saved By Old Times - Deerhunter
 Agoraphobia - Deerhunter
 Revival - Deerhunter
-Twilight at Carbon Lake - Deerhunter</code></pre><h3>Comma-separated values</h3><p>To output as CSV, add the line <code>#csv</code>:</p>
+Twilight at Carbon Lake - Deerhunter</code></pre><p><a href="Tips.md#m3u-playlists">More on M3U playlists</a>.</p>
+<h3>Comma-separated values</h3><p>The generator supports the comma-separated format used by <a href="https://github.com/watsonbox/exportify">Exportify</a>:</p>
+<pre class="prettyprint source"><code>spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
+spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
+spotify:track:2SpHd4lGMrJMIQDf92V6VP,Agoraphobia,Deerhunter,Microcastle,1,2,202640,,
+spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
+spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,</code></pre><p>To output as this format, add the line <code>#csv</code>:</p>
 <pre class="prettyprint source"><code>#csv
 Desire Lines - Deerhunter
 Saved By Old Times - Deerhunter
 Agoraphobia - Deerhunter
 Revival - Deerhunter
-Twilight at Carbon Lake - Deerhunter</code></pre><p>This produces a file on the format used by <a href="https://github.com/watsonbox/exportify">Exportify</a>:</p>
-<pre class="prettyprint source"><code>spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
-spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
-spotify:track:2SpHd4lGMrJMIQDf92V6VP,Agoraphobia,Deerhunter,Microcastle,1,2,202640,,
-spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
-spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,</code></pre><p>The generator can also read files in this format. CSV files can be edited with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc.</p>
-<h3>Import existing Spotify playlists</h3><p>One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of Spotify links:</p>
-<pre class="prettyprint source"><code>https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
-https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
-https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
-...</code></pre><p>One can easily apply <code>#order by popularity</code> to such a list:</p>
-<pre class="prettyprint source"><code>#order by popularity
-https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
-https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
-https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
-...</code></pre><p>Likewise, spotify URIs are handled as well:</p>
-<pre class="prettyprint source"><code>#order by popularity
-#alternate by album
-spotify:track:4oNXgGnumnu5oIXXyP8StH
-spotify:track:7rAjeWkQM6cLqbPjZtXxl2
-spotify:track:2Nt4Uw91pQLXSJ28SttDdF
-...</code></pre><h2>Command-line script</h2><p>A command-line version is also available. It requires <a href="https://nodejs.org/">Node</a> to be installed.</p>
+Twilight at Carbon Lake - Deerhunter</code></pre><p>CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs (which might change).</p>
+<h2>Command-line script</h2><p>A command-line version is also available. It requires <a href="https://nodejs.org/">Node</a> to be installed.</p>
 <p>The source code is located at <a href="https://github.com/epsil/spotify-js">GitHub</a>. To clone the repository:</p>
 <pre class="prettyprint source"><code>$ git clone https://github.com/epsil/spotify-js.git</code></pre><p>Alternatively, download a <a href="https://github.com/epsil/spotify-js/archive/master.zip">ZIP file</a>.</p>
 <p>Run the script with <code>./index.js</code> or <code>node index</code>:</p>
@@ -186,7 +178,7 @@ spotify:track:2Nt4Uw91pQLXSJ28SttDdF
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sat Apr 01 2017 20:49:32 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Apr 05 2017 10:03:40 GMT+0200 (Vest-Europa (sommertid))
 </footer>
 
 <script> prettyPrint(); </script>
