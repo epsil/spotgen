@@ -100,27 +100,4 @@ Note that other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advan
 Miscellaneous
 -------------
 
-The input should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a [Spotify search](https://support.spotify.com/us/using_spotify/search_play/advanced-search1/). One can even add [field filters](https://developer.spotify.com/web-api/search-item/).
-
-<!--
-Food for thought ...
-
-Merge Playlist and Queue
-
-Playlist of string: parse
-Playlist of array: clone
-
-(Def. algorithm: a class whose dispatch() method returns a Playlist.
-We can even imagine examples where a Algorithm-is-a-Playlist ...)
-
-Add setID() method to all classes
-
-Add support for spotify album links
-(e.g., https://open.spotify.com/album/0xnL6goTzcRFKzbrleXfpF)
-
-Order albums by year (or rating)
-
-Add support for Exportify CSV
-
-Implement merging algorithms from last.py
--->
+Single tracks should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a [Spotify search](https://support.spotify.com/us/using_spotify/search_play/advanced-search1/). One can even add [field filters](https://developer.spotify.com/web-api/search-item/).
