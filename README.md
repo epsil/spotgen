@@ -16,6 +16,8 @@ Examples
 -   [Rate Your Music's Top Shoegaze Albums](examples/rateyourmusic-top-shoegaze-albums.spotify.txt) ([source](examples/rateyourmusic-top-shoegaze-albums.txt))
 -   [Rolling Stone's 500 Greatest Songs of All Time](examples/rollingstone-500-greatest-songs-of-all-time.spotify.txt) ([source](examples/rollingstone-500-greatest-songs-of-all-time.txt))
 
+[More examples](Tips.md#recipes).
+
 Usage
 -----
 
@@ -129,9 +131,39 @@ To group the tracks and then interleave them, use `#alternate by`:
 
 This will create a Last.fm-ordered playlist of artists similar to Beach House and Hooverphonic, with each track having a different artist from the previous track.
 
+### Supported formats
+
+The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV files. By default, the generator outputs a list of Spotify URIs.
+
+### Import existing Spotify playlists
+
+One can easily work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of Spotify links:
+
+    https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
+    https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
+    https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
+    ...
+
+One can easily apply `#order by popularity` to such a list:
+
+    #order by popularity
+    https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
+    https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
+    https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
+    ...
+
+Likewise, spotify URIs are handled as well:
+
+    #order by popularity
+    #alternate by album
+    spotify:track:4oNXgGnumnu5oIXXyP8StH
+    spotify:track:7rAjeWkQM6cLqbPjZtXxl2
+    spotify:track:2Nt4Uw91pQLXSJ28SttDdF
+    ...
+
 ### M3U playlists
 
-One can easily import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`), provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
+One can also import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`), provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
 
     #EXTM3U
     #EXTINF:404,Desire Lines - Deerhunter
@@ -155,7 +187,15 @@ The generator translates this to:
 
 ### Comma-separated values
 
-To output as CSV, add the line `#csv`:
+The generator supports the comma-separated format used by [Exportify](https://github.com/watsonbox/exportify):
+
+    spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
+    spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
+    spotify:track:2SpHd4lGMrJMIQDf92V6VP,Agoraphobia,Deerhunter,Microcastle,1,2,202640,,
+    spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
+    spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,
+
+To output as this format, add the line `#csv`:
 
     #csv
     Desire Lines - Deerhunter
@@ -164,41 +204,7 @@ To output as CSV, add the line `#csv`:
     Revival - Deerhunter
     Twilight at Carbon Lake - Deerhunter
 
-This produces a file on the format used by [Exportify](https://github.com/watsonbox/exportify):
-
-    spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
-    spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
-    spotify:track:2SpHd4lGMrJMIQDf92V6VP,Agoraphobia,Deerhunter,Microcastle,1,2,202640,,
-    spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
-    spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,
-
-The generator can also read files in this format. CSV files can be edited with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc.
-
-### Import existing Spotify playlists
-
-One can also work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of Spotify links:
-
-    https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
-    https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
-    https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
-    ...
-
-One can easily apply `#order by popularity` to such a list:
-
-    #order by popularity
-    https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
-    https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
-    https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
-    ...
-
-Likewise, spotify URIs are handled as well:
-
-    #order by popularity
-    #alternate by album
-    spotify:track:4oNXgGnumnu5oIXXyP8StH
-    spotify:track:7rAjeWkQM6cLqbPjZtXxl2
-    spotify:track:2Nt4Uw91pQLXSJ28SttDdF
-    ...
+CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs (which might change).
 
 Command-line script
 -------------------
