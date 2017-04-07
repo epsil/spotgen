@@ -37,6 +37,13 @@ To retrieve the top 10 tracks of an artist, pass the following to the generator:
 
 The generator will output a playlist consisting of the ten most popular tracks of Aphex Twin, which can then be [imported](#usage) into Spotify.
 
+All of the directives listed here can be used multiple times. For example:
+
+    #top Aphex Twin
+    #top Beach House
+
+This will create a playlist consisting of the top tracks of Aphex Twin followed by the top tracks of Beach House.
+
 To retrieve only the top 5 tracks, use `#top5`.
 
 ### Similar artists
