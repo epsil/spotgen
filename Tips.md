@@ -62,13 +62,13 @@ Multiple playlists
 
 Converting multiple playlists at once can easily be done in the Bash shell:
 
-    $ for f in *.txt; do ./spotify.js "$f" "${f%.txt}.spotify.txt"; done
+    $ for f in *.txt; do ./index.js "$f" "${f%.txt}.spotify.txt"; done
 
 This converts `playlist1.txt`, `playlist2.txt`, `playlist3.txt` to `playlist1.spotify.txt`, `playlist2.spotify.txt`, `playlist3.spotify.txt`.
 
 Furthermore, if the shell supports globbing, then one can recursively convert all playlists in a directory with the `**/*.txt` pattern:
 
-    $ for f in **/*.txt; do ./spotify.js "$f" "${f%.txt}.spotify.txt"; done
+    $ for f in **/*.txt; do ./index.js "$f" "${f%.txt}.spotify.txt"; done
 
 M3U playlists
 -------------
