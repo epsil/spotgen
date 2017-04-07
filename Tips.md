@@ -73,7 +73,7 @@ Furthermore, if the shell supports globbing, then one can recursively convert al
 M3U playlists
 -------------
 
-One can easily import [extended M3U](https://en.wikipedia.org/wiki/M3U) playlists containing `EXTM3U` metadata. If the playlist does *not* contain metadata (or if the files are badly tagged), however, then one can attempt to infer the title and artist from the file paths instead. To do this, open the file in a text editor and use regular expressions to transform it. For example, the regular expression
+One can easily import [extended M3U](https://en.wikipedia.org/wiki/M3U) playlists containing `EXTM3U` metadata. If the playlist does *not* contain metadata (or if the files are badly tagged), however, then one can attempt to infer the title and artist from the file paths instead. To do this, open the playlist in a text editor and use regular expressions to transform it. For example, the regular expression
 
     %s/\(^[^\/]+\).*\/[-0-9]*[-. ]*\(.*\)\..*/\2 - \1/g
 
