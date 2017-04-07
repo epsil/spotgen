@@ -42,7 +42,7 @@ All of the directives listed here can be used multiple times. For example:
     #top Aphex Twin
     #top Beach House
 
-This will create a playlist consisting of the top tracks of Aphex Twin followed by the top tracks of Beach House.
+This will create a playlist consisting of the top tracks of Aphex Twin, followed by the top tracks of Beach House.
 
 To retrieve only the top 5 tracks, use `#top5`.
 
