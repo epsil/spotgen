@@ -183,7 +183,7 @@ The generator translates this to:
 
 ### Comma-separated values
 
-The generator supports the comma-separated format used by [Exportify](https://github.com/watsonbox/exportify):
+The generator supports the CSV format used by [Exportify](https://github.com/watsonbox/exportify):
 
     spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
     spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
