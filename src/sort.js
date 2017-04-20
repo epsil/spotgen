@@ -116,7 +116,9 @@ sort.popularity = sort.descending(function (x) {
  * and `0` if `a` is equal to `b`.
  */
 sort.lastfm = sort.combine(sort.descending(function (x) {
-  return x.lastfm()
+  return x.lastfmPersonal()
+}), sort.descending(function (x) {
+  return x.lastfmGlobal()
 }), sort.popularity)
 
 /**

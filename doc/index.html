@@ -44,7 +44,7 @@
 
     <section>
         <article><h1><a href="https://epsil.github.io/spotify/">Spotify Playlist Generator</a></h1><blockquote>
-<p>A tool for converting, processing and generating Spotify playlists.</p>
+<p>A tool for converting, processing and generating <a href="http://www.spotify.com/">Spotify</a> playlists, as well as leveraging <a href="http://last.fm/">Last.fm</a> user data.</p>
 <https://epsil.github.io/spotify/>
 
 </blockquote>
@@ -64,8 +64,12 @@
 <li><strong>Create a new playlist in Spotify:</strong> Choose <em>File -&gt; New Playlist</em> (<kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
 <li><strong>Paste into the playlist:</strong> Select the playlist and choose <em>Edit -&gt; Paste</em> (<kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
 </ol>
+<p>No login is necessary.</p>
 <h3>Top tracks</h3><p>To retrieve the top 10 tracks of an artist, pass the following to the generator:</p>
-<pre class="prettyprint source"><code>#top Aphex Twin</code></pre><p>The generator will output a playlist consisting of ten most popular tracks of Aphex Twin, which can then be <a href="#usage">imported</a> into Spotify.</p>
+<pre class="prettyprint source"><code>#top Aphex Twin</code></pre><p>The generator will output a playlist consisting of the ten most popular tracks of Aphex Twin, which can then be <a href="#usage">imported</a> into Spotify.</p>
+<p>All of the directives listed here can be used multiple times. For example:</p>
+<pre class="prettyprint source"><code>#top Aphex Twin
+#top Beach House</code></pre><p>This will create a playlist consisting of the top tracks of Aphex Twin, followed by the top tracks of Beach House.</p>
 <p>To retrieve only the top 5 tracks, use <code>#top5</code>.</p>
 <h3>Similar artists</h3><p>To find similar artists:</p>
 <pre class="prettyprint source"><code>#similar Aphex Twin</code></pre><p>This will generate a 100-track playlist consisting of the 5 most popular tracks from the 20 most similar artists to Aphex Twin.</p>
@@ -77,10 +81,11 @@
 Irene - Beach House
 Other People - Beach House
 Troublemaker - Beach House
-Wishes - Beach House</code></pre><h3>Duplicates</h3><p>By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:</p>
+Wishes - Beach House</code></pre><p><a href="Tips.md#miscellaneous">More on single tracks</a>.</p>
+<h3>Duplicates</h3><p>By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:</p>
 <pre class="prettyprint source"><code>#duplicates</code></pre><h3>Order</h3><p>To order the tracks by Spotify popularity, use <code>#order by</code>:</p>
 <pre class="prettyprint source"><code>#order by popularity
-#artist Beach House</code></pre><p>To order by <a href="http://last.fm/">Last.fm</a> playcount, add the line <code>#order by lastfm</code>:</p>
+#artist Beach House</code></pre><p>The generator also provides <a href="http://last.fm/">Last.fm</a> support. To order by Last.fm playcount, add the line <code>#order by lastfm</code>:</p>
 <pre class="prettyprint source"><code>#order by lastfm
 #artist Beach House</code></pre><p>To order by Last.fm user playcount, add the Last.fm username at the end:</p>
 <pre class="prettyprint source"><code>#order by lastfm username
@@ -126,12 +131,12 @@ Saved By Old Times - Deerhunter
 Agoraphobia - Deerhunter
 Revival - Deerhunter
 Twilight at Carbon Lake - Deerhunter</code></pre><p><a href="Tips.md#m3u-playlists">More on M3U playlists</a>.</p>
-<h3>Comma-separated values</h3><p>The generator supports the comma-separated format used by <a href="https://github.com/watsonbox/exportify">Exportify</a>:</p>
+<h3>Comma-separated values</h3><p>The generator can read and write the CSV format used by <a href="https://github.com/watsonbox/exportify">Exportify</a>:</p>
 <pre class="prettyprint source"><code>spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,
 spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,
 spotify:track:2SpHd4lGMrJMIQDf92V6VP,Agoraphobia,Deerhunter,Microcastle,1,2,202640,,
 spotify:track:30wvVTkqA4Fp5ZCG0xGof7,Revival,Deerhunter,Halcyon Digest,1,3,133666,,
-spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,</code></pre><p>To output as this format, add the line <code>#csv</code>:</p>
+spotify:track:6vtwbm7YGkTwTINdrcXV5I,Twilight At Carbon Lake,Deerhunter,Microcastle,1,12,263986,,</code></pre><p>To output to this format, add the line <code>#csv</code>:</p>
 <pre class="prettyprint source"><code>#csv
 Desire Lines - Deerhunter
 Saved By Old Times - Deerhunter
@@ -142,14 +147,16 @@ Twilight at Carbon Lake - Deerhunter</code></pre><p>CSV files have the advantage
 <p>The source code is located at <a href="https://github.com/epsil/spotify-js">GitHub</a>. To clone the repository:</p>
 <pre class="prettyprint source"><code>$ git clone https://github.com/epsil/spotify-js.git</code></pre><p>Alternatively, download a <a href="https://github.com/epsil/spotify-js/archive/master.zip">ZIP file</a>.</p>
 <p>Run the script with <code>./index.js</code> or <code>node index</code>:</p>
-<pre class="prettyprint source"><code>$ ./index.js input.txt output.txt</code></pre><h2>Links</h2><ul>
+<pre class="prettyprint source"><code>$ ./index.js input.txt output.txt</code></pre><p><a href="Tips.md#multiple-playlists">More on the command-line version</a>.</p>
+<h2>Links</h2><ul>
 <li><a href="https://epsil.github.io/spotify/">Web interface</a></li>
 <li><a href="https://github.com/epsil/spotify-js">GitHub repository</a></li>
 <li><a href="https://epsil.github.io/spotify/doc/">Developer documentation</a></li>
 <li><a href="Tips.md">Additional tips</a></li>
 </ul>
 <h3>See also</h3><ul>
-<li><a href="https://github.com/watsonbox/exportify">Exportify</a>, the opposite (export Spotify playlists to CSV format)</li>
+<li><a href="http://spotlistr.herokuapp.com/">Spotlistr</a> (<a href="https://github.com/BobNisco/Spotlistr">source</a>), feature-rich AngularJS conversion app</li>
+<li><a href="https://github.com/watsonbox/exportify">Exportify</a>, for exporting Spotify playlists to CSV format</li>
 <li><a href="https://github.com/epsil/lastpy">last.py</a>, a Python script for sorting playlists by Last.fm rating</li>
 </ul>
 <h4>Recommendations</h4><ul>
@@ -159,7 +166,6 @@ Twilight at Carbon Lake - Deerhunter</code></pre><p>CSV files have the advantage
 </ul>
 <h4>Conversion</h4><ul>
 <li><a href="http://michaeldick.me/YetAnotherSpotifyPlaylistConverter/">Yet Another Spotify Playlist Converter</a> (<a href="https://github.com/bertique/YetAnotherSpotifyPlaylistConverter">source</a>)</li>
-<li><a href="http://spotlistr.herokuapp.com/">Spotlistr</a> (<a href="https://github.com/BobNisco/Spotlistr">source</a>)</li>
 <li><a href="http://www.playlist-converter.net/">Playlist Converter</a></li>
 </ul></article>
     </section>
@@ -178,7 +184,7 @@ Twilight at Carbon Lake - Deerhunter</code></pre><p>CSV files have the advantage
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Apr 05 2017 11:04:12 GMT+0200 (Vest-Europa (sommertid))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Thu Apr 20 2017 09:40:54 GMT+0200 (Vest-Europa (sommertid))
 </footer>
 
 <script> prettyPrint(); </script>

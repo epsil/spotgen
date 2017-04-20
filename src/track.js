@@ -237,20 +237,37 @@ Track.prototype.isURI = function (str) {
 }
 
 /**
- * Last.fm playcount.
- * @return {integer} The playcount, or `-1` if not available.
+ * Last.fm global playcount.
+ * @return {integer} The global playcount, or `-1` if not available.
  */
 Track.prototype.lastfm = function () {
-  if (this.lastfmResponse) {
-    var playcount = this.lastfmResponse.track.playcount
-    if (this.lastfmUser) {
-      playcount = this.lastfmResponse.track.userplaycount
-    }
-    if (playcount) {
-      return parseInt(playcount)
-    } else {
-      return -1
-    }
+  var personal = this.lastfmPersonal()
+  return personal > -1 ? personal : this.lastfmGlobal()
+}
+
+/**
+ * Last.fm global playcount.
+ * @return {integer} The global playcount, or `-1` if not available.
+ */
+Track.prototype.lastfmGlobal = function () {
+  if (this.lastfmResponse &&
+      this.lastfmResponse.track &&
+      this.lastfmResponse.track.playcount) {
+    return parseInt(this.lastfmResponse.track.playcount)
+  } else {
+    return -1
+  }
+}
+
+/**
+ * Last.fm personal playcount.
+ * @return {integer} The personal playcount, or `-1` if not available.
+ */
+Track.prototype.lastfmPersonal = function () {
+  if (this.lastfmResponse &&
+      this.lastfmResponse.track &&
+      this.lastfmResponse.track.userplaycount) {
+    return parseInt(this.lastfmResponse.track.userplaycount)
   } else {
     return -1
   }
