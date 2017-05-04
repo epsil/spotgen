@@ -219,7 +219,7 @@ describe('Spotify Playlist Generator', function () {
       return generator.dispatch().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
-                               'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
+                               'spotify:track:0MB5wpo41nfoiaD96wWOtW')
       })
     })
 
@@ -240,7 +240,7 @@ describe('Spotify Playlist Generator', function () {
       return generator.dispatch().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
-                               'spotify:track:3fWs8HBZMvZDi3TqiUu3gZ')
+                               'spotify:track:0MB5wpo41nfoiaD96wWOtW')
       })
     })
   })

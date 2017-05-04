@@ -127,6 +127,9 @@ spotify.searchForArtist = function (artist) {
         response.artists &&
         response.artists.items[0] &&
         response.artists.items[0].id) {
+      // sort results by string similarity
+      response.artists.items = sort(response.artists.items,
+                                    sort.similarArtist(artist))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -150,6 +153,9 @@ spotify.searchForAlbum = function (album) {
         response.albums &&
         response.albums.items[0] &&
         response.albums.items[0].id) {
+      // sort results by string similarity
+      response.albums.items = sort(response.albums.items,
+                                   sort.similarAlbum(album))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)

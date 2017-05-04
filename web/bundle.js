@@ -82083,15 +82083,49 @@ sort.type = sort.descending(function (album) {
 sort.album = sort.combine(sort.type, sort.popularity)
 
 /**
- * Sort track objects by similarity to a track.
- * @param {string} track - The track to compare against.
+ * Sort objects by similarity to a string.
+ * @param {function} fn - A function returning the object's name
+ * as a string.
+ * @param {string} str - The string to compare against.
  * @return {function} - A comparison function.
  */
-sort.similarity = function (track) {
+sort.similarity = function (fn, str) {
   return sort.descending(function (x) {
-    var title = x.name + ' - ' + (x.artists[0].name || '')
-    return stringSimilarity.compareTwoStrings(title, track)
+    return stringSimilarity.compareTwoStrings(fn(x), str)
   })
+}
+
+/**
+ * Sort album objects by similarity to a string.
+ * @param {string} album - The string to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.similarAlbum = function (album) {
+  return sort.similarity(function (x) {
+    return x.name + ' - ' + (x.artists[0].name || '')
+  }, album)
+}
+
+/**
+ * Sort artist objects by similarity to a string.
+ * @param {string} artist - The string to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.similarArtist = function (artist) {
+  return sort.similarity(function (x) {
+    return x.name
+  }, artist)
+}
+
+/**
+ * Sort track objects by similarity to a string.
+ * @param {string} track - The string to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.similarTrack = function (track) {
+  return sort.similarity(function (x) {
+    return x.name + ' - ' + (x.artists[0].name || '')
+  }, track)
 }
 
 /**
@@ -82114,7 +82148,7 @@ sort.censorship = sort.descending(function (x) {
  * @return {function} - A comparison function.
  */
 sort.track = function (track) {
-  return sort.combine(sort.similarity(track),
+  return sort.combine(sort.similarTrack(track),
                       sort.popularity,
                       sort.censorship)
 }
@@ -82251,6 +82285,9 @@ spotify.searchForArtist = function (artist) {
         response.artists &&
         response.artists.items[0] &&
         response.artists.items[0].id) {
+      // sort results by string similarity
+      response.artists.items = sort(response.artists.items,
+                                    sort.similarArtist(artist))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -82274,6 +82311,9 @@ spotify.searchForAlbum = function (album) {
         response.albums &&
         response.albums.items[0] &&
         response.albums.items[0].id) {
+      // sort results by string similarity
+      response.albums.items = sort(response.albums.items,
+                                   sort.similarAlbum(album))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
