@@ -75089,9 +75089,6 @@ var Track = require('./track')
 /**
  * Create a playlist generator.
  * @constructor
- * @param {string} str - A newline-separated string of
- * entries on the form `TITLE - ARTIST`. May also contain
- * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
  */
 function Generator () {
   /**
