@@ -76013,6 +76013,7 @@ module.exports = Similar
 
 },{"./artist":559,"./queue":566,"./spotify":569,"./top":570}],568:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
+var util = require('./util')
 
 /**
  * Stable sort, preserving original order.
@@ -76026,31 +76027,15 @@ var stringSimilarity = require('string-similarity')
 function sort (arr, fn) {
   fn = fn || sort.ascending()
   var i = 0
-  var pair = function (x) {
-    return {key: i++, val: x}
-  }
-  var key = function (x) {
-    return x.key
-  }
-  var val = function (x) {
-    return x.val
-  }
+  var pairs = arr.map(function (x) {
+    return util.pair(i++, x)
+  })
   var cmp = sort.combine(function (a, b) {
-    return fn(a.val, b.val)
-  }, sort.ascending(key))
-  var pairs = arr.map(pair)
+    return fn(util.second(a), util.second(b))
+  }, sort.ascending(util.first))
   pairs = pairs.sort(cmp)
-  arr = pairs.map(val)
+  arr = pairs.map(util.second)
   return arr
-}
-
-/**
- * Identity function.
- * @param {Object} x - A value.
- * @return {Object} - The same value.
- */
-sort.identity = function (x) {
-  return x
 }
 
 /**
@@ -76062,7 +76047,7 @@ sort.identity = function (x) {
  * and `0` if the scores are equal.
  */
 sort.ascending = function (fn) {
-  fn = fn || sort.identity
+  fn = fn || util.identity
   return function (a, b) {
     var x = fn(a)
     var y = fn(b)
@@ -76079,7 +76064,7 @@ sort.ascending = function (fn) {
  * and `0` if the scores are equal.
  */
 sort.descending = function (fn) {
-  fn = fn || sort.identity
+  fn = fn || util.identity
   return function (a, b) {
     var x = fn(a)
     var y = fn(b)
@@ -76238,7 +76223,7 @@ sort.track = function (track) {
 
 module.exports = sort
 
-},{"string-similarity":423}],569:[function(require,module,exports){
+},{"./util":572,"string-similarity":423}],569:[function(require,module,exports){
 var http = require('./http')
 var sort = require('./sort')
 var spotify = {}
@@ -77025,6 +77010,48 @@ Track.prototype.setResponse = function (response) {
 module.exports = Track
 
 },{"./defaults":561,"./lastfm":564,"./spotify":569}],572:[function(require,module,exports){
+var util = {}
+
+/**
+ * Create a pair.
+ * @param {Object} x - The first value.
+ * @param {Object} y - The first value.
+ * @return {Object} - A pair of values.
+ */
+util.pair = function (x, y) {
+  return {first: x, second: y}
+}
+
+/**
+ * Get the first value of a pair.
+ * @param {Object} pair - A pair of values.
+ * @return {Object} - The first value.
+ */
+util.first = function (pair) {
+  return pair.first
+}
+
+/**
+ * Get the second value of a pair.
+ * @param {Object} pair - A pair of values.
+ * @return {Object} - The second value.
+ */
+util.second = function (pair) {
+  return pair.second
+}
+
+/**
+ * Identity function.
+ * @param {Object} x - A value.
+ * @return {Object} - The same value.
+ */
+util.identity = function (x) {
+  return x
+}
+
+module.exports = util
+
+},{}],573:[function(require,module,exports){
 /* global describe, it */
 var chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
@@ -77311,4 +77338,4 @@ describe('Spotify Playlist Generator', function () {
   })
 })
 
-},{"../src/album":558,"../src/artist":559,"../src/parser":565,"../src/queue":566,"../src/sort":568,"../src/track":571,"chai":258,"chai-as-promised":256,"eol":297}]},{},[572]);
+},{"../src/album":558,"../src/artist":559,"../src/parser":565,"../src/queue":566,"../src/sort":568,"../src/track":571,"chai":258,"chai-as-promised":256,"eol":297}]},{},[573]);

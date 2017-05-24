@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: index.js</title>
+    <title>JSDoc: Source: src/util.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: index.js</h1>
+    <h1 class="page-title">Source: src/util.js</h1>
 
     
 
@@ -26,33 +26,46 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>#!/usr/bin/env node
-
-var fs = require('fs')
-var Parser = require('./src/parser')
+            <pre class="prettyprint source linenums"><code>var util = {}
 
 /**
- * Main method.
- * Invoked when run from the command line.
+ * Create a pair.
+ * @param {Object} x - The first value.
+ * @param {Object} y - The first value.
+ * @return {Object} - A pair of values.
  */
-function main () {
-  var input = process.argv[2] || 'input.txt'
-  var output = process.argv[3] || 'output.txt'
-
-  var str = fs.readFileSync(input, 'utf8').toString()
-  var generator = Parser(str)
-
-  generator.dispatch().then(function (str) {
-    fs.writeFile(output, str, function (err) {
-      if (err) { return }
-      console.log('Wrote to ' + output)
-    })
-  })
+util.pair = function (x, y) {
+  return {first: x, second: y}
 }
 
-if (require.main === module) {
-  main()
+/**
+ * Get the first value of a pair.
+ * @param {Object} pair - A pair of values.
+ * @return {Object} - The first value.
+ */
+util.first = function (pair) {
+  return pair.first
 }
+
+/**
+ * Get the second value of a pair.
+ * @param {Object} pair - A pair of values.
+ * @return {Object} - The second value.
+ */
+util.second = function (pair) {
+  return pair.second
+}
+
+/**
+ * Identity function.
+ * @param {Object} x - A value.
+ * @return {Object} - The same value.
+ */
+util.identity = function (x) {
+  return x
+}
+
+module.exports = util
 </code></pre>
         </article>
     </section>
