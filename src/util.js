@@ -1,6 +1,15 @@
 var util = {}
 
 /**
+ * Identity function.
+ * @param {Object} x - A value.
+ * @return {Object} - The same value.
+ */
+util.identity = function (x) {
+  return x
+}
+
+/**
  * Create a pair.
  * @param {Object} x - The first value.
  * @param {Object} y - The second value.
@@ -26,15 +35,6 @@ util.first = function (pair) {
  */
 util.second = function (pair) {
   return pair.second
-}
-
-/**
- * Identity function.
- * @param {Object} x - A value.
- * @return {Object} - The same value.
- */
-util.identity = function (x) {
-  return x
 }
 
 module.exports = util
