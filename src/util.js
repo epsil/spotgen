@@ -3,7 +3,7 @@ var util = {}
 /**
  * Create a pair.
  * @param {Object} x - The first value.
- * @param {Object} y - The first value.
+ * @param {Object} y - The second value.
  * @return {Object} - A pair of values.
  */
 util.pair = function (x, y) {
