@@ -1,4 +1,5 @@
 var stringSimilarity = require('string-similarity')
+var util = require('./util')
 
 /**
  * Stable sort, preserving original order.
@@ -12,31 +13,15 @@ var stringSimilarity = require('string-similarity')
 function sort (arr, fn) {
   fn = fn || sort.ascending()
   var i = 0
-  var pair = function (x) {
-    return {key: i++, val: x}
-  }
-  var key = function (x) {
-    return x.key
-  }
-  var val = function (x) {
-    return x.val
-  }
+  var pairs = arr.map(function (x) {
+    return util.pair(i++, x)
+  })
   var cmp = sort.combine(function (a, b) {
-    return fn(a.val, b.val)
-  }, sort.ascending(key))
-  var pairs = arr.map(pair)
+    return fn(util.second(a), util.second(b))
+  }, sort.ascending(util.first))
   pairs = pairs.sort(cmp)
-  arr = pairs.map(val)
+  arr = pairs.map(util.second)
   return arr
-}
-
-/**
- * Identity function.
- * @param {Object} x - A value.
- * @return {Object} - The same value.
- */
-sort.identity = function (x) {
-  return x
 }
 
 /**
@@ -48,7 +33,7 @@ sort.identity = function (x) {
  * and `0` if the scores are equal.
  */
 sort.ascending = function (fn) {
-  fn = fn || sort.identity
+  fn = fn || util.identity
   return function (a, b) {
     var x = fn(a)
     var y = fn(b)
@@ -65,7 +50,7 @@ sort.ascending = function (fn) {
  * and `0` if the scores are equal.
  */
 sort.descending = function (fn) {
-  fn = fn || sort.identity
+  fn = fn || util.identity
   return function (a, b) {
     var x = fn(a)
     var y = fn(b)
