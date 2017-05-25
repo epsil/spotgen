@@ -81942,13 +81942,13 @@ function sort (arr, fn) {
   fn = fn || sort.ascending()
   var i = 0
   var pairs = arr.map(function (x) {
-    return util.pair(i++, x)
+    return util.pair(x, i++)
   })
   var cmp = sort.combine(function (a, b) {
-    return fn(util.second(a), util.second(b))
-  }, sort.ascending(util.first))
+    return fn(util.first(a), util.first(b))
+  }, sort.ascending(util.second))
   pairs = pairs.sort(cmp)
-  arr = pairs.map(util.second)
+  arr = pairs.map(util.first)
   return arr
 }
 
@@ -82927,9 +82927,18 @@ module.exports = Track
 var util = {}
 
 /**
+ * Identity function.
+ * @param {Object} x - A value.
+ * @return {Object} - The same value.
+ */
+util.identity = function (x) {
+  return x
+}
+
+/**
  * Create a pair.
  * @param {Object} x - The first value.
- * @param {Object} y - The first value.
+ * @param {Object} y - The second value.
  * @return {Object} - A pair of values.
  */
 util.pair = function (x, y) {
@@ -82952,15 +82961,6 @@ util.first = function (pair) {
  */
 util.second = function (pair) {
   return pair.second
-}
-
-/**
- * Identity function.
- * @param {Object} x - A value.
- * @return {Object} - The same value.
- */
-util.identity = function (x) {
-  return x
 }
 
 module.exports = util
