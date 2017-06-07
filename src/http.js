@@ -1,16 +1,27 @@
 var request = require('request')
+var querystring = require('querystring')
 
 /**
  * Perform a HTTP request.
- * @param {string} url - The URL to look up.
- * @param {integer} [delay] - Time delay in ms.
+ * @param {string} uri - The URI to look up.
+ * @param {Object} [options] - Request options.
  * @return {Promise} A promise.
  */
-function http (url, delay) {
-  delay = delay || 100
+function http (uri, options) {
+  options.uri = options.uri || uri
+  options.delay = options.delay || 100
+  options.method = options.method || 'GET'
+  if (options.query) {
+    options.query = querystring.stringify(options.query)
+    if (options.method === 'GET') {
+      options.uri += '?' + options.query
+    } else {
+      options.body = options.query
+    }
+  }
   return new Promise(function (resolve, reject) {
     setTimeout(function () {
-      request(url, function (err, response, body) {
+      request(options, function (err, response, body) {
         if (err) {
           reject(err)
         } else if (response.statusCode !== 200) {
@@ -19,7 +30,7 @@ function http (url, delay) {
           resolve(body)
         }
       })
-    }, delay)
+    }, options.delay)
   })
 }
 
@@ -30,19 +41,18 @@ function http (url, delay) {
  * HTTP requests because of the Same Origin Policy. Therefore,
  * this function falls back to HTTPS if HTTP fails.
  *
- * @param {string} url - The URL to look up.
- * @param {integer} [delay] - Time delay in ms.
+ * @param {string} uri - The URI to look up.
+ * @param {Object} [options] - Request options.
  * @return {Promise} A promise.
  */
-http.s = function (url, delay) {
-  delay = delay || 100
-  return http(url, delay).catch(function (err) {
+http.s = function (uri, options) {
+  return http(uri, options).catch(function (err) {
     var message = err + ''
     if (message.match(/XHR error/i)) {
-      if (url.match(/^http:/i)) {
-        return http(url.replace(/^http:/i, 'https:'), delay)
-      } else if (url.match(/^https:/i)) {
-        return http(url.replace(/^https:/i, 'http:'), delay)
+      if (uri.match(/^http:/i)) {
+        return http(uri.replace(/^http:/i, 'https:'), options)
+      } else if (uri.match(/^https:/i)) {
+        return http(uri.replace(/^https:/i, 'http:'), options)
       }
     }
   })
@@ -50,13 +60,12 @@ http.s = function (url, delay) {
 
 /**
  * Perform a HTTP JSON request.
- * @param {string} url - The URL to look up.
- * @param {integer} [delay] - Time delay in ms.
+ * @param {string} uri - The URI to look up.
+ * @param {Object} [options] - Request options.
  * @return {Promise | JSON} A JSON response.
  */
-http.json = function (url, delay) {
-  delay = delay || 100
-  return http.s(url, delay).then(function (response) {
+http.json = function (uri, options) {
+  return http.s(uri, options).then(function (response) {
     try {
       response = JSON.parse(response)
     } catch (e) {

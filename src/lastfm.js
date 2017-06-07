@@ -15,15 +15,18 @@ module.exports = function (key) {
    * @return {Promise | JSON} The track info.
    */
   lastfm.getInfo = function (artist, title, user, correct) {
-    var url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
+    var uri = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
     correct = (correct === undefined) ? true : correct
-    url += '&api_key=' + encodeURIComponent(key)
-    url += '&artist=' + encodeURIComponent(artist)
-    url += '&track=' + encodeURIComponent(title)
-    url += user ? ('&username=' + encodeURIComponent(user)) : ''
-    url += '&autocorrect=' + (correct ? 1 : 0)
-    url += '&format=json'
-    return lastfm.request(url).then(function (result) {
+    correct = correct ? 1 : 0
+    return lastfm.request(uri, {
+      'query': {
+        'artist': artist,
+        'track': title,
+        'user': user,
+        'autocorrect': correct,
+        'format': 'json'
+      }
+    }).then(function (result) {
       if (result && !result.error && result.track) {
         return Promise.resolve(result)
       } else {
@@ -34,11 +37,12 @@ module.exports = function (key) {
 
   /**
    * Perform a Last.fm request.
-   * @param {string} url - The URL to look up.
+   * @param {string} uri - The URI to look up.
    */
-  lastfm.request = function (url) {
-    console.log(url.replace(/&api_key=[^&]*/i, ''))
-    return http.json(url)
+  lastfm.request = function (uri, options) {
+    console.log(uri)
+    options.query.api_key = key
+    return http.json(uri, options)
   }
 
   return lastfm
