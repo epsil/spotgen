@@ -1,15 +1,24 @@
+var base64 = require('base64')
 var http = require('./http')
 var sort = require('./sort')
 var spotify = {}
+
+var currentToken = ''
 
 /**
  * Authenticate with Clients Credentials Flow.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
+ *
+ * @param {string} clientId - Client ID.
+ * @param {string} clientSecret - Client secret key.
+ * @param {string} [grantType] - Grant type, default "client_credentials".
+ * @return {Promise | string} An access token response.
  */
 spotify.authenticate = function (clientId, clientSecret, grantType) {
   grantType = grantType || 'client_credentials'
-  var auth = '' // todo
+  var auth = 'Authorization: Basic '
+  auth += base64.encode(clientId + ':' + clientSecret)
   var uri = 'https://accounts.spotify.com/api/token'
   return http.json(uri, {
     'method': 'POST',
@@ -19,13 +28,25 @@ spotify.authenticate = function (clientId, clientSecret, grantType) {
     'query': {
       'grant_type': grantType
     }
-  }).then(function (response) {
-    if (response && response.access_token) {
-      return response.access_token
-    } else {
-      return ''
-    }
   })
+}
+
+/**
+ * Obtain a bearer access token.
+ *
+ * @return {Promise | string} A bearer access token.
+ */
+spotify.token = function () {
+  if (currentToken !== '') {
+    return Promise.resolve(currentToken)
+  } else {
+    return spotify.auth('test', 'test').then(function (response) {
+      if (response && response.access_token) {
+        currentToken = response.access_token
+      }
+      return currentToken
+    })
+  }
 }
 
 /**
