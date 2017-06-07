@@ -32,6 +32,20 @@ spotify.authenticate = function (clientId, clientSecret, grantType) {
 }
 
 /**
+ * Refresh the bearer access token.
+ *
+ * @return {Promise | string} A new bearer access token.
+ */
+spotify.refreshToken = function () {
+  return spotify.auth('test', 'test').then(function (response) {
+    if (response && response.access_token) {
+      token = response.access_token
+    }
+    return token
+  })
+}
+
+/**
  * Obtain a bearer access token.
  *
  * @return {Promise | string} A bearer access token.
@@ -40,12 +54,7 @@ spotify.getToken = function () {
   if (token !== '') {
     return Promise.resolve(token)
   } else {
-    return spotify.auth('test', 'test').then(function (response) {
-      if (response && response.access_token) {
-        token = response.access_token
-      }
-      return token
-    })
+    return spotify.refreshToken()
   }
 }
 
@@ -155,11 +164,16 @@ spotify.getTrack = function (id) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.request = function (uri, options) {
+  console.log(uri)
   return spotify.getToken().then(function (token) {
-    console.log(uri)
     options.headers = options.headers || {}
     options.headers.Authorization = 'Bearer ' + token
     return http.json(uri, options)
+  }).catch(function (status) {
+    return spotify.refreshToken().then(function (token) {
+      options.headers.Authorization = 'Bearer ' + token
+      return http.json(uri, options)
+    })
   })
 }
 
