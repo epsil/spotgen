@@ -19,7 +19,7 @@ module.exports = function (key) {
     correct = (correct === undefined) ? true : correct
     correct = correct ? 1 : 0
     return lastfm.request(uri, {
-      'query': {
+      'qs': {
         'artist': artist,
         'track': title,
         'user': user,
@@ -41,7 +41,7 @@ module.exports = function (key) {
    */
   lastfm.request = function (uri, options) {
     console.log(uri)
-    options.query.api_key = key
+    options.qs.api_key = key
     return http.json(uri, options)
   }
 

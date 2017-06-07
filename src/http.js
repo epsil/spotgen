@@ -1,5 +1,4 @@
 var request = require('request')
-var querystring = require('querystring')
 
 /**
  * Perform a HTTP request.
@@ -8,18 +7,10 @@ var querystring = require('querystring')
  * @return {Promise} A promise.
  */
 function http (uri, options) {
+  var delay = options.delay || 100
   options.uri = options.uri || uri
-  options.delay = options.delay || 100
   options.method = options.method || 'GET'
-  if (options.query) {
-    options.query = querystring.stringify(options.query)
-    if (options.method === 'GET') {
-      var sep = options.uri.match(/\?/) ? '&' : '?'
-      options.uri += sep + options.query
-    } else {
-      options.body = options.query
-    }
-  }
+  delete options.delay
   return new Promise(function (resolve, reject) {
     setTimeout(function () {
       request(options, function (err, response, body) {
@@ -31,7 +22,7 @@ function http (uri, options) {
           resolve(body)
         }
       })
-    }, options.delay)
+    }, delay)
   })
 }
 

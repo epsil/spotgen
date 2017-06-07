@@ -1,4 +1,5 @@
 var base64 = require('base-64')
+var defaults = require('./defaults')
 var http = require('./http')
 var sort = require('./sort')
 var spotify = {}
@@ -15,17 +16,16 @@ var token = ''
  * @param {string} [grantType] - Grant type, default "client_credentials".
  * @return {Promise | string} An access token response.
  */
-spotify.authenticate = function (clientId, clientSecret, grantType) {
+spotify.auth = function (clientId, clientSecret, grantType) {
   grantType = grantType || 'client_credentials'
-  var auth = 'Authorization: Basic '
-  auth += base64.encode(clientId + ':' + clientSecret)
+  var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
   var uri = 'https://accounts.spotify.com/api/token'
   return http.json(uri, {
     'method': 'POST',
     'headers': {
       'Authorization': auth
     },
-    'query': {
+    'form': {
       'grant_type': grantType
     }
   })
@@ -37,7 +37,7 @@ spotify.authenticate = function (clientId, clientSecret, grantType) {
  * @return {Promise | string} A new bearer access token.
  */
 spotify.refreshToken = function () {
-  return spotify.auth('test', 'test').then(function (response) {
+  return spotify.auth(defaults.id, defaults.key).then(function (response) {
     if (response && response.access_token) {
       token = response.access_token
     }
@@ -164,6 +164,7 @@ spotify.getTrack = function (id) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.request = function (uri, options) {
+  options = options || {}
   console.log(uri)
   return spotify.getToken().then(function (token) {
     options.headers = options.headers || {}
