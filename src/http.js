@@ -14,7 +14,8 @@ function http (uri, options) {
   if (options.query) {
     options.query = querystring.stringify(options.query)
     if (options.method === 'GET') {
-      options.uri += '?' + options.query
+      var sep = options.uri.match(/\?/) ? '&' : '?'
+      options.uri += sep + options.query
     } else {
       options.body = options.query
     }

@@ -3,7 +3,7 @@ var http = require('./http')
 var sort = require('./sort')
 var spotify = {}
 
-var currentToken = ''
+var token = ''
 
 /**
  * Authenticate with Clients Credentials Flow.
@@ -36,15 +36,15 @@ spotify.authenticate = function (clientId, clientSecret, grantType) {
  *
  * @return {Promise | string} A bearer access token.
  */
-spotify.token = function () {
-  if (currentToken !== '') {
-    return Promise.resolve(currentToken)
+spotify.getToken = function () {
+  if (token !== '') {
+    return Promise.resolve(token)
   } else {
     return spotify.auth('test', 'test').then(function (response) {
       if (response && response.access_token) {
-        currentToken = response.access_token
+        token = response.access_token
       }
-      return currentToken
+      return token
     })
   }
 }
@@ -151,11 +151,16 @@ spotify.getTrack = function (id) {
 /**
  * Perform a Spotify request.
  * @param {string} uri - The URI to resolve.
+ * @param {Object} [options] - Request options.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.request = function (uri) {
-  console.log(uri)
-  return http.json(uri)
+spotify.request = function (uri, options) {
+  return spotify.getToken().then(function (token) {
+    console.log(uri)
+    options.headers = options.headers || {}
+    options.headers.Authorization = 'Bearer ' + token
+    return http.json(uri, options)
+  })
 }
 
 /**
