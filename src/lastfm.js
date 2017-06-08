@@ -40,7 +40,9 @@ module.exports = function (key) {
    * @param {string} uri - The URI to look up.
    */
   lastfm.request = function (uri, options) {
-    console.log(uri)
+    console.log(uri +
+                '&artist=' + encodeURIComponent(options.qs.artist) +
+                '&track=' + encodeURIComponent(options.qs.track))
     options.qs.api_key = key
     return http.json(uri, options)
   }

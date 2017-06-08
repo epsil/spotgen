@@ -2,8 +2,8 @@ var base64 = require('base-64')
 var defaults = require('./defaults')
 var http = require('./http')
 var sort = require('./sort')
-var spotify = {}
 
+var spotify = {}
 var token = ''
 
 /**
