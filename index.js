@@ -16,12 +16,15 @@ function main() {
   const str = fs.readFileSync(input, 'utf8').toString();
   const generator = parser(str);
 
-  generator.dispatch().then(function (data) {
-    fs.writeFile(output, data, function (err) {
+  function cont(data) {
+    function callback(err) {
       if (err) { return; }
       console.log('Wrote to ' + output);
-    });
-  });
+    }
+    fs.writeFile(output, data, callback);
+  }
+
+  generator.dispatch().then(cont);
 }
 
 if (require.main === module) {
