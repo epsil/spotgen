@@ -2,22 +2,22 @@
 
 'use strict';
 
-var fs = require('fs');
-var parser = require('./src/parser');
+const fs = require('fs');
+const parser = require('./src/parser');
 
 /**
  * Main method.
  * Invoked when run from the command line.
  */
-function main () {
-  var input = process.argv[2] || 'input.txt';
-  var output = process.argv[3] || 'output.txt';
+function main() {
+  const input = process.argv[2] || 'input.txt';
+  const output = process.argv[3] || 'output.txt';
 
-  var str = fs.readFileSync(input, 'utf8').toString();
-  var generator = parser(str);
+  const str = fs.readFileSync(input, 'utf8').toString();
+  const generator = parser(str);
 
-  generator.dispatch().then(function (str) {
-    fs.writeFile(output, str, function (err) {
+  generator.dispatch().then(function (data) {
+    fs.writeFile(output, data, function (err) {
       if (err) { return; }
       console.log('Wrote to ' + output);
     });
