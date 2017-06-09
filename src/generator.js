@@ -184,7 +184,10 @@ Generator.prototype.refreshTracks = function () {
  */
 Generator.prototype.toString = function () {
   var self = this
-  var result = self.csv ? 'sep=,\n' : ''
+  var result = ''
+  if (self.csv) {
+    result += 'sep=,\n'
+  }
   this.entries.forEach(function (entry) {
     if (entry instanceof Track || entry instanceof Album) {
       if (entry instanceof Track) {
@@ -197,7 +200,7 @@ Generator.prototype.toString = function () {
         result += csvLine + '\n'
       } else {
         var uri = entry.uri()
-        if (uri !== '') {
+        if (uri) {
           result += uri + '\n'
         }
       }

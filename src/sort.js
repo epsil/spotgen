@@ -67,7 +67,7 @@ sort.descending = function (fn) {
  */
 sort.combine = function () {
   var args = Array.prototype.slice.call(arguments)
-  var callback = function (fn1, fn2) {
+  function callback (fn1, fn2) {
     return function (a, b) {
       var val = fn1(a, b)
       return (val === 0) ? fn2(a, b) : val

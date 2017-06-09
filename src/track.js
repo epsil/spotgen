@@ -145,7 +145,7 @@ Track.prototype.duration = function () {
 Track.prototype.equals = function (track) {
   var uri1 = this.uri()
   var uri2 = track.uri()
-  return uri1 !== '' && uri2 !== '' && uri1 === uri2
+  return uri1 && uri2 && uri1 === uri2
 }
 
 /**
@@ -279,9 +279,9 @@ Track.prototype.lastfmPersonal = function () {
  */
 Track.prototype.name = function () {
   var title = this.title()
-  if (title !== '') {
+  if (title) {
     var artist = this.artist()
-    if (artist !== '') {
+    if (artist) {
       return title + ' - ' + artist
     } else {
       return title
@@ -398,7 +398,7 @@ Track.prototype.trackNumber = function () {
  */
 Track.prototype.toString = function () {
   var name = this.name()
-  if (name !== '') {
+  if (name) {
     return name
   } else {
     return this.entry

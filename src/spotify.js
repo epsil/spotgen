@@ -51,7 +51,7 @@ spotify.refreshToken = function () {
  * @return {Promise | string} A bearer access token.
  */
 spotify.getToken = function () {
-  if (token !== '') {
+  if (token) {
     return Promise.resolve(token)
   } else {
     return spotify.refreshToken()
@@ -91,7 +91,7 @@ spotify.getAlbumsByArtist = function (id) {
   var uri = 'https://api.spotify.com/v1/artists/'
   uri += encodeURIComponent(id) + '/albums?limit=50'
 
-  var getAlbums = function (uri, result) {
+  function getAlbums (uri, result) {
     return spotify.request(uri).then(function (response) {
       if (!(response &&
             response.items)) {
@@ -111,7 +111,7 @@ spotify.getAlbumsByArtist = function (id) {
   }
 
   // sort albums by type
-  var sortAlbums = function (response) {
+  function sortAlbums (response) {
     if (response && response.items) {
       response.items = sort(response.items, sort.album)
     }

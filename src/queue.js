@@ -254,7 +254,7 @@ Queue.prototype.interleave = function () {
   var queues = this
   var result = new Queue()
   var temp = new Queue()
-  var iterator = function (queue) {
+  function iterator (queue) {
     if (!queue.isEmpty()) {
       var entry = queue.shift()
       result.add(entry)

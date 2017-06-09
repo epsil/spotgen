@@ -17,7 +17,7 @@ var Similar = require('./similar')
 function Parser (str) {
   var generator = new Generator()
   str = str.trim()
-  if (str !== '') {
+  if (str) {
     var lines = eol.split(str)
     while (lines.length > 0) {
       var line = lines.shift()
@@ -87,7 +87,7 @@ function Parser (str) {
         var uri = uriMatch[0]
         var uriTrack = new Track(uri)
         generator.entries.add(uriTrack)
-      } else if (line !== '') {
+      } else if (line) {
         var track = new Track(line)
         generator.entries.add(track)
       }
