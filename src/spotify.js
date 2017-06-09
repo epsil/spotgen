@@ -116,7 +116,7 @@ spotify.getAlbumsByArtist = function (id) {
   // sort albums by type
   function sortAlbums (response) {
     if (response && response.items) {
-      response.items = sort(response.items, sort.album)
+      sort(response.items, sort.album)
     }
     return response
   }
@@ -138,7 +138,7 @@ spotify.getTopTracks = function (id) {
   return spotify.request(uri).then(function (response) {
     if (response &&
         response.tracks) {
-      response.tracks = sort(response.tracks, sort.popularity)
+      sort(response.tracks, sort.popularity)
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -198,8 +198,7 @@ spotify.searchForArtist = function (artist) {
         response.artists.items[0] &&
         response.artists.items[0].id) {
       // sort results by string similarity
-      response.artists.items = sort(response.artists.items,
-                                    sort.similarArtist(artist))
+      sort(response.artists.items, sort.similarArtist(artist))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -224,8 +223,7 @@ spotify.searchForAlbum = function (album) {
         response.albums.items[0] &&
         response.albums.items[0].id) {
       // sort results by string similarity
-      response.albums.items = sort(response.albums.items,
-                                   sort.similarAlbum(album))
+      sort(response.albums.items, sort.similarAlbum(album))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -272,8 +270,7 @@ spotify.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      response.tracks.items = sort(response.tracks.items,
-                                   sort.track(track))
+      sort(response.tracks.items, sort.track(track))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)

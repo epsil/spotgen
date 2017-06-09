@@ -2,13 +2,13 @@ var stringSimilarity = require('string-similarity')
 var util = require('./util')
 
 /**
- * Stable sort, preserving original order.
+ * Stable sort, preserving the original order when possible.
  * @param {Array} arr - The array to sort.
  * @param {function} [fn] - A comparison function that returns
  * `-1` if the first argument scores less than the second argument,
  * `1` if the first argument scores more than the second argument,
  * and `0` if the scores are equal.
- * @return {Array} - A new array that is sorted.
+ * @return {Array} - The array, sorted.
  */
 function sort (arr, fn) {
   fn = fn || sort.ascending()
@@ -20,7 +20,9 @@ function sort (arr, fn) {
     return fn(util.first(a), util.first(b))
   }, sort.ascending(util.second))
   pairs = pairs.sort(cmp)
-  arr = pairs.map(util.first)
+  for (i = 0; i < arr.length; i++) {
+    arr[i] = util.first(pairs[i])
+  }
   return arr
 }
 
