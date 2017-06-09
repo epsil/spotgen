@@ -14,7 +14,7 @@ var token = ''
  * @param {string} clientId - Client ID.
  * @param {string} clientSecret - Client secret key.
  * @param {string} [grantType] - Grant type, default "client_credentials".
- * @return {Promise | string} An access token response.
+ * @return {Promise | JSON} An access token response.
  */
 spotify.auth = function (clientId, clientSecret, grantType) {
   grantType = grantType || 'client_credentials'
@@ -34,11 +34,13 @@ spotify.auth = function (clientId, clientSecret, grantType) {
 /**
  * Refresh the bearer access token.
  *
- * @return {Promise | string} A new bearer access token.
+ * @return {Promise | string} A new bearer access token,
+ * or the empty string if not available.
  */
 spotify.refreshToken = function () {
   return spotify.auth(defaults.id, defaults.key).then(function (response) {
-    if (response && response.access_token) {
+    if (response &&
+        response.access_token) {
       token = response.access_token
     }
     return token
@@ -48,7 +50,8 @@ spotify.refreshToken = function () {
 /**
  * Obtain a bearer access token.
  *
- * @return {Promise | string} A bearer access token.
+ * @return {Promise | string} A bearer access token,
+ * or the empty string if not available.
  */
 spotify.getToken = function () {
   if (token) {
