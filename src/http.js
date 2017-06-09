@@ -8,7 +8,7 @@ var request = require('request')
  */
 function http (uri, options) {
   var delay = options.delay || 100
-  options.uri = options.uri || uri
+  options.uri = uri || options.uri
   options.method = options.method || 'GET'
   delete options.delay
   return new Promise(function (resolve, reject) {
