@@ -26,9 +26,68 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>var http = require('./http')
+            <pre class="prettyprint source linenums"><code>var base64 = require('base-64')
+var defaults = require('./defaults')
+var http = require('./http')
 var sort = require('./sort')
+
 var spotify = {}
+var token = ''
+
+/**
+ * Authenticate with Clients Credentials Flow.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
+ *
+ * @param {string} clientId - Client ID.
+ * @param {string} clientSecret - Client secret key.
+ * @param {string} [grantType] - Grant type, default "client_credentials".
+ * @return {Promise | JSON} An access token response.
+ */
+spotify.auth = function (clientId, clientSecret, grantType) {
+  grantType = grantType || 'client_credentials'
+  var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
+  var uri = 'https://accounts.spotify.com/api/token'
+  return http.json(uri, {
+    'method': 'POST',
+    'headers': {
+      'Authorization': auth
+    },
+    'form': {
+      'grant_type': grantType
+    }
+  })
+}
+
+/**
+ * Refresh the bearer access token.
+ *
+ * @return {Promise | string} A new bearer access token,
+ * or the empty string if not available.
+ */
+spotify.refreshToken = function () {
+  return spotify.auth(defaults.id, defaults.key).then(function (response) {
+    if (response &amp;&amp;
+        response.access_token) {
+      token = response.access_token
+    }
+    return token
+  })
+}
+
+/**
+ * Obtain a bearer access token.
+ *
+ * @return {Promise | string} A bearer access token,
+ * or the empty string if not available.
+ */
+spotify.getToken = function () {
+  if (token) {
+    return Promise.resolve(token)
+  } else {
+    return spotify.refreshToken()
+  }
+}
 
 /**
  * Fetch album metadata.
@@ -39,9 +98,9 @@ var spotify = {}
  * @return {Promise | JSON} A JSON response.
  */
 spotify.getAlbum = function (id) {
-  var url = 'https://api.spotify.com/v1/albums/'
-  url += encodeURIComponent(id)
-  return spotify.request(url).then(function (response) {
+  var uri = 'https://api.spotify.com/v1/albums/'
+  uri += encodeURIComponent(id)
+  return spotify.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.id) {
       return Promise.resolve(response)
@@ -60,11 +119,11 @@ spotify.getAlbum = function (id) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.getAlbumsByArtist = function (id) {
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/albums?limit=50'
+  var uri = 'https://api.spotify.com/v1/artists/'
+  uri += encodeURIComponent(id) + '/albums?limit=50'
 
-  var getAlbums = function (url, result) {
-    return spotify.request(url).then(function (response) {
+  function getAlbums (uri, result) {
+    return spotify.request(uri).then(function (response) {
       if (!(response &amp;&amp;
             response.items)) {
         return Promise.reject(response)
@@ -83,14 +142,14 @@ spotify.getAlbumsByArtist = function (id) {
   }
 
   // sort albums by type
-  var sortAlbums = function (response) {
+  function sortAlbums (response) {
     if (response &amp;&amp; response.items) {
-      response.items = sort(response.items, sort.album)
+      sort(response.items, sort.album)
     }
     return response
   }
 
-  return getAlbums(url).then(sortAlbums)
+  return getAlbums(uri).then(sortAlbums)
 }
 
 /**
@@ -102,12 +161,12 @@ spotify.getAlbumsByArtist = function (id) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.getTopTracks = function (id) {
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/top-tracks?country=US'
-  return spotify.request(url).then(function (response) {
+  var uri = 'https://api.spotify.com/v1/artists/'
+  uri += encodeURIComponent(id) + '/top-tracks?country=US'
+  return spotify.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.tracks) {
-      response.tracks = sort(response.tracks, sort.popularity)
+      sort(response.tracks, sort.popularity)
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -124,19 +183,30 @@ spotify.getTopTracks = function (id) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.getTrack = function (id) {
-  var url = 'https://api.spotify.com/v1/tracks/'
-  url += encodeURIComponent(id)
-  return spotify.request(url)
+  var uri = 'https://api.spotify.com/v1/tracks/'
+  uri += encodeURIComponent(id)
+  return spotify.request(uri)
 }
 
 /**
  * Perform a Spotify request.
- * @param {string} url - The URL to resolve.
+ * @param {string} uri - The URI to resolve.
+ * @param {Object} [options] - Request options.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.request = function (url) {
-  console.log(url)
-  return http.json(url)
+spotify.request = function (uri, options) {
+  options = options || {}
+  console.log(uri)
+  return spotify.getToken().then(function (token) {
+    options.headers = options.headers || {}
+    options.headers.Authorization = 'Bearer ' + token
+    return http.json(uri, options)
+  }).catch(function (status) {
+    return spotify.refreshToken().then(function (token) {
+      options.headers.Authorization = 'Bearer ' + token
+      return http.json(uri, options)
+    })
+  })
 }
 
 /**
@@ -148,16 +218,15 @@ spotify.request = function (url) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.searchForArtist = function (artist) {
-  var url = 'https://api.spotify.com/v1/search?type=artist&amp;q='
-  url += encodeURIComponent(artist)
-  return spotify.request(url).then(function (response) {
+  var uri = 'https://api.spotify.com/v1/search?type=artist&amp;q='
+  uri += encodeURIComponent(artist)
+  return spotify.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.artists &amp;&amp;
         response.artists.items[0] &amp;&amp;
         response.artists.items[0].id) {
       // sort results by string similarity
-      response.artists.items = sort(response.artists.items,
-                                    sort.similarArtist(artist))
+      sort(response.artists.items, sort.similarArtist(artist))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -174,16 +243,15 @@ spotify.searchForArtist = function (artist) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.searchForAlbum = function (album) {
-  var url = 'https://api.spotify.com/v1/search?type=album&amp;q='
-  url += encodeURIComponent(album)
-  return spotify.request(url).then(function (response) {
+  var uri = 'https://api.spotify.com/v1/search?type=album&amp;q='
+  uri += encodeURIComponent(album)
+  return spotify.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.albums &amp;&amp;
         response.albums.items[0] &amp;&amp;
         response.albums.items[0].id) {
       // sort results by string similarity
-      response.albums.items = sort(response.albums.items,
-                                   sort.similarAlbum(album))
+      sort(response.albums.items, sort.similarAlbum(album))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -200,9 +268,9 @@ spotify.searchForAlbum = function (album) {
  * @return {Promise | JSON} A JSON response.
  */
 spotify.searchForRelatedArtists = function (id) {
-  var url = 'https://api.spotify.com/v1/artists/'
-  url += encodeURIComponent(id) + '/related-artists'
-  return spotify.request(url).then(function (response) {
+  var uri = 'https://api.spotify.com/v1/artists/'
+  uri += encodeURIComponent(id) + '/related-artists'
+  return spotify.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.artists) {
       return Promise.resolve(response)
@@ -221,17 +289,16 @@ spotify.searchForRelatedArtists = function (id) {
  * @return {Promise | JSON} JSON response.
  */
 spotify.searchForTrack = function (track) {
-  var url = 'https://api.spotify.com/v1/search?type=track&amp;limit=50&amp;q='
-  url += encodeURIComponent(track)
-  return spotify.request(url).then(function (response) {
+  var uri = 'https://api.spotify.com/v1/search?type=track&amp;limit=50&amp;q='
+  uri += encodeURIComponent(track)
+  return spotify.request(uri).then(function (response) {
     if (response.tracks &amp;&amp;
         response.tracks.items[0] &amp;&amp;
         response.tracks.items[0].uri) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      response.tracks.items = sort(response.tracks.items,
-                                   sort.track(track))
+      sort(response.tracks.items, sort.track(track))
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -256,7 +323,7 @@ module.exports = spotify
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Thu May 25 2017 14:24:31 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue Jun 13 2017 12:35:20 GMT+0200 (Vest-Europa (sommertid))
 </footer>
 
 <script> prettyPrint(); </script>
