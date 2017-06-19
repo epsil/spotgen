@@ -4,6 +4,11 @@ Tips
 Recipes
 -------
 
+### Artist's discography ordered by user's Last.fm rating
+
+    #order by lastfm username
+    #artist Beach House
+
 ### Top tracks grouped by artist
 
     #order by popularity
