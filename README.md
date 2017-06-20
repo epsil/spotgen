@@ -215,7 +215,7 @@ Alternatively, download a [ZIP file](https://github.com/epsil/spotify-js/archive
 
 Run the script with `./index.js` or `node index`:
 
-    $ ./index.js input.txt output.txt
+    $ ./index.js input.txt output.spotify.txt
 
 [More on the command-line version](Tips.md#multiple-playlists).
 

@@ -9,7 +9,7 @@ var Parser = require('./src/parser')
  */
 function main () {
   var input = process.argv[2] || 'input.txt'
-  var output = process.argv[3] || 'output.txt'
+  var output = process.argv[3] || 'output.spotify.txt'
 
   var str = fs.readFileSync(input, 'utf8').toString()
   var generator = Parser(str)
