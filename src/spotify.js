@@ -9,6 +9,10 @@ var token = ''
 /**
  * Authenticate with Clients Credentials Flow.
  *
+ * Note: this authentication method does not work
+ * if the script is run from a browser. It only works
+ * when the script is run from the command line.
+ *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *
  * @param {string} clientId - Client ID.
