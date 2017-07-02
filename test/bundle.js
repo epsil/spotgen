@@ -76024,7 +76024,7 @@ Queue.prototype.slice = function (start, end) {
  * @return {Queue} - Itself.
  */
 Queue.prototype.sort = function (fn) {
-  this.queue = sort(this.queue, fn)
+  sort(this.queue, fn)
   return this
 }
 
@@ -76407,6 +76407,11 @@ var token = ''
 
 /**
  * Authenticate with Clients Credentials Flow.
+ *
+ * Note: this authentication method only works if the script is run
+ * from the command line. It does not work when run from a browser,
+ * because Spotify's authentication server rejects cross-site
+ * requests.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *

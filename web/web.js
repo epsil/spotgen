@@ -1,6 +1,8 @@
 /* global jQuery:true */
 /* exported jQuery */
 var Parser = require('../src/parser')
+var defaults = require('../src/defaults')
+var http = require('../src/http')
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
@@ -40,6 +42,29 @@ function resetButton () {
   console.log('')
 }
 
+function auth (clientId, uri) {
+  clientId = clientId || defaults.id
+  uri = uri || window.location.href
+  var url = 'https://accounts.spotify.com/authorize'
+  url += '/?client_id=' + encodeURIComponent(clientId) +
+    '&response_type=' + encodeURIComponent('code') +
+    '&redirect_uri=' + encodeURIComponent(uri)
+  return url
+  // clientSecret = clientSecret || defaults.key
+  // grantType = grantType || 'client_credentials'
+  // var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
+  // var uri = 'https://accounts.spotify.com/api/token'
+  // return http.json(uri, {
+  //   'method': 'POST',
+  //   'headers': {
+  //     'Authorization': auth
+  //   },
+  //   'form': {
+  //     'grant_type': grantType
+  //   }
+  // })
+}
+
 function clickHandler () {
   var textarea = $('textarea')
   var button = $('button')
@@ -68,6 +93,8 @@ function clickHandler () {
 
 $(function () {
   $('form').on('submit', clickHandler)
+  $('button').after('<a href="' + auth() + '">test</a>')
+  // $('button').after('<p>test</p>')
   $('.thumbnail a').click(insertPlaylist)
   $('button').tooltip()
   $('textarea').focus()
