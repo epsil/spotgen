@@ -54,7 +54,7 @@ body {
     margin: 0;
     padding: 0;
 }
-button {
+a.btn, button {
     background-color: rgba(0, 0, 0, 0.1) !important;
     border: 2px solid rgba(255, 255, 255, 0.1) !important;
     color: inherit !important;

@@ -83304,12 +83304,24 @@ function clickHandler () {
   return false
 }
 
+function clickHandler2 () {
+  alert('test')
+  if (true) {
+    return true
+  } else {
+    return false
+  }
+}
+
 $(function () {
   $('form').on('submit', clickHandler)
-  $('button').after('<a href="' + auth() + '">test</a>')
-  // $('button').after('<p>test</p>')
   $('.thumbnail a').click(insertPlaylist)
-  $('button').tooltip()
+  // $('button').after('<a href="' + auth() + '">test</a>')
+  // $('button').after('<p>test</p>')
+  // $('button').tooltip()
+  $('a.btn').attr('href', auth())
+  $('a.btn').click(clickHandler2)
+  $('a.btn').tooltip()
   $('textarea').focus()
 })
 
