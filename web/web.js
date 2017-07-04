@@ -45,6 +45,7 @@ function resetButton () {
 function auth (clientId, uri) {
   clientId = clientId || defaults.id
   uri = uri || window.location.href
+  // uri = 'https://epsil.github.io/spotify/'
   var url = 'https://accounts.spotify.com/authorize'
   url += '/?client_id=' + encodeURIComponent(clientId) +
     '&response_type=' + encodeURIComponent('code') +
