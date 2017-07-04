@@ -92,13 +92,19 @@ function clickHandler () {
   return false
 }
 
+function hasCode() {
+  var urlParams = new URLSearchParams(window.location.search)
+  return urlParams.has('code')
+}
+
 function clickHandler2 () {
-  var urlParams = new URLSearchParams(window.location.search);
+  var urlParams = new URLSearchParams(window.location.search)
   alert('test')
   if (urlParams.has('code')) {
     alert(urlParams.get('code'))
     return false
   } else {
+    localStorage.setItem('textarea', $('textarea').val())
     return true
   }
 }
@@ -113,4 +119,8 @@ $(function () {
   $('a.btn').click(clickHandler2)
   $('a.btn').tooltip()
   $('textarea').focus()
+
+  if (hasCode() && localStorage.getItem('textarea')) {
+    $('textarea').val(localStorage.getItem('textarea'))
+  }
 })
