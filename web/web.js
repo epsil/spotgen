@@ -1,11 +1,11 @@
-/* global jQuery:true */
+/* global jQuery:true, localStorage, URLSearchParams, alert */
 /* exported jQuery */
-var Parser = require('../src/parser')
-var defaults = require('../src/defaults')
-var http = require('../src/http')
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
+var defaults = require('../src/defaults')
+// var http = require('../src/http')
+var Parser = require('../src/parser')
 
 console.log = function (message) {
   if (typeof message === 'string') {
@@ -45,25 +45,12 @@ function resetButton () {
 function auth (clientId, uri) {
   clientId = clientId || defaults.id
   uri = uri || window.location.href
-  // uri = 'https://epsil.github.io/spotify/'
   var url = 'https://accounts.spotify.com/authorize'
-  url += '/?client_id=' + encodeURIComponent(clientId) +
-    '&response_type=' + encodeURIComponent('code') +
+  url += '/' +
+    '?client_id=' + encodeURIComponent(clientId) +
+    '&response_type=' + encodeURIComponent('token') +
     '&redirect_uri=' + encodeURIComponent(uri)
   return url
-  // clientSecret = clientSecret || defaults.key
-  // grantType = grantType || 'client_credentials'
-  // var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
-  // var uri = 'https://accounts.spotify.com/api/token'
-  // return http.json(uri, {
-  //   'method': 'POST',
-  //   'headers': {
-  //     'Authorization': auth
-  //   },
-  //   'form': {
-  //     'grant_type': grantType
-  //   }
-  // })
 }
 
 function clickHandler () {
@@ -92,16 +79,23 @@ function clickHandler () {
   return false
 }
 
-function hasCode() {
-  var urlParams = new URLSearchParams(window.location.search)
-  return urlParams.has('code')
+function token () {
+  var hash = window.location.hash
+  hash = hash.replace(/^#/, '')
+  var urlParams = new URLSearchParams(hash)
+  if (!urlParams.has('access_token')) {
+    return ''
+  } else {
+    return urlParams.get('access_token')
+  }
+}
+
+function hasToken () {
+  return token() !== ''
 }
 
 function clickHandler2 () {
-  var urlParams = new URLSearchParams(window.location.search)
-  alert('test')
-  if (urlParams.has('code')) {
-    alert(urlParams.get('code'))
+  if (hasToken()) {
     return false
   } else {
     localStorage.setItem('textarea', $('textarea').val())
@@ -112,15 +106,14 @@ function clickHandler2 () {
 $(function () {
   $('form').on('submit', clickHandler)
   $('.thumbnail a').click(insertPlaylist)
-  // $('button').after('<a href="' + auth() + '">test</a>')
-  // $('button').after('<p>test</p>')
-  // $('button').tooltip()
-  $('a.btn').attr('href', auth())
   $('a.btn').click(clickHandler2)
   $('a.btn').tooltip()
   $('textarea').focus()
-
-  if (hasCode() && localStorage.getItem('textarea')) {
-    $('textarea').val(localStorage.getItem('textarea'))
+  if (hasToken()) {
+    if (localStorage.getItem('textarea')) {
+      $('textarea').val(localStorage.getItem('textarea'))
+    }
+  } else {
+    $('a.btn').attr('href', auth())
   }
 })
