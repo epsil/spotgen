@@ -83305,11 +83305,13 @@ function clickHandler () {
 }
 
 function clickHandler2 () {
+  var urlParams = new URLSearchParams(window.location.search);
   alert('test')
-  if (true) {
-    return true
-  } else {
+  if (urlParams.has('code')) {
+    alert(urlParams.get('code'))
     return false
+  } else {
+    return true
   }
 }
 
