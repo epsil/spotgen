@@ -74787,16 +74787,17 @@ module.exports = toString;
 
 },{"./_baseToString":470}],559:[function(require,module,exports){
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
-var spotify = require('./spotify')
 
 /**
  * Create album entry.
  * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The album to search for.
  * @param {string} [response] - JSON album object.
  */
-function Album (entry, limit) {
+function Album (spotify, entry, limit) {
   /**
    * Album response.
    *
@@ -74826,6 +74827,11 @@ function Album (entry, limit) {
    */
   this.fetchTracks = true
 
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
+
   this.setLimit(limit)
 }
 
@@ -74837,7 +74843,7 @@ function Album (entry, limit) {
 Album.prototype.createQueue = function () {
   var self = this
   var tracks = this.albumResponse.tracks.items.map(function (item) {
-    var track = new Track(self.entry)
+    var track = new Track(self.spotify, self.entry)
     track.setResponse(item)
     track.setAlbum(self.title())
     return track
@@ -74872,7 +74878,7 @@ Album.prototype.dispatch = function () {
  */
 Album.prototype.fetchAlbum = function () {
   var self = this
-  return spotify.getAlbum(this.id()).then(function (response) {
+  return this.spotify.getAlbum(this.id()).then(function (response) {
     self.albumResponse = response
     return self
   })
@@ -74927,7 +74933,7 @@ Album.prototype.searchForAlbum = function () {
   } else if (this.albumResponse) {
     return Promise.resolve(this.albumResponse)
   } else {
-    return spotify.searchForAlbum(this.entry).then(function (result) {
+    return this.spotify.searchForAlbum(this.entry).then(function (result) {
       self.searchResponse = result
       return self
     }).catch(function () {
@@ -75024,15 +75030,16 @@ module.exports = Album
 },{"./queue":567,"./spotify":570,"./track":572}],560:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var sort = require('./sort')
-var spotify = require('./spotify')
 
 /**
  * Artist entry.
  * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The artist to search for.
  */
-function Artist (entry, limit) {
+function Artist (spotify, entry, limit) {
   /**
    * Artist response.
    *
@@ -75064,6 +75071,11 @@ function Artist (entry, limit) {
    */
   this.searchResponse = null
 
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
+
   this.entry = entry.trim()
 
   this.setLimit(limit)
@@ -75077,7 +75089,7 @@ function Artist (entry, limit) {
 Artist.prototype.createQueue = function () {
   var self = this
   var albums = self.albumsResponse.items.map(function (item) {
-    var album = new Album(self.entry)
+    var album = new Album(self.spotify, self.entry)
     album.setResponse(item)
     return album
   })
@@ -75115,7 +75127,7 @@ Artist.prototype.dispatch = function () {
  */
 Artist.prototype.fetchAlbums = function () {
   var self = this
-  return spotify.getAlbumsByArtist(this.id()).then(function (result) {
+  return this.spotify.getAlbumsByArtist(this.id()).then(function (result) {
     self.albumsResponse = result
     return self
   })
@@ -75151,7 +75163,7 @@ Artist.prototype.searchForArtist = function () {
   } else if (this.artistResponse) {
     return Promise.resolve(this.artistResponse)
   } else {
-    return spotify.searchForArtist(this.entry).then(function (result) {
+    return this.spotify.searchForArtist(this.entry).then(function (result) {
       self.searchResponse = result
       return self
     })
@@ -75246,13 +75258,15 @@ var eol = require('eol')
 var Album = require('./album')
 var CSV = require('./csv')
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
 
 /**
  * Create a playlist generator.
  * @constructor
+ * @param {SpotifyRequestHandler} [spotify] - Spotify request handler.
  */
-function Generator () {
+function Generator (spotify) {
   /**
    * Playlist alternating.
    */
@@ -75287,6 +75301,11 @@ function Generator () {
    * Whether to remove duplicates.
    */
   this.unique = true
+
+  /**
+   * Whether to remove duplicates.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
 }
 
 /**
@@ -75456,7 +75475,7 @@ Generator.prototype.toString = function () {
 
 module.exports = Generator
 
-},{"./album":559,"./csv":561,"./queue":567,"./track":572,"eol":298}],564:[function(require,module,exports){
+},{"./album":559,"./csv":561,"./queue":567,"./spotify":570,"./track":572,"eol":298}],564:[function(require,module,exports){
 var request = require('request')
 
 /**
@@ -75593,6 +75612,7 @@ var Generator = require('./generator')
 var Top = require('./top')
 var Track = require('./track')
 var Similar = require('./similar')
+var SpotifyRequestHandler = require('./spotify')
 
 /**
  * Parse a string and create a playlist generator.
@@ -75602,8 +75622,9 @@ var Similar = require('./similar')
  * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
  * @return {Generator} A playlist generator.
  */
-function Parser (str) {
-  var generator = new Generator()
+function Parser (str, token) {
+  var spotify = new SpotifyRequestHandler(token)
+  var generator = new Generator(spotify)
   str = str.trim()
   if (str) {
     var lines = eol.split(str)
@@ -75634,7 +75655,7 @@ function Parser (str) {
         var albumId = albumMatch[2]
         var albumLimit = parseInt(albumMatch[3])
         var albumEntry = albumMatch[4]
-        var album = new Album(albumEntry)
+        var album = new Album(spotify, albumEntry)
         album.setLimit(albumLimit)
         if (albumId) {
           album.fetchTracks = false
@@ -75644,27 +75665,27 @@ function Parser (str) {
         var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
         var artistLimit = parseInt(artistMatch[1])
         var artistEntry = artistMatch[2]
-        var artist = new Artist(artistEntry)
+        var artist = new Artist(spotify, artistEntry)
         artist.setLimit(artistLimit)
         generator.entries.add(artist)
       } else if (line.match(/^#TOP[0-9]*\s+/i)) {
         var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
         var topLimit = parseInt(topMatch[1])
         var topEntry = topMatch[2]
-        var top = new Top(topEntry)
+        var top = new Top(spotify, topEntry)
         top.setLimit(topLimit)
         generator.entries.add(top)
       } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
         var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
         var similarLimit = parseInt(similarMatch[1])
         var similarEntry = similarMatch[2]
-        var similar = new Similar(similarEntry)
+        var similar = new Similar(spotify, similarEntry)
         similar.setLimit(similarLimit)
         generator.entries.add(similar)
       } else if (line.match(/^#EXTINF/i)) {
         var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
         if (match) {
-          generator.entries.add(new Track(match[1]))
+          generator.entries.add(new Track(spotify, match[1]))
           if (lines.length > 0 &&
               !lines[0].match(/^#/)) {
             lines.shift()
@@ -75673,10 +75694,10 @@ function Parser (str) {
       } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
         var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
         var uri = uriMatch[0]
-        var uriTrack = new Track(uri)
+        var uriTrack = new Track(spotify, uri)
         generator.entries.add(uriTrack)
       } else if (line) {
-        var track = new Track(line)
+        var track = new Track(spotify, line)
         generator.entries.add(track)
       }
     }
@@ -75686,7 +75707,7 @@ function Parser (str) {
 
 module.exports = Parser
 
-},{"./album":559,"./artist":560,"./generator":563,"./similar":568,"./top":571,"./track":572,"eol":298}],567:[function(require,module,exports){
+},{"./album":559,"./artist":560,"./generator":563,"./similar":568,"./spotify":570,"./top":571,"./track":572,"eol":298}],567:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -76066,15 +76087,15 @@ module.exports = Queue
 },{"./sort":569}],568:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var Top = require('./top')
-var spotify = require('./spotify')
 
 /**
  * Similar entry.
  * @constructor
  * @param {string} entry - The artist to search for.
  */
-function Similar (entry) {
+function Similar (spotify, entry) {
   /**
    * Artist query.
    */
@@ -76102,6 +76123,11 @@ function Similar (entry) {
    */
   this.trackLimit = 5
 
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
+
   this.entry = entry.trim()
 }
 
@@ -76112,7 +76138,7 @@ function Similar (entry) {
 Similar.prototype.createQueue = function () {
   var self = this
   var artists = self.relatedArtistsResponse.artists.map(function (item) {
-    var top = new Top(self.entry)
+    var top = new Top(self.spotify, self.entry)
     top.setLimit(self.trackLimit)
     top.setID(item.id)
     return top
@@ -76155,7 +76181,7 @@ Similar.prototype.id = function () {
  * @return {Promise} A Promise to perform the action.
  */
 Similar.prototype.searchForArtist = function () {
-  this.artist = new Artist(this.entry)
+  this.artist = new Artist(this.spotify, this.entry)
   return this.artist.searchForArtist()
 }
 
@@ -76165,7 +76191,7 @@ Similar.prototype.searchForArtist = function () {
  */
 Similar.prototype.searchForRelatedArtists = function () {
   var self = this
-  return spotify.searchForRelatedArtists(this.id()).then(function (result) {
+  return this.spotify.searchForRelatedArtists(this.id()).then(function (result) {
     self.relatedArtistsResponse = result
     return self
   })
@@ -76402,8 +76428,29 @@ var defaults = require('./defaults')
 var http = require('./http')
 var sort = require('./sort')
 
-var spotify = {}
-var token = ''
+/**
+ * Create a Spotify request handler.
+ * @constructor
+ * @param {string} [token] - Access token.
+ * @param {string} [clientId] - Client ID.
+ * @param {string} [clientSecret] - Client secret key.
+ */
+function SpotifyRequestHandler (token, clientId, clientSecret) {
+  /**
+   * Access token.
+   */
+  this.token = token || ''
+
+  /**
+   * Client ID.
+   */
+  this.clientId = clientId || defaults.id
+
+  /**
+   * Client secret key.
+   */
+  this.clientSecret = clientSecret || defaults.key
+}
 
 /**
  * Authenticate with Clients Credentials Flow.
@@ -76420,7 +76467,9 @@ var token = ''
  * @param {string} [grantType] - Grant type, default "client_credentials".
  * @return {Promise | JSON} An access token response.
  */
-spotify.auth = function (clientId, clientSecret, grantType) {
+SpotifyRequestHandler.prototype.auth = function (clientId, clientSecret, grantType) {
+  clientId = clientId || this.clientId
+  clientSecret = clientSecret || this.clientSecret
   grantType = grantType || 'client_credentials'
   var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
   var uri = 'https://accounts.spotify.com/api/token'
@@ -76441,13 +76490,13 @@ spotify.auth = function (clientId, clientSecret, grantType) {
  * @return {Promise | string} A new bearer access token,
  * or the empty string if not available.
  */
-spotify.refreshToken = function () {
-  return spotify.auth(defaults.id, defaults.key).then(function (response) {
+SpotifyRequestHandler.prototype.refreshToken = function () {
+  return this.auth().then(function (response) {
     if (response &&
         response.access_token) {
-      token = response.access_token
+      this.token = response.access_token
     }
-    return token
+    return this.token
   })
 }
 
@@ -76457,11 +76506,11 @@ spotify.refreshToken = function () {
  * @return {Promise | string} A bearer access token,
  * or the empty string if not available.
  */
-spotify.getToken = function () {
-  if (token) {
-    return Promise.resolve(token)
+SpotifyRequestHandler.prototype.getToken = function () {
+  if (this.token) {
+    return Promise.resolve(this.token)
   } else {
-    return spotify.refreshToken()
+    return this.refreshToken()
   }
 }
 
@@ -76473,10 +76522,10 @@ spotify.getToken = function () {
  * @param {string} id - Album ID.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.getAlbum = function (id) {
+SpotifyRequestHandler.prototype.getAlbum = function (id) {
   var uri = 'https://api.spotify.com/v1/albums/'
   uri += encodeURIComponent(id)
-  return spotify.request(uri).then(function (response) {
+  return this.request(uri).then(function (response) {
     if (response &&
         response.id) {
       return Promise.resolve(response)
@@ -76494,12 +76543,13 @@ spotify.getAlbum = function (id) {
  * @param {string} id - Artist ID.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.getAlbumsByArtist = function (id) {
+SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
+  var self = this
   var uri = 'https://api.spotify.com/v1/artists/'
   uri += encodeURIComponent(id) + '/albums?limit=50'
 
   function getAlbums (uri, result) {
-    return spotify.request(uri).then(function (response) {
+    return self.request(uri).then(function (response) {
       if (!(response &&
             response.items)) {
         return Promise.reject(response)
@@ -76536,10 +76586,10 @@ spotify.getAlbumsByArtist = function (id) {
  * @param {string} id - Artist ID.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.getTopTracks = function (id) {
+SpotifyRequestHandler.prototype.getTopTracks = function (id) {
   var uri = 'https://api.spotify.com/v1/artists/'
   uri += encodeURIComponent(id) + '/top-tracks?country=US'
-  return spotify.request(uri).then(function (response) {
+  return this.request(uri).then(function (response) {
     if (response &&
         response.tracks) {
       sort(response.tracks, sort.popularity)
@@ -76558,10 +76608,10 @@ spotify.getTopTracks = function (id) {
  * @param {string} id - Track ID.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.getTrack = function (id) {
+SpotifyRequestHandler.prototype.getTrack = function (id) {
   var uri = 'https://api.spotify.com/v1/tracks/'
   uri += encodeURIComponent(id)
-  return spotify.request(uri)
+  return this.request(uri)
 }
 
 /**
@@ -76570,15 +76620,16 @@ spotify.getTrack = function (id) {
  * @param {Object} [options] - Request options.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.request = function (uri, options) {
+SpotifyRequestHandler.prototype.request = function (uri, options) {
+  var self = this
   options = options || {}
   console.log(uri)
-  return spotify.getToken().then(function (token) {
+  return this.getToken().then(function (token) {
     options.headers = options.headers || {}
     options.headers.Authorization = 'Bearer ' + token
     return http.json(uri, options)
   }).catch(function (status) {
-    return spotify.refreshToken().then(function (token) {
+    return self.refreshToken().then(function (token) {
       options.headers.Authorization = 'Bearer ' + token
       return http.json(uri, options)
     })
@@ -76593,10 +76644,10 @@ spotify.request = function (uri, options) {
  * @param {string} artist - The artist to search for.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.searchForArtist = function (artist) {
+SpotifyRequestHandler.prototype.searchForArtist = function (artist) {
   var uri = 'https://api.spotify.com/v1/search?type=artist&q='
   uri += encodeURIComponent(artist)
-  return spotify.request(uri).then(function (response) {
+  return this.request(uri).then(function (response) {
     if (response &&
         response.artists &&
         response.artists.items[0] &&
@@ -76618,10 +76669,10 @@ spotify.searchForArtist = function (artist) {
  * @param {string} album - The album to search for.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.searchForAlbum = function (album) {
+SpotifyRequestHandler.prototype.searchForAlbum = function (album) {
   var uri = 'https://api.spotify.com/v1/search?type=album&q='
   uri += encodeURIComponent(album)
-  return spotify.request(uri).then(function (response) {
+  return this.request(uri).then(function (response) {
     if (response &&
         response.albums &&
         response.albums.items[0] &&
@@ -76643,10 +76694,10 @@ spotify.searchForAlbum = function (album) {
  * @param {string} id - The album ID.
  * @return {Promise | JSON} A JSON response.
  */
-spotify.searchForRelatedArtists = function (id) {
+SpotifyRequestHandler.prototype.searchForRelatedArtists = function (id) {
   var uri = 'https://api.spotify.com/v1/artists/'
   uri += encodeURIComponent(id) + '/related-artists'
-  return spotify.request(uri).then(function (response) {
+  return this.request(uri).then(function (response) {
     if (response &&
         response.artists) {
       return Promise.resolve(response)
@@ -76664,10 +76715,10 @@ spotify.searchForRelatedArtists = function (id) {
  * @param {string} track - The track to search for.
  * @return {Promise | JSON} JSON response.
  */
-spotify.searchForTrack = function (track) {
+SpotifyRequestHandler.prototype.searchForTrack = function (track) {
   var uri = 'https://api.spotify.com/v1/search?type=track&limit=50&q='
   uri += encodeURIComponent(track)
-  return spotify.request(uri).then(function (response) {
+  return this.request(uri).then(function (response) {
     if (response.tracks &&
         response.tracks.items[0] &&
         response.tracks.items[0].uri) {
@@ -76682,20 +76733,20 @@ spotify.searchForTrack = function (track) {
   })
 }
 
-module.exports = spotify
+module.exports = SpotifyRequestHandler
 
 },{"./defaults":562,"./http":564,"./sort":569,"base-64":1}],571:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
-var spotify = require('./spotify')
 
 /**
  * Top entry.
  * @constructor
  * @param {string} entry - The artist to search for.
  */
-function Top (entry) {
+function Top (spotify, entry) {
   /**
    * Artist query.
    */
@@ -76723,6 +76774,11 @@ function Top (entry) {
    */
   this.topTracksResponse = null
 
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
+
   this.entry = entry.trim()
 }
 
@@ -76734,7 +76790,7 @@ function Top (entry) {
 Top.prototype.createQueue = function () {
   var self = this
   var tracks = self.topTracksResponse.tracks.map(function (item) {
-    var track = new Track(self.entry)
+    var track = new Track(this.spotify, self.entry)
     track.setResponse(item)
     return track
   })
@@ -76764,7 +76820,7 @@ Top.prototype.dispatch = function () {
  */
 Top.prototype.fetchTopTracks = function () {
   var self = this
-  return spotify.getTopTracks(this.getID()).then(function (result) {
+  return this.spotify.getTopTracks(this.getID()).then(function (result) {
     self.topTracksResponse = result
     return self
   })
@@ -76788,7 +76844,7 @@ Top.prototype.searchForArtist = function () {
     return Promise.resolve(this.getID())
   } else {
     var self = this
-    this.artist = new Artist(this.entry)
+    this.artist = new Artist(this.spotify, this.entry)
     return this.artist.searchForArtist().then(function () {
       self.setID(self.artist.id())
     })
@@ -76818,17 +76874,18 @@ module.exports = Top
 },{"./artist":560,"./queue":567,"./spotify":570,"./track":572}],572:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
-var spotify = require('./spotify')
+var SpotifyRequestHandler = require('./spotify')
 
 /**
  * Create track entry.
  * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The track to search for.
  * @param {JSON} [response] - Track response object.
  * Should have the property `popularity`.
  * @param {JSON} [responseSimple] - Simplified track response object.
  */
-function Track (entry) {
+function Track (spotify, entry) {
   /**
    * Album name.
    */
@@ -76857,6 +76914,11 @@ function Track (entry) {
    * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-simplified).
    */
   this.responseSimple = null
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
 }
 
 /**
@@ -76987,7 +77049,7 @@ Track.prototype.fetchLastfm = function (user) {
  */
 Track.prototype.fetchTrack = function () {
   var self = this
-  return spotify.getTrack(this.id()).then(function (result) {
+  return this.spotify.getTrack(this.id()).then(function (result) {
     self.response = result
     return self
   })
@@ -77152,7 +77214,7 @@ Track.prototype.refresh = function () {
  */
 Track.prototype.searchForTrack = function () {
   var self = this
-  return spotify.searchForTrack(this.entry).then(function (result) {
+  return this.spotify.searchForTrack(this.entry).then(function (result) {
     self.response = result.tracks.items[0]
     return self
   })
@@ -77361,15 +77423,15 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should add an entry', function () {
-      var entry = new Track('test')
+      var entry = new Track(null, 'test')
       var queue = new Queue()
       queue.add(entry)
       queue.should.have.deep.property('queue[0].entry', 'test')
     })
 
     it('should store entries in the order they are added', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
       var queue = new Queue()
       queue.add(foo)
       queue.add(bar)
@@ -77378,9 +77440,9 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should remove duplicates', function () {
-      var foo1 = new Track('foo')
-      var foo2 = new Track('foo')
-      var bar = new Track('bar')
+      var foo1 = new Track(null, 'foo')
+      var foo2 = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
       var queue = new Queue()
       queue.add(foo1)
       queue.add(foo2)
@@ -77392,8 +77454,8 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should be sortable', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
       var queue = new Queue()
       queue.add(foo)
       queue.add(bar)
@@ -77403,8 +77465,8 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should be sortable with compare function', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
       var queue = new Queue()
       queue.add(foo)
       queue.add(bar)
@@ -77416,9 +77478,9 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should concatenate queues and preserve order', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
-      var baz = new Track('baz')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
+      var baz = new Track(null, 'baz')
       var queue1 = new Queue()
       var queue2 = new Queue()
       queue1.add(foo)
@@ -77431,9 +77493,9 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should group on a property', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
-      var baz = new Track('baz')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
+      var baz = new Track(null, 'baz')
       foo.group = '1'
       bar.group = '2'
       baz.group = '1'
@@ -77452,24 +77514,24 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Track', function () {
     it('should create an empty track', function () {
-      var track = new Track('')
+      var track = new Track(null, '')
       track.entry.should.eql('')
     })
 
     it('should create a single track', function () {
-      var track = new Track('test')
+      var track = new Track(null, 'test')
       track.entry.should.eql('test')
     })
 
     it('should dispatch a single track', function () {
-      var track = new Track('test')
+      var track = new Track(null, 'test')
       track.entry.should.eql('test')
       var promise = track.dispatch()
       return promise.should.eventually.be.an.instanceof(Track)
     })
 
     it('should not confuse album title with track title', function () {
-      var track = new Track('Off the Wall - Michael Jackson')
+      var track = new Track(null, 'Off the Wall - Michael Jackson')
       return track.dispatch().then(function (track) {
         track.toString().should.eql('Off the Wall - Michael Jackson')
       })
@@ -77546,17 +77608,17 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Album', function () {
     it('should create an empty album', function () {
-      var album = new Album('')
+      var album = new Album(null, '')
       album.entry.should.eql('')
     })
 
     it('should create a single album', function () {
-      var album = new Album('test')
+      var album = new Album(null, 'test')
       album.entry.should.eql('test')
     })
 
     it('should dispatch a single album', function () {
-      var album = new Album('test')
+      var album = new Album(null, 'test')
       album.entry.should.eql('test')
       var promise = album.dispatch()
       return promise.should.eventually.be.instanceof(Queue)
@@ -77565,17 +77627,17 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Artist', function () {
     it('should create an empty artist', function () {
-      var artist = new Artist('')
+      var artist = new Artist(null, '')
       artist.entry.should.eql('')
     })
 
     it('should create a single artist', function () {
-      var artist = new Artist('test')
+      var artist = new Artist(null, 'test')
       artist.entry.should.eql('test')
     })
 
     it('should fetch an artist\'s tracks', function () {
-      var artist = new Artist('test')
+      var artist = new Artist(null, 'test')
       artist.entry.should.eql('test')
       var promise = artist.dispatch()
       return promise.should.eventually.be.an.instanceof(Queue)

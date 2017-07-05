@@ -1,14 +1,15 @@
 var Album = require('./album')
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var sort = require('./sort')
-var spotify = require('./spotify')
 
 /**
  * Artist entry.
  * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The artist to search for.
  */
-function Artist (entry, limit) {
+function Artist (spotify, entry, limit) {
   /**
    * Artist response.
    *
@@ -40,6 +41,11 @@ function Artist (entry, limit) {
    */
   this.searchResponse = null
 
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
+
   this.entry = entry.trim()
 
   this.setLimit(limit)
@@ -53,7 +59,7 @@ function Artist (entry, limit) {
 Artist.prototype.createQueue = function () {
   var self = this
   var albums = self.albumsResponse.items.map(function (item) {
-    var album = new Album(self.entry)
+    var album = new Album(self.spotify, self.entry)
     album.setResponse(item)
     return album
   })
@@ -91,7 +97,7 @@ Artist.prototype.dispatch = function () {
  */
 Artist.prototype.fetchAlbums = function () {
   var self = this
-  return spotify.getAlbumsByArtist(this.id()).then(function (result) {
+  return this.spotify.getAlbumsByArtist(this.id()).then(function (result) {
     self.albumsResponse = result
     return self
   })
@@ -127,7 +133,7 @@ Artist.prototype.searchForArtist = function () {
   } else if (this.artistResponse) {
     return Promise.resolve(this.artistResponse)
   } else {
-    return spotify.searchForArtist(this.entry).then(function (result) {
+    return this.spotify.searchForArtist(this.entry).then(function (result) {
       self.searchResponse = result
       return self
     })

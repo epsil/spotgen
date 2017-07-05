@@ -21,7 +21,7 @@ function insertPlaylist () {
     $('textarea').val(str)
     $('textarea').focus()
     setTimeout(function () {
-      $('button').mouseover()
+      $('a.btn').mouseover()
     }, 1000)
   }
   if ($('html').scrollTop() === 0) {
@@ -33,7 +33,7 @@ function insertPlaylist () {
 }
 
 function resetButton () {
-  var button = $('button')
+  var button = $('a.btn')
   button.text('Create Playlist')
   button.removeClass('disabled')
   button.removeClass('active')
@@ -53,10 +53,10 @@ function auth (clientId, uri) {
   return url
 }
 
-function clickHandler () {
+function generate () {
   var textarea = $('textarea')
-  var button = $('button')
-  var generator = Parser(textarea.val())
+  var button = $('a.btn')
+  var generator = Parser(textarea.val(), token())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')
@@ -94,8 +94,9 @@ function hasToken () {
   return token() !== ''
 }
 
-function clickHandler2 () {
+function clickHandler () {
   if (hasToken()) {
+    generate()
     return false
   } else {
     localStorage.setItem('textarea', $('textarea').val())
@@ -104,14 +105,14 @@ function clickHandler2 () {
 }
 
 $(function () {
-  $('form').on('submit', clickHandler)
   $('.thumbnail a').click(insertPlaylist)
-  $('a.btn').click(clickHandler2)
+  $('a.btn').click(clickHandler)
   $('a.btn').tooltip()
   $('textarea').focus()
   if (hasToken()) {
     if (localStorage.getItem('textarea')) {
       $('textarea').val(localStorage.getItem('textarea'))
+      generate()
     }
   } else {
     $('a.btn').attr('href', auth())

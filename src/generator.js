@@ -2,13 +2,15 @@ var eol = require('eol')
 var Album = require('./album')
 var CSV = require('./csv')
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
 
 /**
  * Create a playlist generator.
  * @constructor
+ * @param {SpotifyRequestHandler} [spotify] - Spotify request handler.
  */
-function Generator () {
+function Generator (spotify) {
   /**
    * Playlist alternating.
    */
@@ -43,6 +45,11 @@ function Generator () {
    * Whether to remove duplicates.
    */
   this.unique = true
+
+  /**
+   * Whether to remove duplicates.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
 }
 
 /**

@@ -1,16 +1,17 @@
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
-var spotify = require('./spotify')
+var SpotifyRequestHandler = require('./spotify')
 
 /**
  * Create track entry.
  * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The track to search for.
  * @param {JSON} [response] - Track response object.
  * Should have the property `popularity`.
  * @param {JSON} [responseSimple] - Simplified track response object.
  */
-function Track (entry) {
+function Track (spotify, entry) {
   /**
    * Album name.
    */
@@ -39,6 +40,11 @@ function Track (entry) {
    * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-simplified).
    */
   this.responseSimple = null
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
 }
 
 /**
@@ -169,7 +175,7 @@ Track.prototype.fetchLastfm = function (user) {
  */
 Track.prototype.fetchTrack = function () {
   var self = this
-  return spotify.getTrack(this.id()).then(function (result) {
+  return this.spotify.getTrack(this.id()).then(function (result) {
     self.response = result
     return self
   })
@@ -334,7 +340,7 @@ Track.prototype.refresh = function () {
  */
 Track.prototype.searchForTrack = function () {
   var self = this
-  return spotify.searchForTrack(this.entry).then(function (result) {
+  return this.spotify.searchForTrack(this.entry).then(function (result) {
     self.response = result.tracks.items[0]
     return self
   })

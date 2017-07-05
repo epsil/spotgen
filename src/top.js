@@ -1,14 +1,14 @@
 var Artist = require('./artist')
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
-var spotify = require('./spotify')
 
 /**
  * Top entry.
  * @constructor
  * @param {string} entry - The artist to search for.
  */
-function Top (entry) {
+function Top (spotify, entry) {
   /**
    * Artist query.
    */
@@ -36,6 +36,11 @@ function Top (entry) {
    */
   this.topTracksResponse = null
 
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
+
   this.entry = entry.trim()
 }
 
@@ -47,7 +52,7 @@ function Top (entry) {
 Top.prototype.createQueue = function () {
   var self = this
   var tracks = self.topTracksResponse.tracks.map(function (item) {
-    var track = new Track(self.entry)
+    var track = new Track(this.spotify, self.entry)
     track.setResponse(item)
     return track
   })
@@ -77,7 +82,7 @@ Top.prototype.dispatch = function () {
  */
 Top.prototype.fetchTopTracks = function () {
   var self = this
-  return spotify.getTopTracks(this.getID()).then(function (result) {
+  return this.spotify.getTopTracks(this.getID()).then(function (result) {
     self.topTracksResponse = result
     return self
   })
@@ -101,7 +106,7 @@ Top.prototype.searchForArtist = function () {
     return Promise.resolve(this.getID())
   } else {
     var self = this
-    this.artist = new Artist(this.entry)
+    this.artist = new Artist(this.spotify, this.entry)
     return this.artist.searchForArtist().then(function () {
       self.setID(self.artist.id())
     })

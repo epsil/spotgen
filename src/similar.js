@@ -1,14 +1,14 @@
 var Artist = require('./artist')
 var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
 var Top = require('./top')
-var spotify = require('./spotify')
 
 /**
  * Similar entry.
  * @constructor
  * @param {string} entry - The artist to search for.
  */
-function Similar (entry) {
+function Similar (spotify, entry) {
   /**
    * Artist query.
    */
@@ -36,6 +36,11 @@ function Similar (entry) {
    */
   this.trackLimit = 5
 
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
+
   this.entry = entry.trim()
 }
 
@@ -46,7 +51,7 @@ function Similar (entry) {
 Similar.prototype.createQueue = function () {
   var self = this
   var artists = self.relatedArtistsResponse.artists.map(function (item) {
-    var top = new Top(self.entry)
+    var top = new Top(self.spotify, self.entry)
     top.setLimit(self.trackLimit)
     top.setID(item.id)
     return top
@@ -89,7 +94,7 @@ Similar.prototype.id = function () {
  * @return {Promise} A Promise to perform the action.
  */
 Similar.prototype.searchForArtist = function () {
-  this.artist = new Artist(this.entry)
+  this.artist = new Artist(this.spotify, this.entry)
   return this.artist.searchForArtist()
 }
 
@@ -99,7 +104,7 @@ Similar.prototype.searchForArtist = function () {
  */
 Similar.prototype.searchForRelatedArtists = function () {
   var self = this
-  return spotify.searchForRelatedArtists(this.id()).then(function (result) {
+  return this.spotify.searchForRelatedArtists(this.id()).then(function (result) {
     self.relatedArtistsResponse = result
     return self
   })

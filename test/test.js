@@ -62,15 +62,15 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should add an entry', function () {
-      var entry = new Track('test')
+      var entry = new Track(null, 'test')
       var queue = new Queue()
       queue.add(entry)
       queue.should.have.deep.property('queue[0].entry', 'test')
     })
 
     it('should store entries in the order they are added', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
       var queue = new Queue()
       queue.add(foo)
       queue.add(bar)
@@ -79,9 +79,9 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should remove duplicates', function () {
-      var foo1 = new Track('foo')
-      var foo2 = new Track('foo')
-      var bar = new Track('bar')
+      var foo1 = new Track(null, 'foo')
+      var foo2 = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
       var queue = new Queue()
       queue.add(foo1)
       queue.add(foo2)
@@ -93,8 +93,8 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should be sortable', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
       var queue = new Queue()
       queue.add(foo)
       queue.add(bar)
@@ -104,8 +104,8 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should be sortable with compare function', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
       var queue = new Queue()
       queue.add(foo)
       queue.add(bar)
@@ -117,9 +117,9 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should concatenate queues and preserve order', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
-      var baz = new Track('baz')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
+      var baz = new Track(null, 'baz')
       var queue1 = new Queue()
       var queue2 = new Queue()
       queue1.add(foo)
@@ -132,9 +132,9 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should group on a property', function () {
-      var foo = new Track('foo')
-      var bar = new Track('bar')
-      var baz = new Track('baz')
+      var foo = new Track(null, 'foo')
+      var bar = new Track(null, 'bar')
+      var baz = new Track(null, 'baz')
       foo.group = '1'
       bar.group = '2'
       baz.group = '1'
@@ -153,24 +153,24 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Track', function () {
     it('should create an empty track', function () {
-      var track = new Track('')
+      var track = new Track(null, '')
       track.entry.should.eql('')
     })
 
     it('should create a single track', function () {
-      var track = new Track('test')
+      var track = new Track(null, 'test')
       track.entry.should.eql('test')
     })
 
     it('should dispatch a single track', function () {
-      var track = new Track('test')
+      var track = new Track(null, 'test')
       track.entry.should.eql('test')
       var promise = track.dispatch()
       return promise.should.eventually.be.an.instanceof(Track)
     })
 
     it('should not confuse album title with track title', function () {
-      var track = new Track('Off the Wall - Michael Jackson')
+      var track = new Track(null, 'Off the Wall - Michael Jackson')
       return track.dispatch().then(function (track) {
         track.toString().should.eql('Off the Wall - Michael Jackson')
       })
@@ -247,17 +247,17 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Album', function () {
     it('should create an empty album', function () {
-      var album = new Album('')
+      var album = new Album(null, '')
       album.entry.should.eql('')
     })
 
     it('should create a single album', function () {
-      var album = new Album('test')
+      var album = new Album(null, 'test')
       album.entry.should.eql('test')
     })
 
     it('should dispatch a single album', function () {
-      var album = new Album('test')
+      var album = new Album(null, 'test')
       album.entry.should.eql('test')
       var promise = album.dispatch()
       return promise.should.eventually.be.instanceof(Queue)
@@ -266,17 +266,17 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Artist', function () {
     it('should create an empty artist', function () {
-      var artist = new Artist('')
+      var artist = new Artist(null, '')
       artist.entry.should.eql('')
     })
 
     it('should create a single artist', function () {
-      var artist = new Artist('test')
+      var artist = new Artist(null, 'test')
       artist.entry.should.eql('test')
     })
 
     it('should fetch an artist\'s tracks', function () {
-      var artist = new Artist('test')
+      var artist = new Artist(null, 'test')
       artist.entry.should.eql('test')
       var promise = artist.dispatch()
       return promise.should.eventually.be.an.instanceof(Queue)
