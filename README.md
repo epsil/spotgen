@@ -27,8 +27,6 @@ To import the playlist into Spotify:
 2.  **Create a new playlist in Spotify:** Choose *File -> New Playlist* (<kbd>Ctrl</kbd> + <kbd>N</kbd>).
 3.  **Paste into the playlist:** Select the playlist and choose *Edit -> Paste* (<kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
-No login is necessary.
-
 ### Top tracks
 
 To retrieve the top 10 tracks of an artist, pass the following to the generator:
