@@ -1,4 +1,4 @@
-/* global jQuery:true, localStorage, URLSearchParams, alert */
+/* global jQuery:true, localStorage, URLSearchParams */
 /* exported jQuery */
 var $ = require('jquery')
 jQuery = $
