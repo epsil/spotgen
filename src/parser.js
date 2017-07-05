@@ -1,3 +1,4 @@
+var defaults = require('./defaults')
 var eol = require('eol')
 var Artist = require('./artist')
 var Album = require('./album')
@@ -16,7 +17,7 @@ var SpotifyRequestHandler = require('./spotify')
  * @return {Generator} A playlist generator.
  */
 function Parser (str, token) {
-  var spotify = new SpotifyRequestHandler(token)
+  var spotify = new SpotifyRequestHandler(defaults.id, defaults.key, token)
   var generator = new Generator(spotify)
   str = str.trim()
   if (str) {

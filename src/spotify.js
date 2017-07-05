@@ -10,12 +10,7 @@ var sort = require('./sort')
  * @param {string} [clientId] - Client ID.
  * @param {string} [clientSecret] - Client secret key.
  */
-function SpotifyRequestHandler (token, clientId, clientSecret) {
-  /**
-   * Access token.
-   */
-  this.token = token || ''
-
+function SpotifyRequestHandler (clientId, clientSecret, token) {
   /**
    * Client ID.
    */
@@ -25,6 +20,11 @@ function SpotifyRequestHandler (token, clientId, clientSecret) {
    * Client secret key.
    */
   this.clientSecret = clientSecret || defaults.key
+
+  /**
+   * Access token.
+   */
+  this.token = token || ''
 }
 
 /**

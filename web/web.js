@@ -4,7 +4,6 @@ var $ = require('jquery')
 jQuery = $
 require('bootstrap')
 var defaults = require('../src/defaults')
-// var http = require('../src/http')
 var Parser = require('../src/parser')
 
 console.log = function (message) {
@@ -53,6 +52,21 @@ function auth (clientId, uri) {
   return url
 }
 
+function token () {
+  var hash = window.location.hash
+  hash = hash.replace(/^#/, '')
+  var urlParams = new URLSearchParams(hash)
+  if (!urlParams.has('access_token')) {
+    return ''
+  } else {
+    return urlParams.get('access_token')
+  }
+}
+
+function hasToken () {
+  return token() !== ''
+}
+
 function generate () {
   var textarea = $('textarea')
   var button = $('a.btn')
@@ -77,21 +91,6 @@ function generate () {
     }
   })
   return false
-}
-
-function token () {
-  var hash = window.location.hash
-  hash = hash.replace(/^#/, '')
-  var urlParams = new URLSearchParams(hash)
-  if (!urlParams.has('access_token')) {
-    return ''
-  } else {
-    return urlParams.get('access_token')
-  }
-}
-
-function hasToken () {
-  return token() !== ''
 }
 
 function clickHandler () {
