@@ -6,9 +6,9 @@ var sort = require('./sort')
 /**
  * Create a Spotify request handler.
  * @constructor
- * @param {string} [token] - Access token.
  * @param {string} [clientId] - Client ID.
  * @param {string} [clientSecret] - Client secret key.
+ * @param {string} [token] - Access token (if already authenticated).
  */
 function SpotifyRequestHandler (clientId, clientSecret, token) {
   /**
@@ -28,12 +28,14 @@ function SpotifyRequestHandler (clientId, clientSecret, token) {
 }
 
 /**
- * Authenticate with Clients Credentials Flow.
+ * Authenticate with the Clients Credentials Flow.
  *
  * Note: this authentication method only works if the script is run
  * from the command line. It does not work when run from a browser,
  * because Spotify's authentication server rejects cross-site
- * requests.
+ * requests. In that case, authenticate with the Implicit Grant Flow
+ * instead and pass the access token to the `SpotifyRequestHandler`
+ * class via the `token` constructor parameter.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *
