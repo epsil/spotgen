@@ -40,7 +40,7 @@
 
     
 
-    <h4 class="name" id="SpotifyRequestHandler"><span class="type-signature"></span>new SpotifyRequestHandler<span class="signature">(token<span class="signature-attributes">opt</span>, clientId<span class="signature-attributes">opt</span>, clientSecret<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="SpotifyRequestHandler"><span class="type-signature"></span>new SpotifyRequestHandler<span class="signature">(clientId<span class="signature-attributes">opt</span>, clientSecret<span class="signature-attributes">opt</span>, token<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -81,39 +81,6 @@
     </thead>
 
     <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>token</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"><p>Access token.</p></td>
-        </tr>
-
     
 
         <tr>
@@ -178,6 +145,39 @@
             
 
             <td class="description last"><p>Client secret key.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>token</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Access token (if already authenticated).</p></td>
         </tr>
 
     
@@ -306,7 +306,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line22">line 22</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -368,7 +368,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line27">line 27</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -430,7 +430,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line17">line 17</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -457,18 +457,20 @@
 
     
 
-    <h4 class="name" id="auth"><span class="type-signature"></span>auth<span class="signature">(clientId, clientSecret, grantType<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    <h4 class="name" id="clientsCredentialsFlow"><span class="type-signature"></span>clientsCredentialsFlow<span class="signature">(clientId, clientSecret, grantType<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Authenticate with Clients Credentials Flow.</p>
+    <p>Authenticate with the Clients Credentials Flow.</p>
 <p>Note: this authentication method only works if the script is run
 from the command line. It does not work when run from a browser,
 because Spotify's authentication server rejects cross-site
-requests.</p>
+requests. In that case, authenticate with the Implicit Grant Flow
+instead and pass the access token to this class via the <code>token</code>
+constructor parameter.</p>
 <p><a href="https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow">Reference</a>.</p>
 </div>
 
@@ -636,7 +638,7 @@ requests.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line45">line 45</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line47">line 47</a>
     </li></ul></dd>
     
 
@@ -793,7 +795,7 @@ requests.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line100">line 100</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line121">line 121</a>
     </li></ul></dd>
     
 
@@ -950,7 +952,7 @@ requests.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line121">line 121</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line142">line 142</a>
     </li></ul></dd>
     
 
@@ -1057,7 +1059,7 @@ requests.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line84">line 84</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line105">line 105</a>
     </li></ul></dd>
     
 
@@ -1215,7 +1217,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line164">line 164</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line185">line 185</a>
     </li></ul></dd>
     
 
@@ -1372,7 +1374,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line186">line 186</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line207">line 207</a>
     </li></ul></dd>
     
 
@@ -1414,6 +1416,203 @@ or the empty string if not available.</p>
 |
 
 <span class="param-type">JSON</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="implicitGrantFlow"><span class="type-signature"></span>implicitGrantFlow<span class="signature">(uri, clientId<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Authenticate with Implicit Grant Flow.</p>
+<p><a href="https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Reference</a>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>uri</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Redirect URI.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>clientId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Client ID.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line73">line 73</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>An authentication URI.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
 
 
     </dd>
@@ -1479,7 +1678,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line68">line 68</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line89">line 89</a>
     </li></ul></dd>
     
 
@@ -1679,7 +1878,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line198">line 198</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line219">line 219</a>
     </li></ul></dd>
     
 
@@ -1836,7 +2035,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line247">line 247</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line268">line 268</a>
     </li></ul></dd>
     
 
@@ -1993,7 +2192,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line222">line 222</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line243">line 243</a>
     </li></ul></dd>
     
 
@@ -2150,7 +2349,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line272">line 272</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line293">line 293</a>
     </li></ul></dd>
     
 
@@ -2307,7 +2506,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line293">line 293</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line314">line 314</a>
     </li></ul></dd>
     
 
@@ -2380,7 +2579,7 @@ or the empty string if not available.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Jul 05 2017 14:27:55 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Jul 07 2017 20:35:09 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

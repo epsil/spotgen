@@ -75605,6 +75605,7 @@ module.exports = function (key) {
 }
 
 },{"./http":564}],566:[function(require,module,exports){
+var defaults = require('./defaults')
 var eol = require('eol')
 var Artist = require('./artist')
 var Album = require('./album')
@@ -75623,7 +75624,7 @@ var SpotifyRequestHandler = require('./spotify')
  * @return {Generator} A playlist generator.
  */
 function Parser (str, token) {
-  var spotify = new SpotifyRequestHandler(token)
+  var spotify = new SpotifyRequestHandler(defaults.id, defaults.key, token)
   var generator = new Generator(spotify)
   str = str.trim()
   if (str) {
@@ -75707,7 +75708,7 @@ function Parser (str, token) {
 
 module.exports = Parser
 
-},{"./album":559,"./artist":560,"./generator":563,"./similar":568,"./spotify":570,"./top":571,"./track":572,"eol":298}],567:[function(require,module,exports){
+},{"./album":559,"./artist":560,"./defaults":562,"./generator":563,"./similar":568,"./spotify":570,"./top":571,"./track":572,"eol":298}],567:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -76431,16 +76432,11 @@ var sort = require('./sort')
 /**
  * Create a Spotify request handler.
  * @constructor
- * @param {string} [token] - Access token.
  * @param {string} [clientId] - Client ID.
  * @param {string} [clientSecret] - Client secret key.
+ * @param {string} [token] - Access token (if already authenticated).
  */
-function SpotifyRequestHandler (token, clientId, clientSecret) {
-  /**
-   * Access token.
-   */
-  this.token = token || ''
-
+function SpotifyRequestHandler (clientId, clientSecret, token) {
   /**
    * Client ID.
    */
@@ -76450,15 +76446,22 @@ function SpotifyRequestHandler (token, clientId, clientSecret) {
    * Client secret key.
    */
   this.clientSecret = clientSecret || defaults.key
+
+  /**
+   * Access token.
+   */
+  this.token = token || ''
 }
 
 /**
- * Authenticate with Clients Credentials Flow.
+ * Authenticate with the Clients Credentials Flow.
  *
  * Note: this authentication method only works if the script is run
  * from the command line. It does not work when run from a browser,
  * because Spotify's authentication server rejects cross-site
- * requests.
+ * requests. In that case, authenticate with the Implicit Grant Flow
+ * instead and pass the access token to this class via the `token`
+ * constructor parameter.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *
@@ -76467,7 +76470,7 @@ function SpotifyRequestHandler (token, clientId, clientSecret) {
  * @param {string} [grantType] - Grant type, default "client_credentials".
  * @return {Promise | JSON} An access token response.
  */
-SpotifyRequestHandler.prototype.auth = function (clientId, clientSecret, grantType) {
+SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, clientSecret, grantType) {
   clientId = clientId || this.clientId
   clientSecret = clientSecret || this.clientSecret
   grantType = grantType || 'client_credentials'
@@ -76485,13 +76488,32 @@ SpotifyRequestHandler.prototype.auth = function (clientId, clientSecret, grantTy
 }
 
 /**
+ * Authenticate with Implicit Grant Flow.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
+ *
+ * @param {string} uri - Redirect URI.
+ * @param {string} [clientId] - Client ID.
+ * @return {string} An authentication URI.
+ */
+SpotifyRequestHandler.prototype.implicitGrantFlow = function (uri, clientId) {
+  clientId = clientId || this.clientId
+  var url = 'https://accounts.spotify.com/authorize'
+  url += '/' +
+    '?client_id=' + encodeURIComponent(clientId) +
+    '&response_type=' + encodeURIComponent('token') +
+    '&redirect_uri=' + encodeURIComponent(uri)
+  return url
+}
+
+/**
  * Refresh the bearer access token.
  *
  * @return {Promise | string} A new bearer access token,
  * or the empty string if not available.
  */
 SpotifyRequestHandler.prototype.refreshToken = function () {
-  return this.auth().then(function (response) {
+  return this.clientsCredentialsFlow().then(function (response) {
     if (response &&
         response.access_token) {
       this.token = response.access_token

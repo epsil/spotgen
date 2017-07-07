@@ -93,9 +93,10 @@ function clickHandler () {
 }
 
 $(function () {
+  var button = $('a.btn')
   $('.thumbnail a').click(insertPlaylist)
-  $('a.btn').click(clickHandler)
-  $('a.btn').tooltip()
+  button.click(clickHandler)
+  button.tooltip()
   $('textarea').focus()
   if (hasToken()) {
     if (localStorage.getItem('textarea')) {
@@ -105,6 +106,6 @@ $(function () {
   } else {
     var spotify = new SpotifyRequestHandler()
     var url = spotify.implicitGrantFlow(window.location.href)
-    $('a.btn').attr('href', url)
+    button.attr('href', url)
   }
 })

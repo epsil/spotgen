@@ -81519,6 +81519,7 @@ module.exports = function (key) {
 }
 
 },{"./http":540}],542:[function(require,module,exports){
+var defaults = require('./defaults')
 var eol = require('eol')
 var Artist = require('./artist')
 var Album = require('./album')
@@ -81537,7 +81538,7 @@ var SpotifyRequestHandler = require('./spotify')
  * @return {Generator} A playlist generator.
  */
 function Parser (str, token) {
-  var spotify = new SpotifyRequestHandler(token)
+  var spotify = new SpotifyRequestHandler(defaults.id, defaults.key, token)
   var generator = new Generator(spotify)
   str = str.trim()
   if (str) {
@@ -81621,7 +81622,7 @@ function Parser (str, token) {
 
 module.exports = Parser
 
-},{"./album":535,"./artist":536,"./generator":539,"./similar":544,"./spotify":546,"./top":547,"./track":548,"eol":273}],543:[function(require,module,exports){
+},{"./album":535,"./artist":536,"./defaults":538,"./generator":539,"./similar":544,"./spotify":546,"./top":547,"./track":548,"eol":273}],543:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -82345,16 +82346,11 @@ var sort = require('./sort')
 /**
  * Create a Spotify request handler.
  * @constructor
- * @param {string} [token] - Access token.
  * @param {string} [clientId] - Client ID.
  * @param {string} [clientSecret] - Client secret key.
+ * @param {string} [token] - Access token (if already authenticated).
  */
-function SpotifyRequestHandler (token, clientId, clientSecret) {
-  /**
-   * Access token.
-   */
-  this.token = token || ''
-
+function SpotifyRequestHandler (clientId, clientSecret, token) {
   /**
    * Client ID.
    */
@@ -82364,15 +82360,22 @@ function SpotifyRequestHandler (token, clientId, clientSecret) {
    * Client secret key.
    */
   this.clientSecret = clientSecret || defaults.key
+
+  /**
+   * Access token.
+   */
+  this.token = token || ''
 }
 
 /**
- * Authenticate with Clients Credentials Flow.
+ * Authenticate with the Clients Credentials Flow.
  *
  * Note: this authentication method only works if the script is run
  * from the command line. It does not work when run from a browser,
  * because Spotify's authentication server rejects cross-site
- * requests.
+ * requests. In that case, authenticate with the Implicit Grant Flow
+ * instead and pass the access token to this class via the `token`
+ * constructor parameter.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *
@@ -82381,7 +82384,7 @@ function SpotifyRequestHandler (token, clientId, clientSecret) {
  * @param {string} [grantType] - Grant type, default "client_credentials".
  * @return {Promise | JSON} An access token response.
  */
-SpotifyRequestHandler.prototype.auth = function (clientId, clientSecret, grantType) {
+SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, clientSecret, grantType) {
   clientId = clientId || this.clientId
   clientSecret = clientSecret || this.clientSecret
   grantType = grantType || 'client_credentials'
@@ -82399,13 +82402,32 @@ SpotifyRequestHandler.prototype.auth = function (clientId, clientSecret, grantTy
 }
 
 /**
+ * Authenticate with Implicit Grant Flow.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
+ *
+ * @param {string} uri - Redirect URI.
+ * @param {string} [clientId] - Client ID.
+ * @return {string} An authentication URI.
+ */
+SpotifyRequestHandler.prototype.implicitGrantFlow = function (uri, clientId) {
+  clientId = clientId || this.clientId
+  var url = 'https://accounts.spotify.com/authorize'
+  url += '/' +
+    '?client_id=' + encodeURIComponent(clientId) +
+    '&response_type=' + encodeURIComponent('token') +
+    '&redirect_uri=' + encodeURIComponent(uri)
+  return url
+}
+
+/**
  * Refresh the bearer access token.
  *
  * @return {Promise | string} A new bearer access token,
  * or the empty string if not available.
  */
 SpotifyRequestHandler.prototype.refreshToken = function () {
-  return this.auth().then(function (response) {
+  return this.clientsCredentialsFlow().then(function (response) {
     if (response &&
         response.access_token) {
       this.token = response.access_token
@@ -83278,9 +83300,8 @@ module.exports = util
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
-var defaults = require('../src/defaults')
-// var http = require('../src/http')
 var Parser = require('../src/parser')
+var SpotifyRequestHandler = require('../src/spotify')
 
 console.log = function (message) {
   if (typeof message === 'string') {
@@ -83317,15 +83338,19 @@ function resetButton () {
   console.log('')
 }
 
-function auth (clientId, uri) {
-  clientId = clientId || defaults.id
-  uri = uri || window.location.href
-  var url = 'https://accounts.spotify.com/authorize'
-  url += '/' +
-    '?client_id=' + encodeURIComponent(clientId) +
-    '&response_type=' + encodeURIComponent('token') +
-    '&redirect_uri=' + encodeURIComponent(uri)
-  return url
+function token () {
+  var hash = window.location.hash
+  hash = hash.replace(/^#/, '')
+  var urlParams = new URLSearchParams(hash)
+  if (!urlParams.has('access_token')) {
+    return ''
+  } else {
+    return urlParams.get('access_token')
+  }
+}
+
+function hasToken () {
+  return token() !== ''
 }
 
 function generate () {
@@ -83354,21 +83379,6 @@ function generate () {
   return false
 }
 
-function token () {
-  var hash = window.location.hash
-  hash = hash.replace(/^#/, '')
-  var urlParams = new URLSearchParams(hash)
-  if (!urlParams.has('access_token')) {
-    return ''
-  } else {
-    return urlParams.get('access_token')
-  }
-}
-
-function hasToken () {
-  return token() !== ''
-}
-
 function clickHandler () {
   if (hasToken()) {
     generate()
@@ -83380,9 +83390,10 @@ function clickHandler () {
 }
 
 $(function () {
+  var button = $('a.btn')
   $('.thumbnail a').click(insertPlaylist)
-  $('a.btn').click(clickHandler)
-  $('a.btn').tooltip()
+  button.click(clickHandler)
+  button.tooltip()
   $('textarea').focus()
   if (hasToken()) {
     if (localStorage.getItem('textarea')) {
@@ -83390,8 +83401,10 @@ $(function () {
       generate()
     }
   } else {
-    $('a.btn').attr('href', auth())
+    var spotify = new SpotifyRequestHandler()
+    var url = spotify.implicitGrantFlow(window.location.href)
+    button.attr('href', url)
   }
 })
 
-},{"../src/defaults":538,"../src/parser":542,"bootstrap":2,"jquery":274}]},{},[550]);
+},{"../src/parser":542,"../src/spotify":546,"bootstrap":2,"jquery":274}]},{},[550]);
