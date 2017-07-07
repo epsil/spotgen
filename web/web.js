@@ -3,8 +3,8 @@
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
-var defaults = require('../src/defaults')
 var Parser = require('../src/parser')
+var SpotifyRequestHandler = require('../src/spotify')
 
 console.log = function (message) {
   if (typeof message === 'string') {
@@ -39,17 +39,6 @@ function resetButton () {
   button.mouseleave()
   button.tooltip('enable')
   console.log('')
-}
-
-function auth (clientId, uri) {
-  clientId = clientId || defaults.id
-  uri = uri || window.location.href
-  var url = 'https://accounts.spotify.com/authorize'
-  url += '/' +
-    '?client_id=' + encodeURIComponent(clientId) +
-    '&response_type=' + encodeURIComponent('token') +
-    '&redirect_uri=' + encodeURIComponent(uri)
-  return url
 }
 
 function token () {
@@ -114,6 +103,8 @@ $(function () {
       generate()
     }
   } else {
-    $('a.btn').attr('href', auth())
+    var spotify = new SpotifyRequestHandler()
+    var url = spotify.implicitGrantFlow(window.location.href)
+    $('a.btn').attr('href', url)
   }
 })

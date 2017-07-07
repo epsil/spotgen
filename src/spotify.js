@@ -34,8 +34,8 @@ function SpotifyRequestHandler (clientId, clientSecret, token) {
  * from the command line. It does not work when run from a browser,
  * because Spotify's authentication server rejects cross-site
  * requests. In that case, authenticate with the Implicit Grant Flow
- * instead and pass the access token to the `SpotifyRequestHandler`
- * class via the `token` constructor parameter.
+ * instead and pass the access token to this class via the `token`
+ * constructor parameter.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *
@@ -44,7 +44,7 @@ function SpotifyRequestHandler (clientId, clientSecret, token) {
  * @param {string} [grantType] - Grant type, default "client_credentials".
  * @return {Promise | JSON} An access token response.
  */
-SpotifyRequestHandler.prototype.auth = function (clientId, clientSecret, grantType) {
+SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, clientSecret, grantType) {
   clientId = clientId || this.clientId
   clientSecret = clientSecret || this.clientSecret
   grantType = grantType || 'client_credentials'
@@ -62,13 +62,32 @@ SpotifyRequestHandler.prototype.auth = function (clientId, clientSecret, grantTy
 }
 
 /**
+ * Authenticate with Implicit Grant Flow.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
+ *
+ * @param {string} uri - Redirect URI.
+ * @param {string} [clientId] - Client ID.
+ * @return {string} An authentication URI.
+ */
+SpotifyRequestHandler.prototype.implicitGrantFlow = function (uri, clientId) {
+  clientId = clientId || this.clientId
+  var url = 'https://accounts.spotify.com/authorize'
+  url += '/' +
+    '?client_id=' + encodeURIComponent(clientId) +
+    '&response_type=' + encodeURIComponent('token') +
+    '&redirect_uri=' + encodeURIComponent(uri)
+  return url
+}
+
+/**
  * Refresh the bearer access token.
  *
  * @return {Promise | string} A new bearer access token,
  * or the empty string if not available.
  */
 SpotifyRequestHandler.prototype.refreshToken = function () {
-  return this.auth().then(function (response) {
+  return this.clientsCredentialsFlow().then(function (response) {
     if (response &&
         response.access_token) {
       this.token = response.access_token
