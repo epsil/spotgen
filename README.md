@@ -220,7 +220,7 @@ Web version
 
 The generator is also available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotify/>.
 
-The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. (The [command-line version](#command-line-script) can be used without logging in.)
+The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the [command-line version](#command-line-script) can be used without logging in.)
 
 It is also possible to run the web version locally:
 
@@ -228,7 +228,9 @@ It is also possible to run the web version locally:
 
 This will start up a `http-server` instance at <http://localhost:9000/>.
 
-Note that Spotify's authentication service requires the web version to be hosted at a whitelisted address. This is the reason for starting `http-server` (merely opening `index.html` in a browser will not work).
+Note that Spotify's authentication service requires the web version to be hosted at a whitelisted address. This is the reason for running `http-server` at port 9000 (merely opening `index.html` in a browser will not work).
+
+For more information about authentication, see the [Spotify Web API](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow) documentation.
 
 Links
 -----
@@ -236,6 +238,7 @@ Links
 -   [Web interface](https://epsil.github.io/spotify/)
 -   [GitHub repository](https://github.com/epsil/spotify-js)
 -   [Developer documentation](https://epsil.github.io/spotify/doc/)
+-   [Spotify Web API documentation](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow)
 -   [Additional tips](Tips.md)
 
 ### See also
