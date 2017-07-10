@@ -3,6 +3,7 @@
 
 var http = require('./http')
 var Parser = require('./parser')
+var SpotifyRequestHandler = require('./spotify')
 var util = require('./util')
 var $ = require('jquery')
 jQuery = $
@@ -20,6 +21,21 @@ function WebScraper (uri, spotify) {
    * Spotify request handler.
    */
   this.spotify = spotify || new SpotifyRequestHandler()
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of results.
+ */
+WebScraper.prototype.createQueue = function (result) {
+  console.log(result)
+  console.log('1')
+  // var generator = Parser(result, null, self.spotify)
+  console.log(Parser)
+  var generator = Parser('what?')
+  console.log('2')
+  console.log(generator)
+  return generator.dispatch()
 }
 
 /**
@@ -51,9 +67,7 @@ WebScraper.prototype.dispatch = function () {
   var self = this
   console.log(this.uri)
   return this.lastfm(this.uri).then(function (result) {
-    console.log(result)
-    var generator = new Parser(result, null, self.spotify)
-    return generator.dispatch()
+    return self.createQueue(result)
   })
 }
 

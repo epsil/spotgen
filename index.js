@@ -13,8 +13,8 @@ var WebScraper = require('./src/web')
  * Invoked when run from the command line.
  */
 function main () {
-  var web = new WebScraper('https://www.last.fm/user/epsilon47/library')
-  web.dispatch()
+  // var web = new WebScraper('https://www.last.fm/user/epsilon47/library')
+  // web.dispatch()
 
   var input = process.argv[2] || 'input.txt'
   var output = process.argv[3] || 'output.spotify.txt'
