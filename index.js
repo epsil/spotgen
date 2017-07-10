@@ -1,6 +1,10 @@
 #!/usr/bin/env node
+/* global document:true, window:true */
 
 var fs = require('fs')
+var jsdom = require('jsdom').jsdom
+document = jsdom()
+window = document.defaultView
 var Parser = require('./src/parser')
 var WebScraper = require('./src/web')
 
