@@ -216,7 +216,7 @@ describe('Spotify Playlist Generator', function () {
 
     it('should create an ordered playlist', function () {
       var generator = Parser('#ORDER BY POPULARITY\ntest1\ntest2')
-      return generator.dispatch().then(function (str) {
+      return generator.execute().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
@@ -237,7 +237,7 @@ describe('Spotify Playlist Generator', function () {
 
     it('should dispatch all entries', function () {
       var generator = Parser('test1\ntest2')
-      return generator.dispatch().then(function (str) {
+      return generator.execute().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')

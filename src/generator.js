@@ -53,6 +53,15 @@ function Generator (spotify) {
 }
 
 /**
+ * Add an entry to the end of the generator queue.
+ * @param {Track | Album | Artist} entry -
+ * The entry to add.
+ */
+Generator.prototype.add = function (entry) {
+  this.entries.add(entry)
+}
+
+/**
  * Alternate the generator entries.
  */
 Generator.prototype.alternate = function () {
@@ -86,10 +95,8 @@ Generator.prototype.dedup = function () {
 }
 
 /**
- * Dispatch all the entries in the generator
- * and return the track listing.
- * @return {Promise | string} A newline-separated list
- * of Spotify URIs.
+ * Dispatch all the entries in the generator.
+ * @return {Promise | Queue} A queue of results.
  */
 Generator.prototype.dispatch = function () {
   var self = this
@@ -101,7 +108,18 @@ Generator.prototype.dispatch = function () {
     return self.group()
   }).then(function () {
     return self.alternate()
-  }).then(function () {
+  })
+}
+
+/**
+ * Dispatch all the entries in the generator
+ * and return the track listing.
+ * @return {Promise | string} A newline-separated list
+ * of Spotify URIs.
+ */
+Generator.prototype.execute = function () {
+  var self = this
+  return this.dispatch().then(function () {
     return self.toString()
   })
 }

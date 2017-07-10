@@ -22,7 +22,7 @@ function main () {
   var str = fs.readFileSync(input, 'utf8').toString()
   var generator = Parser(str)
 
-  generator.dispatch().then(function (str) {
+  generator.execute().then(function (str) {
     fs.writeFile(output, str, function (err) {
       if (err) { return }
       console.log('Wrote to ' + output)
