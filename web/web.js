@@ -59,7 +59,8 @@ function hasToken () {
 function generate () {
   var textarea = $('textarea')
   var button = $('a.btn')
-  var generator = Parser(textarea.val(), token())
+  var parser = new Parser(token())
+  var generator = parser.parse(textarea.val())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')

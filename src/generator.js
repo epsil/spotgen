@@ -42,6 +42,11 @@ function Generator (spotify) {
   this.ordering = null
 
   /**
+   * Whether to reverse the playlist order.
+   */
+  this.reverse = false
+
+  /**
    * Whether to remove duplicates.
    */
   this.unique = true
@@ -80,6 +85,8 @@ Generator.prototype.alternate = function () {
     return this.entries.alternate(function (track) {
       return track.entry.toLowerCase()
     })
+  } else {
+    return Promise.resolve(this.entries)
   }
 }
 
@@ -91,7 +98,7 @@ Generator.prototype.dedup = function () {
   if (this.unique) {
     return this.entries.dedup()
   }
-  return Promise.resolve(this)
+  return Promise.resolve(this.entries)
 }
 
 /**
@@ -108,6 +115,8 @@ Generator.prototype.dispatch = function () {
     return self.group()
   }).then(function () {
     return self.alternate()
+  }).then(function () {
+    return self.reverseOrder()
   })
 }
 
@@ -143,6 +152,7 @@ Generator.prototype.fetchTracks = function () {
   var self = this
   return this.entries.dispatch().then(function (queue) {
     self.entries = queue.flatten()
+    return self.entries
   })
 }
 
@@ -165,6 +175,8 @@ Generator.prototype.group = function () {
     return this.entries.group(function (track) {
       return track.entry.toLowerCase()
     })
+  } else {
+    return Promise.resolve(this.entries)
   }
 }
 
@@ -182,6 +194,8 @@ Generator.prototype.order = function () {
     return this.fetchLastfm().then(function () {
       self.entries.orderByLastfm()
     })
+  } else {
+    return Promise.resolve(this.entries)
   }
 }
 
@@ -201,6 +215,17 @@ Generator.prototype.refreshTracks = function () {
   return this.entries.dispatch().then(function (result) {
     self.entries = result.flatten()
   })
+}
+
+/**
+ * Reverse the order of the entries.
+ * @return {Promise|Generator} - Itself.
+ */
+Generator.prototype.reverseOrder = function () {
+  if (this.reverse) {
+    return this.entries.reverse()
+  }
+  return Promise.resolve(this.entries)
 }
 
 /**

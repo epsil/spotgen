@@ -292,6 +292,15 @@ Queue.prototype.map = function (fn) {
 }
 
 /**
+ * Reverse the order of the queue.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.reverse = function () {
+  this.queue.reverse()
+  return this
+}
+
+/**
  * Set a playlist entry.
  * @param {integer} idx - The index of the entry.
  * The indices start at 0. If out of bounds,

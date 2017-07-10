@@ -10,16 +10,22 @@ var SpotifyRequestHandler = require('./spotify')
 var WebScraper = require('./web')
 
 /**
- * Parse a string and create a playlist generator.
+ * Create a parser.
  * @constructor
- * @param {string} str - A newline-separated string of
+ */
+function Parser (token, handler) {
+  this.spotify = handler || new SpotifyRequestHandler(defaults.id, defaults.key, token)
+}
+
+/**
+ * Parse a string and create a playlist generator.
+ * @param {string} [str] - A newline-separated string of
  * entries on the form `TITLE - ARTIST`. May also contain
  * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
  * @return {Generator} A playlist generator.
  */
-function Parser (str, token, handler) {
-  var spotify = handler || new SpotifyRequestHandler(defaults.id, defaults.key, token)
-  var generator = new Generator(spotify)
+Parser.prototype.parse = function (str) {
+  var generator = new Generator(this.spotify)
   str = str.trim()
   if (str) {
     var lines = eol.split(str)
@@ -37,6 +43,8 @@ function Parser (str, token, handler) {
         generator.alternating = alternateMatch[1].toLowerCase()
       } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
         generator.unique = false
+      } else if (line.match(/^#REVERSE/i)) {
+        generator.reverse = true
       } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
         generator.unique = true
       } else if (line.match(/^#(CSV|CVS)/i)) {
@@ -50,7 +58,7 @@ function Parser (str, token, handler) {
         var albumId = albumMatch[2]
         var albumLimit = parseInt(albumMatch[3])
         var albumEntry = albumMatch[4]
-        var album = new Album(spotify, albumEntry)
+        var album = new Album(this.spotify, albumEntry)
         album.setLimit(albumLimit)
         if (albumId) {
           album.fetchTracks = false
@@ -60,27 +68,27 @@ function Parser (str, token, handler) {
         var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
         var artistLimit = parseInt(artistMatch[1])
         var artistEntry = artistMatch[2]
-        var artist = new Artist(spotify, artistEntry)
+        var artist = new Artist(this.spotify, artistEntry)
         artist.setLimit(artistLimit)
         generator.add(artist)
       } else if (line.match(/^#TOP[0-9]*\s+/i)) {
         var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
         var topLimit = parseInt(topMatch[1])
         var topEntry = topMatch[2]
-        var top = new Top(spotify, topEntry)
+        var top = new Top(this.spotify, topEntry)
         top.setLimit(topLimit)
         generator.add(top)
       } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
         var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
         var similarLimit = parseInt(similarMatch[1])
         var similarEntry = similarMatch[2]
-        var similar = new Similar(spotify, similarEntry)
+        var similar = new Similar(this.spotify, similarEntry)
         similar.setLimit(similarLimit)
         generator.add(similar)
       } else if (line.match(/^#EXTINF/i)) {
         var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
         if (match) {
-          generator.add(new Track(spotify, match[1]))
+          generator.add(new Track(this.spotify, match[1]))
           if (lines.length > 0 &&
               !lines[0].match(/^#/)) {
             lines.shift()
@@ -89,13 +97,13 @@ function Parser (str, token, handler) {
       } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
         var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
         var uri = uriMatch[0]
-        var uriTrack = new Track(spotify, uri)
+        var uriTrack = new Track(this.spotify, uri)
         generator.add(uriTrack)
       } else if (line.match(/^https?:/i)) {
-        var scraper = new WebScraper(line)
+        var scraper = new WebScraper(line, this)
         generator.add(scraper)
       } else if (line) {
-        var track = new Track(spotify, line)
+        var track = new Track(this.spotify, line)
         generator.add(track)
       }
     }
