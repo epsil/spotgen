@@ -1,13 +1,13 @@
 var defaults = require('./defaults')
 var eol = require('eol')
-var Artist = require('./artist')
 var Album = require('./album')
+var Artist = require('./artist')
 var Generator = require('./generator')
-var Top = require('./top')
-var Track = require('./track')
 var Similar = require('./similar')
 var SpotifyRequestHandler = require('./spotify')
-var WebScraper = require('./web')
+var Top = require('./top')
+var Track = require('./track')
+var WebScraper = require('./scraper')
 
 /**
  * Create a parser.
