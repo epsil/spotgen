@@ -62,9 +62,9 @@ WebScraper.prototype.lastfm = function (uri) {
     var html = $($.parseHTML(data))
     var tracks = html.find('td.chartlist-name')
     tracks.each(function () {
-      var title = $(this).text()
-      title = self.cleanup(title)
-      result += title + '\n'
+      var track = $(this).text()
+      track = self.cleanup(track)
+      result += track + '\n'
     })
     return result.trim()
   })
