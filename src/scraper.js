@@ -18,15 +18,6 @@ function WebScraper (uri, parser) {
 }
 
 /**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of results.
- */
-WebScraper.prototype.createQueue = function (result) {
-  var generator = this.parser.parse(result)
-  return generator.dispatch()
-}
-
-/**
  * Clean up a string.
  * @return {string} A new string.
  */
@@ -35,6 +26,29 @@ WebScraper.prototype.cleanup = function (str) {
   str = str.replace(/[\s]+/g, ' ')
   str = util.toAscii(str)
   return str
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {string} result - A newline-separated list of tracks.
+ * @return {Promise | Queue} A queue of results.
+ */
+WebScraper.prototype.createQueue = function (result) {
+  var generator = this.parser.parse(result)
+  return generator.dispatch()
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of results.
+ */
+WebScraper.prototype.dispatch = function () {
+  var self = this
+  console.log(this.uri)
+  return this.lastfm(this.uri).then(function (result) {
+    console.log(result)
+    return self.createQueue(result)
+  })
 }
 
 /**
@@ -53,19 +67,6 @@ WebScraper.prototype.lastfm = function (uri) {
       result += title + '\n'
     })
     return result.trim()
-  })
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of results.
- */
-WebScraper.prototype.dispatch = function () {
-  var self = this
-  console.log(this.uri)
-  return this.lastfm(this.uri).then(function (result) {
-    console.log(result)
-    return self.createQueue(result)
   })
 }
 
