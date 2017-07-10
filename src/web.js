@@ -21,6 +21,10 @@ function WebScraper (uri) {
  * @return {Promise | Queue} A queue of tracks.
  */
 WebScraper.prototype.dispatch = function () {
+  console.log(this.uri)
+  http(this.uri).then(function (data) {
+    console.log(data)
+  })
 }
 
 module.exports = WebScraper

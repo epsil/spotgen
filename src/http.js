@@ -1,12 +1,37 @@
 var request = require('request')
 
 /**
- * Perform a HTTP request.
+ * Perform a HTTP(S) request.
+ *
+ * If the script is hosted on a HTTPS server, we cannot perform
+ * HTTP requests because of the Same Origin Policy. Therefore,
+ * this function falls back to HTTPS if HTTP fails.
+ *
  * @param {string} uri - The URI to look up.
  * @param {Object} [options] - Request options.
  * @return {Promise} A promise.
  */
 function http (uri, options) {
+  return http.request(uri, options).catch(function (err) {
+    var message = err + ''
+    if (message.match(/XHR error/i)) {
+      if (uri.match(/^http:/i)) {
+        return http.request(uri.replace(/^http:/i, 'https:'), options)
+      } else if (uri.match(/^https:/i)) {
+        return http.request(uri.replace(/^https:/i, 'http:'), options)
+      }
+    }
+  })
+}
+
+/**
+ * Perform a HTTP request.
+ * @param {string} uri - The URI to look up.
+ * @param {Object} [options] - Request options.
+ * @return {Promise} A promise.
+ */
+http.request = function (uri, options) {
+  options = options || {}
   var delay = options.delay || 100
   options.uri = uri || options.uri
   options.method = options.method || 'GET'
@@ -27,37 +52,13 @@ function http (uri, options) {
 }
 
 /**
- * Perform a HTTP(S) request.
- *
- * If the script is hosted on a HTTPS server, we cannot perform
- * HTTP requests because of the Same Origin Policy. Therefore,
- * this function falls back to HTTPS if HTTP fails.
- *
- * @param {string} uri - The URI to look up.
- * @param {Object} [options] - Request options.
- * @return {Promise} A promise.
- */
-http.s = function (uri, options) {
-  return http(uri, options).catch(function (err) {
-    var message = err + ''
-    if (message.match(/XHR error/i)) {
-      if (uri.match(/^http:/i)) {
-        return http(uri.replace(/^http:/i, 'https:'), options)
-      } else if (uri.match(/^https:/i)) {
-        return http(uri.replace(/^https:/i, 'http:'), options)
-      }
-    }
-  })
-}
-
-/**
  * Perform a HTTP JSON request.
  * @param {string} uri - The URI to look up.
  * @param {Object} [options] - Request options.
  * @return {Promise | JSON} A JSON response.
  */
 http.json = function (uri, options) {
-  return http.s(uri, options).then(function (response) {
+  return http(uri, options).then(function (response) {
     try {
       response = JSON.parse(response)
     } catch (e) {
