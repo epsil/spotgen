@@ -57,7 +57,7 @@ WebScraper.prototype.dispatch = function () {
  */
 WebScraper.prototype.lastfm = function (uri) {
   var self = this
-  return http(this.uri).then(function (data) {
+  return http(uri).then(function (data) {
     var result = ''
     var html = $($.parseHTML(data))
     var tracks = html.find('td.chartlist-name')
