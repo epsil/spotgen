@@ -80941,7 +80941,7 @@ Album.prototype.uri = function () {
 
 module.exports = Album
 
-},{"./queue":543,"./spotify":546,"./track":548}],536:[function(require,module,exports){
+},{"./queue":543,"./spotify":547,"./track":549}],536:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -81115,7 +81115,7 @@ Artist.prototype.setResponse = function (response) {
 
 module.exports = Artist
 
-},{"./album":535,"./queue":543,"./sort":545,"./spotify":546}],537:[function(require,module,exports){
+},{"./album":535,"./queue":543,"./sort":546,"./spotify":547}],537:[function(require,module,exports){
 var stringify = require('csv-stringify/lib/sync')
 
 /**
@@ -81212,6 +81212,11 @@ function Generator (spotify) {
   this.ordering = null
 
   /**
+   * Whether to reverse the playlist order.
+   */
+  this.reverse = false
+
+  /**
    * Whether to remove duplicates.
    */
   this.unique = true
@@ -81220,6 +81225,15 @@ function Generator (spotify) {
    * Whether to remove duplicates.
    */
   this.spotify = spotify || new SpotifyRequestHandler()
+}
+
+/**
+ * Add an entry to the end of the generator queue.
+ * @param {Track | Album | Artist} entry -
+ * The entry to add.
+ */
+Generator.prototype.add = function (entry) {
+  this.entries.add(entry)
 }
 
 /**
@@ -81241,6 +81255,8 @@ Generator.prototype.alternate = function () {
     return this.entries.alternate(function (track) {
       return track.entry.toLowerCase()
     })
+  } else {
+    return Promise.resolve(this.entries)
   }
 }
 
@@ -81252,14 +81268,12 @@ Generator.prototype.dedup = function () {
   if (this.unique) {
     return this.entries.dedup()
   }
-  return Promise.resolve(this)
+  return Promise.resolve(this.entries)
 }
 
 /**
- * Dispatch all the entries in the generator
- * and return the track listing.
- * @return {Promise | string} A newline-separated list
- * of Spotify URIs.
+ * Dispatch all the entries in the generator.
+ * @return {Promise | Queue} A queue of results.
  */
 Generator.prototype.dispatch = function () {
   var self = this
@@ -81272,6 +81286,19 @@ Generator.prototype.dispatch = function () {
   }).then(function () {
     return self.alternate()
   }).then(function () {
+    return self.reverseOrder()
+  })
+}
+
+/**
+ * Dispatch all the entries in the generator
+ * and return the track listing.
+ * @return {Promise | string} A newline-separated list
+ * of Spotify URIs.
+ */
+Generator.prototype.execute = function () {
+  var self = this
+  return this.dispatch().then(function () {
     return self.toString()
   })
 }
@@ -81295,6 +81322,7 @@ Generator.prototype.fetchTracks = function () {
   var self = this
   return this.entries.dispatch().then(function (queue) {
     self.entries = queue.flatten()
+    return self.entries
   })
 }
 
@@ -81317,6 +81345,8 @@ Generator.prototype.group = function () {
     return this.entries.group(function (track) {
       return track.entry.toLowerCase()
     })
+  } else {
+    return Promise.resolve(this.entries)
   }
 }
 
@@ -81334,6 +81364,8 @@ Generator.prototype.order = function () {
     return this.fetchLastfm().then(function () {
       self.entries.orderByLastfm()
     })
+  } else {
+    return Promise.resolve(this.entries)
   }
 }
 
@@ -81353,6 +81385,17 @@ Generator.prototype.refreshTracks = function () {
   return this.entries.dispatch().then(function (result) {
     self.entries = result.flatten()
   })
+}
+
+/**
+ * Reverse the order of the entries.
+ * @return {Promise|Generator} - Itself.
+ */
+Generator.prototype.reverseOrder = function () {
+  if (this.reverse) {
+    return this.entries.reverse()
+  }
+  return Promise.resolve(this.entries)
 }
 
 /**
@@ -81389,8 +81432,32 @@ Generator.prototype.toString = function () {
 
 module.exports = Generator
 
-},{"./album":535,"./csv":537,"./queue":543,"./spotify":546,"./track":548,"eol":273}],540:[function(require,module,exports){
+},{"./album":535,"./csv":537,"./queue":543,"./spotify":547,"./track":549,"eol":273}],540:[function(require,module,exports){
 var request = require('request')
+
+/**
+ * Perform a HTTP(S) request.
+ *
+ * If the script is hosted on a HTTPS server, we cannot perform
+ * HTTP requests because of the Same Origin Policy. Therefore,
+ * this function falls back to HTTPS if HTTP fails.
+ *
+ * @param {string} uri - The URI to look up.
+ * @param {Object} [options] - Request options.
+ * @return {Promise} A promise.
+ */
+function http (uri, options) {
+  return http.request(uri, options).catch(function (err) {
+    var message = err + ''
+    if (message.match(/XHR error/i)) {
+      if (uri.match(/^http:/i)) {
+        return http.request(uri.replace(/^http:/i, 'https:'), options)
+      } else if (uri.match(/^https:/i)) {
+        return http.request(uri.replace(/^https:/i, 'http:'), options)
+      }
+    }
+  })
+}
 
 /**
  * Perform a HTTP request.
@@ -81398,7 +81465,8 @@ var request = require('request')
  * @param {Object} [options] - Request options.
  * @return {Promise} A promise.
  */
-function http (uri, options) {
+http.request = function (uri, options) {
+  options = options || {}
   var delay = options.delay || 100
   options.uri = uri || options.uri
   options.method = options.method || 'GET'
@@ -81419,37 +81487,13 @@ function http (uri, options) {
 }
 
 /**
- * Perform a HTTP(S) request.
- *
- * If the script is hosted on a HTTPS server, we cannot perform
- * HTTP requests because of the Same Origin Policy. Therefore,
- * this function falls back to HTTPS if HTTP fails.
- *
- * @param {string} uri - The URI to look up.
- * @param {Object} [options] - Request options.
- * @return {Promise} A promise.
- */
-http.s = function (uri, options) {
-  return http(uri, options).catch(function (err) {
-    var message = err + ''
-    if (message.match(/XHR error/i)) {
-      if (uri.match(/^http:/i)) {
-        return http(uri.replace(/^http:/i, 'https:'), options)
-      } else if (uri.match(/^https:/i)) {
-        return http(uri.replace(/^https:/i, 'http:'), options)
-      }
-    }
-  })
-}
-
-/**
  * Perform a HTTP JSON request.
  * @param {string} uri - The URI to look up.
  * @param {Object} [options] - Request options.
  * @return {Promise | JSON} A JSON response.
  */
 http.json = function (uri, options) {
-  return http.s(uri, options).then(function (response) {
+  return http(uri, options).then(function (response) {
     try {
       response = JSON.parse(response)
     } catch (e) {
@@ -81521,25 +81565,32 @@ module.exports = function (key) {
 },{"./http":540}],542:[function(require,module,exports){
 var defaults = require('./defaults')
 var eol = require('eol')
-var Artist = require('./artist')
 var Album = require('./album')
+var Artist = require('./artist')
 var Generator = require('./generator')
-var Top = require('./top')
-var Track = require('./track')
 var Similar = require('./similar')
 var SpotifyRequestHandler = require('./spotify')
+var Top = require('./top')
+var Track = require('./track')
+var WebScraper = require('./scraper')
+
+/**
+ * Create a parser.
+ * @constructor
+ */
+function Parser (token, handler) {
+  this.spotify = handler || new SpotifyRequestHandler(defaults.id, defaults.key, token)
+}
 
 /**
  * Parse a string and create a playlist generator.
- * @constructor
- * @param {string} str - A newline-separated string of
+ * @param {string} [str] - A newline-separated string of
  * entries on the form `TITLE - ARTIST`. May also contain
  * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
  * @return {Generator} A playlist generator.
  */
-function Parser (str, token) {
-  var spotify = new SpotifyRequestHandler(defaults.id, defaults.key, token)
-  var generator = new Generator(spotify)
+Parser.prototype.parse = function (str) {
+  var generator = new Generator(this.spotify)
   str = str.trim()
   if (str) {
     var lines = eol.split(str)
@@ -81557,6 +81608,8 @@ function Parser (str, token) {
         generator.alternating = alternateMatch[1].toLowerCase()
       } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
         generator.unique = false
+      } else if (line.match(/^#REVERSE/i)) {
+        generator.reverse = true
       } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
         generator.unique = true
       } else if (line.match(/^#(CSV|CVS)/i)) {
@@ -81570,37 +81623,37 @@ function Parser (str, token) {
         var albumId = albumMatch[2]
         var albumLimit = parseInt(albumMatch[3])
         var albumEntry = albumMatch[4]
-        var album = new Album(spotify, albumEntry)
+        var album = new Album(this.spotify, albumEntry)
         album.setLimit(albumLimit)
         if (albumId) {
           album.fetchTracks = false
         }
-        generator.entries.add(album)
+        generator.add(album)
       } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
         var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
         var artistLimit = parseInt(artistMatch[1])
         var artistEntry = artistMatch[2]
-        var artist = new Artist(spotify, artistEntry)
+        var artist = new Artist(this.spotify, artistEntry)
         artist.setLimit(artistLimit)
-        generator.entries.add(artist)
+        generator.add(artist)
       } else if (line.match(/^#TOP[0-9]*\s+/i)) {
         var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
         var topLimit = parseInt(topMatch[1])
         var topEntry = topMatch[2]
-        var top = new Top(spotify, topEntry)
+        var top = new Top(this.spotify, topEntry)
         top.setLimit(topLimit)
-        generator.entries.add(top)
+        generator.add(top)
       } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
         var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
         var similarLimit = parseInt(similarMatch[1])
         var similarEntry = similarMatch[2]
-        var similar = new Similar(spotify, similarEntry)
+        var similar = new Similar(this.spotify, similarEntry)
         similar.setLimit(similarLimit)
-        generator.entries.add(similar)
+        generator.add(similar)
       } else if (line.match(/^#EXTINF/i)) {
         var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
         if (match) {
-          generator.entries.add(new Track(spotify, match[1]))
+          generator.add(new Track(this.spotify, match[1]))
           if (lines.length > 0 &&
               !lines[0].match(/^#/)) {
             lines.shift()
@@ -81609,11 +81662,14 @@ function Parser (str, token) {
       } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
         var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
         var uri = uriMatch[0]
-        var uriTrack = new Track(spotify, uri)
-        generator.entries.add(uriTrack)
+        var uriTrack = new Track(this.spotify, uri)
+        generator.add(uriTrack)
+      } else if (line.match(/^https?:/i)) {
+        var scraper = new WebScraper(line, this)
+        generator.add(scraper)
       } else if (line) {
-        var track = new Track(spotify, line)
-        generator.entries.add(track)
+        var track = new Track(this.spotify, line)
+        generator.add(track)
       }
     }
   }
@@ -81622,7 +81678,7 @@ function Parser (str, token) {
 
 module.exports = Parser
 
-},{"./album":535,"./artist":536,"./defaults":538,"./generator":539,"./similar":544,"./spotify":546,"./top":547,"./track":548,"eol":273}],543:[function(require,module,exports){
+},{"./album":535,"./artist":536,"./defaults":538,"./generator":539,"./scraper":544,"./similar":545,"./spotify":547,"./top":548,"./track":549,"eol":273}],543:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -81917,6 +81973,15 @@ Queue.prototype.map = function (fn) {
 }
 
 /**
+ * Reverse the order of the queue.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.reverse = function () {
+  this.queue.reverse()
+  return this
+}
+
+/**
  * Set a playlist entry.
  * @param {integer} idx - The index of the entry.
  * The indices start at 0. If out of bounds,
@@ -81999,7 +82064,82 @@ Queue.prototype.toArray = function () {
 
 module.exports = Queue
 
-},{"./sort":545}],544:[function(require,module,exports){
+},{"./sort":546}],544:[function(require,module,exports){
+/* global jQuery:true */
+/* exported jQuery */
+
+var http = require('./http')
+var util = require('./util')
+var $ = require('jquery')
+jQuery = $
+
+/**
+ * Create a web scraper.
+ * @constructor
+ * @param {string} uri - The URI of the webpage to scrape.
+ */
+function WebScraper (uri, parser) {
+  this.uri = uri
+
+  this.parser = parser
+}
+
+/**
+ * Clean up a string.
+ * @return {string} A new string.
+ */
+WebScraper.prototype.cleanup = function (str) {
+  str = str.trim()
+  str = str.replace(/[\s]+/g, ' ')
+  str = util.toAscii(str)
+  return str
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {string} result - A newline-separated list of tracks.
+ * @return {Promise | Queue} A queue of results.
+ */
+WebScraper.prototype.createQueue = function (result) {
+  var generator = this.parser.parse(result)
+  return generator.dispatch()
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of results.
+ */
+WebScraper.prototype.dispatch = function () {
+  var self = this
+  console.log(this.uri)
+  return this.lastfm(this.uri).then(function (result) {
+    console.log(result)
+    return self.createQueue(result)
+  })
+}
+
+/**
+ * Scrape a Last.fm tracklist.
+ * @return {Promise | string} A newline-separated list of tracks.
+ */
+WebScraper.prototype.lastfm = function (uri) {
+  var self = this
+  return http(this.uri).then(function (data) {
+    var result = ''
+    var html = $($.parseHTML(data))
+    var tracks = html.find('td.chartlist-name')
+    tracks.each(function () {
+      var title = $(this).text()
+      title = self.cleanup(title)
+      result += title + '\n'
+    })
+    return result.trim()
+  })
+}
+
+module.exports = WebScraper
+
+},{"./http":540,"./util":550,"jquery":274}],545:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -82124,7 +82264,7 @@ Similar.prototype.setLimit = function (limit) {
 
 module.exports = Similar
 
-},{"./artist":536,"./queue":543,"./spotify":546,"./top":547}],545:[function(require,module,exports){
+},{"./artist":536,"./queue":543,"./spotify":547,"./top":548}],546:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
 var util = require('./util')
 
@@ -82337,7 +82477,7 @@ sort.track = function (track) {
 
 module.exports = sort
 
-},{"./util":549,"string-similarity":400}],546:[function(require,module,exports){
+},{"./util":550,"string-similarity":400}],547:[function(require,module,exports){
 var base64 = require('base-64')
 var defaults = require('./defaults')
 var http = require('./http')
@@ -82374,8 +82514,7 @@ function SpotifyRequestHandler (clientId, clientSecret, token) {
  * from the command line. It does not work when run from a browser,
  * because Spotify's authentication server rejects cross-site
  * requests. In that case, authenticate with the Implicit Grant Flow
- * instead and pass the access token to this class via the `token`
- * constructor parameter.
+ * instead and pass the received access token to this class.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *
@@ -82402,7 +82541,7 @@ SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, cli
 }
 
 /**
- * Authenticate with Implicit Grant Flow.
+ * Authenticate with the Implicit Grant Flow.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
  *
@@ -82671,7 +82810,7 @@ SpotifyRequestHandler.prototype.searchForTrack = function (track) {
 
 module.exports = SpotifyRequestHandler
 
-},{"./defaults":538,"./http":540,"./sort":545,"base-64":1}],547:[function(require,module,exports){
+},{"./defaults":538,"./http":540,"./sort":546,"base-64":1}],548:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -82807,7 +82946,7 @@ Top.prototype.setLimit = function (limit) {
 
 module.exports = Top
 
-},{"./artist":536,"./queue":543,"./spotify":546,"./track":548}],548:[function(require,module,exports){
+},{"./artist":536,"./queue":543,"./spotify":547,"./track":549}],549:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
 var SpotifyRequestHandler = require('./spotify')
@@ -83252,7 +83391,7 @@ Track.prototype.setResponse = function (response) {
 
 module.exports = Track
 
-},{"./defaults":538,"./lastfm":541,"./spotify":546}],549:[function(require,module,exports){
+},{"./defaults":538,"./lastfm":541,"./spotify":547}],550:[function(require,module,exports){
 var util = {}
 
 /**
@@ -83292,9 +83431,34 @@ util.second = function (pair) {
   return pair.second
 }
 
+/**
+ * Replace Unicode characters with their ASCII equivalents.
+ * @param {string} x - A string.
+ * @return {string} - A new string.
+ */
+util.toAscii = function (str) {
+  return str.replace(/[\u2018\u2019\u00b4]/g, "'")
+    .replace(/[\u201c\u201d\u2033]/g, '"')
+    .replace(/[\u2212\u2022\u00b7\u25aa]/g, '-')
+    .replace(/[\u2013\u2015]/g, '-')
+    .replace(/\u2014/g, '-')
+    // .replace(/[\u2013\u2015]/g, '--')
+    // .replace(/\u2014/g, '---')
+    .replace(/\u2026/g, '...')
+    .replace(/[ ]+\n/g, '\n')
+    .replace(/\s*\\\n/g, '\\\n')
+    .replace(/\s*\\\n\s*\\\n/g, '\n\n')
+    .replace(/\s*\\\n\n/g, '\n\n')
+    .replace(/\n-\n/g, '\n')
+    .replace(/\n\n\s*\\\n/g, '\n\n')
+    .replace(/\n\n\n*/g, '\n\n')
+    .replace(/[ ]+$/gm, '')
+    .replace(/^\s+|[\s\\]+$/g, '')
+}
+
 module.exports = util
 
-},{}],550:[function(require,module,exports){
+},{}],551:[function(require,module,exports){
 /* global jQuery:true, localStorage, URLSearchParams */
 /* exported jQuery */
 var $ = require('jquery')
@@ -83356,13 +83520,14 @@ function hasToken () {
 function generate () {
   var textarea = $('textarea')
   var button = $('a.btn')
-  var generator = Parser(textarea.val(), token())
+  var parser = new Parser(token())
+  var generator = parser.parse(textarea.val())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')
   button.mouseleave()
   button.tooltip('disable')
-  generator.dispatch().then(function (result) {
+  generator.execute().then(function (result) {
     console.log('')
     button.removeClass('disabled')
     textarea.val(result)
@@ -83407,4 +83572,4 @@ $(function () {
   }
 })
 
-},{"../src/parser":542,"../src/spotify":546,"bootstrap":2,"jquery":274}]},{},[550]);
+},{"../src/parser":542,"../src/spotify":547,"bootstrap":2,"jquery":274}]},{},[551]);
