@@ -21,7 +21,7 @@ function Parser (token, handler) {
  * Parse a string and create a playlist generator.
  * @param {string} [str] - A newline-separated string of
  * entries on the form `TITLE - ARTIST`. May also contain
- * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
+ * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` commands.
  * @return {Generator} A playlist generator.
  */
 Parser.prototype.parse = function (str) {

@@ -21,7 +21,7 @@ Examples
 Usage
 -----
 
-Create a **text file** containing one or more of the directives listed below. Then pass it to the generator (either the [web version](#web-version) or the [command-line version](#command-line-script)), and it will be **converted** to a Spotify playlist.
+Create a **text file** containing one or more of the commands listed below. Then pass it to the generator (either the [web version](#web-version) or the [command-line version](#command-line-script)), and it will be **converted** to a Spotify playlist.
 
 To **import** the playlist into Spotify:
 
@@ -29,7 +29,7 @@ To **import** the playlist into Spotify:
 2.  **Create a new playlist in Spotify:** Choose *File -> New Playlist* (<kbd>Ctrl</kbd> + <kbd>N</kbd>).
 3.  **Paste into the playlist:** Select the playlist and choose *Edit -> Paste* (<kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
-Below follows a list of **generator directives**. One can generate a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
+Below follows a list of **generator commands**. One can generate a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
 
 ### Web scraping
 
@@ -39,7 +39,7 @@ Note: web scraping is only available in the [command-line version](#command-line
 
 The generator can be instructed to fetch data from [Last.fm](http://last.fm/)'s webpages simply by supplying the page's address. For example, to create a playlist of a user's recently played tracks, add the line:
 
-    https://www.last.fm/user/username/library/tracks
+    http://www.last.fm/user/username/library/tracks
 
 To create a playlist of tracks a user has listened to on a particular day:
 
@@ -69,9 +69,9 @@ To create a playlist of artists similar to an artist:
 
     http://www.last.fm/music/Artist+Name/+similar
 
-Note that Last.fm lists tracks in reverse chronological order. To create a chronological playlist, add the [`#reverse`](#reverse) directive.
+Note that Last.fm lists tracks in reverse chronological order. To create a chronological playlist, add the [`#reverse`](#reverse) command.
 
-[More on Last.fm scraping](Tips.md#Last.fm).
+[More on Last.fm scraping](Tips.md#lastfm).
 
 ### Top tracks
 
@@ -81,7 +81,7 @@ To retrieve the top 10 tracks of an artist, pass the following to the generator:
 
 The generator will output a playlist consisting of the ten most popular tracks of Aphex Twin, which can then be [imported](#usage) into Spotify.
 
-All of the directives listed here can be used multiple times. For example:
+All of the commands listed here can be used multiple times. For example:
 
     #top Aphex Twin
     #top Beach House
@@ -114,7 +114,7 @@ To add all the albums of an artist:
 
     #artist Beach House
 
-Note that this directive can be somewhat slow, as it endeavors to retrieve every track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the [`#top`](#top-tracks) directive.
+Note that this command can be rather slow, as it endeavors to retrieve every track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the [`#top`](#top-tracks) command.
 
 ### Tracks
 
@@ -192,7 +192,7 @@ One can easily work with existing Spotify playlists. By selecting the playlist's
     https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
     ...
 
-One can easily apply the [`#order`](#order) directive to such a list:
+One can easily apply the [`#order`](#order) command to such a list:
 
     #order by popularity
     https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
