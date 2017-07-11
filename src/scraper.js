@@ -22,6 +22,7 @@ function WebScraper (uri, parser) {
  * @return {string} A new string.
  */
 WebScraper.prototype.cleanup = function (str) {
+  str = str || ''
   str = str.trim()
   str = str.replace(/[\s]+/g, ' ')
   str = util.toAscii(str)
@@ -60,12 +61,33 @@ WebScraper.prototype.lastfm = function (uri) {
   return http(uri).then(function (data) {
     var result = ''
     var html = $($.parseHTML(data))
-    var tracks = html.find('td.chartlist-name')
-    tracks.each(function () {
-      var track = $(this).text()
-      track = self.cleanup(track)
-      result += track + '\n'
-    })
+    if (uri.match(/\/\+tracks/gi)) {
+      // tracks by a single artist
+      var artist = self.cleanup(html.find('h1.header-title').text())
+      html.find('td.chartlist-name').each(function () {
+        result += artist + ' - ' + self.cleanup($(this).text()) + '\n'
+      })
+    } else if (uri.match(/\/\+similar/gi)) {
+      // similar artists
+      html.find('h3.big-artist-list-title').each(function () {
+        result += '#top ' + self.cleanup($(this).text()) + '\n'
+      })
+    } else if (uri.match(/\/artists/gi)) {
+      // list of artists
+      html.find('td.chartlist-name').each(function () {
+        result += '#top ' + self.cleanup($(this).text()) + '\n'
+      })
+    } else if (uri.match(/\/albums/gi)) {
+      // list of albums
+      html.find('td.chartlist-name').each(function () {
+        result += '#album ' + self.cleanup($(this).text()) + '\n'
+      })
+    } else {
+      // list of tracks by various artists
+      html.find('td.chartlist-name').each(function () {
+        result += self.cleanup($(this).text()) + '\n'
+      })
+    }
     return result.trim()
   })
 }
