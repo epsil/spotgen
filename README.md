@@ -21,11 +21,57 @@ Examples
 Usage
 -----
 
-To import the playlist into Spotify:
+Create a **text file** containing one or more of the directives listed below. Then pass it to the generator (either the [web version](#web-version) or the [command-line version](#command-line-script)), and it will be **converted** to a Spotify playlist.
+
+To **import** the playlist into Spotify:
 
 1.  **Copy the output of the generator:** Choose *Edit -> Copy* (<kbd>Ctrl</kbd> + <kbd>C</kbd>).
 2.  **Create a new playlist in Spotify:** Choose *File -> New Playlist* (<kbd>Ctrl</kbd> + <kbd>N</kbd>).
 3.  **Paste into the playlist:** Select the playlist and choose *Edit -> Paste* (<kbd>Ctrl</kbd> + <kbd>V</kbd>).
+
+Below follows a list of **generator directives**. One can generate a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
+
+### Web scraping
+
+Note: web scraping is only available in the [command-line version](#command-line-script).
+
+#### Last.fm
+
+The generator can be instructed to fetch data from [Last.fm](http://last.fm/)'s webpages simply by supplying the page's address. For example, to create a playlist of a user's recently played tracks, add the line:
+
+    https://www.last.fm/user/username/library/tracks
+
+To create a playlist of tracks a user has listened to on a particular day:
+
+    http://www.last.fm/user/username/library?from=2012-07-21&to=2013-07-21
+
+To create a playlist of a user's favorite tracks for a given year:
+
+    http://www.last.fm/user/username/library/tracks?from=2012-01-01&to=2013-01-01
+
+To create a playlist of a user's favorite tracks of all time:
+
+    http://www.last.fm/user/username/library/tracks
+
+To create a playlist of a user's favorite albums:
+
+    http://www.last.fm/user/username/library/albums
+
+To create a playlist of a user's favorite artists:
+
+    http://www.last.fm/user/username/library/artists
+
+To create a playlist of an artist's top tracks:
+
+    http://www.last.fm/music/Artist+Name/+tracks
+
+To create a playlist of artists similar to an artist:
+
+    http://www.last.fm/music/Artist+Name/+similar
+
+Note that Last.fm lists tracks in reverse chronological order. To create a chronological playlist, add the [`#reverse`](#reverse) directive.
+
+[More on Last.fm scraping](Tips.md#Last.fm).
 
 ### Top tracks
 
@@ -43,6 +89,8 @@ All of the directives listed here can be used multiple times. For example:
 This will create a playlist consisting of the top tracks of Aphex Twin, followed by the top tracks of Beach House.
 
 To retrieve only the top 5 tracks, use `#top5`.
+
+To retrieve *all* tracks, use [`#artist`](#artists).
 
 ### Similar artists
 
@@ -66,6 +114,8 @@ To add all the albums of an artist:
 
     #artist Beach House
 
+Note that this directive can be somewhat slow, as it endeavors to retrieve every track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the [`#top`](#top-tracks) directive.
+
 ### Tracks
 
 To add a single track to the playlist, add a line on the form `TITLE - ARTIST`:
@@ -83,6 +133,12 @@ To add a single track to the playlist, add a line on the form `TITLE - ARTIST`:
 By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:
 
     #duplicates
+
+### Reverse
+
+To reverse the order of the tracks, add the line:
+
+    #reverse
 
 ### Order
 
@@ -136,7 +192,7 @@ One can easily work with existing Spotify playlists. By selecting the playlist's
     https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
     ...
 
-One can easily apply `#order by popularity` to such a list:
+One can easily apply the [`#order`](#order) directive to such a list:
 
     #order by popularity
     https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
@@ -198,7 +254,7 @@ To output to this format, add the line `#csv`:
     Revival - Deerhunter
     Twilight at Carbon Lake - Deerhunter
 
-CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs (which might change).
+CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs. (The URIs might, conceivably, change or become outdated. On the other hand, the title, artist and album of a track can be used to find that track on any music streaming service.)
 
 Command-line script
 -------------------
@@ -221,6 +277,8 @@ Web version
 The generator is also available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotify/>.
 
 The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the [command-line version](#command-line-script) can be used without logging in.)
+
+The web version does not support [web scraping](#web-scraping), due to browser limits on [cross-site requests](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing). For this, one has to use the command-line version.
 
 It is also possible to run the web version locally:
 

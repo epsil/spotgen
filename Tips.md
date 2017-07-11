@@ -1,6 +1,17 @@
 Tips
 ====
 
+Last.fm
+-------
+
+[Last.fm](http://last.fm/)'s webpages are a goldmine of recommendations. For example, if one has a high compatibility with another user, that user's "top tracks" often makes for an interesting playlist.
+
+Similarly, one's own "top tracks" are also a good source of favorites, especially in combination with a time criteria. The "top tracks" chart for an earlier year is a good indication of one's listening habits in that time period, and a rich source of "lost gems" which one may have forgotten about in the meantime.
+
+Last.fm also provides information about an artist's top tracks and similar artists. Such functionality is built into Spotify as well, but Last.fm's recommendations are a good supplement.
+
+At the moment, Last.fm scraping is not supported by the [web version](https://epsil.github.io/spotify/) of the generator, due to browser limits on [cross-site requests](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing). Therefore, only the [command-line version](README.md#command-line-script) supports web scraping.
+
 Recipes
 -------
 
