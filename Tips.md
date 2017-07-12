@@ -15,6 +15,11 @@ At the moment, Last.fm scraping is not supported by the [web version](https://ep
 Recipes
 -------
 
+### Last.fm similar artists
+
+    #alternate by artist
+    http://www.last.fm/music/Artist+Name/+similar
+
 ### Artist's discography ordered by user's Last.fm rating
 
     #order by lastfm username
