@@ -3,6 +3,7 @@
 
 var http = require('./http')
 var util = require('./util')
+var URI = require('urijs')
 var $ = require('jquery')
 jQuery = $
 
@@ -120,7 +121,7 @@ WebScraper.prototype.rym = function (uri) {
  *
  * In the example above, the scraping function converts a table of
  * tracks to a generator string on the form `ARTIST - TRACK`. If the
- * input was a albums chart, then the output would be a string of
+ * input was an albums chart, then the output should be a string of
  * `#album` commands instead. In other words, the scraping function
  * should extract the *meaning* of the web page and express it as
  * input that could be passed to the generator.
@@ -129,7 +130,8 @@ WebScraper.prototype.rym = function (uri) {
  * @return {Promise | string} A generator string.
  */
 WebScraper.prototype.scrape = function (uri) {
-  if (uri.match(/rateyourmusic.com/gi)) {
+  var domain = URI(uri).domain()
+  if (domain === 'rateyourmusic.com') {
     return this.rym(uri)
   } else {
     return this.lastfm(uri)
