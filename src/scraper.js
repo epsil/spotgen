@@ -53,7 +53,11 @@ WebScraper.prototype.lastfm = function (uri) {
     var html = $($.parseHTML(data))
     if (uri.match(/\/\+tracks/gi)) {
       // tracks by a single artist
-      var artist = self.trim(html.find('h1.header-title').text())
+      var header = html.find('header a.library-header-crumb')
+      if (header.length === 0) {
+        header = html.find('h1.header-title')
+      }
+      var artist = self.trim(header.first().text())
       html.find('td.chartlist-name').each(function () {
         result += artist + ' - ' + self.trim($(this).text()) + '\n'
       })
