@@ -101,10 +101,8 @@ WebScraper.prototype.lastfm = function (uri) {
 WebScraper.prototype.rym = function (uri) {
   var self = this
   return http(uri).then(function (data) {
-    console.log(data)
     var result = ''
     var html = $($.parseHTML(data))
-    // https://rateyourmusic.com/charts/top/album/2016
     html.find('div.chart_details').each(function () {
       var artist = self.trim($(this).find('a.artist').text())
       var album = self.trim($(this).find('a.album').text())
