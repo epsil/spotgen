@@ -9,7 +9,7 @@ jQuery = $
 /**
  * Create a web scraper.
  * @constructor
- * @param {string} uri - The URI of the webpage to scrape.
+ * @param {string} uri - The URI of the web page to scrape.
  */
 function WebScraper (uri, parser) {
   this.uri = uri
@@ -54,7 +54,7 @@ WebScraper.prototype.dispatch = function () {
 
 /**
  * Scrape a Last.fm tracklist.
- * @param {string} uri - The URI of the webpage to scrape.
+ * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.lastfm = function (uri) {
@@ -95,7 +95,7 @@ WebScraper.prototype.lastfm = function (uri) {
 
 /**
  * Scrape a Rate Your Music chart.
- * @param {string} uri - The URI of the webpage to scrape.
+ * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A newline-separated list of albums.
  */
 WebScraper.prototype.rym = function (uri) {
@@ -114,7 +114,30 @@ WebScraper.prototype.rym = function (uri) {
 
 /**
  * Scrape a web page.
- * @param {string} uri - The URI of the webpage to scrape.
+ *
+ * This function inspects the host of the web page and invokes an
+ * appropriate scraping function. The scraping functions are written
+ * in the following manner: they take the web page URI as input and
+ * return a generator string as output, wrapped in a Promise.
+ * Schematically:
+ *
+ *           web page:                      generator string
+ *     +-------------------+                   (Promise):
+ *     | track1 by artist1 |    scraping
+ *     +-------------------+    function    artist1 - track1
+ *     | track2 by artist2 |    =======>    artist2 - track2
+ *     +-------------------+                artist3 - track3
+ *     | track3 by artist3 |
+ *     +-------------------+
+ *
+ * In the example above, the scraping function converts a table of
+ * tracks to a generator string on the form `ARTIST - TRACK`. If the
+ * input was a albums chart, then the output would be a string of
+ * `#album` commands instead. In other words, the scraping function
+ * should extract the *meaning* of the web page and express it as
+ * input that could be passed to the generator.
+ *
+ * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A generator string.
  */
 WebScraper.prototype.scrape = function (uri) {
