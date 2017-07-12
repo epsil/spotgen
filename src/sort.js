@@ -14,14 +14,19 @@ function sort (arr, fn) {
   fn = fn || sort.ascending()
   var i = 0
   var pairs = arr.map(function (x) {
-    return util.pair(x, i++)
+    return {
+      idx: i++,
+      val: x
+    }
   })
   var cmp = sort.combine(function (a, b) {
-    return fn(util.first(a), util.first(b))
-  }, sort.ascending(util.second))
+    return fn(a.val, b.val)
+  }, sort.ascending(function (x) {
+    return x.idx
+  }))
   pairs = pairs.sort(cmp)
   for (i = 0; i < arr.length; i++) {
-    arr[i] = util.first(pairs[i])
+    arr[i] = pairs[i].val
   }
   return arr
 }
