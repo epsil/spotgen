@@ -16,7 +16,10 @@ util.identity = function (x) {
  * @return {Object} - A pair of values.
  */
 util.pair = function (x, y) {
-  return {first: x, second: y}
+  return {
+    first: x,
+    second: y
+  }
 }
 
 /**
