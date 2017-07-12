@@ -85774,7 +85774,10 @@ function http (uri, options) {
  * @return {Promise} A promise.
  */
 http.request = function (uri, options) {
+  var agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0; T312461)'
   options = options || {}
+  options.headers = options.headers || {}
+  options.headers['User-Agent'] = options.headers['User-Agent'] || agent
   var delay = options.delay || 100
   options.uri = uri || options.uri
   options.method = options.method || 'GET'
@@ -85894,7 +85897,7 @@ function Parser (token, handler) {
  * Parse a string and create a playlist generator.
  * @param {string} [str] - A newline-separated string of
  * entries on the form `TITLE - ARTIST`. May also contain
- * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` directives.
+ * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` commands.
  * @return {Generator} A playlist generator.
  */
 Parser.prototype.parse = function (str) {
@@ -86384,7 +86387,7 @@ jQuery = $
 /**
  * Create a web scraper.
  * @constructor
- * @param {string} uri - The URI of the webpage to scrape.
+ * @param {string} uri - The URI of the web page to scrape.
  */
 function WebScraper (uri, parser) {
   this.uri = uri
@@ -86396,7 +86399,8 @@ function WebScraper (uri, parser) {
  * Clean up a string.
  * @return {string} A new string.
  */
-WebScraper.prototype.cleanup = function (str) {
+WebScraper.prototype.trim = function (str) {
+  str = str || ''
   str = str.trim()
   str = str.replace(/[\s]+/g, ' ')
   str = util.toAscii(str)
@@ -86420,7 +86424,7 @@ WebScraper.prototype.createQueue = function (result) {
 WebScraper.prototype.dispatch = function () {
   var self = this
   console.log(this.uri)
-  return this.lastfm(this.uri).then(function (result) {
+  return this.scrape(this.uri).then(function (result) {
     console.log(result)
     return self.createQueue(result)
   })
@@ -86428,21 +86432,98 @@ WebScraper.prototype.dispatch = function () {
 
 /**
  * Scrape a Last.fm tracklist.
+ * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.lastfm = function (uri) {
   var self = this
-  return http(this.uri).then(function (data) {
+  return http(uri).then(function (data) {
     var result = ''
     var html = $($.parseHTML(data))
-    var tracks = html.find('td.chartlist-name')
-    tracks.each(function () {
-      var title = $(this).text()
-      title = self.cleanup(title)
-      result += title + '\n'
+    if (uri.match(/\/\+tracks/gi)) {
+      // tracks by a single artist
+      var artist = self.trim(html.find('h1.header-title').text())
+      html.find('td.chartlist-name').each(function () {
+        result += artist + ' - ' + self.trim($(this).text()) + '\n'
+      })
+    } else if (uri.match(/\/\+similar/gi)) {
+      // similar artists
+      html.find('h3.big-artist-list-title').each(function () {
+        result += '#top ' + self.trim($(this).text()) + '\n'
+      })
+    } else if (uri.match(/\/artists/gi)) {
+      // list of artists
+      html.find('td.chartlist-name').each(function () {
+        result += '#top ' + self.trim($(this).text()) + '\n'
+      })
+    } else if (uri.match(/\/albums/gi)) {
+      // list of albums
+      html.find('td.chartlist-name').each(function () {
+        result += '#album ' + self.trim($(this).text()) + '\n'
+      })
+    } else {
+      // list of tracks by various artists
+      html.find('td.chartlist-name').each(function () {
+        result += self.trim($(this).text()) + '\n'
+      })
+    }
+    return result.trim()
+  })
+}
+
+/**
+ * Scrape a Rate Your Music chart.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.rym = function (uri) {
+  var self = this
+  return http(uri).then(function (data) {
+    var result = ''
+    var html = $($.parseHTML(data))
+    html.find('div.chart_details').each(function () {
+      var artist = self.trim($(this).find('a.artist').text())
+      var album = self.trim($(this).find('a.album').text())
+      result += '#album ' + artist + ' - ' + album + '\n'
     })
     return result.trim()
   })
+}
+
+/**
+ * Scrape a web page.
+ *
+ * This function inspects the host of the web page and invokes an
+ * appropriate scraping function. The scraping functions are written
+ * in the following manner: they take the web page URI as input and
+ * return a generator string as output (wrapped in a Promise).
+ * Schematically:
+ *
+ *           web page:                      generator string
+ *     +-------------------+                   (Promise):
+ *     | track1 by artist1 |    scraping
+ *     +-------------------+    function    artist1 - track1
+ *     | track2 by artist2 |    =======>    artist2 - track2
+ *     +-------------------+                artist3 - track3
+ *     | track3 by artist3 |
+ *     +-------------------+
+ *
+ * In the example above, the scraping function converts a table of
+ * tracks to a generator string on the form `ARTIST - TRACK`. If the
+ * input was a albums chart, then the output would be a string of
+ * `#album` commands instead. In other words, the scraping function
+ * should extract the *meaning* of the web page and express it as
+ * input that could be passed to the generator.
+ *
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A generator string.
+ */
+WebScraper.prototype.scrape = function (uri) {
+  if (uri.match(/rateyourmusic.com/gi)) {
+    return this.rym(uri)
+  } else {
+    return this.lastfm(uri)
+  }
 }
 
 module.exports = WebScraper

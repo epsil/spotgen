@@ -118,7 +118,7 @@ WebScraper.prototype.rym = function (uri) {
  * This function inspects the host of the web page and invokes an
  * appropriate scraping function. The scraping functions are written
  * in the following manner: they take the web page URI as input and
- * return a generator string as output, wrapped in a Promise.
+ * return a generator string as output (wrapped in a Promise).
  * Schematically:
  *
  *           web page:                      generator string
