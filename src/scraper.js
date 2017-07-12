@@ -18,18 +18,6 @@ function WebScraper (uri, parser) {
 }
 
 /**
- * Clean up a string.
- * @return {string} A new string.
- */
-WebScraper.prototype.trim = function (str) {
-  str = str || ''
-  str = str.trim()
-  str = str.replace(/[\s]+/g, ' ')
-  str = util.toAscii(str)
-  return str
-}
-
-/**
  * Create a queue of tracks.
  * @param {string} result - A newline-separated list of tracks.
  * @return {Promise | Queue} A queue of results.
@@ -146,6 +134,18 @@ WebScraper.prototype.scrape = function (uri) {
   } else {
     return this.lastfm(uri)
   }
+}
+
+/**
+ * Clean up a string.
+ * @return {string} A new string.
+ */
+WebScraper.prototype.trim = function (str) {
+  str = str || ''
+  str = str.trim()
+  str = str.replace(/[\s]+/g, ' ')
+  str = util.toAscii(str)
+  return str
 }
 
 module.exports = WebScraper
