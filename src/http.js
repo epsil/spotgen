@@ -35,6 +35,9 @@ http.request = function (uri, options) {
   var delay = options.delay || 100
   options.uri = uri || options.uri
   options.method = options.method || 'GET'
+  options.headers = options.headers || {}
+  var ua = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0; T312461)'
+  options.headers['User-Agent'] = options.headers['User-Agent'] || ua
   delete options.delay
   return new Promise(function (resolve, reject) {
     setTimeout(function () {

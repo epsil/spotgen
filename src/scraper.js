@@ -46,7 +46,7 @@ WebScraper.prototype.createQueue = function (result) {
 WebScraper.prototype.dispatch = function () {
   var self = this
   console.log(this.uri)
-  return this.lastfm(this.uri).then(function (result) {
+  return this.scrape(this.uri).then(function (result) {
     console.log(result)
     return self.createQueue(result)
   })
@@ -54,6 +54,7 @@ WebScraper.prototype.dispatch = function () {
 
 /**
  * Scrape a Last.fm tracklist.
+ * @param {string} uri - The URI of the webpage to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.lastfm = function (uri) {
@@ -90,6 +91,40 @@ WebScraper.prototype.lastfm = function (uri) {
     }
     return result.trim()
   })
+}
+
+/**
+ * Scrape a Rate Your Music chart.
+ * @param {string} uri - The URI of the webpage to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.rym = function (uri) {
+  var self = this
+  return http(uri).then(function (data) {
+    console.log(data)
+    var result = ''
+    var html = $($.parseHTML(data))
+    // https://rateyourmusic.com/charts/top/album/2016
+    html.find('div.chart_details').each(function () {
+      var artist = self.trim($(this).find('a.artist').text())
+      var album = self.trim($(this).find('a.album').text())
+      result += '#album ' + artist + ' - ' + album + '\n'
+    })
+    return result.trim()
+  })
+}
+
+/**
+ * Scrape a web page.
+ * @param {string} uri - The URI of the webpage to scrape.
+ * @return {Promise | string} A generator string.
+ */
+WebScraper.prototype.scrape = function (uri) {
+  if (uri.match(/rateyourmusic.com/gi)) {
+    return this.rym(uri)
+  } else {
+    return this.lastfm(uri)
+  }
 }
 
 module.exports = WebScraper
