@@ -50,11 +50,11 @@ SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, cli
   var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
   var uri = 'https://accounts.spotify.com/api/token'
   return http.json(uri, {
-    'method': 'POST',
-    'headers': {
-      'Authorization': auth
+    method: 'POST',
+    headers: {
+      Authorization: auth
     },
-    'form': {
+    form: {
       'grant_type': grantType
     }
   })

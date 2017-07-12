@@ -19,12 +19,12 @@ module.exports = function (key) {
     correct = (correct === undefined) ? true : correct
     correct = correct ? 1 : 0
     return lastfm.request(uri, {
-      'qs': {
-        'artist': artist,
-        'track': title,
-        'user': user,
-        'autocorrect': correct,
-        'format': 'json'
+      qs: {
+        artist: artist,
+        track: title,
+        user: user,
+        autocorrect: correct,
+        format: 'json'
       }
     }).then(function (result) {
       if (result && !result.error && result.track) {
