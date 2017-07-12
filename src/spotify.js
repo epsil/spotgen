@@ -34,7 +34,7 @@ function SpotifyRequestHandler (clientId, clientSecret, token) {
  * from the command line. It does not work when run from a browser,
  * because Spotify's authentication server rejects cross-site
  * requests. In that case, authenticate with the Implicit Grant Flow
- * instead and pass the received access token to this class.
+ * instead.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *
@@ -62,6 +62,12 @@ SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, cli
 
 /**
  * Authenticate with the Implicit Grant Flow.
+ *
+ * Returns a URI that the calling web application can use to redirect
+ * the user to a Spotify login screen. After the user has logged in,
+ * Spotify redirects back to the web application with an access token
+ * (included in the hash fragment of the URI). That token can then be
+ * passed to this class.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
  *
