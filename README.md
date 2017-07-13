@@ -140,6 +140,12 @@ To reverse the order of the tracks, add the line:
 
     #reverse
 
+### Shuffle
+
+To shuffle the order of the tracks, add the line:
+
+    #shuffle
+
 ### Order
 
 To order the tracks by Spotify popularity, use `#order by`:

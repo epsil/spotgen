@@ -47,6 +47,11 @@ function Generator (spotify) {
   this.reverse = false
 
   /**
+   * Whether to shuffle the playlist.
+   */
+  this.shuffle = false
+
+  /**
    * Whether to remove duplicates.
    */
   this.unique = true
@@ -116,7 +121,7 @@ Generator.prototype.dispatch = function () {
   }).then(function () {
     return self.alternate()
   }).then(function () {
-    return self.reverseOrder()
+    return self.reorder()
   })
 }
 
@@ -221,9 +226,11 @@ Generator.prototype.refreshTracks = function () {
  * Reverse the order of the entries.
  * @return {Promise|Generator} - Itself.
  */
-Generator.prototype.reverseOrder = function () {
+Generator.prototype.reorder = function () {
   if (this.reverse) {
     return this.entries.reverse()
+  } else if (this.shuffle) {
+    return this.entries.shuffle()
   }
   return Promise.resolve(this.entries)
 }

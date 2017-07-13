@@ -45,6 +45,8 @@ Parser.prototype.parse = function (str) {
         generator.unique = false
       } else if (line.match(/^#REVERSE/i)) {
         generator.reverse = true
+      } else if (line.match(/^#SHUFFLE/i)) {
+        generator.shuffle = true
       } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
         generator.unique = true
       } else if (line.match(/^#(CSV|CVS)/i)) {

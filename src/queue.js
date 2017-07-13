@@ -374,6 +374,29 @@ Queue.prototype.shift = function () {
 }
 
 /**
+ * Shuffle the elements in the queue.
+ *
+ * Uses the Fisher-Yates algorithm.
+ *
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.shuffle = function () {
+  var counter = this.queue.length
+  // while there are elements in the array ...
+  while (counter > 0) {
+    // ... pick a random index ...
+    var index = Math.floor(Math.random() * counter)
+    // ... decrease the counter by 1 ...
+    counter--
+    // ... and swap the last element with it
+    var temp = this.queue[counter]
+    this.queue[counter] = this.queue[index]
+    this.queue[index] = temp
+  }
+  return this
+}
+
+/**
  * Convert queue to array.
  * @return {Array} An array of playlist entries.
  */
