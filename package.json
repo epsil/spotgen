@@ -7,6 +7,9 @@
     "type": "git",
     "url": "git+https://github.com/epsil/spotify-js.git"
   },
+  "bin": {
+    "spotify-js": "index.js"
+  },
   "scripts": {
     "clean": "git stash && git clean -d -f -f -x",
     "clean!": "npm run reset && npm run clean",
