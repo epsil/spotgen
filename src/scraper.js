@@ -23,9 +23,9 @@ function WebScraper (uri, parser) {
  *
  * This function inspects the host of the web page and invokes an
  * appropriate scraping function. The scraping functions are written
- * in the following manner: they take the web page URI as input and
- * return a generator string as output (wrapped in a Promise).
- * Schematically:
+ * in the following manner: they take the web page URI as input,
+ * fetch the page, and return a generator string as output (wrapped
+ * in a Promise). Schematically:
  *
  *           web page:                      generator string
  *     +-------------------+                   (Promise):
@@ -41,7 +41,7 @@ function WebScraper (uri, parser) {
  * input was an albums chart, then the output should be a string of
  * `#album` commands instead. In other words, the scraping function
  * should extract the *meaning* of the web page and express it as
- * input that could be passed to the generator.
+ * input to the generator.
  *
  * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A generator string.
