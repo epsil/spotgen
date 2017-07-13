@@ -134,6 +134,33 @@ WebScraper.prototype.rateyourmusic = function (uri) {
 }
 
 /**
+ * Scrape a Reddit forum.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.reddit = function (uri) {
+  var self = this
+  function cleanup (str) {
+    str = self.trim(str)
+    str = str.replace(/].*/gi, ']')
+    str = str.replace(/\).*/gi, ')')
+    str = str.replace(/\[[^\]]*]/gi, '')
+    str = str.replace(/\([^)]*\)/gi, '')
+    str = str.replace(/[^-\w\s]/gi, '')
+    return str
+  }
+  return http(uri).then(function (data) {
+    var result = ''
+    var html = $($.parseHTML(data))
+    html.find('a.title').each(function () {
+      var track = cleanup(self.trim($(this).text()))
+      result += track + '\n'
+    })
+    return result.trim()
+  })
+}
+
+/**
  * Scrape a web page.
  *
  * This function inspects the host of the web page and invokes an
@@ -167,6 +194,8 @@ WebScraper.prototype.scrape = function (uri) {
     return this.pitchfork(uri)
   } else if (domain === 'rateyourmusic.com') {
     return this.rateyourmusic(uri)
+  } else if (domain === 'reddit.com') {
+    return this.reddit(uri)
   } else {
     return this.lastfm(uri)
   }
