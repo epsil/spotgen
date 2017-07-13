@@ -38,7 +38,7 @@ function WebScraper (uri, parser) {
  *
  * In the example above, the scraping function converts a table of
  * tracks to a generator string on the form `ARTIST - TRACK`. If the
- * input was an albums chart, then the output should be a string of
+ * input were an albums chart, then the output would be a string of
  * `#album` commands instead. In other words, the scraping function
  * should extract the *meaning* of the web page and express it as
  * input to the generator.
