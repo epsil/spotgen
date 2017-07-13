@@ -118,8 +118,8 @@ WebScraper.prototype.trim = function (str) {
 WebScraper.prototype.lastfm = function (uri) {
   var self = this
   return http(uri).then(function (data) {
-    var result = ''
     var html = $($.parseHTML(data))
+    var result = ''
     if (uri.match(/\/\+tracks/gi)) {
       // tracks by a single artist
       var header = html.find('header a.library-header-crumb')
@@ -191,8 +191,8 @@ WebScraper.prototype.pitchfork = function (uri) {
 WebScraper.prototype.rateyourmusic = function (uri) {
   var self = this
   return http(uri).then(function (data) {
-    var result = ''
     var html = $($.parseHTML(data))
+    var result = ''
     html.find('div.chart_details').each(function () {
       var artist = self.trim($(this).find('a.artist').text())
       var album = self.trim($(this).find('a.album').text())
@@ -210,8 +210,8 @@ WebScraper.prototype.rateyourmusic = function (uri) {
 WebScraper.prototype.reddit = function (uri) {
   var self = this
   return http(uri).then(function (data) {
-    var result = ''
     var html = $($.parseHTML(data))
+    var result = ''
     html.find('a.title').each(function () {
       var track = self.cleanup($(this).text())
       result += track + '\n'
@@ -232,8 +232,8 @@ WebScraper.prototype.reddit = function (uri) {
 WebScraper.prototype.webpage = function (uri) {
   var self = this
   return http(uri).then(function (data) {
-    var result = ''
     var html = $($.parseHTML(data))
+    var result = ''
     html.find('a').each(function () {
       var track = self.cleanup($(this).text())
       result += track + '\n'
