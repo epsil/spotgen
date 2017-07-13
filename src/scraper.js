@@ -94,7 +94,9 @@ WebScraper.prototype.cleanup = function (str) {
   str = str.replace(/\).*/gi, ')')
   str = str.replace(/\[[^\]]*]/gi, '')
   str = str.replace(/\([^)]*\)/gi, '')
-  str = str.replace(/[^-\w\s]/gi, '')
+  str = str.replace(/-+/gi, '-')
+  str = str.replace(/\.+/gi, '.')
+  str = str.replace(/[^-'.\w\s]/gi, '')
   return str
 }
 
