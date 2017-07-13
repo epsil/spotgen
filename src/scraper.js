@@ -87,6 +87,34 @@ WebScraper.prototype.lastfm = function (uri) {
 }
 
 /**
+ * Scrape a Pitchfork list.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.pitchfork = function (uri) {
+  var self = this
+  function getPages (uri, result) {
+    return http(uri).then(function (data) {
+      var html = $($.parseHTML(data))
+      html.find('div.artist-work').each(function () {
+        var artist = self.trim($(this).find('ul.artist-list li:first').text())
+        var album = self.trim($(this).find('h2.work-title').text())
+        result += '#album ' + artist + ' - ' + album + '\n'
+      })
+      var nextPage = html.find('.fts-pagination__list-item--active').next()
+      if (nextPage.length > 0) {
+        var nextUri = nextPage.find('a').attr('href')
+        nextUri = URI(nextUri).absoluteTo(uri).toString()
+        return getPages(nextUri, result)
+      } else {
+        return result.trim()
+      }
+    })
+  }
+  return getPages(uri, '')
+}
+
+/**
  * Scrape a Rate Your Music chart.
  * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A newline-separated list of albums.
@@ -135,7 +163,9 @@ WebScraper.prototype.rym = function (uri) {
  */
 WebScraper.prototype.scrape = function (uri) {
   var domain = URI(uri).domain()
-  if (domain === 'rateyourmusic.com') {
+  if (domain === 'pitchfork.com') {
+    return this.pitchfork(uri)
+  } else if (domain === 'rateyourmusic.com') {
     return this.rym(uri)
   } else {
     return this.lastfm(uri)
