@@ -93,8 +93,9 @@ WebScraper.prototype.lastfm = function (uri) {
  */
 WebScraper.prototype.pitchfork = function (uri) {
   var self = this
-  function getPages (uri, result) {
-    return http(uri).then(function (data) {
+  function getPages (nextUri, result) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
       html.find('div.artist-work').each(function () {
         var artist = self.trim($(this).find('ul.artist-list li:first').text())
@@ -103,8 +104,7 @@ WebScraper.prototype.pitchfork = function (uri) {
       })
       var nextPage = html.find('.fts-pagination__list-item--active').next()
       if (nextPage.length > 0) {
-        var nextUri = nextPage.find('a').attr('href')
-        nextUri = URI(nextUri).absoluteTo(uri).toString()
+        nextUri = nextPage.find('a').attr('href')
         return getPages(nextUri, result)
       } else {
         return result.trim()
@@ -119,7 +119,7 @@ WebScraper.prototype.pitchfork = function (uri) {
  * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A newline-separated list of albums.
  */
-WebScraper.prototype.rym = function (uri) {
+WebScraper.prototype.rateyourmusic = function (uri) {
   var self = this
   return http(uri).then(function (data) {
     var result = ''
@@ -166,7 +166,7 @@ WebScraper.prototype.scrape = function (uri) {
   if (domain === 'pitchfork.com') {
     return this.pitchfork(uri)
   } else if (domain === 'rateyourmusic.com') {
-    return this.rym(uri)
+    return this.rateyourmusic(uri)
   } else {
     return this.lastfm(uri)
   }
