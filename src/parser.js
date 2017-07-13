@@ -49,6 +49,8 @@ Parser.prototype.parse = function (str) {
         generator.shuffle = true
       } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
         generator.unique = true
+      } else if (line.match(/^#DEDUP/i)) {
+        generator.unique = false
       } else if (line.match(/^#(CSV|CVS)/i)) {
         generator.csv = true
       } else if (line.match(/^##/i) ||
