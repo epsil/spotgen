@@ -48,14 +48,16 @@ function WebScraper (uri, parser) {
  */
 WebScraper.prototype.scrape = function (uri) {
   var domain = URI(uri).domain()
-  if (domain === 'pitchfork.com') {
+  if (domain === 'last.fm') {
+    return this.lastfm(uri)
+  } else if (domain === 'pitchfork.com') {
     return this.pitchfork(uri)
   } else if (domain === 'rateyourmusic.com') {
     return this.rateyourmusic(uri)
   } else if (domain === 'reddit.com') {
     return this.reddit(uri)
   } else {
-    return this.lastfm(uri)
+    return this.webpage(uri)
   }
 }
 
@@ -83,7 +85,21 @@ WebScraper.prototype.dispatch = function () {
 }
 
 /**
- * Clean up a string.
+ * Clean up a string's contents.
+ * @return {string} A new string.
+ */
+WebScraper.prototype.cleanup = function (str) {
+  str = this.trim(str)
+  str = str.replace(/].*/gi, ']')
+  str = str.replace(/\).*/gi, ')')
+  str = str.replace(/\[[^\]]*]/gi, '')
+  str = str.replace(/\([^)]*\)/gi, '')
+  str = str.replace(/[^-\w\s]/gi, '')
+  return str
+}
+
+/**
+ * Clean up a string's whitespace.
  * @return {string} A new string.
  */
 WebScraper.prototype.trim = function (str) {
@@ -193,20 +209,33 @@ WebScraper.prototype.rateyourmusic = function (uri) {
  */
 WebScraper.prototype.reddit = function (uri) {
   var self = this
-  function cleanup (str) {
-    str = self.trim(str)
-    str = str.replace(/].*/gi, ']')
-    str = str.replace(/\).*/gi, ')')
-    str = str.replace(/\[[^\]]*]/gi, '')
-    str = str.replace(/\([^)]*\)/gi, '')
-    str = str.replace(/[^-\w\s]/gi, '')
-    return str
-  }
   return http(uri).then(function (data) {
     var result = ''
     var html = $($.parseHTML(data))
     html.find('a.title').each(function () {
-      var track = cleanup($(this).text())
+      var track = self.cleanup($(this).text())
+      result += track + '\n'
+    })
+    return result.trim()
+  })
+}
+
+/**
+ * Scrape a web page.
+ *
+ * This is a fall-back function in case none of the other
+ * scraping functions apply.
+ *
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.webpage = function (uri) {
+  var self = this
+  return http(uri).then(function (data) {
+    var result = ''
+    var html = $($.parseHTML(data))
+    html.find('a').each(function () {
+      var track = self.cleanup($(this).text())
       result += track + '\n'
     })
     return result.trim()
