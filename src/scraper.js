@@ -91,12 +91,12 @@ WebScraper.prototype.dispatch = function () {
 WebScraper.prototype.cleanup = function (str) {
   str = this.trim(str)
   str = str.replace(/].*/gi, ']')
-  str = str.replace(/\).*/gi, ')')
-  str = str.replace(/\[[^\]]*]/gi, '')
-  str = str.replace(/\([^)]*\)/gi, '')
-  str = str.replace(/-+/gi, '-')
-  str = str.replace(/\.+/gi, '.')
-  str = str.replace(/[^-'.\w\s]/gi, '')
+    .replace(/\).*/gi, ')')
+    .replace(/\[[^\]]*]/gi, '')
+    .replace(/\([^)]*\)/gi, '')
+    .replace(/-+/gi, '-')
+    .replace(/\.+/gi, '.')
+    .replace(/[^-'.\w\s]/gi, '')
   return str
 }
 
