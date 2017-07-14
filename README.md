@@ -57,7 +57,7 @@ To scrape a [Pitchfork](http://pitchfork.com/) list:
 
 #### Rate Your Music
 
-To scrape a [Rate Your Music](https://rateyourmusic.com/) chart:
+To scrape a [Rate Your Music](http://rateyourmusic.com/) chart:
 
     http://rateyourmusic.com/charts/top/album/2016
 
@@ -69,7 +69,7 @@ To scrape a [Reddit](http://www.reddit.com/) forum:
 
 To scrape a comments thread:
 
-    http://www.reddit.com/r/Music/comments/56klgl/recommend_me_some_angry_songs/
+    http://www.reddit.com/r/Music/comments/2zpfv7/whats_the_catchiest_song_you_know_that_just_makes/
 
 When scraping threads, it can be a good idea to add the [`#order by lastfm`](#order) command. This will order the results by [Last.fm](http://last.fm/) popularity and thereby filter out noise.
 
@@ -223,7 +223,7 @@ Likewise, spotify URIs are handled as well:
 
 ### M3U playlists
 
-One can also import [M3U](https://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`), provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
+One can also import [M3U](http://en.wikipedia.org/wiki/M3U) playlists (with the file extension `.m3u` or `.m3u8`), provided they contain `EXTM3U` metadata. That is, the playlist should be on the form:
 
     #EXTM3U
     #EXTINF:404,Desire Lines - Deerhunter
@@ -271,7 +271,7 @@ CSV files have the advantage of being editable with a spreadsheet editor such as
 Command-line script
 -------------------
 
-A command-line version is available. It requires [Node](https://nodejs.org/) to be installed.
+A command-line version is available. It requires [Node](http://nodejs.org/) to be installed.
 
 After installing Node, fetch the source code, which is located at [GitHub](https://github.com/epsil/spotify-js):
 
@@ -298,7 +298,7 @@ The generator is also available as a single-page application running in the brow
 
 The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the [command-line version](#command-line-script) can be used without logging in.)
 
-The web version does not support [web scraping](#web-scraping), due to browser limits on [cross-site requests](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing). For this, one has to use the command-line version.
+The web version does not support [web scraping](#web-scraping), due to browser limits on [cross-site requests](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing). For this, one has to use the command-line version.
 
 It is also possible to run the web version locally:
 
@@ -308,7 +308,7 @@ This will start up a `http-server` instance at <http://localhost:9000/>.
 
 Note that Spotify's authentication service requires the web version to be hosted at a whitelisted address. This is the reason for running `http-server` at port 9000 (merely opening `index.html` in a browser will not work).
 
-For more information about authentication, see the [Spotify Web API](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow) documentation.
+For more information about authentication, see the [Spotify Web API](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow) documentation.
 
 Links
 -----
@@ -316,7 +316,7 @@ Links
 -   [Web interface](https://epsil.github.io/spotify/)
 -   [GitHub repository](https://github.com/epsil/spotify-js)
 -   [Developer documentation](https://epsil.github.io/spotify/doc/)
--   [Spotify Web API documentation](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow)
+-   [Spotify Web API documentation](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow)
 -   [Additional tips](Tips.md)
 
 ### See also
@@ -328,4 +328,4 @@ Links
 
 -   [MagicPlaylist](http://magicplaylist.co/) ([source](https://github.com/loverajoel/magicplaylist))
 -   [20v](http://20v.co/) ([source](https://github.com/fusenlabs/20v))
--   [Spotibot](https://www.spotibot.com/)
+-   [Spotibot](http://www.spotibot.com/)
