@@ -4,18 +4,44 @@ Tips
 Last.fm
 -------
 
-[Last.fm](http://last.fm/)'s webpages are a goldmine of recommendations. For example, if one has a high compatibility with another user, that user's "top tracks" often makes for an interesting playlist.
+To create a playlist of tracks a user has listened to on a particular day:
+
+    http://www.last.fm/user/username/library?from=2012-07-21&to=2013-07-21
+
+To create a playlist of a user's favorite tracks for a given year:
+
+    http://www.last.fm/user/username/library/tracks?from=2012-01-01&to=2013-01-01
+
+To create a playlist of a user's favorite tracks of all time:
+
+    http://www.last.fm/user/username/library/tracks
+
+To create a playlist of a user's favorite albums:
+
+    http://www.last.fm/user/username/library/albums
+
+To create a playlist of a user's favorite artists:
+
+    http://www.last.fm/user/username/library/artists
+
+To create a playlist of an artist's top tracks:
+
+    http://www.last.fm/music/Artist+Name/+tracks
+
+To create a playlist of artists similar to an artist:
+
+    http://www.last.fm/music/Artist+Name/+similar
+
+Last.fm's webpages are a goldmine of recommendations. For example, if one has a high compatibility with another user, that user's "top tracks" often makes for an interesting playlist.
 
 Similarly, one's own "top tracks" are also a good source of favorites, especially in combination with a time criteria. The "top tracks" chart for an earlier year is a good indication of one's listening habits in that time period, and a rich source of "lost gems" which one may have forgotten about in the meantime.
 
 Last.fm also provides information about an artist's top tracks and similar artists. Such functionality is built into Spotify as well, but Last.fm's recommendations are a good supplement.
 
-At the moment, Last.fm scraping is not supported by the [web version](https://epsil.github.io/spotify/) of the generator, due to browser limits on [cross-site requests](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing). Therefore, only the [command-line version](README.md#command-line-script) supports web scraping.
-
 Recipes
 -------
 
-### Last.fm similar artists
+### Last.fm similar artists, interleaved together
 
     #alternate by artist
     http://www.last.fm/music/Artist+Name/+similar

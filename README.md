@@ -41,34 +41,6 @@ The generator can be instructed to fetch data from [Last.fm](http://last.fm/)'s 
 
     http://www.last.fm/user/username/library/tracks
 
-To create a playlist of tracks a user has listened to on a particular day:
-
-    http://www.last.fm/user/username/library?from=2012-07-21&to=2013-07-21
-
-To create a playlist of a user's favorite tracks for a given year:
-
-    http://www.last.fm/user/username/library/tracks?from=2012-01-01&to=2013-01-01
-
-To create a playlist of a user's favorite tracks of all time:
-
-    http://www.last.fm/user/username/library/tracks
-
-To create a playlist of a user's favorite albums:
-
-    http://www.last.fm/user/username/library/albums
-
-To create a playlist of a user's favorite artists:
-
-    http://www.last.fm/user/username/library/artists
-
-To create a playlist of an artist's top tracks:
-
-    http://www.last.fm/music/Artist+Name/+tracks
-
-To create a playlist of artists similar to an artist:
-
-    http://www.last.fm/music/Artist+Name/+similar
-
 Note that Last.fm lists tracks in reverse chronological order. To create a chronological playlist, add the [`#reverse`](#reverse) command.
 
 [More on Last.fm scraping](Tips.md#lastfm).
