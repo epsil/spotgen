@@ -19,12 +19,11 @@ function sort (arr, fn) {
       val: x
     }
   })
-  var cmp = sort.combine(function (a, b) {
-    return fn(a.val, b.val)
-  }, sort.ascending(function (x) {
-    return x.idx
-  }))
-  pairs = pairs.sort(cmp)
+  pairs = pairs.sort(function (a, b) {
+    var x = fn(a.val, b.val)
+    if (x) { return x }
+    return (a.idx < b.idx) ? -1 : ((a.idx > b.idx) ? 1 : 0)
+  })
   for (i = 0; i < arr.length; i++) {
     arr[i] = pairs[i].val
   }
