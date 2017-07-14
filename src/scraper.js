@@ -208,18 +208,56 @@ WebScraper.prototype.rateyourmusic = function (uri) {
 
 /**
  * Scrape a Reddit forum.
+ *
+ * Handles post listing and comment threads. Employs Bob Nisco's
+ * heuristic for parsing comments.
+ *
  * @param {string} uri - The URI of the web page to scrape.
- * @return {Promise | string} A newline-separated list of albums.
+ * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.reddit = function (uri) {
   var self = this
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
-    html.find('a.title').each(function () {
-      var track = self.cleanup($(this).text())
-      result += track + '\n'
-    })
+    if (uri.match(/\/comments\//gi)) {
+      // comments thread
+      html.find('div.commentarea div.md').each(function () {
+        // first assumption: if there are links,
+        // they are probably links to songs
+        var links = $(this).find('a')
+        if (links.length > 0) {
+          links.each(function () {
+            result += self.cleanup($(this).text()) + '\n'
+          })
+          return
+        }
+        // second assumption: if there are multiple sentences,
+        // the song is the first one
+        var body = $(this).text()
+        var sentences = body.split('.')
+        if (sentences.length > 1) {
+          result += self.cleanup(sentences[0]) + '\n'
+          return
+        }
+        // third assumption: if there are multiple lines to a comment,
+        // then the song will be on the first line with a user's
+        // comments on other lines after it
+        var lines = body.split('\n')
+        if (lines.length > 1) {
+          result += self.cleanup(lines[0]) + '\n'
+          return
+        }
+        // fall-back case
+        result += self.cleanup(body) + '\n'
+      })
+    } else {
+      // post listing
+      html.find('a.title').each(function () {
+        var track = self.cleanup($(this).text())
+        result += track + '\n'
+      })
+    }
     return result.trim()
   })
 }
@@ -231,7 +269,7 @@ WebScraper.prototype.reddit = function (uri) {
  * scraping functions apply.
  *
  * @param {string} uri - The URI of the web page to scrape.
- * @return {Promise | string} A newline-separated list of albums.
+ * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.webpage = function (uri) {
   var self = this
@@ -249,7 +287,7 @@ WebScraper.prototype.webpage = function (uri) {
 /**
  * Scrape a YouTube playlist.
  * @param {string} uri - The URI of the web page to scrape.
- * @return {Promise | string} A newline-separated list of albums.
+ * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.youtube = function (uri) {
   var self = this
