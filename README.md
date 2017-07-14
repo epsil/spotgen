@@ -71,7 +71,7 @@ To scrape a comments thread:
 
     http://www.reddit.com/r/Music/comments/2zpfv7/whats_the_catchiest_song_you_know_that_just_makes/
 
-When scraping threads, it can be a good idea to add the [`#order by lastfm`](#order) command. This will order the results by [Last.fm](http://last.fm/) popularity and thereby filter out noise.
+When scraping threads, it can be a good idea to add the [`#order by lastfm`](#order) command. This will order the results by [Last.fm](http://last.fm/) popularity, thereby filtering out noise.
 
 #### YouTube
 
