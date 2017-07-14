@@ -222,7 +222,7 @@ WebScraper.prototype.reddit = function (uri) {
     var result = ''
     if (uri.match(/\/comments\//gi)) {
       // comments thread
-      html.find('div.commentarea div.md').each(function () {
+      html.find('div.usertext-body div.md, div.commentarea div.md').each(function () {
         // first assumption: if there are links,
         // they are probably links to songs
         var links = $(this).find('a')
