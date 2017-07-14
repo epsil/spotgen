@@ -73,6 +73,30 @@ Note that Last.fm lists tracks in reverse chronological order. To create a chron
 
 [More on Last.fm scraping](Tips.md#lastfm).
 
+#### Pitchfork
+
+To scrape a [Pitchfork](http://pitchfork.com/) list:
+
+    http://pitchfork.com/features/lists-and-guides/9980-the-50-best-albums-of-2016/
+
+#### Rate Your Music
+
+To scrape a [Rate Your Music](https://rateyourmusic.com/) chart:
+
+    http://rateyourmusic.com/charts/top/album/2016
+
+#### Reddit
+
+To scrape a [Reddit](http://www.reddit.com/) forum:
+
+    http://www.reddit.com/r/SoundsVintage/
+
+#### YouTube
+
+To convert a [YouTube](http://www.youtube.com/) playlist:
+
+    http://www.youtube.com/watch?v=yWEK4v9AVKQ&list=PLChOO_ZAB22WuyDODJ3kjJiU0oQzWOTyb
+
 ### Top tracks
 
 To retrieve the top 10 tracks of an artist, pass the following to the generator:
