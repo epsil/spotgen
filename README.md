@@ -261,15 +261,23 @@ CSV files have the advantage of being editable with a spreadsheet editor such as
 Command-line script
 -------------------
 
-A command-line version is available. The source code is located at [GitHub](https://github.com/epsil/spotify-js):
+A command-line version is available. It requires [Node](https://nodejs.org/) to be installed.
+
+After installing Node, fetch the source code, which is located at [GitHub](https://github.com/epsil/spotify-js):
 
     $ git clone https://github.com/epsil/spotify-js.git
 
 Alternatively, download a [ZIP file](https://github.com/epsil/spotify-js/archive/master.zip).
 
-The script requires [Node](https://nodejs.org/) to be installed. Run it with `./index.js` or `node index`:
+The script can be run with `./index.js` or `node index`:
 
     $ ./index.js input.txt output.spotify.txt
+
+On Linux or OS X, a symbolic link can be created like so:
+
+    $ ln -s /path/to/spotify-js/index.js /usr/local/bin/spotify-js
+
+Then the script can be invoked as `spotify-js`.
 
 [More on the command-line version](Tips.md#multiple-playlists).
 
