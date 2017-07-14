@@ -222,13 +222,16 @@ WebScraper.prototype.reddit = function (uri) {
     var result = ''
     if (uri.match(/\/comments\//gi)) {
       // comments thread
-      html.find('div.usertext-body div.md, div.commentarea div.md').each(function () {
+      html.find('div.entry div.md').each(function () {
         // first assumption: if there are links,
         // they are probably links to songs
         var links = $(this).find('a')
         if (links.length > 0) {
           links.each(function () {
-            result += self.cleanup($(this).text()) + '\n'
+            var txt = $(this).text()
+            if (!txt.match(/https?:/gi)) {
+              result += self.cleanup(txt) + '\n'
+            }
           })
           return
         }
