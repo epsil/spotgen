@@ -91,7 +91,6 @@ WebScraper.prototype.dispatch = function () {
  * @return {string} A new string.
  */
 WebScraper.prototype.cleanup = function (str) {
-  str = this.trim(str)
   str = str.replace(/].*/gi, ']')
     .replace(/\).*/gi, ')')
     .replace(/\[[^\]]*]/gi, '')
@@ -99,6 +98,7 @@ WebScraper.prototype.cleanup = function (str) {
     .replace(/-+/gi, '-')
     .replace(/\.+/gi, '.')
     .replace(/[^-'.\w\s]/gi, '')
+  str = this.trim(str)
   return str
 }
 
