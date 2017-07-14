@@ -56,6 +56,8 @@ WebScraper.prototype.scrape = function (uri) {
     return this.rateyourmusic(uri)
   } else if (domain === 'reddit.com') {
     return this.reddit(uri)
+  } else if (domain === 'youtube.com') {
+    return this.youtube(uri)
   } else {
     return this.webpage(uri)
   }
@@ -237,6 +239,24 @@ WebScraper.prototype.webpage = function (uri) {
     var html = $($.parseHTML(data))
     var result = ''
     html.find('a').each(function () {
+      var track = self.cleanup($(this).text())
+      result += track + '\n'
+    })
+    return result.trim()
+  })
+}
+
+/**
+ * Scrape a YouTube playlist.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.youtube = function (uri) {
+  var self = this
+  return http(uri).then(function (data) {
+    var html = $($.parseHTML(data))
+    var result = ''
+    html.find('div.playlist-video-description h4, a.pl-video-title-link').each(function () {
       var track = self.cleanup($(this).text())
       result += track + '\n'
     })
