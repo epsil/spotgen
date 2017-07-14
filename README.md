@@ -33,15 +33,19 @@ Below follows a list of **generator commands**. One can generate a playlist in m
 
 ### Web scraping
 
-Note: web scraping is only available in the [command-line version](#command-line-script).
+The generator can scrape data from web pages. Note that this functionality is only available in the [command-line version](#command-line-script).
 
 #### Last.fm
 
-The generator can be instructed to fetch data from [Last.fm](http://last.fm/)'s webpages simply by supplying the page's address. For example, to create a playlist of a user's recently played tracks, add the line:
+The generator can be instructed to fetch data from [Last.fm](http://last.fm/)'s webpages simply by supplying the page's address. For example, to create a playlist of artists similar to an artist, add the line:
+
+    http://www.last.fm/music/Artist+Name/+similar
+
+To create a playlist of a user's recently played tracks:
 
     http://www.last.fm/user/username/library/tracks
 
-Note that Last.fm lists tracks in reverse chronological order. To create a chronological playlist, add the [`#reverse`](#reverse) command.
+Note that Last.fm displays listening history in reverse chronological order. To create a chronological playlist, add the [`#reverse`](#reverse) command.
 
 [More on Last.fm scraping](Tips.md#lastfm).
 
@@ -62,6 +66,12 @@ To scrape a [Rate Your Music](https://rateyourmusic.com/) chart:
 To scrape a [Reddit](http://www.reddit.com/) forum:
 
     http://www.reddit.com/r/SoundsVintage/
+
+To scrape a comments thread:
+
+    http://www.reddit.com/r/Music/comments/56klgl/recommend_me_some_angry_songs/
+
+When scraping threads, it can be a good idea to add the [`#order by lastfm`](#order) command. This will order the results by [Last.fm](http://last.fm/) popularity and thereby filter out noise.
 
 #### YouTube
 
