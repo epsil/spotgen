@@ -104,14 +104,12 @@ Parser.prototype.parse = function (str) {
         var uriTrack = new Track(this.spotify, uri)
         generator.add(uriTrack)
       } else if (line.match(/^https?:\/\/open.spotify.com/i)) {
-        var track = new Track(this.spotify, line)
-        generator.add(track)
+        generator.add(new Track(this.spotify, line))
       } else if (line.match(/^https?:/i)) {
         var scraper = new WebScraper(line, this)
         generator.add(scraper)
       } else if (line) {
-        var track = new Track(this.spotify, line)
-        generator.add(track)
+        generator.add(new Track(this.spotify, line))
       }
     }
   }

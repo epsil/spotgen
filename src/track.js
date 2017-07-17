@@ -175,7 +175,7 @@ Track.prototype.fetchLastfm = function (user) {
  */
 Track.prototype.fetchTrack = function () {
   var self = this
-  return this.spotify.getTrack(this.id()).then(function (result) {
+  return this.spotify.getTrack(this.getID()).then(function (result) {
     self.response = result
     return self
   })
@@ -199,27 +199,6 @@ Track.prototype.hasArtist = function (artist) {
     }
   }
   return false
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the track,
- * or `-1` if not available.
- */
-Track.prototype.id = function () {
-  if (this.response &&
-      this.response.id) {
-    return this.response.id
-  } else if (this.responseSimple &&
-             this.responseSimple.id) {
-    return this.responseSimple.id
-  } else if (this.isURI(this.entry)) {
-    return this.entry.substring(14)
-  } else if (this.isLink(this.entry)) {
-    return this.entry.split('/')[4]
-  } else {
-    return -1
-  }
 }
 
 /**
