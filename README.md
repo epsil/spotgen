@@ -31,6 +31,9 @@ To **import** the playlist into Spotify:
 
 Below follows a list of **generator commands**. One can generate a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
 
+Commands
+--------
+
 ### Web scraping
 
 The generator can scrape data from web pages. Note that this functionality is only available in the [command-line version](#command-line-script).
