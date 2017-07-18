@@ -99,12 +99,9 @@ Parser.prototype.parse = function (str) {
           }
         }
       } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
-        var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
-        var uri = uriMatch[0]
-        var uriTrack = new Track(this.spotify, uri)
-        generator.add(uriTrack)
+        generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/^https?:\/\/open.spotify.com/i)) {
-        generator.add(new Track(this.spotify, line))
+        generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/^https?:/i)) {
         var scraper = new WebScraper(line, this)
         generator.add(scraper)
