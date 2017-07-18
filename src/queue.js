@@ -80,7 +80,7 @@ Queue.prototype.dedup = function () {
         return other.refresh().then(function () {
           return entry.refresh()
         }).then(function () {
-          if (entry.popularity() > other.popularity()) {
+          if (entry.popularity > other.popularity) {
             Queue.set(idx, entry)
           }
         })

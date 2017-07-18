@@ -7,12 +7,13 @@ var Top = require('./top')
  * Similar entry.
  * @constructor
  * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
  */
-function Similar (spotify, entry) {
+function Similar (spotify, entry, id, trackLimit, artistLimit) {
   /**
-   * Artist query.
+   * Array of related artists.
    */
-  this.artist = null
+  this.artists = []
 
   /**
    * Number of artists to fetch.
@@ -25,11 +26,9 @@ function Similar (spotify, entry) {
   this.entry = null
 
   /**
-   * Related artists response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
+   * Spotify ID.
    */
-  this.relatedArtistsResponse = null
+  this.id = ''
 
   /**
    * Number of tracks to fetch per artist.
@@ -39,9 +38,13 @@ function Similar (spotify, entry) {
   /**
    * Spotify request handler.
    */
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = null
 
   this.entry = entry.trim()
+  this.id = id
+  this.spotify = spotify || new SpotifyRequestHandler()
+  this.trackLimit = trackLimit || this.trackLimit
+  this.artistLimit = artistLimit || this.artistLimit
 }
 
 /**
@@ -50,11 +53,8 @@ function Similar (spotify, entry) {
  */
 Similar.prototype.createQueue = function () {
   var self = this
-  var artists = self.relatedArtistsResponse.artists.map(function (item) {
-    var top = new Top(self.spotify, self.entry)
-    top.setLimit(self.trackLimit)
-    top.setID(item.id)
-    return top
+  var artists = this.artists.map(function (artist) {
+    return new Top(self.spotify, self.entry, artist.id, self.limit)
   })
   var queue = new Queue(artists)
   queue = queue.slice(0, self.artistLimit)
@@ -77,25 +77,15 @@ Similar.prototype.dispatch = function () {
 }
 
 /**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Similar.prototype.id = function () {
-  if (this.artist) {
-    return this.artist.id()
-  } else {
-    return -1
-  }
-}
-
-/**
  * Search for artist.
  * @return {Promise} A Promise to perform the action.
  */
 Similar.prototype.searchForArtist = function () {
-  this.artist = new Artist(this.spotify, this.entry)
-  return this.artist.searchForArtist()
+  var self = this
+  var artist = new Artist(this.spotify, this.entry)
+  return artist.searchForArtist().then(function (artist) {
+    self.id = artist.id
+  })
 }
 
 /**
@@ -104,20 +94,10 @@ Similar.prototype.searchForArtist = function () {
  */
 Similar.prototype.searchForRelatedArtists = function () {
   var self = this
-  return this.spotify.searchForRelatedArtists(this.id()).then(function (result) {
-    self.relatedArtistsResponse = result
+  return this.spotify.searchForRelatedArtists(this.id).then(function (response) {
+    self.artists = response.artists
     return self
   })
-}
-
-/**
- * Set the number of tracks to fetch per artist.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Similar.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.trackLimit = limit
-  }
 }
 
 module.exports = Similar

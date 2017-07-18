@@ -90,11 +90,7 @@ sort.combine = function () {
  * and `0` if `a` is equal to `b`.
  */
 sort.popularity = sort.descending(function (x) {
-  if (typeof x.popularity === 'function') {
-    return x.popularity()
-  } else {
-    return x.popularity || -1
-  }
+  return x.popularity || -1
 })
 
 /**
@@ -106,9 +102,9 @@ sort.popularity = sort.descending(function (x) {
  * and `0` if `a` is equal to `b`.
  */
 sort.lastfm = sort.combine(sort.descending(function (x) {
-  return x.lastfmPersonal()
+  return x.lastfmPersonal
 }), sort.descending(function (x) {
-  return x.lastfmGlobal()
+  return x.lastfmGlobal
 }), sort.popularity)
 
 /**
@@ -127,7 +123,7 @@ sort.type = sort.descending(function (album) {
     'appears_on': 2,
     'compilation': 1
   }
-  var type = album.album_type || album.type()
+  var type = album.album_type
   return rankings[type] || 0
 })
 

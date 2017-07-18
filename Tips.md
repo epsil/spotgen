@@ -6,7 +6,7 @@ Last.fm
 
 To create a playlist of a user's recently played tracks:
 
-    http://www.last.fm/user/username/library/tracks
+    http://www.last.fm/user/username/library
 
 To create a playlist of tracks a user has listened to on a particular day:
 

@@ -13,23 +13,19 @@ var sort = require('./sort')
  */
 function Artist (spotify, entry, id, limit) {
   /**
-   * Artist response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#artist-object-full).
+   * Array of albums.
    */
-  this.artistResponse = null
-
-  /**
-   * Albums response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-artists-albums/#example).
-   */
-  this.albumsResponse = null
+  this.albums = []
 
   /**
    * Entry string.
    */
-  this.entry = null
+  this.entry = ''
+
+  /**
+   * Spotify ID.
+   */
+  this.id = ''
 
   /**
    * Number of tracks to fetch.
@@ -37,25 +33,32 @@ function Artist (spotify, entry, id, limit) {
   this.limit = null
 
   /**
-   * Search response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+   * The artist name.
    */
-  this.searchResponse = null
+  this.name = ''
 
   /**
    * Spotify request handler.
    */
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = null
 
   this.entry = entry.trim()
-
-  /**
-   * Spotify ID.
-   */
   this.id = id
+  this.limit = limit
+  this.name = entry
+  this.spotify = spotify || new SpotifyRequestHandler()
+}
 
-  this.setLimit(limit)
+/**
+ * Clone a JSON response.
+ * @param {Object} response - The response.
+ */
+Artist.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
+  }
 }
 
 /**
@@ -65,12 +68,15 @@ function Artist (spotify, entry, id, limit) {
  */
 Artist.prototype.createQueue = function () {
   var self = this
-  var albums = self.albumsResponse.items.map(function (item) {
+  var albums = self.albums.map(function (item) {
     var album = new Album(self.spotify, self.entry)
-    album.setResponse(item)
+    album.clone(item)
     return album
   })
   var albumQueue = new Queue(albums)
+  if (self.limit) {
+    albumQueue = albumQueue.slice(0, self.limit)
+  }
   return albumQueue.forEachPromise(function (album) {
     // get album popularity
     return album.fetchAlbum()
@@ -79,8 +85,7 @@ Artist.prototype.createQueue = function () {
     return albumQueue.dispatch()
   }).then(function (queue) {
     return queue.flatten().filter(function (track) {
-      // TODO: use canonical artist name
-      return track.hasArtist(self.entry)
+      return track.hasArtist(self.name)
     })
   })
 }
@@ -104,8 +109,8 @@ Artist.prototype.dispatch = function () {
  */
 Artist.prototype.fetchAlbums = function () {
   var self = this
-  return this.spotify.getAlbumsByArtist(this.id).then(function (result) {
-    self.albumsResponse = result
+  return this.spotify.getAlbumsByArtist(this.id).then(function (response) {
+    self.albums = response.items
     return self
   })
 }
@@ -116,62 +121,28 @@ Artist.prototype.fetchAlbums = function () {
  */
 Artist.prototype.searchForArtist = function () {
   var self = this
-  if (this.searchResponse) {
-    return Promise.resolve(this.searchResponse)
-  } else if (this.artistResponse) {
-    return Promise.resolve(this.artistResponse)
-  } else if (this.id) {
-    return Promise.resolve(this.id)
+  if (this.id) {
+    return Promise.resolve(this)
   } else {
-    return this.spotify.searchForArtist(this.entry).then(function (result) {
-      self.searchResponse = result
-      console.log(result)
-      if (self.searchResponse &&
-          self.searchResponse.artists &&
-          self.searchResponse.artists.items[0] &&
-          self.searchResponse.artists.items[0].id) {
-        self.id = self.searchResponse.artists.items[0].id
+    return this.spotify.searchForArtist(this.entry).then(function (response) {
+      if (response &&
+          response.artists &&
+          response.artists.items &&
+          response.artists.items[0]) {
+        response = response.artists.items[0]
+        self.clone(response)
+        return Promise.resolve(self)
+      } else {
+        return Promise.reject(response)
       }
-      return self
     }).catch(function () {
-      if (self.entry.match(/[0-9a-z]+$/i)) {
+      if (self.entry.match(/^[0-9a-z]+$/i)) {
         self.id = self.entry
-        return Promise.resolve(self.id)
+        return Promise.resolve(self)
       } else {
         return Promise.reject(null)
       }
     })
-  }
-}
-
-/**
- * Set the number of tracks to fetch.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Artist.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.limit = limit
-  }
-}
-
-/**
- * Set the JSON response.
- * @param {JSON} response - The response.
- */
-Artist.prototype.setResponse = function (response) {
-  if (response &&
-      response.artists &&
-      response.artists.items[0] &&
-      response.artists.items[0].id) {
-    this.searchResponse = response
-    this.id = response.artists.items[0].id
-  } else if (response &&
-             response.id) {
-    this.artistResponse = response
-    this.id = response.id
-  } else if (response &&
-             response.items) {
-    this.albumsResponse = response
   }
 }
 

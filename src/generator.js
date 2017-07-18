@@ -248,17 +248,16 @@ Generator.prototype.toString = function () {
   this.entries.forEach(function (entry) {
     if (entry instanceof Track || entry instanceof Album) {
       if (entry instanceof Track) {
-        console.log(entry.toString())
-        console.log(entry.popularity() + ' (' + entry.lastfm() + ')')
+        console.log(entry.title)
+        console.log(entry.popularity + ' (' + entry.lastfm + ')')
       }
       if (self.csv) {
         var csvFormat = new CSV(entry)
         var csvLine = csvFormat.toString()
         result += csvLine + '\n'
       } else {
-        var uri = entry.uri()
-        if (uri) {
-          result += uri + '\n'
+        if (entry.uri) {
+          result += entry.uri + '\n'
         }
       }
     }

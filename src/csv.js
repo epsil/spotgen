@@ -32,15 +32,15 @@ CSV.prototype.toString = function () {
     return (num < 0) ? '' : num
   }
   return stringify([[
-    this.track.uri(),
-    this.track.title(),
-    this.track.artist(),
-    this.track.album(),
-    numberToString(this.track.discNumber()),
-    numberToString(this.track.trackNumber()),
-    numberToString(this.track.duration()),
-    numberToString(this.track.popularity()),
-    numberToString(this.track.lastfm())
+    this.track.uri,
+    this.track.name,
+    this.track.artist,
+    this.track.album,
+    numberToString(this.track.disc_number),
+    numberToString(this.track.track_number),
+    numberToString(this.track.duration_ms),
+    numberToString(this.track.popularity),
+    numberToString(this.track.lastfm)
   ]]).trim()
 }
 

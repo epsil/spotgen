@@ -46,7 +46,7 @@ The generator can be instructed to fetch data from [Last.fm](http://last.fm/)'s 
 
 To create a playlist of a user's recently played tracks:
 
-    http://www.last.fm/user/username/library/tracks
+    http://www.last.fm/user/username/library
 
 Note that Last.fm displays listening history in reverse chronological order. To create a chronological playlist, add the [`#reverse`](#reverse) command.
 

@@ -7,13 +7,10 @@ var Track = require('./track')
  * Top entry.
  * @constructor
  * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of tracks to fetch.
  */
-function Top (spotify, entry) {
-  /**
-   * Artist query.
-   */
-  this.artist = null
-
+function Top (spotify, entry, id, limit) {
   /**
    * Entry string.
    */
@@ -22,7 +19,7 @@ function Top (spotify, entry) {
   /**
    * Spotify ID.
    */
-  this.id = -1
+  this.id = ''
 
   /**
    * Number of tracks to fetch.
@@ -30,18 +27,19 @@ function Top (spotify, entry) {
   this.limit = null
 
   /**
-   * Top tracks response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
+   * Top tracks.
    */
-  this.topTracksResponse = null
+  this.tracks = []
 
   /**
    * Spotify request handler.
    */
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = null
 
   this.entry = entry.trim()
+  this.id = id
+  this.limit = limit
+  this.spotify = spotify || new SpotifyRequestHandler()
 }
 
 /**
@@ -51,9 +49,9 @@ function Top (spotify, entry) {
  */
 Top.prototype.createQueue = function () {
   var self = this
-  var tracks = self.topTracksResponse.tracks.map(function (item) {
+  var tracks = this.tracks.map(function (item) {
     var track = new Track(this.spotify, self.entry)
-    track.setResponse(item)
+    track.clone(item)
     return track
   })
   var trackQueue = new Queue(tracks)
@@ -82,19 +80,10 @@ Top.prototype.dispatch = function () {
  */
 Top.prototype.fetchTopTracks = function () {
   var self = this
-  return this.spotify.getTopTracks(this.getID()).then(function (result) {
-    self.topTracksResponse = result
+  return this.spotify.getTopTracks(this.id).then(function (response) {
+    self.tracks = response.tracks
     return self
   })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Top.prototype.getID = function () {
-  return this.id
 }
 
 /**
@@ -102,32 +91,15 @@ Top.prototype.getID = function () {
  * @return {Promise} A Promise to perform the action.
  */
 Top.prototype.searchForArtist = function () {
-  if (this.getID() !== -1) {
-    return Promise.resolve(this.getID())
+  var self = this
+  if (this.id) {
+    return Promise.resolve(this)
   } else {
-    var self = this
-    this.artist = new Artist(this.spotify, this.entry)
-    return this.artist.searchForArtist().then(function () {
-      self.setID(self.artist.id())
+    var artist = new Artist(this.spotify, this.entry)
+    return artist.searchForArtist().then(function (artist) {
+      self.id = artist.id
+      return self
     })
-  }
-}
-
-/**
- * Set Spotify ID.
- * @param {string} id - The Spotify ID of the artist.
- */
-Top.prototype.setID = function (id) {
-  this.id = id
-}
-
-/**
- * Set the number of tracks to fetch.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Top.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.limit = limit
   }
 }
 

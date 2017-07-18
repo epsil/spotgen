@@ -172,7 +172,7 @@ describe('Spotify Playlist Generator', function () {
     it('should not confuse album title with track title', function () {
       var track = new Track(null, 'Off the Wall - Michael Jackson')
       return track.dispatch().then(function (track) {
-        track.toString().should.eql('Off the Wall - Michael Jackson')
+        track.title.should.eql('Off the Wall - Michael Jackson')
       })
     })
   })
@@ -225,7 +225,7 @@ describe('Spotify Playlist Generator', function () {
       var generator = parser.parse('#ORDER BY POPULARITY\ntest1\ntest2')
       return generator.execute().then(function (str) {
         // FIXME: this is really brittle
-        eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
+        eol.lf(str).should.eql('spotify:track:2gEhpagAXuAtuE8Bcjkq3b\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
       })
     })
@@ -249,7 +249,7 @@ describe('Spotify Playlist Generator', function () {
       var generator = parser.parse('test1\ntest2')
       return generator.execute().then(function (str) {
         // FIXME: this is really brittle
-        eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
+        eol.lf(str).should.eql('spotify:track:2gEhpagAXuAtuE8Bcjkq3b\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
       })
     })
@@ -286,7 +286,7 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should fetch an artist\'s tracks', function () {
-      var artist = new Artist(null, 'test')
+      var artist = new Artist(null, 'test', null, 5)
       artist.entry.should.eql('test')
       var promise = artist.dispatch()
       return promise.should.eventually.be.an.instanceof(Queue)

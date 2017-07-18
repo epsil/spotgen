@@ -62,8 +62,7 @@ Parser.prototype.parse = function (str) {
         var albumId = albumMatch[2]
         var albumLimit = parseInt(albumMatch[3])
         var albumEntry = albumMatch[4]
-        var album = new Album(this.spotify, albumEntry)
-        album.setLimit(albumLimit)
+        var album = new Album(this.spotify, albumEntry, null, albumLimit)
         if (albumId) {
           album.fetchTracks = false
         }
@@ -72,22 +71,19 @@ Parser.prototype.parse = function (str) {
         var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
         var artistLimit = parseInt(artistMatch[1])
         var artistEntry = artistMatch[2]
-        var artist = new Artist(this.spotify, artistEntry)
-        artist.setLimit(artistLimit)
+        var artist = new Artist(this.spotify, artistEntry, null, artistLimit)
         generator.add(artist)
       } else if (line.match(/^#TOP[0-9]*\s+/i)) {
         var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
         var topLimit = parseInt(topMatch[1])
         var topEntry = topMatch[2]
-        var top = new Top(this.spotify, topEntry)
-        top.setLimit(topLimit)
+        var top = new Top(this.spotify, topEntry, null, topLimit)
         generator.add(top)
       } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
         var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
         var similarLimit = parseInt(similarMatch[1])
         var similarEntry = similarMatch[2]
-        var similar = new Similar(this.spotify, similarEntry)
-        similar.setLimit(similarLimit)
+        var similar = new Similar(this.spotify, similarEntry, null, similarLimit)
         generator.add(similar)
       } else if (line.match(/^#EXTINF/i)) {
         var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
@@ -100,15 +96,15 @@ Parser.prototype.parse = function (str) {
         }
       } else if (line.match(/spotify:artist:[0-9a-z]+/i)) {
         generator.add(new Artist(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/^https?:\/\/open.spotify.com\/(.*\/)?artist/i)) {
+      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)?artist/i)) {
         generator.add(new Artist(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/spotify:album:[0-9a-z]+/i)) {
         generator.add(new Album(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/^https?:\/\/open.spotify.com\/(.*\/)?album/i)) {
+      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)?album/i)) {
         generator.add(new Album(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
         generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/^https?:\/\/open.spotify.com/i)) {
+      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com/i)) {
         generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/^https?:/i)) {
         var scraper = new WebScraper(line, this)
