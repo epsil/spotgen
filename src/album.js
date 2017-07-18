@@ -7,9 +7,10 @@ var Track = require('./track')
  * @constructor
  * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The album to search for.
- * @param {string} [response] - JSON album object.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of tracks to fetch.
  */
-function Album (spotify, entry, limit) {
+function Album (spotify, entry, id, limit) {
   /**
    * Album response.
    *
@@ -43,6 +44,11 @@ function Album (spotify, entry, limit) {
    * Spotify request handler.
    */
   this.spotify = spotify || new SpotifyRequestHandler()
+
+  /**
+   * Spotify ID.
+   */
+  this.id = id
 
   this.setLimit(limit)
 }
@@ -90,30 +96,10 @@ Album.prototype.dispatch = function () {
  */
 Album.prototype.fetchAlbum = function () {
   var self = this
-  return this.spotify.getAlbum(this.id()).then(function (response) {
+  return this.spotify.getAlbum(this.id).then(function (response) {
     self.albumResponse = response
     return self
   })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the album,
- * or `-1` if not available.
- */
-Album.prototype.id = function () {
-  if (this.albumResponse &&
-      this.albumResponse.id) {
-    return this.albumResponse.id
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].id) {
-    return this.searchResponse.albums.items[0].id
-  } else {
-    return -1
-  }
 }
 
 /**
@@ -144,20 +130,34 @@ Album.prototype.searchForAlbum = function () {
     return Promise.resolve(this.searchResponse)
   } else if (this.albumResponse) {
     return Promise.resolve(this.albumResponse)
+  } else if (this.id) {
+    return Promise.resolve(this.id)
   } else {
     return this.spotify.searchForAlbum(this.entry).then(function (result) {
       self.searchResponse = result
+      if (self.searchResponse &&
+          self.searchResponse.albums &&
+          self.searchResponse.albums.items &&
+          self.searchResponse.albums.items[0] &&
+          self.searchResponse.albums.items[0].id) {
+        self.id = self.searchResponse.albums.items[0].id
+      }
       return self
     }).catch(function () {
-      console.log('COULD NOT FIND ' + self.entry)
-      return Promise.reject(null)
+      if (self.entry.match(/[0-9a-z]+$/i)) {
+        self.id = self.entry
+        return Promise.resolve(self.id)
+      } else {
+        console.log('COULD NOT FIND ' + self.entry)
+        return Promise.reject(null)
+      }
     })
   }
 }
 
 /**
- * Set the number of albums to fetch.
- * @param {integer} limit - The maximum amount of albums.
+ * Set the number of tracks to fetch.
+ * @param {integer} limit - The maximum amount of tracks.
  */
 Album.prototype.setLimit = function (limit) {
   if (Number.isInteger(limit)) {
@@ -175,9 +175,11 @@ Album.prototype.setResponse = function (response) {
       response.albums.items[0] &&
       response.albums.items[0].id) {
     this.searchResponse = response
+    this.id = response.id
   } else if (response &&
              response.id) {
     this.albumResponse = response
+    this.id = response.id
   }
 }
 
@@ -232,6 +234,8 @@ Album.prototype.uri = function () {
              this.searchResponse.albums.items[0] &&
              this.searchResponse.albums.items[0].uri) {
     return this.searchResponse.albums.items[0].uri
+  } else if (this.id) {
+    return 'spotify:album:' + this.id
   } else {
     return ''
   }

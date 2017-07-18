@@ -98,6 +98,14 @@ Parser.prototype.parse = function (str) {
             lines.shift()
           }
         }
+      } else if (line.match(/spotify:artist:[0-9a-z]+/i)) {
+        generator.add(new Artist(this.spotify, line, line.match(/[0-9a-z]+$/i)))
+      } else if (line.match(/^https?:\/\/open.spotify.com\/(.*\/)?artist/i)) {
+        generator.add(new Artist(this.spotify, line, line.match(/[0-9a-z]+$/i)))
+      } else if (line.match(/spotify:album:[0-9a-z]+/i)) {
+        generator.add(new Album(this.spotify, line, line.match(/[0-9a-z]+$/i)))
+      } else if (line.match(/^https?:\/\/open.spotify.com\/(.*\/)?album/i)) {
+        generator.add(new Album(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
         generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/^https?:\/\/open.spotify.com/i)) {

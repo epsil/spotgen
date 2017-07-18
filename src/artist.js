@@ -8,8 +8,10 @@ var sort = require('./sort')
  * @constructor
  * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of albums to fetch.
  */
-function Artist (spotify, entry, limit) {
+function Artist (spotify, entry, id, limit) {
   /**
    * Artist response.
    *
@@ -47,6 +49,11 @@ function Artist (spotify, entry, limit) {
   this.spotify = spotify || new SpotifyRequestHandler()
 
   this.entry = entry.trim()
+
+  /**
+   * Spotify ID.
+   */
+  this.id = id
 
   this.setLimit(limit)
 }
@@ -97,29 +104,10 @@ Artist.prototype.dispatch = function () {
  */
 Artist.prototype.fetchAlbums = function () {
   var self = this
-  return this.spotify.getAlbumsByArtist(this.id()).then(function (result) {
+  return this.spotify.getAlbumsByArtist(this.id).then(function (result) {
     self.albumsResponse = result
     return self
   })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Artist.prototype.id = function () {
-  if (this.searchResponse &&
-      this.searchResponse.artists &&
-      this.searchResponse.artists.items[0] &&
-      this.searchResponse.artists.items[0].id) {
-    return this.searchResponse.artists.items[0].id
-  } else if (this.artistResponse &&
-             this.artistResponse.id) {
-    return this.artistResponse.id
-  } else {
-    return -1
-  }
 }
 
 /**
@@ -132,10 +120,26 @@ Artist.prototype.searchForArtist = function () {
     return Promise.resolve(this.searchResponse)
   } else if (this.artistResponse) {
     return Promise.resolve(this.artistResponse)
+  } else if (this.id) {
+    return Promise.resolve(this.id)
   } else {
     return this.spotify.searchForArtist(this.entry).then(function (result) {
       self.searchResponse = result
+      console.log(result)
+      if (self.searchResponse &&
+          self.searchResponse.artists &&
+          self.searchResponse.artists.items[0] &&
+          self.searchResponse.artists.items[0].id) {
+        self.id = self.searchResponse.artists.items[0].id
+      }
       return self
+    }).catch(function () {
+      if (self.entry.match(/[0-9a-z]+$/i)) {
+        self.id = self.entry
+        return Promise.resolve(self.id)
+      } else {
+        return Promise.reject(null)
+      }
     })
   }
 }
@@ -160,9 +164,11 @@ Artist.prototype.setResponse = function (response) {
       response.artists.items[0] &&
       response.artists.items[0].id) {
     this.searchResponse = response
+    this.id = response.artists.items[0].id
   } else if (response &&
              response.id) {
     this.artistResponse = response
+    this.id = response.id
   } else if (response &&
              response.items) {
     this.albumsResponse = response

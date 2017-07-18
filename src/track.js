@@ -304,6 +304,14 @@ Track.prototype.searchForTrack = function () {
     self.response = result.tracks.items[0]
     self.id = self.response.id
     return self
+  }).catch(function () {
+    if (self.entry.match(/[0-9a-z]+$/i)) {
+      self.id = self.entry
+      return Promise.resolve(self.id)
+    } else {
+      // console.log('COULD NOT FIND ' + self.entry)
+      return Promise.reject(null)
+    }
   })
 }
 
