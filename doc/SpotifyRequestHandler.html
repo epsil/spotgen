@@ -469,7 +469,7 @@
 from the command line. It does not work when run from a browser,
 because Spotify's authentication server rejects cross-site
 requests. In that case, authenticate with the Implicit Grant Flow
-instead and pass the received access token to this class.</p>
+instead.</p>
 <p><a href="https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow">Reference</a>.</p>
 </div>
 
@@ -794,7 +794,7 @@ instead and pass the received access token to this class.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line120">line 120</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line126">line 126</a>
     </li></ul></dd>
     
 
@@ -951,7 +951,7 @@ instead and pass the received access token to this class.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line141">line 141</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line147">line 147</a>
     </li></ul></dd>
     
 
@@ -1058,7 +1058,7 @@ instead and pass the received access token to this class.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line104">line 104</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line110">line 110</a>
     </li></ul></dd>
     
 
@@ -1216,7 +1216,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line184">line 184</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line190">line 190</a>
     </li></ul></dd>
     
 
@@ -1373,7 +1373,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line206">line 206</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line212">line 212</a>
     </li></ul></dd>
     
 
@@ -1437,6 +1437,11 @@ or the empty string if not available.</p>
 
 <div class="description">
     <p>Authenticate with the Implicit Grant Flow.</p>
+<p>Returns a URI that the calling web application can use to redirect
+the user to a Spotify login screen. After the user has logged in,
+Spotify redirects back to the web application with an access token
+(included in the hash fragment of the URI). That token can then be
+passed to this class.</p>
 <p><a href="https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Reference</a>.</p>
 </div>
 
@@ -1573,7 +1578,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line72">line 72</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line78">line 78</a>
     </li></ul></dd>
     
 
@@ -1677,7 +1682,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line88">line 88</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line94">line 94</a>
     </li></ul></dd>
     
 
@@ -1877,7 +1882,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line218">line 218</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line224">line 224</a>
     </li></ul></dd>
     
 
@@ -2034,7 +2039,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line267">line 267</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line273">line 273</a>
     </li></ul></dd>
     
 
@@ -2191,7 +2196,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line242">line 242</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line248">line 248</a>
     </li></ul></dd>
     
 
@@ -2348,7 +2353,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line292">line 292</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line298">line 298</a>
     </li></ul></dd>
     
 
@@ -2505,7 +2510,7 @@ or the empty string if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line313">line 313</a>
+        <a href="src_spotify.js.html">src/spotify.js</a>, <a href="src_spotify.js.html#line319">line 319</a>
     </li></ul></dd>
     
 
@@ -2578,7 +2583,7 @@ or the empty string if not available.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Jul 12 2017 13:39:18 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Jul 21 2017 00:29:06 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

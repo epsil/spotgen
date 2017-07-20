@@ -85008,6 +85008,3233 @@ function toString(value) {
 module.exports = toString;
 
 },{"./_baseToString":471}],560:[function(require,module,exports){
+/*!
+ * URI.js - Mutating URLs
+ * IPv6 Support
+ *
+ * Version: 1.18.10
+ *
+ * Author: Rodney Rehm
+ * Web: http://medialize.github.io/URI.js/
+ *
+ * Licensed under
+ *   MIT License http://www.opensource.org/licenses/mit-license
+ *
+ */
+
+(function (root, factory) {
+  'use strict';
+  // https://github.com/umdjs/umd/blob/master/returnExports.js
+  if (typeof module === 'object' && module.exports) {
+    // Node
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(factory);
+  } else {
+    // Browser globals (root is window)
+    root.IPv6 = factory(root);
+  }
+}(this, function (root) {
+  'use strict';
+
+  /*
+  var _in = "fe80:0000:0000:0000:0204:61ff:fe9d:f156";
+  var _out = IPv6.best(_in);
+  var _expected = "fe80::204:61ff:fe9d:f156";
+
+  console.log(_in, _out, _expected, _out === _expected);
+  */
+
+  // save current IPv6 variable, if any
+  var _IPv6 = root && root.IPv6;
+
+  function bestPresentation(address) {
+    // based on:
+    // Javascript to test an IPv6 address for proper format, and to
+    // present the "best text representation" according to IETF Draft RFC at
+    // http://tools.ietf.org/html/draft-ietf-6man-text-addr-representation-04
+    // 8 Feb 2010 Rich Brown, Dartware, LLC
+    // Please feel free to use this code as long as you provide a link to
+    // http://www.intermapper.com
+    // http://intermapper.com/support/tools/IPV6-Validator.aspx
+    // http://download.dartware.com/thirdparty/ipv6validator.js
+
+    var _address = address.toLowerCase();
+    var segments = _address.split(':');
+    var length = segments.length;
+    var total = 8;
+
+    // trim colons (:: or ::a:b:c… or …a:b:c::)
+    if (segments[0] === '' && segments[1] === '' && segments[2] === '') {
+      // must have been ::
+      // remove first two items
+      segments.shift();
+      segments.shift();
+    } else if (segments[0] === '' && segments[1] === '') {
+      // must have been ::xxxx
+      // remove the first item
+      segments.shift();
+    } else if (segments[length - 1] === '' && segments[length - 2] === '') {
+      // must have been xxxx::
+      segments.pop();
+    }
+
+    length = segments.length;
+
+    // adjust total segments for IPv4 trailer
+    if (segments[length - 1].indexOf('.') !== -1) {
+      // found a "." which means IPv4
+      total = 7;
+    }
+
+    // fill empty segments them with "0000"
+    var pos;
+    for (pos = 0; pos < length; pos++) {
+      if (segments[pos] === '') {
+        break;
+      }
+    }
+
+    if (pos < total) {
+      segments.splice(pos, 1, '0000');
+      while (segments.length < total) {
+        segments.splice(pos, 0, '0000');
+      }
+    }
+
+    // strip leading zeros
+    var _segments;
+    for (var i = 0; i < total; i++) {
+      _segments = segments[i].split('');
+      for (var j = 0; j < 3 ; j++) {
+        if (_segments[0] === '0' && _segments.length > 1) {
+          _segments.splice(0,1);
+        } else {
+          break;
+        }
+      }
+
+      segments[i] = _segments.join('');
+    }
+
+    // find longest sequence of zeroes and coalesce them into one segment
+    var best = -1;
+    var _best = 0;
+    var _current = 0;
+    var current = -1;
+    var inzeroes = false;
+    // i; already declared
+
+    for (i = 0; i < total; i++) {
+      if (inzeroes) {
+        if (segments[i] === '0') {
+          _current += 1;
+        } else {
+          inzeroes = false;
+          if (_current > _best) {
+            best = current;
+            _best = _current;
+          }
+        }
+      } else {
+        if (segments[i] === '0') {
+          inzeroes = true;
+          current = i;
+          _current = 1;
+        }
+      }
+    }
+
+    if (_current > _best) {
+      best = current;
+      _best = _current;
+    }
+
+    if (_best > 1) {
+      segments.splice(best, _best, '');
+    }
+
+    length = segments.length;
+
+    // assemble remaining segments
+    var result = '';
+    if (segments[0] === '')  {
+      result = ':';
+    }
+
+    for (i = 0; i < length; i++) {
+      result += segments[i];
+      if (i === length - 1) {
+        break;
+      }
+
+      result += ':';
+    }
+
+    if (segments[length - 1] === '') {
+      result += ':';
+    }
+
+    return result;
+  }
+
+  function noConflict() {
+    /*jshint validthis: true */
+    if (root.IPv6 === this) {
+      root.IPv6 = _IPv6;
+    }
+  
+    return this;
+  }
+
+  return {
+    best: bestPresentation,
+    noConflict: noConflict
+  };
+}));
+
+},{}],561:[function(require,module,exports){
+/*!
+ * URI.js - Mutating URLs
+ * Second Level Domain (SLD) Support
+ *
+ * Version: 1.18.10
+ *
+ * Author: Rodney Rehm
+ * Web: http://medialize.github.io/URI.js/
+ *
+ * Licensed under
+ *   MIT License http://www.opensource.org/licenses/mit-license
+ *
+ */
+
+(function (root, factory) {
+  'use strict';
+  // https://github.com/umdjs/umd/blob/master/returnExports.js
+  if (typeof module === 'object' && module.exports) {
+    // Node
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(factory);
+  } else {
+    // Browser globals (root is window)
+    root.SecondLevelDomains = factory(root);
+  }
+}(this, function (root) {
+  'use strict';
+
+  // save current SecondLevelDomains variable, if any
+  var _SecondLevelDomains = root && root.SecondLevelDomains;
+
+  var SLD = {
+    // list of known Second Level Domains
+    // converted list of SLDs from https://github.com/gavingmiller/second-level-domains
+    // ----
+    // publicsuffix.org is more current and actually used by a couple of browsers internally.
+    // downside is it also contains domains like "dyndns.org" - which is fine for the security
+    // issues browser have to deal with (SOP for cookies, etc) - but is way overboard for URI.js
+    // ----
+    list: {
+      'ac':' com gov mil net org ',
+      'ae':' ac co gov mil name net org pro sch ',
+      'af':' com edu gov net org ',
+      'al':' com edu gov mil net org ',
+      'ao':' co ed gv it og pb ',
+      'ar':' com edu gob gov int mil net org tur ',
+      'at':' ac co gv or ',
+      'au':' asn com csiro edu gov id net org ',
+      'ba':' co com edu gov mil net org rs unbi unmo unsa untz unze ',
+      'bb':' biz co com edu gov info net org store tv ',
+      'bh':' biz cc com edu gov info net org ',
+      'bn':' com edu gov net org ',
+      'bo':' com edu gob gov int mil net org tv ',
+      'br':' adm adv agr am arq art ato b bio blog bmd cim cng cnt com coop ecn edu eng esp etc eti far flog fm fnd fot fst g12 ggf gov imb ind inf jor jus lel mat med mil mus net nom not ntr odo org ppg pro psc psi qsl rec slg srv tmp trd tur tv vet vlog wiki zlg ',
+      'bs':' com edu gov net org ',
+      'bz':' du et om ov rg ',
+      'ca':' ab bc mb nb nf nl ns nt nu on pe qc sk yk ',
+      'ck':' biz co edu gen gov info net org ',
+      'cn':' ac ah bj com cq edu fj gd gov gs gx gz ha hb he hi hl hn jl js jx ln mil net nm nx org qh sc sd sh sn sx tj tw xj xz yn zj ',
+      'co':' com edu gov mil net nom org ',
+      'cr':' ac c co ed fi go or sa ',
+      'cy':' ac biz com ekloges gov ltd name net org parliament press pro tm ',
+      'do':' art com edu gob gov mil net org sld web ',
+      'dz':' art asso com edu gov net org pol ',
+      'ec':' com edu fin gov info med mil net org pro ',
+      'eg':' com edu eun gov mil name net org sci ',
+      'er':' com edu gov ind mil net org rochest w ',
+      'es':' com edu gob nom org ',
+      'et':' biz com edu gov info name net org ',
+      'fj':' ac biz com info mil name net org pro ',
+      'fk':' ac co gov net nom org ',
+      'fr':' asso com f gouv nom prd presse tm ',
+      'gg':' co net org ',
+      'gh':' com edu gov mil org ',
+      'gn':' ac com gov net org ',
+      'gr':' com edu gov mil net org ',
+      'gt':' com edu gob ind mil net org ',
+      'gu':' com edu gov net org ',
+      'hk':' com edu gov idv net org ',
+      'hu':' 2000 agrar bolt casino city co erotica erotika film forum games hotel info ingatlan jogasz konyvelo lakas media news org priv reklam sex shop sport suli szex tm tozsde utazas video ',
+      'id':' ac co go mil net or sch web ',
+      'il':' ac co gov idf k12 muni net org ',
+      'in':' ac co edu ernet firm gen gov i ind mil net nic org res ',
+      'iq':' com edu gov i mil net org ',
+      'ir':' ac co dnssec gov i id net org sch ',
+      'it':' edu gov ',
+      'je':' co net org ',
+      'jo':' com edu gov mil name net org sch ',
+      'jp':' ac ad co ed go gr lg ne or ',
+      'ke':' ac co go info me mobi ne or sc ',
+      'kh':' com edu gov mil net org per ',
+      'ki':' biz com de edu gov info mob net org tel ',
+      'km':' asso com coop edu gouv k medecin mil nom notaires pharmaciens presse tm veterinaire ',
+      'kn':' edu gov net org ',
+      'kr':' ac busan chungbuk chungnam co daegu daejeon es gangwon go gwangju gyeongbuk gyeonggi gyeongnam hs incheon jeju jeonbuk jeonnam k kg mil ms ne or pe re sc seoul ulsan ',
+      'kw':' com edu gov net org ',
+      'ky':' com edu gov net org ',
+      'kz':' com edu gov mil net org ',
+      'lb':' com edu gov net org ',
+      'lk':' assn com edu gov grp hotel int ltd net ngo org sch soc web ',
+      'lr':' com edu gov net org ',
+      'lv':' asn com conf edu gov id mil net org ',
+      'ly':' com edu gov id med net org plc sch ',
+      'ma':' ac co gov m net org press ',
+      'mc':' asso tm ',
+      'me':' ac co edu gov its net org priv ',
+      'mg':' com edu gov mil nom org prd tm ',
+      'mk':' com edu gov inf name net org pro ',
+      'ml':' com edu gov net org presse ',
+      'mn':' edu gov org ',
+      'mo':' com edu gov net org ',
+      'mt':' com edu gov net org ',
+      'mv':' aero biz com coop edu gov info int mil museum name net org pro ',
+      'mw':' ac co com coop edu gov int museum net org ',
+      'mx':' com edu gob net org ',
+      'my':' com edu gov mil name net org sch ',
+      'nf':' arts com firm info net other per rec store web ',
+      'ng':' biz com edu gov mil mobi name net org sch ',
+      'ni':' ac co com edu gob mil net nom org ',
+      'np':' com edu gov mil net org ',
+      'nr':' biz com edu gov info net org ',
+      'om':' ac biz co com edu gov med mil museum net org pro sch ',
+      'pe':' com edu gob mil net nom org sld ',
+      'ph':' com edu gov i mil net ngo org ',
+      'pk':' biz com edu fam gob gok gon gop gos gov net org web ',
+      'pl':' art bialystok biz com edu gda gdansk gorzow gov info katowice krakow lodz lublin mil net ngo olsztyn org poznan pwr radom slupsk szczecin torun warszawa waw wroc wroclaw zgora ',
+      'pr':' ac biz com edu est gov info isla name net org pro prof ',
+      'ps':' com edu gov net org plo sec ',
+      'pw':' belau co ed go ne or ',
+      'ro':' arts com firm info nom nt org rec store tm www ',
+      'rs':' ac co edu gov in org ',
+      'sb':' com edu gov net org ',
+      'sc':' com edu gov net org ',
+      'sh':' co com edu gov net nom org ',
+      'sl':' com edu gov net org ',
+      'st':' co com consulado edu embaixada gov mil net org principe saotome store ',
+      'sv':' com edu gob org red ',
+      'sz':' ac co org ',
+      'tr':' av bbs bel biz com dr edu gen gov info k12 name net org pol tel tsk tv web ',
+      'tt':' aero biz cat co com coop edu gov info int jobs mil mobi museum name net org pro tel travel ',
+      'tw':' club com ebiz edu game gov idv mil net org ',
+      'mu':' ac co com gov net or org ',
+      'mz':' ac co edu gov org ',
+      'na':' co com ',
+      'nz':' ac co cri geek gen govt health iwi maori mil net org parliament school ',
+      'pa':' abo ac com edu gob ing med net nom org sld ',
+      'pt':' com edu gov int net nome org publ ',
+      'py':' com edu gov mil net org ',
+      'qa':' com edu gov mil net org ',
+      're':' asso com nom ',
+      'ru':' ac adygeya altai amur arkhangelsk astrakhan bashkiria belgorod bir bryansk buryatia cbg chel chelyabinsk chita chukotka chuvashia com dagestan e-burg edu gov grozny int irkutsk ivanovo izhevsk jar joshkar-ola kalmykia kaluga kamchatka karelia kazan kchr kemerovo khabarovsk khakassia khv kirov koenig komi kostroma kranoyarsk kuban kurgan kursk lipetsk magadan mari mari-el marine mil mordovia mosreg msk murmansk nalchik net nnov nov novosibirsk nsk omsk orenburg org oryol penza perm pp pskov ptz rnd ryazan sakhalin samara saratov simbirsk smolensk spb stavropol stv surgut tambov tatarstan tom tomsk tsaritsyn tsk tula tuva tver tyumen udm udmurtia ulan-ude vladikavkaz vladimir vladivostok volgograd vologda voronezh vrn vyatka yakutia yamal yekaterinburg yuzhno-sakhalinsk ',
+      'rw':' ac co com edu gouv gov int mil net ',
+      'sa':' com edu gov med net org pub sch ',
+      'sd':' com edu gov info med net org tv ',
+      'se':' a ac b bd c d e f g h i k l m n o org p parti pp press r s t tm u w x y z ',
+      'sg':' com edu gov idn net org per ',
+      'sn':' art com edu gouv org perso univ ',
+      'sy':' com edu gov mil net news org ',
+      'th':' ac co go in mi net or ',
+      'tj':' ac biz co com edu go gov info int mil name net nic org test web ',
+      'tn':' agrinet com defense edunet ens fin gov ind info intl mincom nat net org perso rnrt rns rnu tourism ',
+      'tz':' ac co go ne or ',
+      'ua':' biz cherkassy chernigov chernovtsy ck cn co com crimea cv dn dnepropetrovsk donetsk dp edu gov if in ivano-frankivsk kh kharkov kherson khmelnitskiy kiev kirovograd km kr ks kv lg lugansk lutsk lviv me mk net nikolaev od odessa org pl poltava pp rovno rv sebastopol sumy te ternopil uzhgorod vinnica vn zaporizhzhe zhitomir zp zt ',
+      'ug':' ac co go ne or org sc ',
+      'uk':' ac bl british-library co cym gov govt icnet jet lea ltd me mil mod national-library-scotland nel net nhs nic nls org orgn parliament plc police sch scot soc ',
+      'us':' dni fed isa kids nsn ',
+      'uy':' com edu gub mil net org ',
+      've':' co com edu gob info mil net org web ',
+      'vi':' co com k12 net org ',
+      'vn':' ac biz com edu gov health info int name net org pro ',
+      'ye':' co com gov ltd me net org plc ',
+      'yu':' ac co edu gov org ',
+      'za':' ac agric alt bourse city co cybernet db edu gov grondar iaccess imt inca landesign law mil net ngo nis nom olivetti org pix school tm web ',
+      'zm':' ac co com edu gov net org sch ',
+      // https://en.wikipedia.org/wiki/CentralNic#Second-level_domains
+      'com': 'ar br cn de eu gb gr hu jpn kr no qc ru sa se uk us uy za ',
+      'net': 'gb jp se uk ',
+      'org': 'ae',
+      'de': 'com '
+    },
+    // gorhill 2013-10-25: Using indexOf() instead Regexp(). Significant boost
+    // in both performance and memory footprint. No initialization required.
+    // http://jsperf.com/uri-js-sld-regex-vs-binary-search/4
+    // Following methods use lastIndexOf() rather than array.split() in order
+    // to avoid any memory allocations.
+    has: function(domain) {
+      var tldOffset = domain.lastIndexOf('.');
+      if (tldOffset <= 0 || tldOffset >= (domain.length-1)) {
+        return false;
+      }
+      var sldOffset = domain.lastIndexOf('.', tldOffset-1);
+      if (sldOffset <= 0 || sldOffset >= (tldOffset-1)) {
+        return false;
+      }
+      var sldList = SLD.list[domain.slice(tldOffset+1)];
+      if (!sldList) {
+        return false;
+      }
+      return sldList.indexOf(' ' + domain.slice(sldOffset+1, tldOffset) + ' ') >= 0;
+    },
+    is: function(domain) {
+      var tldOffset = domain.lastIndexOf('.');
+      if (tldOffset <= 0 || tldOffset >= (domain.length-1)) {
+        return false;
+      }
+      var sldOffset = domain.lastIndexOf('.', tldOffset-1);
+      if (sldOffset >= 0) {
+        return false;
+      }
+      var sldList = SLD.list[domain.slice(tldOffset+1)];
+      if (!sldList) {
+        return false;
+      }
+      return sldList.indexOf(' ' + domain.slice(0, tldOffset) + ' ') >= 0;
+    },
+    get: function(domain) {
+      var tldOffset = domain.lastIndexOf('.');
+      if (tldOffset <= 0 || tldOffset >= (domain.length-1)) {
+        return null;
+      }
+      var sldOffset = domain.lastIndexOf('.', tldOffset-1);
+      if (sldOffset <= 0 || sldOffset >= (tldOffset-1)) {
+        return null;
+      }
+      var sldList = SLD.list[domain.slice(tldOffset+1)];
+      if (!sldList) {
+        return null;
+      }
+      if (sldList.indexOf(' ' + domain.slice(sldOffset+1, tldOffset) + ' ') < 0) {
+        return null;
+      }
+      return domain.slice(sldOffset+1);
+    },
+    noConflict: function(){
+      if (root.SecondLevelDomains === this) {
+        root.SecondLevelDomains = _SecondLevelDomains;
+      }
+      return this;
+    }
+  };
+
+  return SLD;
+}));
+
+},{}],562:[function(require,module,exports){
+/*!
+ * URI.js - Mutating URLs
+ *
+ * Version: 1.18.10
+ *
+ * Author: Rodney Rehm
+ * Web: http://medialize.github.io/URI.js/
+ *
+ * Licensed under
+ *   MIT License http://www.opensource.org/licenses/mit-license
+ *
+ */
+(function (root, factory) {
+  'use strict';
+  // https://github.com/umdjs/umd/blob/master/returnExports.js
+  if (typeof module === 'object' && module.exports) {
+    // Node
+    module.exports = factory(require('./punycode'), require('./IPv6'), require('./SecondLevelDomains'));
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(['./punycode', './IPv6', './SecondLevelDomains'], factory);
+  } else {
+    // Browser globals (root is window)
+    root.URI = factory(root.punycode, root.IPv6, root.SecondLevelDomains, root);
+  }
+}(this, function (punycode, IPv6, SLD, root) {
+  'use strict';
+  /*global location, escape, unescape */
+  // FIXME: v2.0.0 renamce non-camelCase properties to uppercase
+  /*jshint camelcase: false */
+
+  // save current URI variable, if any
+  var _URI = root && root.URI;
+
+  function URI(url, base) {
+    var _urlSupplied = arguments.length >= 1;
+    var _baseSupplied = arguments.length >= 2;
+
+    // Allow instantiation without the 'new' keyword
+    if (!(this instanceof URI)) {
+      if (_urlSupplied) {
+        if (_baseSupplied) {
+          return new URI(url, base);
+        }
+
+        return new URI(url);
+      }
+
+      return new URI();
+    }
+
+    if (url === undefined) {
+      if (_urlSupplied) {
+        throw new TypeError('undefined is not a valid argument for URI');
+      }
+
+      if (typeof location !== 'undefined') {
+        url = location.href + '';
+      } else {
+        url = '';
+      }
+    }
+
+    if (url === null) {
+      if (_urlSupplied) {
+        throw new TypeError('null is not a valid argument for URI');
+      }
+    }
+
+    this.href(url);
+
+    // resolve to base according to http://dvcs.w3.org/hg/url/raw-file/tip/Overview.html#constructor
+    if (base !== undefined) {
+      return this.absoluteTo(base);
+    }
+
+    return this;
+  }
+
+  URI.version = '1.18.10';
+
+  var p = URI.prototype;
+  var hasOwn = Object.prototype.hasOwnProperty;
+
+  function escapeRegEx(string) {
+    // https://github.com/medialize/URI.js/commit/85ac21783c11f8ccab06106dba9735a31a86924d#commitcomment-821963
+    return string.replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
+  }
+
+  function getType(value) {
+    // IE8 doesn't return [Object Undefined] but [Object Object] for undefined value
+    if (value === undefined) {
+      return 'Undefined';
+    }
+
+    return String(Object.prototype.toString.call(value)).slice(8, -1);
+  }
+
+  function isArray(obj) {
+    return getType(obj) === 'Array';
+  }
+
+  function filterArrayValues(data, value) {
+    var lookup = {};
+    var i, length;
+
+    if (getType(value) === 'RegExp') {
+      lookup = null;
+    } else if (isArray(value)) {
+      for (i = 0, length = value.length; i < length; i++) {
+        lookup[value[i]] = true;
+      }
+    } else {
+      lookup[value] = true;
+    }
+
+    for (i = 0, length = data.length; i < length; i++) {
+      /*jshint laxbreak: true */
+      var _match = lookup && lookup[data[i]] !== undefined
+        || !lookup && value.test(data[i]);
+      /*jshint laxbreak: false */
+      if (_match) {
+        data.splice(i, 1);
+        length--;
+        i--;
+      }
+    }
+
+    return data;
+  }
+
+  function arrayContains(list, value) {
+    var i, length;
+
+    // value may be string, number, array, regexp
+    if (isArray(value)) {
+      // Note: this can be optimized to O(n) (instead of current O(m * n))
+      for (i = 0, length = value.length; i < length; i++) {
+        if (!arrayContains(list, value[i])) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    var _type = getType(value);
+    for (i = 0, length = list.length; i < length; i++) {
+      if (_type === 'RegExp') {
+        if (typeof list[i] === 'string' && list[i].match(value)) {
+          return true;
+        }
+      } else if (list[i] === value) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function arraysEqual(one, two) {
+    if (!isArray(one) || !isArray(two)) {
+      return false;
+    }
+
+    // arrays can't be equal if they have different amount of content
+    if (one.length !== two.length) {
+      return false;
+    }
+
+    one.sort();
+    two.sort();
+
+    for (var i = 0, l = one.length; i < l; i++) {
+      if (one[i] !== two[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function trimSlashes(text) {
+    var trim_expression = /^\/+|\/+$/g;
+    return text.replace(trim_expression, '');
+  }
+
+  URI._parts = function() {
+    return {
+      protocol: null,
+      username: null,
+      password: null,
+      hostname: null,
+      urn: null,
+      port: null,
+      path: null,
+      query: null,
+      fragment: null,
+      // state
+      duplicateQueryParameters: URI.duplicateQueryParameters,
+      escapeQuerySpace: URI.escapeQuerySpace
+    };
+  };
+  // state: allow duplicate query parameters (a=1&a=1)
+  URI.duplicateQueryParameters = false;
+  // state: replaces + with %20 (space in query strings)
+  URI.escapeQuerySpace = true;
+  // static properties
+  URI.protocol_expression = /^[a-z][a-z0-9.+-]*$/i;
+  URI.idn_expression = /[^a-z0-9\.-]/i;
+  URI.punycode_expression = /(xn--)/i;
+  // well, 333.444.555.666 matches, but it sure ain't no IPv4 - do we care?
+  URI.ip4_expression = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+  // credits to Rich Brown
+  // source: http://forums.intermapper.com/viewtopic.php?p=1096#1096
+  // specification: http://www.ietf.org/rfc/rfc4291.txt
+  URI.ip6_expression = /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/;
+  // expression used is "gruber revised" (@gruber v2) determined to be the
+  // best solution in a regex-golf we did a couple of ages ago at
+  // * http://mathiasbynens.be/demo/url-regex
+  // * http://rodneyrehm.de/t/url-regex.html
+  URI.find_uri_expression = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/ig;
+  URI.findUri = {
+    // valid "scheme://" or "www."
+    start: /\b(?:([a-z][a-z0-9.+-]*:\/\/)|www\.)/gi,
+    // everything up to the next whitespace
+    end: /[\s\r\n]|$/,
+    // trim trailing punctuation captured by end RegExp
+    trim: /[`!()\[\]{};:'".,<>?«»“”„‘’]+$/,
+    // balanced parens inclusion (), [], {}, <>
+    parens: /(\([^\)]*\)|\[[^\]]*\]|\{[^}]*\}|<[^>]*>)/g,
+  };
+  // http://www.iana.org/assignments/uri-schemes.html
+  // http://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers#Well-known_ports
+  URI.defaultPorts = {
+    http: '80',
+    https: '443',
+    ftp: '21',
+    gopher: '70',
+    ws: '80',
+    wss: '443'
+  };
+  // allowed hostname characters according to RFC 3986
+  // ALPHA DIGIT "-" "." "_" "~" "!" "$" "&" "'" "(" ")" "*" "+" "," ";" "=" %encoded
+  // I've never seen a (non-IDN) hostname other than: ALPHA DIGIT . -
+  URI.invalid_hostname_characters = /[^a-zA-Z0-9\.-]/;
+  // map DOM Elements to their URI attribute
+  URI.domAttributes = {
+    'a': 'href',
+    'blockquote': 'cite',
+    'link': 'href',
+    'base': 'href',
+    'script': 'src',
+    'form': 'action',
+    'img': 'src',
+    'area': 'href',
+    'iframe': 'src',
+    'embed': 'src',
+    'source': 'src',
+    'track': 'src',
+    'input': 'src', // but only if type="image"
+    'audio': 'src',
+    'video': 'src'
+  };
+  URI.getDomAttribute = function(node) {
+    if (!node || !node.nodeName) {
+      return undefined;
+    }
+
+    var nodeName = node.nodeName.toLowerCase();
+    // <input> should only expose src for type="image"
+    if (nodeName === 'input' && node.type !== 'image') {
+      return undefined;
+    }
+
+    return URI.domAttributes[nodeName];
+  };
+
+  function escapeForDumbFirefox36(value) {
+    // https://github.com/medialize/URI.js/issues/91
+    return escape(value);
+  }
+
+  // encoding / decoding according to RFC3986
+  function strictEncodeURIComponent(string) {
+    // see https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/encodeURIComponent
+    return encodeURIComponent(string)
+      .replace(/[!'()*]/g, escapeForDumbFirefox36)
+      .replace(/\*/g, '%2A');
+  }
+  URI.encode = strictEncodeURIComponent;
+  URI.decode = decodeURIComponent;
+  URI.iso8859 = function() {
+    URI.encode = escape;
+    URI.decode = unescape;
+  };
+  URI.unicode = function() {
+    URI.encode = strictEncodeURIComponent;
+    URI.decode = decodeURIComponent;
+  };
+  URI.characters = {
+    pathname: {
+      encode: {
+        // RFC3986 2.1: For consistency, URI producers and normalizers should
+        // use uppercase hexadecimal digits for all percent-encodings.
+        expression: /%(24|26|2B|2C|3B|3D|3A|40)/ig,
+        map: {
+          // -._~!'()*
+          '%24': '$',
+          '%26': '&',
+          '%2B': '+',
+          '%2C': ',',
+          '%3B': ';',
+          '%3D': '=',
+          '%3A': ':',
+          '%40': '@'
+        }
+      },
+      decode: {
+        expression: /[\/\?#]/g,
+        map: {
+          '/': '%2F',
+          '?': '%3F',
+          '#': '%23'
+        }
+      }
+    },
+    reserved: {
+      encode: {
+        // RFC3986 2.1: For consistency, URI producers and normalizers should
+        // use uppercase hexadecimal digits for all percent-encodings.
+        expression: /%(21|23|24|26|27|28|29|2A|2B|2C|2F|3A|3B|3D|3F|40|5B|5D)/ig,
+        map: {
+          // gen-delims
+          '%3A': ':',
+          '%2F': '/',
+          '%3F': '?',
+          '%23': '#',
+          '%5B': '[',
+          '%5D': ']',
+          '%40': '@',
+          // sub-delims
+          '%21': '!',
+          '%24': '$',
+          '%26': '&',
+          '%27': '\'',
+          '%28': '(',
+          '%29': ')',
+          '%2A': '*',
+          '%2B': '+',
+          '%2C': ',',
+          '%3B': ';',
+          '%3D': '='
+        }
+      }
+    },
+    urnpath: {
+      // The characters under `encode` are the characters called out by RFC 2141 as being acceptable
+      // for usage in a URN. RFC2141 also calls out "-", ".", and "_" as acceptable characters, but
+      // these aren't encoded by encodeURIComponent, so we don't have to call them out here. Also
+      // note that the colon character is not featured in the encoding map; this is because URI.js
+      // gives the colons in URNs semantic meaning as the delimiters of path segements, and so it
+      // should not appear unencoded in a segment itself.
+      // See also the note above about RFC3986 and capitalalized hex digits.
+      encode: {
+        expression: /%(21|24|27|28|29|2A|2B|2C|3B|3D|40)/ig,
+        map: {
+          '%21': '!',
+          '%24': '$',
+          '%27': '\'',
+          '%28': '(',
+          '%29': ')',
+          '%2A': '*',
+          '%2B': '+',
+          '%2C': ',',
+          '%3B': ';',
+          '%3D': '=',
+          '%40': '@'
+        }
+      },
+      // These characters are the characters called out by RFC2141 as "reserved" characters that
+      // should never appear in a URN, plus the colon character (see note above).
+      decode: {
+        expression: /[\/\?#:]/g,
+        map: {
+          '/': '%2F',
+          '?': '%3F',
+          '#': '%23',
+          ':': '%3A'
+        }
+      }
+    }
+  };
+  URI.encodeQuery = function(string, escapeQuerySpace) {
+    var escaped = URI.encode(string + '');
+    if (escapeQuerySpace === undefined) {
+      escapeQuerySpace = URI.escapeQuerySpace;
+    }
+
+    return escapeQuerySpace ? escaped.replace(/%20/g, '+') : escaped;
+  };
+  URI.decodeQuery = function(string, escapeQuerySpace) {
+    string += '';
+    if (escapeQuerySpace === undefined) {
+      escapeQuerySpace = URI.escapeQuerySpace;
+    }
+
+    try {
+      return URI.decode(escapeQuerySpace ? string.replace(/\+/g, '%20') : string);
+    } catch(e) {
+      // we're not going to mess with weird encodings,
+      // give up and return the undecoded original string
+      // see https://github.com/medialize/URI.js/issues/87
+      // see https://github.com/medialize/URI.js/issues/92
+      return string;
+    }
+  };
+  // generate encode/decode path functions
+  var _parts = {'encode':'encode', 'decode':'decode'};
+  var _part;
+  var generateAccessor = function(_group, _part) {
+    return function(string) {
+      try {
+        return URI[_part](string + '').replace(URI.characters[_group][_part].expression, function(c) {
+          return URI.characters[_group][_part].map[c];
+        });
+      } catch (e) {
+        // we're not going to mess with weird encodings,
+        // give up and return the undecoded original string
+        // see https://github.com/medialize/URI.js/issues/87
+        // see https://github.com/medialize/URI.js/issues/92
+        return string;
+      }
+    };
+  };
+
+  for (_part in _parts) {
+    URI[_part + 'PathSegment'] = generateAccessor('pathname', _parts[_part]);
+    URI[_part + 'UrnPathSegment'] = generateAccessor('urnpath', _parts[_part]);
+  }
+
+  var generateSegmentedPathFunction = function(_sep, _codingFuncName, _innerCodingFuncName) {
+    return function(string) {
+      // Why pass in names of functions, rather than the function objects themselves? The
+      // definitions of some functions (but in particular, URI.decode) will occasionally change due
+      // to URI.js having ISO8859 and Unicode modes. Passing in the name and getting it will ensure
+      // that the functions we use here are "fresh".
+      var actualCodingFunc;
+      if (!_innerCodingFuncName) {
+        actualCodingFunc = URI[_codingFuncName];
+      } else {
+        actualCodingFunc = function(string) {
+          return URI[_codingFuncName](URI[_innerCodingFuncName](string));
+        };
+      }
+
+      var segments = (string + '').split(_sep);
+
+      for (var i = 0, length = segments.length; i < length; i++) {
+        segments[i] = actualCodingFunc(segments[i]);
+      }
+
+      return segments.join(_sep);
+    };
+  };
+
+  // This takes place outside the above loop because we don't want, e.g., encodeUrnPath functions.
+  URI.decodePath = generateSegmentedPathFunction('/', 'decodePathSegment');
+  URI.decodeUrnPath = generateSegmentedPathFunction(':', 'decodeUrnPathSegment');
+  URI.recodePath = generateSegmentedPathFunction('/', 'encodePathSegment', 'decode');
+  URI.recodeUrnPath = generateSegmentedPathFunction(':', 'encodeUrnPathSegment', 'decode');
+
+  URI.encodeReserved = generateAccessor('reserved', 'encode');
+
+  URI.parse = function(string, parts) {
+    var pos;
+    if (!parts) {
+      parts = {};
+    }
+    // [protocol"://"[username[":"password]"@"]hostname[":"port]"/"?][path]["?"querystring]["#"fragment]
+
+    // extract fragment
+    pos = string.indexOf('#');
+    if (pos > -1) {
+      // escaping?
+      parts.fragment = string.substring(pos + 1) || null;
+      string = string.substring(0, pos);
+    }
+
+    // extract query
+    pos = string.indexOf('?');
+    if (pos > -1) {
+      // escaping?
+      parts.query = string.substring(pos + 1) || null;
+      string = string.substring(0, pos);
+    }
+
+    // extract protocol
+    if (string.substring(0, 2) === '//') {
+      // relative-scheme
+      parts.protocol = null;
+      string = string.substring(2);
+      // extract "user:pass@host:port"
+      string = URI.parseAuthority(string, parts);
+    } else {
+      pos = string.indexOf(':');
+      if (pos > -1) {
+        parts.protocol = string.substring(0, pos) || null;
+        if (parts.protocol && !parts.protocol.match(URI.protocol_expression)) {
+          // : may be within the path
+          parts.protocol = undefined;
+        } else if (string.substring(pos + 1, pos + 3) === '//') {
+          string = string.substring(pos + 3);
+
+          // extract "user:pass@host:port"
+          string = URI.parseAuthority(string, parts);
+        } else {
+          string = string.substring(pos + 1);
+          parts.urn = true;
+        }
+      }
+    }
+
+    // what's left must be the path
+    parts.path = string;
+
+    // and we're done
+    return parts;
+  };
+  URI.parseHost = function(string, parts) {
+    // Copy chrome, IE, opera backslash-handling behavior.
+    // Back slashes before the query string get converted to forward slashes
+    // See: https://github.com/joyent/node/blob/386fd24f49b0e9d1a8a076592a404168faeecc34/lib/url.js#L115-L124
+    // See: https://code.google.com/p/chromium/issues/detail?id=25916
+    // https://github.com/medialize/URI.js/pull/233
+    string = string.replace(/\\/g, '/');
+
+    // extract host:port
+    var pos = string.indexOf('/');
+    var bracketPos;
+    var t;
+
+    if (pos === -1) {
+      pos = string.length;
+    }
+
+    if (string.charAt(0) === '[') {
+      // IPv6 host - http://tools.ietf.org/html/draft-ietf-6man-text-addr-representation-04#section-6
+      // I claim most client software breaks on IPv6 anyways. To simplify things, URI only accepts
+      // IPv6+port in the format [2001:db8::1]:80 (for the time being)
+      bracketPos = string.indexOf(']');
+      parts.hostname = string.substring(1, bracketPos) || null;
+      parts.port = string.substring(bracketPos + 2, pos) || null;
+      if (parts.port === '/') {
+        parts.port = null;
+      }
+    } else {
+      var firstColon = string.indexOf(':');
+      var firstSlash = string.indexOf('/');
+      var nextColon = string.indexOf(':', firstColon + 1);
+      if (nextColon !== -1 && (firstSlash === -1 || nextColon < firstSlash)) {
+        // IPv6 host contains multiple colons - but no port
+        // this notation is actually not allowed by RFC 3986, but we're a liberal parser
+        parts.hostname = string.substring(0, pos) || null;
+        parts.port = null;
+      } else {
+        t = string.substring(0, pos).split(':');
+        parts.hostname = t[0] || null;
+        parts.port = t[1] || null;
+      }
+    }
+
+    if (parts.hostname && string.substring(pos).charAt(0) !== '/') {
+      pos++;
+      string = '/' + string;
+    }
+
+    return string.substring(pos) || '/';
+  };
+  URI.parseAuthority = function(string, parts) {
+    string = URI.parseUserinfo(string, parts);
+    return URI.parseHost(string, parts);
+  };
+  URI.parseUserinfo = function(string, parts) {
+    // extract username:password
+    var firstSlash = string.indexOf('/');
+    var pos = string.lastIndexOf('@', firstSlash > -1 ? firstSlash : string.length - 1);
+    var t;
+
+    // authority@ must come before /path
+    if (pos > -1 && (firstSlash === -1 || pos < firstSlash)) {
+      t = string.substring(0, pos).split(':');
+      parts.username = t[0] ? URI.decode(t[0]) : null;
+      t.shift();
+      parts.password = t[0] ? URI.decode(t.join(':')) : null;
+      string = string.substring(pos + 1);
+    } else {
+      parts.username = null;
+      parts.password = null;
+    }
+
+    return string;
+  };
+  URI.parseQuery = function(string, escapeQuerySpace) {
+    if (!string) {
+      return {};
+    }
+
+    // throw out the funky business - "?"[name"="value"&"]+
+    string = string.replace(/&+/g, '&').replace(/^\?*&*|&+$/g, '');
+
+    if (!string) {
+      return {};
+    }
+
+    var items = {};
+    var splits = string.split('&');
+    var length = splits.length;
+    var v, name, value;
+
+    for (var i = 0; i < length; i++) {
+      v = splits[i].split('=');
+      name = URI.decodeQuery(v.shift(), escapeQuerySpace);
+      // no "=" is null according to http://dvcs.w3.org/hg/url/raw-file/tip/Overview.html#collect-url-parameters
+      value = v.length ? URI.decodeQuery(v.join('='), escapeQuerySpace) : null;
+
+      if (hasOwn.call(items, name)) {
+        if (typeof items[name] === 'string' || items[name] === null) {
+          items[name] = [items[name]];
+        }
+
+        items[name].push(value);
+      } else {
+        items[name] = value;
+      }
+    }
+
+    return items;
+  };
+
+  URI.build = function(parts) {
+    var t = '';
+
+    if (parts.protocol) {
+      t += parts.protocol + ':';
+    }
+
+    if (!parts.urn && (t || parts.hostname)) {
+      t += '//';
+    }
+
+    t += (URI.buildAuthority(parts) || '');
+
+    if (typeof parts.path === 'string') {
+      if (parts.path.charAt(0) !== '/' && typeof parts.hostname === 'string') {
+        t += '/';
+      }
+
+      t += parts.path;
+    }
+
+    if (typeof parts.query === 'string' && parts.query) {
+      t += '?' + parts.query;
+    }
+
+    if (typeof parts.fragment === 'string' && parts.fragment) {
+      t += '#' + parts.fragment;
+    }
+    return t;
+  };
+  URI.buildHost = function(parts) {
+    var t = '';
+
+    if (!parts.hostname) {
+      return '';
+    } else if (URI.ip6_expression.test(parts.hostname)) {
+      t += '[' + parts.hostname + ']';
+    } else {
+      t += parts.hostname;
+    }
+
+    if (parts.port) {
+      t += ':' + parts.port;
+    }
+
+    return t;
+  };
+  URI.buildAuthority = function(parts) {
+    return URI.buildUserinfo(parts) + URI.buildHost(parts);
+  };
+  URI.buildUserinfo = function(parts) {
+    var t = '';
+
+    if (parts.username) {
+      t += URI.encode(parts.username);
+    }
+
+    if (parts.password) {
+      t += ':' + URI.encode(parts.password);
+    }
+
+    if (t) {
+      t += '@';
+    }
+
+    return t;
+  };
+  URI.buildQuery = function(data, duplicateQueryParameters, escapeQuerySpace) {
+    // according to http://tools.ietf.org/html/rfc3986 or http://labs.apache.org/webarch/uri/rfc/rfc3986.html
+    // being »-._~!$&'()*+,;=:@/?« %HEX and alnum are allowed
+    // the RFC explicitly states ?/foo being a valid use case, no mention of parameter syntax!
+    // URI.js treats the query string as being application/x-www-form-urlencoded
+    // see http://www.w3.org/TR/REC-html40/interact/forms.html#form-content-type
+
+    var t = '';
+    var unique, key, i, length;
+    for (key in data) {
+      if (hasOwn.call(data, key) && key) {
+        if (isArray(data[key])) {
+          unique = {};
+          for (i = 0, length = data[key].length; i < length; i++) {
+            if (data[key][i] !== undefined && unique[data[key][i] + ''] === undefined) {
+              t += '&' + URI.buildQueryParameter(key, data[key][i], escapeQuerySpace);
+              if (duplicateQueryParameters !== true) {
+                unique[data[key][i] + ''] = true;
+              }
+            }
+          }
+        } else if (data[key] !== undefined) {
+          t += '&' + URI.buildQueryParameter(key, data[key], escapeQuerySpace);
+        }
+      }
+    }
+
+    return t.substring(1);
+  };
+  URI.buildQueryParameter = function(name, value, escapeQuerySpace) {
+    // http://www.w3.org/TR/REC-html40/interact/forms.html#form-content-type -- application/x-www-form-urlencoded
+    // don't append "=" for null values, according to http://dvcs.w3.org/hg/url/raw-file/tip/Overview.html#url-parameter-serialization
+    return URI.encodeQuery(name, escapeQuerySpace) + (value !== null ? '=' + URI.encodeQuery(value, escapeQuerySpace) : '');
+  };
+
+  URI.addQuery = function(data, name, value) {
+    if (typeof name === 'object') {
+      for (var key in name) {
+        if (hasOwn.call(name, key)) {
+          URI.addQuery(data, key, name[key]);
+        }
+      }
+    } else if (typeof name === 'string') {
+      if (data[name] === undefined) {
+        data[name] = value;
+        return;
+      } else if (typeof data[name] === 'string') {
+        data[name] = [data[name]];
+      }
+
+      if (!isArray(value)) {
+        value = [value];
+      }
+
+      data[name] = (data[name] || []).concat(value);
+    } else {
+      throw new TypeError('URI.addQuery() accepts an object, string as the name parameter');
+    }
+  };
+  URI.removeQuery = function(data, name, value) {
+    var i, length, key;
+
+    if (isArray(name)) {
+      for (i = 0, length = name.length; i < length; i++) {
+        data[name[i]] = undefined;
+      }
+    } else if (getType(name) === 'RegExp') {
+      for (key in data) {
+        if (name.test(key)) {
+          data[key] = undefined;
+        }
+      }
+    } else if (typeof name === 'object') {
+      for (key in name) {
+        if (hasOwn.call(name, key)) {
+          URI.removeQuery(data, key, name[key]);
+        }
+      }
+    } else if (typeof name === 'string') {
+      if (value !== undefined) {
+        if (getType(value) === 'RegExp') {
+          if (!isArray(data[name]) && value.test(data[name])) {
+            data[name] = undefined;
+          } else {
+            data[name] = filterArrayValues(data[name], value);
+          }
+        } else if (data[name] === String(value) && (!isArray(value) || value.length === 1)) {
+          data[name] = undefined;
+        } else if (isArray(data[name])) {
+          data[name] = filterArrayValues(data[name], value);
+        }
+      } else {
+        data[name] = undefined;
+      }
+    } else {
+      throw new TypeError('URI.removeQuery() accepts an object, string, RegExp as the first parameter');
+    }
+  };
+  URI.hasQuery = function(data, name, value, withinArray) {
+    switch (getType(name)) {
+      case 'String':
+        // Nothing to do here
+        break;
+
+      case 'RegExp':
+        for (var key in data) {
+          if (hasOwn.call(data, key)) {
+            if (name.test(key) && (value === undefined || URI.hasQuery(data, key, value))) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+
+      case 'Object':
+        for (var _key in name) {
+          if (hasOwn.call(name, _key)) {
+            if (!URI.hasQuery(data, _key, name[_key])) {
+              return false;
+            }
+          }
+        }
+
+        return true;
+
+      default:
+        throw new TypeError('URI.hasQuery() accepts a string, regular expression or object as the name parameter');
+    }
+
+    switch (getType(value)) {
+      case 'Undefined':
+        // true if exists (but may be empty)
+        return name in data; // data[name] !== undefined;
+
+      case 'Boolean':
+        // true if exists and non-empty
+        var _booly = Boolean(isArray(data[name]) ? data[name].length : data[name]);
+        return value === _booly;
+
+      case 'Function':
+        // allow complex comparison
+        return !!value(data[name], name, data);
+
+      case 'Array':
+        if (!isArray(data[name])) {
+          return false;
+        }
+
+        var op = withinArray ? arrayContains : arraysEqual;
+        return op(data[name], value);
+
+      case 'RegExp':
+        if (!isArray(data[name])) {
+          return Boolean(data[name] && data[name].match(value));
+        }
+
+        if (!withinArray) {
+          return false;
+        }
+
+        return arrayContains(data[name], value);
+
+      case 'Number':
+        value = String(value);
+        /* falls through */
+      case 'String':
+        if (!isArray(data[name])) {
+          return data[name] === value;
+        }
+
+        if (!withinArray) {
+          return false;
+        }
+
+        return arrayContains(data[name], value);
+
+      default:
+        throw new TypeError('URI.hasQuery() accepts undefined, boolean, string, number, RegExp, Function as the value parameter');
+    }
+  };
+
+
+  URI.joinPaths = function() {
+    var input = [];
+    var segments = [];
+    var nonEmptySegments = 0;
+
+    for (var i = 0; i < arguments.length; i++) {
+      var url = new URI(arguments[i]);
+      input.push(url);
+      var _segments = url.segment();
+      for (var s = 0; s < _segments.length; s++) {
+        if (typeof _segments[s] === 'string') {
+          segments.push(_segments[s]);
+        }
+
+        if (_segments[s]) {
+          nonEmptySegments++;
+        }
+      }
+    }
+
+    if (!segments.length || !nonEmptySegments) {
+      return new URI('');
+    }
+
+    var uri = new URI('').segment(segments);
+
+    if (input[0].path() === '' || input[0].path().slice(0, 1) === '/') {
+      uri.path('/' + uri.path());
+    }
+
+    return uri.normalize();
+  };
+
+  URI.commonPath = function(one, two) {
+    var length = Math.min(one.length, two.length);
+    var pos;
+
+    // find first non-matching character
+    for (pos = 0; pos < length; pos++) {
+      if (one.charAt(pos) !== two.charAt(pos)) {
+        pos--;
+        break;
+      }
+    }
+
+    if (pos < 1) {
+      return one.charAt(0) === two.charAt(0) && one.charAt(0) === '/' ? '/' : '';
+    }
+
+    // revert to last /
+    if (one.charAt(pos) !== '/' || two.charAt(pos) !== '/') {
+      pos = one.substring(0, pos).lastIndexOf('/');
+    }
+
+    return one.substring(0, pos + 1);
+  };
+
+  URI.withinString = function(string, callback, options) {
+    options || (options = {});
+    var _start = options.start || URI.findUri.start;
+    var _end = options.end || URI.findUri.end;
+    var _trim = options.trim || URI.findUri.trim;
+    var _parens = options.parens || URI.findUri.parens;
+    var _attributeOpen = /[a-z0-9-]=["']?$/i;
+
+    _start.lastIndex = 0;
+    while (true) {
+      var match = _start.exec(string);
+      if (!match) {
+        break;
+      }
+
+      var start = match.index;
+      if (options.ignoreHtml) {
+        // attribut(e=["']?$)
+        var attributeOpen = string.slice(Math.max(start - 3, 0), start);
+        if (attributeOpen && _attributeOpen.test(attributeOpen)) {
+          continue;
+        }
+      }
+
+      var end = start + string.slice(start).search(_end);
+      var slice = string.slice(start, end);
+      // make sure we include well balanced parens
+      var parensEnd = -1;
+      while (true) {
+        var parensMatch = _parens.exec(slice);
+        if (!parensMatch) {
+          break;
+        }
+
+        var parensMatchEnd = parensMatch.index + parensMatch[0].length;
+        parensEnd = Math.max(parensEnd, parensMatchEnd);
+      }
+
+      if (parensEnd > -1) {
+        slice = slice.slice(0, parensEnd) + slice.slice(parensEnd).replace(_trim, '');
+      } else {
+        slice = slice.replace(_trim, '');
+      }
+
+      if (slice.length <= match[0].length) {
+        // the extract only contains the starting marker of a URI,
+        // e.g. "www" or "http://"
+        continue;
+      }
+
+      if (options.ignore && options.ignore.test(slice)) {
+        continue;
+      }
+
+      end = start + slice.length;
+      var result = callback(slice, start, end, string);
+      if (result === undefined) {
+        _start.lastIndex = end;
+        continue;
+      }
+
+      result = String(result);
+      string = string.slice(0, start) + result + string.slice(end);
+      _start.lastIndex = start + result.length;
+    }
+
+    _start.lastIndex = 0;
+    return string;
+  };
+
+  URI.ensureValidHostname = function(v) {
+    // Theoretically URIs allow percent-encoding in Hostnames (according to RFC 3986)
+    // they are not part of DNS and therefore ignored by URI.js
+
+    if (v.match(URI.invalid_hostname_characters)) {
+      // test punycode
+      if (!punycode) {
+        throw new TypeError('Hostname "' + v + '" contains characters other than [A-Z0-9.-] and Punycode.js is not available');
+      }
+
+      if (punycode.toASCII(v).match(URI.invalid_hostname_characters)) {
+        throw new TypeError('Hostname "' + v + '" contains characters other than [A-Z0-9.-]');
+      }
+    }
+  };
+
+  // noConflict
+  URI.noConflict = function(removeAll) {
+    if (removeAll) {
+      var unconflicted = {
+        URI: this.noConflict()
+      };
+
+      if (root.URITemplate && typeof root.URITemplate.noConflict === 'function') {
+        unconflicted.URITemplate = root.URITemplate.noConflict();
+      }
+
+      if (root.IPv6 && typeof root.IPv6.noConflict === 'function') {
+        unconflicted.IPv6 = root.IPv6.noConflict();
+      }
+
+      if (root.SecondLevelDomains && typeof root.SecondLevelDomains.noConflict === 'function') {
+        unconflicted.SecondLevelDomains = root.SecondLevelDomains.noConflict();
+      }
+
+      return unconflicted;
+    } else if (root.URI === this) {
+      root.URI = _URI;
+    }
+
+    return this;
+  };
+
+  p.build = function(deferBuild) {
+    if (deferBuild === true) {
+      this._deferred_build = true;
+    } else if (deferBuild === undefined || this._deferred_build) {
+      this._string = URI.build(this._parts);
+      this._deferred_build = false;
+    }
+
+    return this;
+  };
+
+  p.clone = function() {
+    return new URI(this);
+  };
+
+  p.valueOf = p.toString = function() {
+    return this.build(false)._string;
+  };
+
+
+  function generateSimpleAccessor(_part){
+    return function(v, build) {
+      if (v === undefined) {
+        return this._parts[_part] || '';
+      } else {
+        this._parts[_part] = v || null;
+        this.build(!build);
+        return this;
+      }
+    };
+  }
+
+  function generatePrefixAccessor(_part, _key){
+    return function(v, build) {
+      if (v === undefined) {
+        return this._parts[_part] || '';
+      } else {
+        if (v !== null) {
+          v = v + '';
+          if (v.charAt(0) === _key) {
+            v = v.substring(1);
+          }
+        }
+
+        this._parts[_part] = v;
+        this.build(!build);
+        return this;
+      }
+    };
+  }
+
+  p.protocol = generateSimpleAccessor('protocol');
+  p.username = generateSimpleAccessor('username');
+  p.password = generateSimpleAccessor('password');
+  p.hostname = generateSimpleAccessor('hostname');
+  p.port = generateSimpleAccessor('port');
+  p.query = generatePrefixAccessor('query', '?');
+  p.fragment = generatePrefixAccessor('fragment', '#');
+
+  p.search = function(v, build) {
+    var t = this.query(v, build);
+    return typeof t === 'string' && t.length ? ('?' + t) : t;
+  };
+  p.hash = function(v, build) {
+    var t = this.fragment(v, build);
+    return typeof t === 'string' && t.length ? ('#' + t) : t;
+  };
+
+  p.pathname = function(v, build) {
+    if (v === undefined || v === true) {
+      var res = this._parts.path || (this._parts.hostname ? '/' : '');
+      return v ? (this._parts.urn ? URI.decodeUrnPath : URI.decodePath)(res) : res;
+    } else {
+      if (this._parts.urn) {
+        this._parts.path = v ? URI.recodeUrnPath(v) : '';
+      } else {
+        this._parts.path = v ? URI.recodePath(v) : '/';
+      }
+      this.build(!build);
+      return this;
+    }
+  };
+  p.path = p.pathname;
+  p.href = function(href, build) {
+    var key;
+
+    if (href === undefined) {
+      return this.toString();
+    }
+
+    this._string = '';
+    this._parts = URI._parts();
+
+    var _URI = href instanceof URI;
+    var _object = typeof href === 'object' && (href.hostname || href.path || href.pathname);
+    if (href.nodeName) {
+      var attribute = URI.getDomAttribute(href);
+      href = href[attribute] || '';
+      _object = false;
+    }
+
+    // window.location is reported to be an object, but it's not the sort
+    // of object we're looking for:
+    // * location.protocol ends with a colon
+    // * location.query != object.search
+    // * location.hash != object.fragment
+    // simply serializing the unknown object should do the trick
+    // (for location, not for everything...)
+    if (!_URI && _object && href.pathname !== undefined) {
+      href = href.toString();
+    }
+
+    if (typeof href === 'string' || href instanceof String) {
+      this._parts = URI.parse(String(href), this._parts);
+    } else if (_URI || _object) {
+      var src = _URI ? href._parts : href;
+      for (key in src) {
+        if (hasOwn.call(this._parts, key)) {
+          this._parts[key] = src[key];
+        }
+      }
+    } else {
+      throw new TypeError('invalid input');
+    }
+
+    this.build(!build);
+    return this;
+  };
+
+  // identification accessors
+  p.is = function(what) {
+    var ip = false;
+    var ip4 = false;
+    var ip6 = false;
+    var name = false;
+    var sld = false;
+    var idn = false;
+    var punycode = false;
+    var relative = !this._parts.urn;
+
+    if (this._parts.hostname) {
+      relative = false;
+      ip4 = URI.ip4_expression.test(this._parts.hostname);
+      ip6 = URI.ip6_expression.test(this._parts.hostname);
+      ip = ip4 || ip6;
+      name = !ip;
+      sld = name && SLD && SLD.has(this._parts.hostname);
+      idn = name && URI.idn_expression.test(this._parts.hostname);
+      punycode = name && URI.punycode_expression.test(this._parts.hostname);
+    }
+
+    switch (what.toLowerCase()) {
+      case 'relative':
+        return relative;
+
+      case 'absolute':
+        return !relative;
+
+      // hostname identification
+      case 'domain':
+      case 'name':
+        return name;
+
+      case 'sld':
+        return sld;
+
+      case 'ip':
+        return ip;
+
+      case 'ip4':
+      case 'ipv4':
+      case 'inet4':
+        return ip4;
+
+      case 'ip6':
+      case 'ipv6':
+      case 'inet6':
+        return ip6;
+
+      case 'idn':
+        return idn;
+
+      case 'url':
+        return !this._parts.urn;
+
+      case 'urn':
+        return !!this._parts.urn;
+
+      case 'punycode':
+        return punycode;
+    }
+
+    return null;
+  };
+
+  // component specific input validation
+  var _protocol = p.protocol;
+  var _port = p.port;
+  var _hostname = p.hostname;
+
+  p.protocol = function(v, build) {
+    if (v !== undefined) {
+      if (v) {
+        // accept trailing ://
+        v = v.replace(/:(\/\/)?$/, '');
+
+        if (!v.match(URI.protocol_expression)) {
+          throw new TypeError('Protocol "' + v + '" contains characters other than [A-Z0-9.+-] or doesn\'t start with [A-Z]');
+        }
+      }
+    }
+    return _protocol.call(this, v, build);
+  };
+  p.scheme = p.protocol;
+  p.port = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (v !== undefined) {
+      if (v === 0) {
+        v = null;
+      }
+
+      if (v) {
+        v += '';
+        if (v.charAt(0) === ':') {
+          v = v.substring(1);
+        }
+
+        if (v.match(/[^0-9]/)) {
+          throw new TypeError('Port "' + v + '" contains characters other than [0-9]');
+        }
+      }
+    }
+    return _port.call(this, v, build);
+  };
+  p.hostname = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (v !== undefined) {
+      var x = {};
+      var res = URI.parseHost(v, x);
+      if (res !== '/') {
+        throw new TypeError('Hostname "' + v + '" contains characters other than [A-Z0-9.-]');
+      }
+
+      v = x.hostname;
+    }
+    return _hostname.call(this, v, build);
+  };
+
+  // compound accessors
+  p.origin = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (v === undefined) {
+      var protocol = this.protocol();
+      var authority = this.authority();
+      if (!authority) {
+        return '';
+      }
+
+      return (protocol ? protocol + '://' : '') + this.authority();
+    } else {
+      var origin = URI(v);
+      this
+        .protocol(origin.protocol())
+        .authority(origin.authority())
+        .build(!build);
+      return this;
+    }
+  };
+  p.host = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (v === undefined) {
+      return this._parts.hostname ? URI.buildHost(this._parts) : '';
+    } else {
+      var res = URI.parseHost(v, this._parts);
+      if (res !== '/') {
+        throw new TypeError('Hostname "' + v + '" contains characters other than [A-Z0-9.-]');
+      }
+
+      this.build(!build);
+      return this;
+    }
+  };
+  p.authority = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (v === undefined) {
+      return this._parts.hostname ? URI.buildAuthority(this._parts) : '';
+    } else {
+      var res = URI.parseAuthority(v, this._parts);
+      if (res !== '/') {
+        throw new TypeError('Hostname "' + v + '" contains characters other than [A-Z0-9.-]');
+      }
+
+      this.build(!build);
+      return this;
+    }
+  };
+  p.userinfo = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (v === undefined) {
+      var t = URI.buildUserinfo(this._parts);
+      return t ? t.substring(0, t.length -1) : t;
+    } else {
+      if (v[v.length-1] !== '@') {
+        v += '@';
+      }
+
+      URI.parseUserinfo(v, this._parts);
+      this.build(!build);
+      return this;
+    }
+  };
+  p.resource = function(v, build) {
+    var parts;
+
+    if (v === undefined) {
+      return this.path() + this.search() + this.hash();
+    }
+
+    parts = URI.parse(v);
+    this._parts.path = parts.path;
+    this._parts.query = parts.query;
+    this._parts.fragment = parts.fragment;
+    this.build(!build);
+    return this;
+  };
+
+  // fraction accessors
+  p.subdomain = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    // convenience, return "www" from "www.example.org"
+    if (v === undefined) {
+      if (!this._parts.hostname || this.is('IP')) {
+        return '';
+      }
+
+      // grab domain and add another segment
+      var end = this._parts.hostname.length - this.domain().length - 1;
+      return this._parts.hostname.substring(0, end) || '';
+    } else {
+      var e = this._parts.hostname.length - this.domain().length;
+      var sub = this._parts.hostname.substring(0, e);
+      var replace = new RegExp('^' + escapeRegEx(sub));
+
+      if (v && v.charAt(v.length - 1) !== '.') {
+        v += '.';
+      }
+
+      if (v) {
+        URI.ensureValidHostname(v);
+      }
+
+      this._parts.hostname = this._parts.hostname.replace(replace, v);
+      this.build(!build);
+      return this;
+    }
+  };
+  p.domain = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (typeof v === 'boolean') {
+      build = v;
+      v = undefined;
+    }
+
+    // convenience, return "example.org" from "www.example.org"
+    if (v === undefined) {
+      if (!this._parts.hostname || this.is('IP')) {
+        return '';
+      }
+
+      // if hostname consists of 1 or 2 segments, it must be the domain
+      var t = this._parts.hostname.match(/\./g);
+      if (t && t.length < 2) {
+        return this._parts.hostname;
+      }
+
+      // grab tld and add another segment
+      var end = this._parts.hostname.length - this.tld(build).length - 1;
+      end = this._parts.hostname.lastIndexOf('.', end -1) + 1;
+      return this._parts.hostname.substring(end) || '';
+    } else {
+      if (!v) {
+        throw new TypeError('cannot set domain empty');
+      }
+
+      URI.ensureValidHostname(v);
+
+      if (!this._parts.hostname || this.is('IP')) {
+        this._parts.hostname = v;
+      } else {
+        var replace = new RegExp(escapeRegEx(this.domain()) + '$');
+        this._parts.hostname = this._parts.hostname.replace(replace, v);
+      }
+
+      this.build(!build);
+      return this;
+    }
+  };
+  p.tld = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (typeof v === 'boolean') {
+      build = v;
+      v = undefined;
+    }
+
+    // return "org" from "www.example.org"
+    if (v === undefined) {
+      if (!this._parts.hostname || this.is('IP')) {
+        return '';
+      }
+
+      var pos = this._parts.hostname.lastIndexOf('.');
+      var tld = this._parts.hostname.substring(pos + 1);
+
+      if (build !== true && SLD && SLD.list[tld.toLowerCase()]) {
+        return SLD.get(this._parts.hostname) || tld;
+      }
+
+      return tld;
+    } else {
+      var replace;
+
+      if (!v) {
+        throw new TypeError('cannot set TLD empty');
+      } else if (v.match(/[^a-zA-Z0-9-]/)) {
+        if (SLD && SLD.is(v)) {
+          replace = new RegExp(escapeRegEx(this.tld()) + '$');
+          this._parts.hostname = this._parts.hostname.replace(replace, v);
+        } else {
+          throw new TypeError('TLD "' + v + '" contains characters other than [A-Z0-9]');
+        }
+      } else if (!this._parts.hostname || this.is('IP')) {
+        throw new ReferenceError('cannot set TLD on non-domain host');
+      } else {
+        replace = new RegExp(escapeRegEx(this.tld()) + '$');
+        this._parts.hostname = this._parts.hostname.replace(replace, v);
+      }
+
+      this.build(!build);
+      return this;
+    }
+  };
+  p.directory = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (v === undefined || v === true) {
+      if (!this._parts.path && !this._parts.hostname) {
+        return '';
+      }
+
+      if (this._parts.path === '/') {
+        return '/';
+      }
+
+      var end = this._parts.path.length - this.filename().length - 1;
+      var res = this._parts.path.substring(0, end) || (this._parts.hostname ? '/' : '');
+
+      return v ? URI.decodePath(res) : res;
+
+    } else {
+      var e = this._parts.path.length - this.filename().length;
+      var directory = this._parts.path.substring(0, e);
+      var replace = new RegExp('^' + escapeRegEx(directory));
+
+      // fully qualifier directories begin with a slash
+      if (!this.is('relative')) {
+        if (!v) {
+          v = '/';
+        }
+
+        if (v.charAt(0) !== '/') {
+          v = '/' + v;
+        }
+      }
+
+      // directories always end with a slash
+      if (v && v.charAt(v.length - 1) !== '/') {
+        v += '/';
+      }
+
+      v = URI.recodePath(v);
+      this._parts.path = this._parts.path.replace(replace, v);
+      this.build(!build);
+      return this;
+    }
+  };
+  p.filename = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (typeof v !== 'string') {
+      if (!this._parts.path || this._parts.path === '/') {
+        return '';
+      }
+
+      var pos = this._parts.path.lastIndexOf('/');
+      var res = this._parts.path.substring(pos+1);
+
+      return v ? URI.decodePathSegment(res) : res;
+    } else {
+      var mutatedDirectory = false;
+
+      if (v.charAt(0) === '/') {
+        v = v.substring(1);
+      }
+
+      if (v.match(/\.?\//)) {
+        mutatedDirectory = true;
+      }
+
+      var replace = new RegExp(escapeRegEx(this.filename()) + '$');
+      v = URI.recodePath(v);
+      this._parts.path = this._parts.path.replace(replace, v);
+
+      if (mutatedDirectory) {
+        this.normalizePath(build);
+      } else {
+        this.build(!build);
+      }
+
+      return this;
+    }
+  };
+  p.suffix = function(v, build) {
+    if (this._parts.urn) {
+      return v === undefined ? '' : this;
+    }
+
+    if (v === undefined || v === true) {
+      if (!this._parts.path || this._parts.path === '/') {
+        return '';
+      }
+
+      var filename = this.filename();
+      var pos = filename.lastIndexOf('.');
+      var s, res;
+
+      if (pos === -1) {
+        return '';
+      }
+
+      // suffix may only contain alnum characters (yup, I made this up.)
+      s = filename.substring(pos+1);
+      res = (/^[a-z0-9%]+$/i).test(s) ? s : '';
+      return v ? URI.decodePathSegment(res) : res;
+    } else {
+      if (v.charAt(0) === '.') {
+        v = v.substring(1);
+      }
+
+      var suffix = this.suffix();
+      var replace;
+
+      if (!suffix) {
+        if (!v) {
+          return this;
+        }
+
+        this._parts.path += '.' + URI.recodePath(v);
+      } else if (!v) {
+        replace = new RegExp(escapeRegEx('.' + suffix) + '$');
+      } else {
+        replace = new RegExp(escapeRegEx(suffix) + '$');
+      }
+
+      if (replace) {
+        v = URI.recodePath(v);
+        this._parts.path = this._parts.path.replace(replace, v);
+      }
+
+      this.build(!build);
+      return this;
+    }
+  };
+  p.segment = function(segment, v, build) {
+    var separator = this._parts.urn ? ':' : '/';
+    var path = this.path();
+    var absolute = path.substring(0, 1) === '/';
+    var segments = path.split(separator);
+
+    if (segment !== undefined && typeof segment !== 'number') {
+      build = v;
+      v = segment;
+      segment = undefined;
+    }
+
+    if (segment !== undefined && typeof segment !== 'number') {
+      throw new Error('Bad segment "' + segment + '", must be 0-based integer');
+    }
+
+    if (absolute) {
+      segments.shift();
+    }
+
+    if (segment < 0) {
+      // allow negative indexes to address from the end
+      segment = Math.max(segments.length + segment, 0);
+    }
+
+    if (v === undefined) {
+      /*jshint laxbreak: true */
+      return segment === undefined
+        ? segments
+        : segments[segment];
+      /*jshint laxbreak: false */
+    } else if (segment === null || segments[segment] === undefined) {
+      if (isArray(v)) {
+        segments = [];
+        // collapse empty elements within array
+        for (var i=0, l=v.length; i < l; i++) {
+          if (!v[i].length && (!segments.length || !segments[segments.length -1].length)) {
+            continue;
+          }
+
+          if (segments.length && !segments[segments.length -1].length) {
+            segments.pop();
+          }
+
+          segments.push(trimSlashes(v[i]));
+        }
+      } else if (v || typeof v === 'string') {
+        v = trimSlashes(v);
+        if (segments[segments.length -1] === '') {
+          // empty trailing elements have to be overwritten
+          // to prevent results such as /foo//bar
+          segments[segments.length -1] = v;
+        } else {
+          segments.push(v);
+        }
+      }
+    } else {
+      if (v) {
+        segments[segment] = trimSlashes(v);
+      } else {
+        segments.splice(segment, 1);
+      }
+    }
+
+    if (absolute) {
+      segments.unshift('');
+    }
+
+    return this.path(segments.join(separator), build);
+  };
+  p.segmentCoded = function(segment, v, build) {
+    var segments, i, l;
+
+    if (typeof segment !== 'number') {
+      build = v;
+      v = segment;
+      segment = undefined;
+    }
+
+    if (v === undefined) {
+      segments = this.segment(segment, v, build);
+      if (!isArray(segments)) {
+        segments = segments !== undefined ? URI.decode(segments) : undefined;
+      } else {
+        for (i = 0, l = segments.length; i < l; i++) {
+          segments[i] = URI.decode(segments[i]);
+        }
+      }
+
+      return segments;
+    }
+
+    if (!isArray(v)) {
+      v = (typeof v === 'string' || v instanceof String) ? URI.encode(v) : v;
+    } else {
+      for (i = 0, l = v.length; i < l; i++) {
+        v[i] = URI.encode(v[i]);
+      }
+    }
+
+    return this.segment(segment, v, build);
+  };
+
+  // mutating query string
+  var q = p.query;
+  p.query = function(v, build) {
+    if (v === true) {
+      return URI.parseQuery(this._parts.query, this._parts.escapeQuerySpace);
+    } else if (typeof v === 'function') {
+      var data = URI.parseQuery(this._parts.query, this._parts.escapeQuerySpace);
+      var result = v.call(this, data);
+      this._parts.query = URI.buildQuery(result || data, this._parts.duplicateQueryParameters, this._parts.escapeQuerySpace);
+      this.build(!build);
+      return this;
+    } else if (v !== undefined && typeof v !== 'string') {
+      this._parts.query = URI.buildQuery(v, this._parts.duplicateQueryParameters, this._parts.escapeQuerySpace);
+      this.build(!build);
+      return this;
+    } else {
+      return q.call(this, v, build);
+    }
+  };
+  p.setQuery = function(name, value, build) {
+    var data = URI.parseQuery(this._parts.query, this._parts.escapeQuerySpace);
+
+    if (typeof name === 'string' || name instanceof String) {
+      data[name] = value !== undefined ? value : null;
+    } else if (typeof name === 'object') {
+      for (var key in name) {
+        if (hasOwn.call(name, key)) {
+          data[key] = name[key];
+        }
+      }
+    } else {
+      throw new TypeError('URI.addQuery() accepts an object, string as the name parameter');
+    }
+
+    this._parts.query = URI.buildQuery(data, this._parts.duplicateQueryParameters, this._parts.escapeQuerySpace);
+    if (typeof name !== 'string') {
+      build = value;
+    }
+
+    this.build(!build);
+    return this;
+  };
+  p.addQuery = function(name, value, build) {
+    var data = URI.parseQuery(this._parts.query, this._parts.escapeQuerySpace);
+    URI.addQuery(data, name, value === undefined ? null : value);
+    this._parts.query = URI.buildQuery(data, this._parts.duplicateQueryParameters, this._parts.escapeQuerySpace);
+    if (typeof name !== 'string') {
+      build = value;
+    }
+
+    this.build(!build);
+    return this;
+  };
+  p.removeQuery = function(name, value, build) {
+    var data = URI.parseQuery(this._parts.query, this._parts.escapeQuerySpace);
+    URI.removeQuery(data, name, value);
+    this._parts.query = URI.buildQuery(data, this._parts.duplicateQueryParameters, this._parts.escapeQuerySpace);
+    if (typeof name !== 'string') {
+      build = value;
+    }
+
+    this.build(!build);
+    return this;
+  };
+  p.hasQuery = function(name, value, withinArray) {
+    var data = URI.parseQuery(this._parts.query, this._parts.escapeQuerySpace);
+    return URI.hasQuery(data, name, value, withinArray);
+  };
+  p.setSearch = p.setQuery;
+  p.addSearch = p.addQuery;
+  p.removeSearch = p.removeQuery;
+  p.hasSearch = p.hasQuery;
+
+  // sanitizing URLs
+  p.normalize = function() {
+    if (this._parts.urn) {
+      return this
+        .normalizeProtocol(false)
+        .normalizePath(false)
+        .normalizeQuery(false)
+        .normalizeFragment(false)
+        .build();
+    }
+
+    return this
+      .normalizeProtocol(false)
+      .normalizeHostname(false)
+      .normalizePort(false)
+      .normalizePath(false)
+      .normalizeQuery(false)
+      .normalizeFragment(false)
+      .build();
+  };
+  p.normalizeProtocol = function(build) {
+    if (typeof this._parts.protocol === 'string') {
+      this._parts.protocol = this._parts.protocol.toLowerCase();
+      this.build(!build);
+    }
+
+    return this;
+  };
+  p.normalizeHostname = function(build) {
+    if (this._parts.hostname) {
+      if (this.is('IDN') && punycode) {
+        this._parts.hostname = punycode.toASCII(this._parts.hostname);
+      } else if (this.is('IPv6') && IPv6) {
+        this._parts.hostname = IPv6.best(this._parts.hostname);
+      }
+
+      this._parts.hostname = this._parts.hostname.toLowerCase();
+      this.build(!build);
+    }
+
+    return this;
+  };
+  p.normalizePort = function(build) {
+    // remove port of it's the protocol's default
+    if (typeof this._parts.protocol === 'string' && this._parts.port === URI.defaultPorts[this._parts.protocol]) {
+      this._parts.port = null;
+      this.build(!build);
+    }
+
+    return this;
+  };
+  p.normalizePath = function(build) {
+    var _path = this._parts.path;
+    if (!_path) {
+      return this;
+    }
+
+    if (this._parts.urn) {
+      this._parts.path = URI.recodeUrnPath(this._parts.path);
+      this.build(!build);
+      return this;
+    }
+
+    if (this._parts.path === '/') {
+      return this;
+    }
+
+    _path = URI.recodePath(_path);
+
+    var _was_relative;
+    var _leadingParents = '';
+    var _parent, _pos;
+
+    // handle relative paths
+    if (_path.charAt(0) !== '/') {
+      _was_relative = true;
+      _path = '/' + _path;
+    }
+
+    // handle relative files (as opposed to directories)
+    if (_path.slice(-3) === '/..' || _path.slice(-2) === '/.') {
+      _path += '/';
+    }
+
+    // resolve simples
+    _path = _path
+      .replace(/(\/(\.\/)+)|(\/\.$)/g, '/')
+      .replace(/\/{2,}/g, '/');
+
+    // remember leading parents
+    if (_was_relative) {
+      _leadingParents = _path.substring(1).match(/^(\.\.\/)+/) || '';
+      if (_leadingParents) {
+        _leadingParents = _leadingParents[0];
+      }
+    }
+
+    // resolve parents
+    while (true) {
+      _parent = _path.search(/\/\.\.(\/|$)/);
+      if (_parent === -1) {
+        // no more ../ to resolve
+        break;
+      } else if (_parent === 0) {
+        // top level cannot be relative, skip it
+        _path = _path.substring(3);
+        continue;
+      }
+
+      _pos = _path.substring(0, _parent).lastIndexOf('/');
+      if (_pos === -1) {
+        _pos = _parent;
+      }
+      _path = _path.substring(0, _pos) + _path.substring(_parent + 3);
+    }
+
+    // revert to relative
+    if (_was_relative && this.is('relative')) {
+      _path = _leadingParents + _path.substring(1);
+    }
+
+    this._parts.path = _path;
+    this.build(!build);
+    return this;
+  };
+  p.normalizePathname = p.normalizePath;
+  p.normalizeQuery = function(build) {
+    if (typeof this._parts.query === 'string') {
+      if (!this._parts.query.length) {
+        this._parts.query = null;
+      } else {
+        this.query(URI.parseQuery(this._parts.query, this._parts.escapeQuerySpace));
+      }
+
+      this.build(!build);
+    }
+
+    return this;
+  };
+  p.normalizeFragment = function(build) {
+    if (!this._parts.fragment) {
+      this._parts.fragment = null;
+      this.build(!build);
+    }
+
+    return this;
+  };
+  p.normalizeSearch = p.normalizeQuery;
+  p.normalizeHash = p.normalizeFragment;
+
+  p.iso8859 = function() {
+    // expect unicode input, iso8859 output
+    var e = URI.encode;
+    var d = URI.decode;
+
+    URI.encode = escape;
+    URI.decode = decodeURIComponent;
+    try {
+      this.normalize();
+    } finally {
+      URI.encode = e;
+      URI.decode = d;
+    }
+    return this;
+  };
+
+  p.unicode = function() {
+    // expect iso8859 input, unicode output
+    var e = URI.encode;
+    var d = URI.decode;
+
+    URI.encode = strictEncodeURIComponent;
+    URI.decode = unescape;
+    try {
+      this.normalize();
+    } finally {
+      URI.encode = e;
+      URI.decode = d;
+    }
+    return this;
+  };
+
+  p.readable = function() {
+    var uri = this.clone();
+    // removing username, password, because they shouldn't be displayed according to RFC 3986
+    uri.username('').password('').normalize();
+    var t = '';
+    if (uri._parts.protocol) {
+      t += uri._parts.protocol + '://';
+    }
+
+    if (uri._parts.hostname) {
+      if (uri.is('punycode') && punycode) {
+        t += punycode.toUnicode(uri._parts.hostname);
+        if (uri._parts.port) {
+          t += ':' + uri._parts.port;
+        }
+      } else {
+        t += uri.host();
+      }
+    }
+
+    if (uri._parts.hostname && uri._parts.path && uri._parts.path.charAt(0) !== '/') {
+      t += '/';
+    }
+
+    t += uri.path(true);
+    if (uri._parts.query) {
+      var q = '';
+      for (var i = 0, qp = uri._parts.query.split('&'), l = qp.length; i < l; i++) {
+        var kv = (qp[i] || '').split('=');
+        q += '&' + URI.decodeQuery(kv[0], this._parts.escapeQuerySpace)
+          .replace(/&/g, '%26');
+
+        if (kv[1] !== undefined) {
+          q += '=' + URI.decodeQuery(kv[1], this._parts.escapeQuerySpace)
+            .replace(/&/g, '%26');
+        }
+      }
+      t += '?' + q.substring(1);
+    }
+
+    t += URI.decodeQuery(uri.hash(), true);
+    return t;
+  };
+
+  // resolving relative and absolute URLs
+  p.absoluteTo = function(base) {
+    var resolved = this.clone();
+    var properties = ['protocol', 'username', 'password', 'hostname', 'port'];
+    var basedir, i, p;
+
+    if (this._parts.urn) {
+      throw new Error('URNs do not have any generally defined hierarchical components');
+    }
+
+    if (!(base instanceof URI)) {
+      base = new URI(base);
+    }
+
+    if (resolved._parts.protocol) {
+      // Directly returns even if this._parts.hostname is empty.
+      return resolved;
+    } else {
+      resolved._parts.protocol = base._parts.protocol;
+    }
+
+    if (this._parts.hostname) {
+      return resolved;
+    }
+
+    for (i = 0; (p = properties[i]); i++) {
+      resolved._parts[p] = base._parts[p];
+    }
+
+    if (!resolved._parts.path) {
+      resolved._parts.path = base._parts.path;
+      if (!resolved._parts.query) {
+        resolved._parts.query = base._parts.query;
+      }
+    } else {
+      if (resolved._parts.path.substring(-2) === '..') {
+        resolved._parts.path += '/';
+      }
+
+      if (resolved.path().charAt(0) !== '/') {
+        basedir = base.directory();
+        basedir = basedir ? basedir : base.path().indexOf('/') === 0 ? '/' : '';
+        resolved._parts.path = (basedir ? (basedir + '/') : '') + resolved._parts.path;
+        resolved.normalizePath();
+      }
+    }
+
+    resolved.build();
+    return resolved;
+  };
+  p.relativeTo = function(base) {
+    var relative = this.clone().normalize();
+    var relativeParts, baseParts, common, relativePath, basePath;
+
+    if (relative._parts.urn) {
+      throw new Error('URNs do not have any generally defined hierarchical components');
+    }
+
+    base = new URI(base).normalize();
+    relativeParts = relative._parts;
+    baseParts = base._parts;
+    relativePath = relative.path();
+    basePath = base.path();
+
+    if (relativePath.charAt(0) !== '/') {
+      throw new Error('URI is already relative');
+    }
+
+    if (basePath.charAt(0) !== '/') {
+      throw new Error('Cannot calculate a URI relative to another relative URI');
+    }
+
+    if (relativeParts.protocol === baseParts.protocol) {
+      relativeParts.protocol = null;
+    }
+
+    if (relativeParts.username !== baseParts.username || relativeParts.password !== baseParts.password) {
+      return relative.build();
+    }
+
+    if (relativeParts.protocol !== null || relativeParts.username !== null || relativeParts.password !== null) {
+      return relative.build();
+    }
+
+    if (relativeParts.hostname === baseParts.hostname && relativeParts.port === baseParts.port) {
+      relativeParts.hostname = null;
+      relativeParts.port = null;
+    } else {
+      return relative.build();
+    }
+
+    if (relativePath === basePath) {
+      relativeParts.path = '';
+      return relative.build();
+    }
+
+    // determine common sub path
+    common = URI.commonPath(relativePath, basePath);
+
+    // If the paths have nothing in common, return a relative URL with the absolute path.
+    if (!common) {
+      return relative.build();
+    }
+
+    var parents = baseParts.path
+      .substring(common.length)
+      .replace(/[^\/]*$/, '')
+      .replace(/.*?\//g, '../');
+
+    relativeParts.path = (parents + relativeParts.path.substring(common.length)) || './';
+
+    return relative.build();
+  };
+
+  // comparing URIs
+  p.equals = function(uri) {
+    var one = this.clone();
+    var two = new URI(uri);
+    var one_map = {};
+    var two_map = {};
+    var checked = {};
+    var one_query, two_query, key;
+
+    one.normalize();
+    two.normalize();
+
+    // exact match
+    if (one.toString() === two.toString()) {
+      return true;
+    }
+
+    // extract query string
+    one_query = one.query();
+    two_query = two.query();
+    one.query('');
+    two.query('');
+
+    // definitely not equal if not even non-query parts match
+    if (one.toString() !== two.toString()) {
+      return false;
+    }
+
+    // query parameters have the same length, even if they're permuted
+    if (one_query.length !== two_query.length) {
+      return false;
+    }
+
+    one_map = URI.parseQuery(one_query, this._parts.escapeQuerySpace);
+    two_map = URI.parseQuery(two_query, this._parts.escapeQuerySpace);
+
+    for (key in one_map) {
+      if (hasOwn.call(one_map, key)) {
+        if (!isArray(one_map[key])) {
+          if (one_map[key] !== two_map[key]) {
+            return false;
+          }
+        } else if (!arraysEqual(one_map[key], two_map[key])) {
+          return false;
+        }
+
+        checked[key] = true;
+      }
+    }
+
+    for (key in two_map) {
+      if (hasOwn.call(two_map, key)) {
+        if (!checked[key]) {
+          // two contains a parameter not present in one
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
+  // state
+  p.duplicateQueryParameters = function(v) {
+    this._parts.duplicateQueryParameters = !!v;
+    return this;
+  };
+
+  p.escapeQuerySpace = function(v) {
+    this._parts.escapeQuerySpace = !!v;
+    return this;
+  };
+
+  return URI;
+}));
+
+},{"./IPv6":560,"./SecondLevelDomains":561,"./punycode":563}],563:[function(require,module,exports){
+(function (global){
+/*! https://mths.be/punycode v1.4.0 by @mathias */
+;(function(root) {
+
+	/** Detect free variables */
+	var freeExports = typeof exports == 'object' && exports &&
+		!exports.nodeType && exports;
+	var freeModule = typeof module == 'object' && module &&
+		!module.nodeType && module;
+	var freeGlobal = typeof global == 'object' && global;
+	if (
+		freeGlobal.global === freeGlobal ||
+		freeGlobal.window === freeGlobal ||
+		freeGlobal.self === freeGlobal
+	) {
+		root = freeGlobal;
+	}
+
+	/**
+	 * The `punycode` object.
+	 * @name punycode
+	 * @type Object
+	 */
+	var punycode,
+
+	/** Highest positive signed 32-bit float value */
+	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
+
+	/** Bootstring parameters */
+	base = 36,
+	tMin = 1,
+	tMax = 26,
+	skew = 38,
+	damp = 700,
+	initialBias = 72,
+	initialN = 128, // 0x80
+	delimiter = '-', // '\x2D'
+
+	/** Regular expressions */
+	regexPunycode = /^xn--/,
+	regexNonASCII = /[^\x20-\x7E]/, // unprintable ASCII chars + non-ASCII chars
+	regexSeparators = /[\x2E\u3002\uFF0E\uFF61]/g, // RFC 3490 separators
+
+	/** Error messages */
+	errors = {
+		'overflow': 'Overflow: input needs wider integers to process',
+		'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
+		'invalid-input': 'Invalid input'
+	},
+
+	/** Convenience shortcuts */
+	baseMinusTMin = base - tMin,
+	floor = Math.floor,
+	stringFromCharCode = String.fromCharCode,
+
+	/** Temporary variable */
+	key;
+
+	/*--------------------------------------------------------------------------*/
+
+	/**
+	 * A generic error utility function.
+	 * @private
+	 * @param {String} type The error type.
+	 * @returns {Error} Throws a `RangeError` with the applicable error message.
+	 */
+	function error(type) {
+		throw new RangeError(errors[type]);
+	}
+
+	/**
+	 * A generic `Array#map` utility function.
+	 * @private
+	 * @param {Array} array The array to iterate over.
+	 * @param {Function} callback The function that gets called for every array
+	 * item.
+	 * @returns {Array} A new array of values returned by the callback function.
+	 */
+	function map(array, fn) {
+		var length = array.length;
+		var result = [];
+		while (length--) {
+			result[length] = fn(array[length]);
+		}
+		return result;
+	}
+
+	/**
+	 * A simple `Array#map`-like wrapper to work with domain name strings or email
+	 * addresses.
+	 * @private
+	 * @param {String} domain The domain name or email address.
+	 * @param {Function} callback The function that gets called for every
+	 * character.
+	 * @returns {Array} A new string of characters returned by the callback
+	 * function.
+	 */
+	function mapDomain(string, fn) {
+		var parts = string.split('@');
+		var result = '';
+		if (parts.length > 1) {
+			// In email addresses, only the domain name should be punycoded. Leave
+			// the local part (i.e. everything up to `@`) intact.
+			result = parts[0] + '@';
+			string = parts[1];
+		}
+		// Avoid `split(regex)` for IE8 compatibility. See #17.
+		string = string.replace(regexSeparators, '\x2E');
+		var labels = string.split('.');
+		var encoded = map(labels, fn).join('.');
+		return result + encoded;
+	}
+
+	/**
+	 * Creates an array containing the numeric code points of each Unicode
+	 * character in the string. While JavaScript uses UCS-2 internally,
+	 * this function will convert a pair of surrogate halves (each of which
+	 * UCS-2 exposes as separate characters) into a single code point,
+	 * matching UTF-16.
+	 * @see `punycode.ucs2.encode`
+	 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+	 * @memberOf punycode.ucs2
+	 * @name decode
+	 * @param {String} string The Unicode input string (UCS-2).
+	 * @returns {Array} The new array of code points.
+	 */
+	function ucs2decode(string) {
+		var output = [],
+		    counter = 0,
+		    length = string.length,
+		    value,
+		    extra;
+		while (counter < length) {
+			value = string.charCodeAt(counter++);
+			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
+				// high surrogate, and there is a next character
+				extra = string.charCodeAt(counter++);
+				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
+					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
+				} else {
+					// unmatched surrogate; only append this code unit, in case the next
+					// code unit is the high surrogate of a surrogate pair
+					output.push(value);
+					counter--;
+				}
+			} else {
+				output.push(value);
+			}
+		}
+		return output;
+	}
+
+	/**
+	 * Creates a string based on an array of numeric code points.
+	 * @see `punycode.ucs2.decode`
+	 * @memberOf punycode.ucs2
+	 * @name encode
+	 * @param {Array} codePoints The array of numeric code points.
+	 * @returns {String} The new Unicode string (UCS-2).
+	 */
+	function ucs2encode(array) {
+		return map(array, function(value) {
+			var output = '';
+			if (value > 0xFFFF) {
+				value -= 0x10000;
+				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
+				value = 0xDC00 | value & 0x3FF;
+			}
+			output += stringFromCharCode(value);
+			return output;
+		}).join('');
+	}
+
+	/**
+	 * Converts a basic code point into a digit/integer.
+	 * @see `digitToBasic()`
+	 * @private
+	 * @param {Number} codePoint The basic numeric code point value.
+	 * @returns {Number} The numeric value of a basic code point (for use in
+	 * representing integers) in the range `0` to `base - 1`, or `base` if
+	 * the code point does not represent a value.
+	 */
+	function basicToDigit(codePoint) {
+		if (codePoint - 48 < 10) {
+			return codePoint - 22;
+		}
+		if (codePoint - 65 < 26) {
+			return codePoint - 65;
+		}
+		if (codePoint - 97 < 26) {
+			return codePoint - 97;
+		}
+		return base;
+	}
+
+	/**
+	 * Converts a digit/integer into a basic code point.
+	 * @see `basicToDigit()`
+	 * @private
+	 * @param {Number} digit The numeric value of a basic code point.
+	 * @returns {Number} The basic code point whose value (when used for
+	 * representing integers) is `digit`, which needs to be in the range
+	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
+	 * used; else, the lowercase form is used. The behavior is undefined
+	 * if `flag` is non-zero and `digit` has no uppercase form.
+	 */
+	function digitToBasic(digit, flag) {
+		//  0..25 map to ASCII a..z or A..Z
+		// 26..35 map to ASCII 0..9
+		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
+	}
+
+	/**
+	 * Bias adaptation function as per section 3.4 of RFC 3492.
+	 * https://tools.ietf.org/html/rfc3492#section-3.4
+	 * @private
+	 */
+	function adapt(delta, numPoints, firstTime) {
+		var k = 0;
+		delta = firstTime ? floor(delta / damp) : delta >> 1;
+		delta += floor(delta / numPoints);
+		for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base) {
+			delta = floor(delta / baseMinusTMin);
+		}
+		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
+	}
+
+	/**
+	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
+	 * symbols.
+	 * @memberOf punycode
+	 * @param {String} input The Punycode string of ASCII-only symbols.
+	 * @returns {String} The resulting string of Unicode symbols.
+	 */
+	function decode(input) {
+		// Don't use UCS-2
+		var output = [],
+		    inputLength = input.length,
+		    out,
+		    i = 0,
+		    n = initialN,
+		    bias = initialBias,
+		    basic,
+		    j,
+		    index,
+		    oldi,
+		    w,
+		    k,
+		    digit,
+		    t,
+		    /** Cached calculation results */
+		    baseMinusT;
+
+		// Handle the basic code points: let `basic` be the number of input code
+		// points before the last delimiter, or `0` if there is none, then copy
+		// the first basic code points to the output.
+
+		basic = input.lastIndexOf(delimiter);
+		if (basic < 0) {
+			basic = 0;
+		}
+
+		for (j = 0; j < basic; ++j) {
+			// if it's not a basic code point
+			if (input.charCodeAt(j) >= 0x80) {
+				error('not-basic');
+			}
+			output.push(input.charCodeAt(j));
+		}
+
+		// Main decoding loop: start just after the last delimiter if any basic code
+		// points were copied; start at the beginning otherwise.
+
+		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
+
+			// `index` is the index of the next character to be consumed.
+			// Decode a generalized variable-length integer into `delta`,
+			// which gets added to `i`. The overflow checking is easier
+			// if we increase `i` as we go, then subtract off its starting
+			// value at the end to obtain `delta`.
+			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
+
+				if (index >= inputLength) {
+					error('invalid-input');
+				}
+
+				digit = basicToDigit(input.charCodeAt(index++));
+
+				if (digit >= base || digit > floor((maxInt - i) / w)) {
+					error('overflow');
+				}
+
+				i += digit * w;
+				t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+
+				if (digit < t) {
+					break;
+				}
+
+				baseMinusT = base - t;
+				if (w > floor(maxInt / baseMinusT)) {
+					error('overflow');
+				}
+
+				w *= baseMinusT;
+
+			}
+
+			out = output.length + 1;
+			bias = adapt(i - oldi, out, oldi == 0);
+
+			// `i` was supposed to wrap around from `out` to `0`,
+			// incrementing `n` each time, so we'll fix that now:
+			if (floor(i / out) > maxInt - n) {
+				error('overflow');
+			}
+
+			n += floor(i / out);
+			i %= out;
+
+			// Insert `n` at position `i` of the output
+			output.splice(i++, 0, n);
+
+		}
+
+		return ucs2encode(output);
+	}
+
+	/**
+	 * Converts a string of Unicode symbols (e.g. a domain name label) to a
+	 * Punycode string of ASCII-only symbols.
+	 * @memberOf punycode
+	 * @param {String} input The string of Unicode symbols.
+	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
+	 */
+	function encode(input) {
+		var n,
+		    delta,
+		    handledCPCount,
+		    basicLength,
+		    bias,
+		    j,
+		    m,
+		    q,
+		    k,
+		    t,
+		    currentValue,
+		    output = [],
+		    /** `inputLength` will hold the number of code points in `input`. */
+		    inputLength,
+		    /** Cached calculation results */
+		    handledCPCountPlusOne,
+		    baseMinusT,
+		    qMinusT;
+
+		// Convert the input in UCS-2 to Unicode
+		input = ucs2decode(input);
+
+		// Cache the length
+		inputLength = input.length;
+
+		// Initialize the state
+		n = initialN;
+		delta = 0;
+		bias = initialBias;
+
+		// Handle the basic code points
+		for (j = 0; j < inputLength; ++j) {
+			currentValue = input[j];
+			if (currentValue < 0x80) {
+				output.push(stringFromCharCode(currentValue));
+			}
+		}
+
+		handledCPCount = basicLength = output.length;
+
+		// `handledCPCount` is the number of code points that have been handled;
+		// `basicLength` is the number of basic code points.
+
+		// Finish the basic string - if it is not empty - with a delimiter
+		if (basicLength) {
+			output.push(delimiter);
+		}
+
+		// Main encoding loop:
+		while (handledCPCount < inputLength) {
+
+			// All non-basic code points < n have been handled already. Find the next
+			// larger one:
+			for (m = maxInt, j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+				if (currentValue >= n && currentValue < m) {
+					m = currentValue;
+				}
+			}
+
+			// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
+			// but guard against overflow
+			handledCPCountPlusOne = handledCPCount + 1;
+			if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
+				error('overflow');
+			}
+
+			delta += (m - n) * handledCPCountPlusOne;
+			n = m;
+
+			for (j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+
+				if (currentValue < n && ++delta > maxInt) {
+					error('overflow');
+				}
+
+				if (currentValue == n) {
+					// Represent delta as a generalized variable-length integer
+					for (q = delta, k = base; /* no condition */; k += base) {
+						t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+						if (q < t) {
+							break;
+						}
+						qMinusT = q - t;
+						baseMinusT = base - t;
+						output.push(
+							stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
+						);
+						q = floor(qMinusT / baseMinusT);
+					}
+
+					output.push(stringFromCharCode(digitToBasic(q, 0)));
+					bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
+					delta = 0;
+					++handledCPCount;
+				}
+			}
+
+			++delta;
+			++n;
+
+		}
+		return output.join('');
+	}
+
+	/**
+	 * Converts a Punycode string representing a domain name or an email address
+	 * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
+	 * it doesn't matter if you call it on a string that has already been
+	 * converted to Unicode.
+	 * @memberOf punycode
+	 * @param {String} input The Punycoded domain name or email address to
+	 * convert to Unicode.
+	 * @returns {String} The Unicode representation of the given Punycode
+	 * string.
+	 */
+	function toUnicode(input) {
+		return mapDomain(input, function(string) {
+			return regexPunycode.test(string)
+				? decode(string.slice(4).toLowerCase())
+				: string;
+		});
+	}
+
+	/**
+	 * Converts a Unicode string representing a domain name or an email address to
+	 * Punycode. Only the non-ASCII parts of the domain name will be converted,
+	 * i.e. it doesn't matter if you call it with a domain that's already in
+	 * ASCII.
+	 * @memberOf punycode
+	 * @param {String} input The domain name or email address to convert, as a
+	 * Unicode string.
+	 * @returns {String} The Punycode representation of the given domain name or
+	 * email address.
+	 */
+	function toASCII(input) {
+		return mapDomain(input, function(string) {
+			return regexNonASCII.test(string)
+				? 'xn--' + encode(string)
+				: string;
+		});
+	}
+
+	/*--------------------------------------------------------------------------*/
+
+	/** Define the public API */
+	punycode = {
+		/**
+		 * A string representing the current Punycode.js version number.
+		 * @memberOf punycode
+		 * @type String
+		 */
+		'version': '1.3.2',
+		/**
+		 * An object of methods to convert from JavaScript's internal character
+		 * representation (UCS-2) to Unicode code points, and back.
+		 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+		 * @memberOf punycode
+		 * @type Object
+		 */
+		'ucs2': {
+			'decode': ucs2decode,
+			'encode': ucs2encode
+		},
+		'decode': decode,
+		'encode': encode,
+		'toASCII': toASCII,
+		'toUnicode': toUnicode
+	};
+
+	/** Expose `punycode` */
+	// Some AMD build optimizers, like r.js, check for specific condition patterns
+	// like the following:
+	if (
+		typeof define == 'function' &&
+		typeof define.amd == 'object' &&
+		define.amd
+	) {
+		define('punycode', function() {
+			return punycode;
+		});
+	} else if (freeExports && freeModule) {
+		if (module.exports == freeExports) {
+			// in Node.js, io.js, or RingoJS v0.8.0+
+			freeModule.exports = punycode;
+		} else {
+			// in Narwhal or RingoJS v0.7.0-
+			for (key in punycode) {
+				punycode.hasOwnProperty(key) && (freeExports[key] = punycode[key]);
+			}
+		}
+	} else {
+		// in Rhino or a web browser
+		root.punycode = punycode;
+	}
+
+}(this));
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],564:[function(require,module,exports){
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
@@ -85017,32 +88244,14 @@ var Track = require('./track')
  * @constructor
  * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The album to search for.
- * @param {string} [response] - JSON album object.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of tracks to fetch.
  */
-function Album (spotify, entry, limit) {
-  /**
-   * Album response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#album-object-full).
-   */
-  this.albumResponse = null
-
+function Album (spotify, entry, id, limit) {
   /**
    * Entry string.
    */
-  this.entry = entry.trim()
-
-  /**
-   * Number of albums to fetch.
-   */
-  this.limit = null
-
-  /**
-   * Search response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/search-item/#example).
-   */
-  this.searchResponse = null
+  this.entry = ''
 
   /**
    * Whether to fetch tracks.
@@ -85050,11 +88259,65 @@ function Album (spotify, entry, limit) {
   this.fetchTracks = true
 
   /**
+   * Spotify ID.
+   */
+  this.id = ''
+
+  /**
+   * Number of albums to fetch.
+   */
+  this.limit = null
+
+  /**
+   * The album name.
+   */
+  this.name = ''
+
+  /**
+   * The album popularity.
+   * @return {string} - The album popularity.
+   */
+  this.popularity = null
+
+  /**
    * Spotify request handler.
    */
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = null
 
-  this.setLimit(limit)
+  /**
+   * Album tracks.
+   */
+  this.tracks = []
+
+  /**
+   * Spotify URI
+   * (a string on the form `spotify:album:xxxxxxxxxxxxxxxxxxxxxx`).
+   */
+  this.uri = ''
+
+  this.entry = entry.trim()
+  this.id = id
+  this.limit = limit
+  this.name = entry
+  this.spotify = spotify || new SpotifyRequestHandler()
+  this.uri = this.id ? ('spotify:album:' + this.id) : this.uri
+}
+
+/**
+ * Clone a JSON response.
+ * @param {Object} response - The response.
+ */
+Album.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
+  }
+  if (response &&
+      response.tracks &&
+      response.tracks.items) {
+    this.tracks = response.tracks.items
+  }
 }
 
 /**
@@ -85064,10 +88327,10 @@ function Album (spotify, entry, limit) {
  */
 Album.prototype.createQueue = function () {
   var self = this
-  var tracks = this.albumResponse.tracks.items.map(function (item) {
+  var tracks = this.tracks.map(function (item) {
     var track = new Track(self.spotify, self.entry)
-    track.setResponse(item)
-    track.setAlbum(self.title())
+    track.clone(item)
+    track.album = self.name
     return track
   })
   var queue = new Queue(tracks)
@@ -85100,47 +88363,13 @@ Album.prototype.dispatch = function () {
  */
 Album.prototype.fetchAlbum = function () {
   var self = this
-  return this.spotify.getAlbum(this.id()).then(function (response) {
-    self.albumResponse = response
-    return self
-  })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the album,
- * or `-1` if not available.
- */
-Album.prototype.id = function () {
-  if (this.albumResponse &&
-      this.albumResponse.id) {
-    return this.albumResponse.id
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].id) {
-    return this.searchResponse.albums.items[0].id
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this)
   } else {
-    return -1
-  }
-}
-
-/**
- * The album popularity.
- * @return {string} - The album popularity.
- */
-Album.prototype.popularity = function () {
-  if (this.albumResponse &&
-      this.albumResponse.popularity) {
-    return this.albumResponse.popularity
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].popularity) {
-    return this.searchResponse.albums.items[0].popularity
-  } else {
-    return ''
+    return this.spotify.getAlbum(this.id).then(function (response) {
+      self.clone(response)
+      return self
+    })
   }
 }
 
@@ -85150,106 +88379,36 @@ Album.prototype.popularity = function () {
  */
 Album.prototype.searchForAlbum = function () {
   var self = this
-  if (this.searchResponse) {
-    return Promise.resolve(this.searchResponse)
-  } else if (this.albumResponse) {
-    return Promise.resolve(this.albumResponse)
+  if (this.id) {
+    return Promise.resolve(this)
   } else {
-    return this.spotify.searchForAlbum(this.entry).then(function (result) {
-      self.searchResponse = result
-      return self
+    return this.spotify.searchForAlbum(this.entry).then(function (response) {
+      if (response &&
+          response.albums &&
+          response.albums.items &&
+          response.albums.items[0]) {
+        response = response.albums.items[0]
+        self.clone(response)
+        return Promise.resolve(self)
+      } else {
+        return Promise.reject(response)
+      }
     }).catch(function () {
-      console.log('COULD NOT FIND ' + self.entry)
-      return Promise.reject(null)
+      if (self.entry.match(/^[0-9a-z]+$/i)) {
+        self.id = self.entry
+        self.uri = 'spotify:album:' + self.id
+        return Promise.resolve(self)
+      } else {
+        console.log('COULD NOT FIND ' + self.entry)
+        return Promise.reject(null)
+      }
     })
-  }
-}
-
-/**
- * Set the number of albums to fetch.
- * @param {integer} limit - The maximum amount of albums.
- */
-Album.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.limit = limit
-  }
-}
-
-/**
- * Set the JSON response.
- * @param {JSON} response - The response.
- */
-Album.prototype.setResponse = function (response) {
-  if (response &&
-      response.albums &&
-      response.albums.items[0] &&
-      response.albums.items[0].id) {
-    this.searchResponse = response
-  } else if (response &&
-             response.id) {
-    this.albumResponse = response
-  }
-}
-
-/**
- * The album title.
- * @return {string} - The album title.
- */
-Album.prototype.title = function () {
-  if (this.albumResponse &&
-      this.albumResponse.name) {
-    return this.albumResponse.name
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].name) {
-    return this.searchResponse.albums.items[0].name
-  } else {
-    return ''
-  }
-}
-
-/**
- * The album type.
- * @return {string} - The album type.
- */
-Album.prototype.type = function () {
-  if (this.albumResponse &&
-      this.albumResponse.album_type) {
-    return this.albumResponse.album_type
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].album_type) {
-    return this.searchResponse.albums.items[0].album_type
-  } else {
-    return ''
-  }
-}
-
-/**
- * Spotify URI.
- * @return {string} The Spotify URI
- * (a string on the form `spotify:album:xxxxxxxxxxxxxxxxxxxxxx`),
- * or the empty string if not available.
- */
-Album.prototype.uri = function () {
-  if (this.albumResponse &&
-      this.albumResponse.uri) {
-    return this.albumResponse.uri
-  } else if (this.searchResponse &&
-             this.searchResponse.albums &&
-             this.searchResponse.albums.items[0] &&
-             this.searchResponse.albums.items[0].uri) {
-    return this.searchResponse.albums.items[0].uri
-  } else {
-    return ''
   }
 }
 
 module.exports = Album
 
-},{"./queue":568,"./spotify":572,"./track":574}],561:[function(require,module,exports){
+},{"./queue":572,"./spotify":576,"./track":578}],565:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -85260,26 +88419,24 @@ var sort = require('./sort')
  * @constructor
  * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of albums to fetch.
  */
-function Artist (spotify, entry, limit) {
+function Artist (spotify, entry, id, limit) {
   /**
-   * Artist response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#artist-object-full).
+   * Array of albums.
    */
-  this.artistResponse = null
-
-  /**
-   * Albums response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-artists-albums/#example).
-   */
-  this.albumsResponse = null
+  this.albums = []
 
   /**
    * Entry string.
    */
-  this.entry = null
+  this.entry = ''
+
+  /**
+   * Spotify ID.
+   */
+  this.id = ''
 
   /**
    * Number of tracks to fetch.
@@ -85287,20 +88444,32 @@ function Artist (spotify, entry, limit) {
   this.limit = null
 
   /**
-   * Search response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+   * The artist name.
    */
-  this.searchResponse = null
+  this.name = ''
 
   /**
    * Spotify request handler.
    */
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = null
 
   this.entry = entry.trim()
+  this.id = id
+  this.limit = limit
+  this.name = entry
+  this.spotify = spotify || new SpotifyRequestHandler()
+}
 
-  this.setLimit(limit)
+/**
+ * Clone a JSON response.
+ * @param {Object} response - The response.
+ */
+Artist.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
+  }
 }
 
 /**
@@ -85310,12 +88479,15 @@ function Artist (spotify, entry, limit) {
  */
 Artist.prototype.createQueue = function () {
   var self = this
-  var albums = self.albumsResponse.items.map(function (item) {
+  var albums = self.albums.map(function (item) {
     var album = new Album(self.spotify, self.entry)
-    album.setResponse(item)
+    album.clone(item)
     return album
   })
   var albumQueue = new Queue(albums)
+  if (self.limit) {
+    albumQueue = albumQueue.slice(0, self.limit)
+  }
   return albumQueue.forEachPromise(function (album) {
     // get album popularity
     return album.fetchAlbum()
@@ -85324,8 +88496,7 @@ Artist.prototype.createQueue = function () {
     return albumQueue.dispatch()
   }).then(function (queue) {
     return queue.flatten().filter(function (track) {
-      // TODO: use canonical artist name
-      return track.hasArtist(self.entry)
+      return track.hasArtist(self.name)
     })
   })
 }
@@ -85349,29 +88520,10 @@ Artist.prototype.dispatch = function () {
  */
 Artist.prototype.fetchAlbums = function () {
   var self = this
-  return this.spotify.getAlbumsByArtist(this.id()).then(function (result) {
-    self.albumsResponse = result
+  return this.spotify.getAlbumsByArtist(this.id).then(function (response) {
+    self.albums = response.items
     return self
   })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Artist.prototype.id = function () {
-  if (this.searchResponse &&
-      this.searchResponse.artists &&
-      this.searchResponse.artists.items[0] &&
-      this.searchResponse.artists.items[0].id) {
-    return this.searchResponse.artists.items[0].id
-  } else if (this.artistResponse &&
-             this.artistResponse.id) {
-    return this.artistResponse.id
-  } else {
-    return -1
-  }
 }
 
 /**
@@ -85380,50 +88532,34 @@ Artist.prototype.id = function () {
  */
 Artist.prototype.searchForArtist = function () {
   var self = this
-  if (this.searchResponse) {
-    return Promise.resolve(this.searchResponse)
-  } else if (this.artistResponse) {
-    return Promise.resolve(this.artistResponse)
+  if (this.id) {
+    return Promise.resolve(this)
   } else {
-    return this.spotify.searchForArtist(this.entry).then(function (result) {
-      self.searchResponse = result
-      return self
+    return this.spotify.searchForArtist(this.entry).then(function (response) {
+      if (response &&
+          response.artists &&
+          response.artists.items &&
+          response.artists.items[0]) {
+        response = response.artists.items[0]
+        self.clone(response)
+        return Promise.resolve(self)
+      } else {
+        return Promise.reject(response)
+      }
+    }).catch(function () {
+      if (self.entry.match(/^[0-9a-z]+$/i)) {
+        self.id = self.entry
+        return Promise.resolve(self)
+      } else {
+        return Promise.reject(null)
+      }
     })
-  }
-}
-
-/**
- * Set the number of tracks to fetch.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Artist.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.limit = limit
-  }
-}
-
-/**
- * Set the JSON response.
- * @param {JSON} response - The response.
- */
-Artist.prototype.setResponse = function (response) {
-  if (response &&
-      response.artists &&
-      response.artists.items[0] &&
-      response.artists.items[0].id) {
-    this.searchResponse = response
-  } else if (response &&
-             response.id) {
-    this.artistResponse = response
-  } else if (response &&
-             response.items) {
-    this.albumsResponse = response
   }
 }
 
 module.exports = Artist
 
-},{"./album":560,"./queue":568,"./sort":571,"./spotify":572}],562:[function(require,module,exports){
+},{"./album":564,"./queue":572,"./sort":575,"./spotify":576}],566:[function(require,module,exports){
 var stringify = require('csv-stringify/lib/sync')
 
 /**
@@ -85458,24 +88594,24 @@ CSV.prototype.toString = function () {
     return (num < 0) ? '' : num
   }
   return stringify([[
-    this.track.uri(),
-    this.track.title(),
-    this.track.artist(),
-    this.track.album(),
-    numberToString(this.track.discNumber()),
-    numberToString(this.track.trackNumber()),
-    numberToString(this.track.duration()),
-    numberToString(this.track.popularity()),
-    numberToString(this.track.lastfm())
+    this.track.uri,
+    this.track.name,
+    this.track.artist,
+    this.track.album,
+    numberToString(this.track.disc_number),
+    numberToString(this.track.track_number),
+    numberToString(this.track.duration_ms),
+    numberToString(this.track.popularity),
+    numberToString(this.track.lastfm)
   ]]).trim()
 }
 
 module.exports = CSV
 
-},{"csv-stringify/lib/sync":296}],563:[function(require,module,exports){
+},{"csv-stringify/lib/sync":296}],567:[function(require,module,exports){
 var _0x22f8=['\x35\x66\x30\x63\x66\x63\x32\x32\x66\x61\x39\x65\x34\x37\x66\x65\x61\x31\x35\x61\x35\x66\x35\x63\x65\x66\x37\x64\x38\x62\x30\x37','\x65\x78\x70\x6f\x72\x74\x73'];(function(_0x2c655a,_0x2213f0){var _0x457c86=function(_0x50d308){while(--_0x50d308){_0x2c655a['\x70\x75\x73\x68'](_0x2c655a['\x73\x68\x69\x66\x74']());}};_0x457c86(++_0x2213f0);}(_0x22f8,0xe1));var _0x822f=function(_0xff0804,_0x38aff9){_0xff0804=_0xff0804-0x0;var _0x41bc24=_0x22f8[_0xff0804];return _0x41bc24;};module[_0x822f('0x0')]={'\x61\x70\x69':'\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66','\x69\x64':'\x36\x62\x36\x39\x66\x33\x62\x34\x64\x35\x33\x36\x34\x35\x37\x65\x38\x66\x39\x35\x34\x62\x33\x61\x33\x61\x65\x65\x32\x34\x35\x38','\x6b\x65\x79':_0x822f('0x1')};
 
-},{}],564:[function(require,module,exports){
+},{}],568:[function(require,module,exports){
 var eol = require('eol')
 var Album = require('./album')
 var CSV = require('./csv')
@@ -85523,6 +88659,11 @@ function Generator (spotify) {
    * Whether to reverse the playlist order.
    */
   this.reverse = false
+
+  /**
+   * Whether to shuffle the playlist.
+   */
+  this.shuffle = false
 
   /**
    * Whether to remove duplicates.
@@ -85594,7 +88735,7 @@ Generator.prototype.dispatch = function () {
   }).then(function () {
     return self.alternate()
   }).then(function () {
-    return self.reverseOrder()
+    return self.reorder()
   })
 }
 
@@ -85699,9 +88840,11 @@ Generator.prototype.refreshTracks = function () {
  * Reverse the order of the entries.
  * @return {Promise|Generator} - Itself.
  */
-Generator.prototype.reverseOrder = function () {
+Generator.prototype.reorder = function () {
   if (this.reverse) {
     return this.entries.reverse()
+  } else if (this.shuffle) {
+    return this.entries.shuffle()
   }
   return Promise.resolve(this.entries)
 }
@@ -85719,17 +88862,16 @@ Generator.prototype.toString = function () {
   this.entries.forEach(function (entry) {
     if (entry instanceof Track || entry instanceof Album) {
       if (entry instanceof Track) {
-        console.log(entry.toString())
-        console.log(entry.popularity() + ' (' + entry.lastfm() + ')')
+        console.log(entry.title)
+        console.log(entry.popularity + ' (' + entry.lastfm + ')')
       }
       if (self.csv) {
         var csvFormat = new CSV(entry)
         var csvLine = csvFormat.toString()
         result += csvLine + '\n'
       } else {
-        var uri = entry.uri()
-        if (uri) {
-          result += uri + '\n'
+        if (entry.uri) {
+          result += entry.uri + '\n'
         }
       }
     }
@@ -85740,7 +88882,7 @@ Generator.prototype.toString = function () {
 
 module.exports = Generator
 
-},{"./album":560,"./csv":562,"./queue":568,"./spotify":572,"./track":574,"eol":298}],565:[function(require,module,exports){
+},{"./album":564,"./csv":566,"./queue":572,"./spotify":576,"./track":578,"eol":298}],569:[function(require,module,exports){
 var request = require('request')
 
 /**
@@ -85820,7 +88962,7 @@ http.json = function (uri, options) {
 
 module.exports = http
 
-},{"request":300}],566:[function(require,module,exports){
+},{"request":300}],570:[function(require,module,exports){
 var http = require('./http')
 
 module.exports = function (key) {
@@ -85842,12 +88984,12 @@ module.exports = function (key) {
     correct = (correct === undefined) ? true : correct
     correct = correct ? 1 : 0
     return lastfm.request(uri, {
-      'qs': {
-        'artist': artist,
-        'track': title,
-        'user': user,
-        'autocorrect': correct,
-        'format': 'json'
+      qs: {
+        artist: artist,
+        track: title,
+        user: user,
+        autocorrect: correct,
+        format: 'json'
       }
     }).then(function (result) {
       if (result && !result.error && result.track) {
@@ -85873,7 +89015,7 @@ module.exports = function (key) {
   return lastfm
 }
 
-},{"./http":565}],567:[function(require,module,exports){
+},{"./http":569}],571:[function(require,module,exports){
 var defaults = require('./defaults')
 var eol = require('eol')
 var Album = require('./album')
@@ -85921,8 +89063,12 @@ Parser.prototype.parse = function (str) {
         generator.unique = false
       } else if (line.match(/^#REVERSE/i)) {
         generator.reverse = true
+      } else if (line.match(/^#SHUFFLE/i)) {
+        generator.shuffle = true
       } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
         generator.unique = true
+      } else if (line.match(/^#DEDUP/i)) {
+        generator.unique = false
       } else if (line.match(/^#(CSV|CVS)/i)) {
         generator.csv = true
       } else if (line.match(/^##/i) ||
@@ -85934,8 +89080,7 @@ Parser.prototype.parse = function (str) {
         var albumId = albumMatch[2]
         var albumLimit = parseInt(albumMatch[3])
         var albumEntry = albumMatch[4]
-        var album = new Album(this.spotify, albumEntry)
-        album.setLimit(albumLimit)
+        var album = new Album(this.spotify, albumEntry, null, albumLimit)
         if (albumId) {
           album.fetchTracks = false
         }
@@ -85944,22 +89089,19 @@ Parser.prototype.parse = function (str) {
         var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
         var artistLimit = parseInt(artistMatch[1])
         var artistEntry = artistMatch[2]
-        var artist = new Artist(this.spotify, artistEntry)
-        artist.setLimit(artistLimit)
+        var artist = new Artist(this.spotify, artistEntry, null, artistLimit)
         generator.add(artist)
       } else if (line.match(/^#TOP[0-9]*\s+/i)) {
         var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
         var topLimit = parseInt(topMatch[1])
         var topEntry = topMatch[2]
-        var top = new Top(this.spotify, topEntry)
-        top.setLimit(topLimit)
+        var top = new Top(this.spotify, topEntry, null, topLimit)
         generator.add(top)
       } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
         var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
         var similarLimit = parseInt(similarMatch[1])
         var similarEntry = similarMatch[2]
-        var similar = new Similar(this.spotify, similarEntry)
-        similar.setLimit(similarLimit)
+        var similar = new Similar(this.spotify, similarEntry, null, similarLimit)
         generator.add(similar)
       } else if (line.match(/^#EXTINF/i)) {
         var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
@@ -85970,17 +89112,23 @@ Parser.prototype.parse = function (str) {
             lines.shift()
           }
         }
+      } else if (line.match(/spotify:artist:[0-9a-z]+/i)) {
+        generator.add(new Artist(this.spotify, line, line.match(/[0-9a-z]+$/i)))
+      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)?artist/i)) {
+        generator.add(new Artist(this.spotify, line, line.match(/[0-9a-z]+$/i)))
+      } else if (line.match(/spotify:album:[0-9a-z]+/i)) {
+        generator.add(new Album(this.spotify, line, line.match(/[0-9a-z]+$/i)))
+      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)?album/i)) {
+        generator.add(new Album(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
-        var uriMatch = line.match(/spotify:track:[0-9a-z]+/i)
-        var uri = uriMatch[0]
-        var uriTrack = new Track(this.spotify, uri)
-        generator.add(uriTrack)
+        generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
+      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com/i)) {
+        generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
       } else if (line.match(/^https?:/i)) {
         var scraper = new WebScraper(line, this)
         generator.add(scraper)
       } else if (line) {
-        var track = new Track(this.spotify, line)
-        generator.add(track)
+        generator.add(new Track(this.spotify, line))
       }
     }
   }
@@ -85989,7 +89137,7 @@ Parser.prototype.parse = function (str) {
 
 module.exports = Parser
 
-},{"./album":560,"./artist":561,"./defaults":563,"./generator":564,"./scraper":569,"./similar":570,"./spotify":572,"./top":573,"./track":574,"eol":298}],568:[function(require,module,exports){
+},{"./album":564,"./artist":565,"./defaults":567,"./generator":568,"./scraper":573,"./similar":574,"./spotify":576,"./top":577,"./track":578,"eol":298}],572:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -86072,7 +89220,7 @@ Queue.prototype.dedup = function () {
         return other.refresh().then(function () {
           return entry.refresh()
         }).then(function () {
-          if (entry.popularity() > other.popularity()) {
+          if (entry.popularity > other.popularity) {
             Queue.set(idx, entry)
           }
         })
@@ -86366,6 +89514,29 @@ Queue.prototype.shift = function () {
 }
 
 /**
+ * Shuffle the elements in the queue.
+ *
+ * Uses the Fisher-Yates algorithm.
+ *
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.shuffle = function () {
+  var counter = this.queue.length
+  // while there are elements in the array ...
+  while (counter > 0) {
+    // ... pick a random index ...
+    var index = Math.floor(Math.random() * counter)
+    // ... decrease the counter by 1 ...
+    counter--
+    // ... and swap the last element with it
+    var temp = this.queue[counter]
+    this.queue[counter] = this.queue[index]
+    this.queue[index] = temp
+  }
+  return this
+}
+
+/**
  * Convert queue to array.
  * @return {Array} An array of playlist entries.
  */
@@ -86375,12 +89546,13 @@ Queue.prototype.toArray = function () {
 
 module.exports = Queue
 
-},{"./sort":571}],569:[function(require,module,exports){
+},{"./sort":575}],573:[function(require,module,exports){
 /* global jQuery:true */
 /* exported jQuery */
 
 var http = require('./http')
 var util = require('./util')
+var URI = require('urijs')
 var $ = require('jquery')
 jQuery = $
 
@@ -86396,15 +89568,48 @@ function WebScraper (uri, parser) {
 }
 
 /**
- * Clean up a string.
- * @return {string} A new string.
+ * Scrape a web page.
+ *
+ * This function inspects the host of the web page and invokes an
+ * appropriate scraping function. The scraping functions are written
+ * in the following manner: they take the web page URI as input,
+ * fetch the page, and return a generator string as output (wrapped
+ * in a Promise). Schematically:
+ *
+ *           web page:                      generator string
+ *     +-------------------+                   (Promise):
+ *     | track1 by artist1 |    scraping
+ *     +-------------------+    function    artist1 - track1
+ *     | track2 by artist2 |    =======>    artist2 - track2
+ *     +-------------------+                artist3 - track3
+ *     | track3 by artist3 |
+ *     +-------------------+
+ *
+ * In the example above, the scraping function converts a table of
+ * tracks to a generator string on the form `ARTIST - TRACK`. If the
+ * input were an albums chart, then the output would be a string of
+ * `#album` commands instead. In other words, the scraping function
+ * should extract the *meaning* of the web page and express it as
+ * input to the generator.
+ *
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A generator string.
  */
-WebScraper.prototype.trim = function (str) {
-  str = str || ''
-  str = str.trim()
-  str = str.replace(/[\s]+/g, ' ')
-  str = util.toAscii(str)
-  return str
+WebScraper.prototype.scrape = function (uri) {
+  var domain = URI(uri).domain()
+  if (domain === 'last.fm') {
+    return this.lastfm(uri)
+  } else if (domain === 'pitchfork.com') {
+    return this.pitchfork(uri)
+  } else if (domain === 'rateyourmusic.com') {
+    return this.rateyourmusic(uri)
+  } else if (domain === 'reddit.com') {
+    return this.reddit(uri)
+  } else if (domain === 'youtube.com') {
+    return this.youtube(uri)
+  } else {
+    return this.webpage(uri)
+  }
 }
 
 /**
@@ -86431,6 +89636,34 @@ WebScraper.prototype.dispatch = function () {
 }
 
 /**
+ * Clean up a string's contents.
+ * @return {string} A new string.
+ */
+WebScraper.prototype.cleanup = function (str) {
+  str = str.replace(/].*/gi, ']')
+    .replace(/\).*/gi, ')')
+    .replace(/\[[^\]]*]/gi, '')
+    .replace(/\([^)]*\)/gi, '')
+    .replace(/-+/gi, '-')
+    .replace(/\.+/gi, '.')
+    .replace(/[^-'.\w\s]/gi, '')
+  str = this.trim(str)
+  return str
+}
+
+/**
+ * Clean up a string's whitespace.
+ * @return {string} A new string.
+ */
+WebScraper.prototype.trim = function (str) {
+  str = str || ''
+  str = str.trim()
+  str = str.replace(/[\s]+/g, ' ')
+  str = util.toAscii(str)
+  return str
+}
+
+/**
  * Scrape a Last.fm tracklist.
  * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
@@ -86438,11 +89671,15 @@ WebScraper.prototype.dispatch = function () {
 WebScraper.prototype.lastfm = function (uri) {
   var self = this
   return http(uri).then(function (data) {
-    var result = ''
     var html = $($.parseHTML(data))
+    var result = ''
     if (uri.match(/\/\+tracks/gi)) {
       // tracks by a single artist
-      var artist = self.trim(html.find('h1.header-title').text())
+      var header = html.find('header a.library-header-crumb')
+      if (header.length === 0) {
+        header = html.find('h1.header-title')
+      }
+      var artist = self.trim(header.first().text())
       html.find('td.chartlist-name').each(function () {
         result += artist + ' - ' + self.trim($(this).text()) + '\n'
       })
@@ -86472,15 +89709,43 @@ WebScraper.prototype.lastfm = function (uri) {
 }
 
 /**
+ * Scrape a Pitchfork list.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.pitchfork = function (uri) {
+  var self = this
+  function getPages (nextUri, result) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      html.find('div.artist-work').each(function () {
+        var artist = self.trim($(this).find('ul.artist-list li:first').text())
+        var album = self.trim($(this).find('h2.work-title').text())
+        result += '#album ' + artist + ' - ' + album + '\n'
+      })
+      var nextPage = html.find('.fts-pagination__list-item--active').next()
+      if (nextPage.length > 0) {
+        nextUri = nextPage.find('a').attr('href')
+        return getPages(nextUri, result)
+      } else {
+        return result.trim()
+      }
+    })
+  }
+  return getPages(uri, '')
+}
+
+/**
  * Scrape a Rate Your Music chart.
  * @param {string} uri - The URI of the web page to scrape.
  * @return {Promise | string} A newline-separated list of albums.
  */
-WebScraper.prototype.rym = function (uri) {
+WebScraper.prototype.rateyourmusic = function (uri) {
   var self = this
   return http(uri).then(function (data) {
-    var result = ''
     var html = $($.parseHTML(data))
+    var result = ''
     html.find('div.chart_details').each(function () {
       var artist = self.trim($(this).find('a.artist').text())
       var album = self.trim($(this).find('a.album').text())
@@ -86491,44 +89756,107 @@ WebScraper.prototype.rym = function (uri) {
 }
 
 /**
- * Scrape a web page.
+ * Scrape a Reddit forum.
  *
- * This function inspects the host of the web page and invokes an
- * appropriate scraping function. The scraping functions are written
- * in the following manner: they take the web page URI as input and
- * return a generator string as output (wrapped in a Promise).
- * Schematically:
- *
- *           web page:                      generator string
- *     +-------------------+                   (Promise):
- *     | track1 by artist1 |    scraping
- *     +-------------------+    function    artist1 - track1
- *     | track2 by artist2 |    =======>    artist2 - track2
- *     +-------------------+                artist3 - track3
- *     | track3 by artist3 |
- *     +-------------------+
- *
- * In the example above, the scraping function converts a table of
- * tracks to a generator string on the form `ARTIST - TRACK`. If the
- * input was a albums chart, then the output would be a string of
- * `#album` commands instead. In other words, the scraping function
- * should extract the *meaning* of the web page and express it as
- * input that could be passed to the generator.
+ * Handles post listing and comment threads. Employs Bob Nisco's
+ * heuristic for parsing comments.
  *
  * @param {string} uri - The URI of the web page to scrape.
- * @return {Promise | string} A generator string.
+ * @return {Promise | string} A newline-separated list of tracks.
  */
-WebScraper.prototype.scrape = function (uri) {
-  if (uri.match(/rateyourmusic.com/gi)) {
-    return this.rym(uri)
-  } else {
-    return this.lastfm(uri)
-  }
+WebScraper.prototype.reddit = function (uri) {
+  var self = this
+  return http(uri).then(function (data) {
+    var html = $($.parseHTML(data))
+    var result = ''
+    if (uri.match(/\/comments\//gi)) {
+      // comments thread
+      html.find('div.entry div.md').each(function () {
+        // first assumption: if there are links,
+        // they are probably links to songs
+        var links = $(this).find('a')
+        if (links.length > 0) {
+          links.each(function () {
+            var txt = $(this).text()
+            if (!txt.match(/https?:/gi)) {
+              result += self.cleanup(txt) + '\n'
+            }
+          })
+          return
+        }
+        // second assumption: if there are multiple sentences,
+        // the song is the first one
+        var body = $(this).text()
+        var sentences = body.split('.')
+        if (sentences.length > 1) {
+          result += self.cleanup(sentences[0]) + '\n'
+          return
+        }
+        // third assumption: if there are multiple lines to a comment,
+        // then the song will be on the first line with a user's
+        // comments on other lines after it
+        var lines = body.split('\n')
+        if (lines.length > 1) {
+          result += self.cleanup(lines[0]) + '\n'
+          return
+        }
+        // fall-back case
+        result += self.cleanup(body) + '\n'
+      })
+    } else {
+      // post listing
+      html.find('a.title').each(function () {
+        var track = self.cleanup($(this).text())
+        result += track + '\n'
+      })
+    }
+    return result.trim()
+  })
+}
+
+/**
+ * Scrape a web page.
+ *
+ * This is a fall-back function in case none of the other
+ * scraping functions apply.
+ *
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of tracks.
+ */
+WebScraper.prototype.webpage = function (uri) {
+  var self = this
+  return http(uri).then(function (data) {
+    var html = $($.parseHTML(data))
+    var result = ''
+    html.find('a').each(function () {
+      var track = self.cleanup($(this).text())
+      result += track + '\n'
+    })
+    return result.trim()
+  })
+}
+
+/**
+ * Scrape a YouTube playlist.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of tracks.
+ */
+WebScraper.prototype.youtube = function (uri) {
+  var self = this
+  return http(uri).then(function (data) {
+    var html = $($.parseHTML(data))
+    var result = ''
+    html.find('div.playlist-video-description h4, a.pl-video-title-link').each(function () {
+      var track = self.cleanup($(this).text())
+      result += track + '\n'
+    })
+    return result.trim()
+  })
 }
 
 module.exports = WebScraper
 
-},{"./http":565,"./util":575,"jquery":299}],570:[function(require,module,exports){
+},{"./http":569,"./util":579,"jquery":299,"urijs":562}],574:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -86538,12 +89866,13 @@ var Top = require('./top')
  * Similar entry.
  * @constructor
  * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
  */
-function Similar (spotify, entry) {
+function Similar (spotify, entry, id, trackLimit, artistLimit) {
   /**
-   * Artist query.
+   * Array of related artists.
    */
-  this.artist = null
+  this.artists = []
 
   /**
    * Number of artists to fetch.
@@ -86556,11 +89885,9 @@ function Similar (spotify, entry) {
   this.entry = null
 
   /**
-   * Related artists response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
+   * Spotify ID.
    */
-  this.relatedArtistsResponse = null
+  this.id = ''
 
   /**
    * Number of tracks to fetch per artist.
@@ -86570,9 +89897,13 @@ function Similar (spotify, entry) {
   /**
    * Spotify request handler.
    */
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = null
 
   this.entry = entry.trim()
+  this.id = id
+  this.spotify = spotify || new SpotifyRequestHandler()
+  this.trackLimit = trackLimit || this.trackLimit
+  this.artistLimit = artistLimit || this.artistLimit
 }
 
 /**
@@ -86581,11 +89912,8 @@ function Similar (spotify, entry) {
  */
 Similar.prototype.createQueue = function () {
   var self = this
-  var artists = self.relatedArtistsResponse.artists.map(function (item) {
-    var top = new Top(self.spotify, self.entry)
-    top.setLimit(self.trackLimit)
-    top.setID(item.id)
-    return top
+  var artists = this.artists.map(function (artist) {
+    return new Top(self.spotify, self.entry, artist.id, self.limit)
   })
   var queue = new Queue(artists)
   queue = queue.slice(0, self.artistLimit)
@@ -86608,25 +89936,15 @@ Similar.prototype.dispatch = function () {
 }
 
 /**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Similar.prototype.id = function () {
-  if (this.artist) {
-    return this.artist.id()
-  } else {
-    return -1
-  }
-}
-
-/**
  * Search for artist.
  * @return {Promise} A Promise to perform the action.
  */
 Similar.prototype.searchForArtist = function () {
-  this.artist = new Artist(this.spotify, this.entry)
-  return this.artist.searchForArtist()
+  var self = this
+  var artist = new Artist(this.spotify, this.entry)
+  return artist.searchForArtist().then(function (artist) {
+    self.id = artist.id
+  })
 }
 
 /**
@@ -86635,25 +89953,15 @@ Similar.prototype.searchForArtist = function () {
  */
 Similar.prototype.searchForRelatedArtists = function () {
   var self = this
-  return this.spotify.searchForRelatedArtists(this.id()).then(function (result) {
-    self.relatedArtistsResponse = result
+  return this.spotify.searchForRelatedArtists(this.id).then(function (response) {
+    self.artists = response.artists
     return self
   })
 }
 
-/**
- * Set the number of tracks to fetch per artist.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Similar.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.trackLimit = limit
-  }
-}
-
 module.exports = Similar
 
-},{"./artist":561,"./queue":568,"./spotify":572,"./top":573}],571:[function(require,module,exports){
+},{"./artist":565,"./queue":572,"./spotify":576,"./top":577}],575:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
 var util = require('./util')
 
@@ -86670,14 +89978,18 @@ function sort (arr, fn) {
   fn = fn || sort.ascending()
   var i = 0
   var pairs = arr.map(function (x) {
-    return util.pair(x, i++)
+    return {
+      idx: i++,
+      val: x
+    }
   })
-  var cmp = sort.combine(function (a, b) {
-    return fn(util.first(a), util.first(b))
-  }, sort.ascending(util.second))
-  pairs = pairs.sort(cmp)
+  pairs = pairs.sort(function (a, b) {
+    var x = fn(a.val, b.val)
+    if (x) { return x }
+    return (a.idx < b.idx) ? -1 : ((a.idx > b.idx) ? 1 : 0)
+  })
   for (i = 0; i < arr.length; i++) {
-    arr[i] = util.first(pairs[i])
+    arr[i] = pairs[i].val
   }
   return arr
 }
@@ -86742,11 +90054,7 @@ sort.combine = function () {
  * and `0` if `a` is equal to `b`.
  */
 sort.popularity = sort.descending(function (x) {
-  if (typeof x.popularity === 'function') {
-    return x.popularity()
-  } else {
-    return x.popularity || -1
-  }
+  return x.popularity || -1
 })
 
 /**
@@ -86758,9 +90066,9 @@ sort.popularity = sort.descending(function (x) {
  * and `0` if `a` is equal to `b`.
  */
 sort.lastfm = sort.combine(sort.descending(function (x) {
-  return x.lastfmPersonal()
+  return x.lastfmPersonal
 }), sort.descending(function (x) {
-  return x.lastfmGlobal()
+  return x.lastfmGlobal
 }), sort.popularity)
 
 /**
@@ -86779,7 +90087,7 @@ sort.type = sort.descending(function (album) {
     'appears_on': 2,
     'compilation': 1
   }
-  var type = album.album_type || album.type()
+  var type = album.album_type
   return rankings[type] || 0
 })
 
@@ -86866,7 +90174,7 @@ sort.track = function (track) {
 
 module.exports = sort
 
-},{"./util":575,"string-similarity":425}],572:[function(require,module,exports){
+},{"./util":579,"string-similarity":425}],576:[function(require,module,exports){
 var base64 = require('base-64')
 var defaults = require('./defaults')
 var http = require('./http')
@@ -86903,7 +90211,7 @@ function SpotifyRequestHandler (clientId, clientSecret, token) {
  * from the command line. It does not work when run from a browser,
  * because Spotify's authentication server rejects cross-site
  * requests. In that case, authenticate with the Implicit Grant Flow
- * instead and pass the received access token to this class.
+ * instead.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
  *
@@ -86919,11 +90227,11 @@ SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, cli
   var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
   var uri = 'https://accounts.spotify.com/api/token'
   return http.json(uri, {
-    'method': 'POST',
-    'headers': {
-      'Authorization': auth
+    method: 'POST',
+    headers: {
+      Authorization: auth
     },
-    'form': {
+    form: {
       'grant_type': grantType
     }
   })
@@ -86931,6 +90239,12 @@ SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, cli
 
 /**
  * Authenticate with the Implicit Grant Flow.
+ *
+ * Returns a URI that the calling web application can use to redirect
+ * the user to a Spotify login screen. After the user has logged in,
+ * Spotify redirects back to the web application with an access token
+ * (included in the hash fragment of the URI). That token can then be
+ * passed to this class.
  *
  * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
  *
@@ -87199,7 +90513,7 @@ SpotifyRequestHandler.prototype.searchForTrack = function (track) {
 
 module.exports = SpotifyRequestHandler
 
-},{"./defaults":563,"./http":565,"./sort":571,"base-64":1}],573:[function(require,module,exports){
+},{"./defaults":567,"./http":569,"./sort":575,"base-64":1}],577:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -87209,13 +90523,10 @@ var Track = require('./track')
  * Top entry.
  * @constructor
  * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of tracks to fetch.
  */
-function Top (spotify, entry) {
-  /**
-   * Artist query.
-   */
-  this.artist = null
-
+function Top (spotify, entry, id, limit) {
   /**
    * Entry string.
    */
@@ -87224,7 +90535,7 @@ function Top (spotify, entry) {
   /**
    * Spotify ID.
    */
-  this.id = -1
+  this.id = ''
 
   /**
    * Number of tracks to fetch.
@@ -87232,18 +90543,19 @@ function Top (spotify, entry) {
   this.limit = null
 
   /**
-   * Top tracks response.
-   *
-   * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
+   * Top tracks.
    */
-  this.topTracksResponse = null
+  this.tracks = []
 
   /**
    * Spotify request handler.
    */
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = null
 
   this.entry = entry.trim()
+  this.id = id
+  this.limit = limit
+  this.spotify = spotify || new SpotifyRequestHandler()
 }
 
 /**
@@ -87253,9 +90565,9 @@ function Top (spotify, entry) {
  */
 Top.prototype.createQueue = function () {
   var self = this
-  var tracks = self.topTracksResponse.tracks.map(function (item) {
+  var tracks = this.tracks.map(function (item) {
     var track = new Track(this.spotify, self.entry)
-    track.setResponse(item)
+    track.clone(item)
     return track
   })
   var trackQueue = new Queue(tracks)
@@ -87284,19 +90596,10 @@ Top.prototype.dispatch = function () {
  */
 Top.prototype.fetchTopTracks = function () {
   var self = this
-  return this.spotify.getTopTracks(this.getID()).then(function (result) {
-    self.topTracksResponse = result
+  return this.spotify.getTopTracks(this.id).then(function (response) {
+    self.tracks = response.tracks
     return self
   })
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the artist,
- * or `-1` if not available.
- */
-Top.prototype.getID = function () {
-  return this.id
 }
 
 /**
@@ -87304,38 +90607,21 @@ Top.prototype.getID = function () {
  * @return {Promise} A Promise to perform the action.
  */
 Top.prototype.searchForArtist = function () {
-  if (this.getID() !== -1) {
-    return Promise.resolve(this.getID())
+  var self = this
+  if (this.id) {
+    return Promise.resolve(this)
   } else {
-    var self = this
-    this.artist = new Artist(this.spotify, this.entry)
-    return this.artist.searchForArtist().then(function () {
-      self.setID(self.artist.id())
+    var artist = new Artist(this.spotify, this.entry)
+    return artist.searchForArtist().then(function (artist) {
+      self.id = artist.id
+      return self
     })
-  }
-}
-
-/**
- * Set Spotify ID.
- * @param {string} id - The Spotify ID of the artist.
- */
-Top.prototype.setID = function (id) {
-  this.id = id
-}
-
-/**
- * Set the number of tracks to fetch.
- * @param {integer} limit - The maximum amount of tracks.
- */
-Top.prototype.setLimit = function (limit) {
-  if (Number.isInteger(limit)) {
-    this.limit = limit
   }
 }
 
 module.exports = Top
 
-},{"./artist":561,"./queue":568,"./spotify":572,"./track":574}],574:[function(require,module,exports){
+},{"./artist":565,"./queue":572,"./spotify":576,"./track":578}],578:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
 var SpotifyRequestHandler = require('./spotify')
@@ -87345,106 +90631,112 @@ var SpotifyRequestHandler = require('./spotify')
  * @constructor
  * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The track to search for.
- * @param {JSON} [response] - Track response object.
- * Should have the property `popularity`.
- * @param {JSON} [responseSimple] - Simplified track response object.
+ * @param {string} [id] - The Spotify ID, if known.
  */
-function Track (spotify, entry) {
+function Track (spotify, entry, id) {
   /**
    * Album name.
    */
-  this.albumName = null
+  this.album = ''
+
+  /**
+   * Track artists, separated by `,`.
+   */
+  this.artist = ''
+
+  /**
+   * Array of track artists.
+   */
+  this.artists = []
 
   /**
    * Entry string.
    */
-  this.entry = entry.trim()
+  this.entry = ''
 
   /**
-   * Last.fm user.
+   * Spotify ID.
    */
-  this.lastfmUser = null
+  this.id = ''
 
   /**
-   * Full track object.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-full).
+   * Last.fm global playcount.
    */
-  this.response = null
+  this.lastfm = ''
 
   /**
-   * Simplified track object.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-simplified).
+   * Last.fm global playcount.
    */
-  this.responseSimple = null
+  this.lastfmGlobal = ''
+
+  /**
+   * Last.fm personal playcount.
+   */
+  this.lastfmPersonal = ''
+
+  /**
+   * Main track artist.
+   */
+  this.mainArtist = ''
+
+  /**
+   * Track name.
+   */
+  this.name = ''
+
+  /**
+   * Spotify popularity.
+   */
+  this.popularity = ''
 
   /**
    * Spotify request handler.
    */
+  this.spotify = null
+
+  /**
+   * Full track name on the form `Title - Artist`.
+   */
+  this.title = ''
+
+  /**
+   * Spotify URI
+   * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`).
+   */
+  this.uri = ''
+
+  this.entry = entry.trim()
+  this.id = id
+  this.name = entry
   this.spotify = spotify || new SpotifyRequestHandler()
+  this.uri = this.id ? ('spotify:track:' + this.id) : this.uri
 }
 
 /**
- * Track album.
- * @return {string} The track album,
- * or the empty string if not available.
+ * Clone a JSON response.
+ * @param {Object} response - The response.
  */
-Track.prototype.album = function () {
-  if (this.albumName) {
-    return this.albumName
-  } else if (this.response &&
-      this.response.album &&
-      this.response.album.name) {
-    return this.response.album.name
-  } else {
-    return ''
+Track.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
   }
-}
-
-/**
- * Track main artist.
- * @return {string} The main artist.
- */
-Track.prototype.artist = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.artists &&
-      response.artists[0] &&
-      response.artists[0].name) {
-    return response.artists[0].name.trim()
-  } else {
-    return ''
+  if (response.album &&
+      response.album.name) {
+    this.album = response.album.name
   }
-}
-
-/**
- * Track artists.
- * @return {string} All the track artists, separated by `, `.
- */
-Track.prototype.artists = function () {
-  var artists = []
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.artists) {
-    artists = this.response.artists.map(function (artist) {
+  if (response.artists) {
+    this.artists = response.artists.map(function (artist) {
       return artist.name.trim()
     })
+    this.artist = this.artists.join(', ')
+    this.mainArtist = this.artists[0]
   }
-  return artists.join(', ')
-}
-
-/**
- * Disc number.
- * @return {integer} The disc number.
- */
-Track.prototype.discNumber = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.disc_number) {
-    return response.disc_number
+  if (this.mainArtist && this.name) {
+    this.title = this.name + ' - ' + this.mainArtist
   } else {
-    return -1
+    this.title = this.name
   }
 }
 
@@ -87453,30 +90745,12 @@ Track.prototype.discNumber = function () {
  * @return {Promise | Track} Itself.
  */
 Track.prototype.dispatch = function () {
-  if (this.response) {
+  if (this.popularity) {
     return Promise.resolve(this)
-  } else if (this.responseSimple) {
-    return this.fetchTrack()
-  } else if (this.isURI(this.entry)) {
-    return this.fetchTrack()
-  } else if (this.isLink(this.entry)) {
+  } else if (this.id) {
     return this.fetchTrack()
   } else {
     return this.searchForTrack()
-  }
-}
-
-/**
- * Track duration.
- * @return {integer} The track duration in ms.
- */
-Track.prototype.duration = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.duration_ms) {
-    return response.duration_ms
-  } else {
-    return -1
   }
 }
 
@@ -87487,9 +90761,7 @@ Track.prototype.duration = function () {
  * `false` otherwise.
  */
 Track.prototype.equals = function (track) {
-  var uri1 = this.uri()
-  var uri2 = track.uri()
-  return uri1 && uri2 && uri1 === uri2
+  return this.uri && track.uri && this.uri === track.uri
 }
 
 /**
@@ -87497,12 +90769,11 @@ Track.prototype.equals = function (track) {
  * @return {Promise | Track} Itself.
  */
 Track.prototype.fetchLastfm = function (user) {
-  var artist = this.artist()
-  var title = this.title()
-  this.lastfmUser = user
   var self = this
-  return lastfm.getInfo(artist, title, user).then(function (result) {
-    self.lastfmResponse = result
+  return lastfm.getInfo(this.artist, this.name, user).then(function (result) {
+    self.lastfmGlobal = parseInt(result.track.playcount)
+    self.lastfmPersonal = parseInt(result.track.userplaycount)
+    self.lastfm = self.lastfmPersonal > -1 ? self.lastfmPersonal : self.lastfmGlobal
     return self
   })
 }
@@ -87513,8 +90784,8 @@ Track.prototype.fetchLastfm = function (user) {
  */
 Track.prototype.fetchTrack = function () {
   var self = this
-  return this.spotify.getTrack(this.id()).then(function (result) {
-    self.response = result
+  return this.spotify.getTrack(this.id).then(function (response) {
+    self.clone(response)
     return self
   })
 }
@@ -87526,138 +90797,14 @@ Track.prototype.fetchTrack = function () {
  * `false` otherwise.
  */
 Track.prototype.hasArtist = function (artist) {
-  var response = this.response || this.responseSimple
-  var artists = response.artists.map(function (artist) {
-    return artist.name.trim().toLowerCase()
-  })
   artist = artist.trim().toLowerCase()
-  for (var i in artists) {
-    if (artists[i].includes(artist)) {
+  for (var i in this.artists) {
+    var trackArtist = this.artists[i].toLowerCase().trim()
+    if (trackArtist.includes(artist)) {
       return true
     }
   }
   return false
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the track,
- * or `-1` if not available.
- */
-Track.prototype.id = function () {
-  if (this.response &&
-      this.response.id) {
-    return this.response.id
-  } else if (this.responseSimple &&
-             this.responseSimple.id) {
-    return this.responseSimple.id
-  } else if (this.isURI(this.entry)) {
-    return this.entry.substring(14)
-  } else if (this.isLink(this.entry)) {
-    return this.entry.split('/')[4]
-  } else {
-    return -1
-  }
-}
-
-/**
- * Whether a string is a Spotify link
- * on the form `http://open.spotify.com/track/ID`.
- * @param {string} str - A potential Spotify link.
- * @return {boolean} `true` if `str` is a link, `false` otherwise.
- */
-Track.prototype.isLink = function (str) {
-  return str.match(/^https?:\/\/open\.spotify\.com\/track\//i)
-}
-
-/**
- * Whether a string is a Spotify URI
- * on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`.
- * @return {boolean} `true`
- * or `-1` if not available.
- */
-Track.prototype.isURI = function (str) {
-  return str.match(/^spotify:track:/i)
-}
-
-/**
- * Last.fm global playcount.
- * @return {integer} The global playcount, or `-1` if not available.
- */
-Track.prototype.lastfm = function () {
-  var personal = this.lastfmPersonal()
-  return personal > -1 ? personal : this.lastfmGlobal()
-}
-
-/**
- * Last.fm global playcount.
- * @return {integer} The global playcount, or `-1` if not available.
- */
-Track.prototype.lastfmGlobal = function () {
-  if (this.lastfmResponse &&
-      this.lastfmResponse.track &&
-      this.lastfmResponse.track.playcount) {
-    return parseInt(this.lastfmResponse.track.playcount)
-  } else {
-    return -1
-  }
-}
-
-/**
- * Last.fm personal playcount.
- * @return {integer} The personal playcount, or `-1` if not available.
- */
-Track.prototype.lastfmPersonal = function () {
-  if (this.lastfmResponse &&
-      this.lastfmResponse.track &&
-      this.lastfmResponse.track.userplaycount) {
-    return parseInt(this.lastfmResponse.track.userplaycount)
-  } else {
-    return -1
-  }
-}
-
-/**
- * Full track name.
- * @return {string} The track name, on the form `Title - Artist`.
- */
-Track.prototype.name = function () {
-  var title = this.title()
-  if (title) {
-    var artist = this.artist()
-    if (artist) {
-      return title + ' - ' + artist
-    } else {
-      return title
-    }
-  } else {
-    return ''
-  }
-}
-
-/**
- * Spotify popularity.
- * @return {int} The Spotify popularity, or `-1` if not available.
- */
-Track.prototype.popularity = function () {
-  if (this.response) {
-    return this.response.popularity
-  } else if (this.responseSimple &&
-             this.responseSimple.popularity) {
-    return this.responseSimple.popularity
-  } else {
-    return -1
-  }
-}
-
-/**
- * Spotify popularity as a promise.
- * @return {Promise | int} The Spotify popularity, or `-1` if not available.
- */
-Track.prototype.popularityPromise = function () {
-  return this.refresh().then(function () {
-    return Promise.resolve(this.popularity())
-  })
 }
 
 /**
@@ -87678,18 +90825,26 @@ Track.prototype.refresh = function () {
  */
 Track.prototype.searchForTrack = function () {
   var self = this
-  return this.spotify.searchForTrack(this.entry).then(function (result) {
-    self.response = result.tracks.items[0]
-    return self
+  return this.spotify.searchForTrack(this.entry).then(function (response) {
+    if (response &&
+        response.tracks &&
+        response.tracks.items &&
+        response.tracks.items[0]) {
+      response = response.tracks.items[0]
+      self.clone(response)
+      return Promise.resolve(self)
+    } else {
+      return Promise.reject(response)
+    }
+  }).catch(function () {
+    if (self.entry.match(/^[0-9a-z]+$/i)) {
+      self.id = self.entry
+      return Promise.resolve(self)
+    } else {
+      // console.log('COULD NOT FIND ' + self.entry)
+      return Promise.reject(null)
+    }
   })
-}
-
-/**
- * Set album for track.
- * @param {string} album - The album name.
- */
-Track.prototype.setAlbum = function (album) {
-  this.albumName = album
 }
 
 /**
@@ -87699,88 +90854,21 @@ Track.prototype.setAlbum = function (album) {
  * `false` otherwise.
  */
 Track.prototype.similarTo = function (track) {
-  if (this.equals(track)) {
-    return true
-  } else {
-    var str1 = this.toString().toLowerCase()
-    var str2 = track.toString().toLowerCase()
-    return str1 === str2
-  }
-}
-
-/**
- * Track title.
- * @return {string} The track title.
- */
-Track.prototype.title = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.name) {
-    return response.name
-  } else {
-    return ''
-  }
-}
-
-/**
- * Track number.
- * @return {integer} The track number.
- */
-Track.prototype.trackNumber = function () {
-  var response = this.response || this.responseSimple
-  if (response &&
-      response.track_number) {
-    return response.track_number
-  } else {
-    return -1
-  }
+  return this.equals(track) ||
+    this.title.toLowerCase() === track.title.toLowerCase()
 }
 
 /**
  * Full track title.
- * @return {string} The track title, on the form `Title - Artist`.
+ * @return {string} The track title.
  */
 Track.prototype.toString = function () {
-  var name = this.name()
-  if (name) {
-    return name
-  } else {
-    return this.entry
-  }
-}
-
-/**
- * Spotify URI.
- * @return {string} The Spotify URI
- * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`),
- * or the empty string if not available.
- */
-Track.prototype.uri = function () {
-  if (this.response) {
-    return this.response.uri
-  } else if (this.responseSimple) {
-    return this.responseSimple.uri
-  } else {
-    return ''
-  }
-}
-
-/**
- * Set the JSON response.
- * @param {JSON} response - The response.
- */
-Track.prototype.setResponse = function (response) {
-  if (response &&
-      response.popularity) {
-    this.response = response
-  } else {
-    this.responseSimple = response
-  }
+  return this.title || this.name || this.entry || this.id
 }
 
 module.exports = Track
 
-},{"./defaults":563,"./lastfm":566,"./spotify":572}],575:[function(require,module,exports){
+},{"./defaults":567,"./lastfm":570,"./spotify":576}],579:[function(require,module,exports){
 var util = {}
 
 /**
@@ -87790,34 +90878,6 @@ var util = {}
  */
 util.identity = function (x) {
   return x
-}
-
-/**
- * Create a pair.
- * @param {Object} x - The first value.
- * @param {Object} y - The second value.
- * @return {Object} - A pair of values.
- */
-util.pair = function (x, y) {
-  return {first: x, second: y}
-}
-
-/**
- * Get the first value of a pair.
- * @param {Object} pair - A pair of values.
- * @return {Object} - The first value.
- */
-util.first = function (pair) {
-  return pair.first
-}
-
-/**
- * Get the second value of a pair.
- * @param {Object} pair - A pair of values.
- * @return {Object} - The second value.
- */
-util.second = function (pair) {
-  return pair.second
 }
 
 /**
@@ -87847,7 +90907,7 @@ util.toAscii = function (str) {
 
 module.exports = util
 
-},{}],576:[function(require,module,exports){
+},{}],580:[function(require,module,exports){
 /* global describe, it */
 var chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
@@ -88022,7 +91082,7 @@ describe('Spotify Playlist Generator', function () {
     it('should not confuse album title with track title', function () {
       var track = new Track(null, 'Off the Wall - Michael Jackson')
       return track.dispatch().then(function (track) {
-        track.toString().should.eql('Off the Wall - Michael Jackson')
+        track.title.should.eql('Off the Wall - Michael Jackson')
       })
     })
   })
@@ -88075,7 +91135,7 @@ describe('Spotify Playlist Generator', function () {
       var generator = parser.parse('#ORDER BY POPULARITY\ntest1\ntest2')
       return generator.execute().then(function (str) {
         // FIXME: this is really brittle
-        eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
+        eol.lf(str).should.eql('spotify:track:2gEhpagAXuAtuE8Bcjkq3b\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
       })
     })
@@ -88099,7 +91159,7 @@ describe('Spotify Playlist Generator', function () {
       var generator = parser.parse('test1\ntest2')
       return generator.execute().then(function (str) {
         // FIXME: this is really brittle
-        eol.lf(str).should.eql('spotify:track:5fUSaE4HYpnVqS9VFv5Z7m\n' +
+        eol.lf(str).should.eql('spotify:track:2gEhpagAXuAtuE8Bcjkq3b\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
       })
     })
@@ -88136,7 +91196,7 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should fetch an artist\'s tracks', function () {
-      var artist = new Artist(null, 'test')
+      var artist = new Artist(null, 'test', null, 5)
       artist.entry.should.eql('test')
       var promise = artist.dispatch()
       return promise.should.eventually.be.an.instanceof(Queue)
@@ -88144,4 +91204,4 @@ describe('Spotify Playlist Generator', function () {
   })
 })
 
-},{"../src/album":560,"../src/artist":561,"../src/parser":567,"../src/queue":568,"../src/sort":571,"../src/track":574,"chai":259,"chai-as-promised":257,"eol":298}]},{},[576]);
+},{"../src/album":564,"../src/artist":565,"../src/parser":571,"../src/queue":572,"../src/sort":575,"../src/track":578,"chai":259,"chai-as-promised":257,"eol":298}]},{},[580]);

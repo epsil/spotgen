@@ -40,7 +40,7 @@
 
     
 
-    <h4 class="name" id="Artist"><span class="type-signature"></span>new Artist<span class="signature">(spotify, entry)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="Artist"><span class="type-signature"></span>new Artist<span class="signature">(spotify, entry, id<span class="signature-attributes">opt</span>, limit<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -71,6 +71,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -96,6 +98,14 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -119,10 +129,84 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
             <td class="description last"><p>The artist to search for.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>The Spotify ID, if known.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>limit</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>The number of albums to fetch.</p></td>
         </tr>
 
     
@@ -163,7 +247,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line12">line 12</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -207,77 +291,13 @@
 
         
             
-<h4 class="name" id="albumsResponse"><span class="type-signature"></span>albumsResponse<span class="type-signature"></span></h4>
+<h4 class="name" id="albums"><span class="type-signature"></span>albums<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>Albums response.</p>
-<p><a href="https://developer.spotify.com/web-api/get-artists-albums/#example">Reference</a>.</p>
-</div>
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line25">line 25</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
-<h4 class="name" id="artistResponse"><span class="type-signature"></span>artistResponse<span class="type-signature"></span></h4>
-
-
-
-
-<div class="description">
-    <p>Artist response.</p>
-<p><a href="https://developer.spotify.com/web-api/object-model/#artist-object-full">Reference</a>.</p>
+    <p>Array of albums.</p>
 </div>
 
 
@@ -377,7 +397,69 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line30">line 30</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line23">line 23</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="id"><span class="type-signature"></span>id<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>Spotify ID.</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line28">line 28</a>
     </li></ul></dd>
     
 
@@ -439,7 +521,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line35">line 35</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line33">line 33</a>
     </li></ul></dd>
     
 
@@ -457,14 +539,13 @@
 
         
             
-<h4 class="name" id="searchResponse"><span class="type-signature"></span>searchResponse<span class="type-signature"></span></h4>
+<h4 class="name" id="name"><span class="type-signature"></span>name<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>Search response.</p>
-<p><a href="https://developer.spotify.com/web-api/search-item/#example">Reference</a>.</p>
+    <p>The artist name.</p>
 </div>
 
 
@@ -502,7 +583,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line42">line 42</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -564,7 +645,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line47">line 47</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line43">line 43</a>
     </li></ul></dd>
     
 
@@ -585,6 +666,137 @@
 
     
         <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="clone"><span class="type-signature"></span>clone<span class="signature">(response)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Clone a JSON response.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>response</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The response.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line56">line 56</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         
             
@@ -691,7 +903,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line59">line 59</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line69">line 69</a>
     </li></ul></dd>
     
 
@@ -798,7 +1010,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line85">line 85</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line97">line 97</a>
     </li></ul></dd>
     
 
@@ -905,7 +1117,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line98">line 98</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line110">line 110</a>
     </li></ul></dd>
     
 
@@ -947,111 +1159,6 @@
 |
 
 <span class="param-type">JSON</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="id"><span class="type-signature"></span>id<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Spotify ID.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line111">line 111</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>The Spotify ID of the artist,
-or <code>-1</code> if not available.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
 
 
     </dd>
@@ -1117,7 +1224,7 @@ or <code>-1</code> if not available.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line129">line 129</a>
+        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line122">line 122</a>
     </li></ul></dd>
     
 
@@ -1169,268 +1276,6 @@ or <code>-1</code> if not available.</p>
 
 
         
-            
-
-    
-
-    <h4 class="name" id="setLimit"><span class="type-signature"></span>setLimit<span class="signature">(limit)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Set the number of tracks to fetch.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>limit</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">integer</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The maximum amount of tracks.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line147">line 147</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="setResponse"><span class="type-signature"></span>setResponse<span class="signature">(response)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Set the JSON response.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>response</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">JSON</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The response.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line157">line 157</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
     
 
     
@@ -1452,7 +1297,7 @@ or <code>-1</code> if not available.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Jul 12 2017 13:39:18 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Jul 21 2017 00:29:06 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

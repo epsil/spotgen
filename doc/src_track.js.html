@@ -35,106 +35,112 @@ var SpotifyRequestHandler = require('./spotify')
  * @constructor
  * @param {SpotifyRequestHandler} spotify - Spotify request handler.
  * @param {string} entry - The track to search for.
- * @param {JSON} [response] - Track response object.
- * Should have the property `popularity`.
- * @param {JSON} [responseSimple] - Simplified track response object.
+ * @param {string} [id] - The Spotify ID, if known.
  */
-function Track (spotify, entry) {
+function Track (spotify, entry, id) {
   /**
    * Album name.
    */
-  this.albumName = null
+  this.album = ''
+
+  /**
+   * Track artists, separated by `,`.
+   */
+  this.artist = ''
+
+  /**
+   * Array of track artists.
+   */
+  this.artists = []
 
   /**
    * Entry string.
    */
-  this.entry = entry.trim()
+  this.entry = ''
 
   /**
-   * Last.fm user.
+   * Spotify ID.
    */
-  this.lastfmUser = null
+  this.id = ''
 
   /**
-   * Full track object.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-full).
+   * Last.fm global playcount.
    */
-  this.response = null
+  this.lastfm = ''
 
   /**
-   * Simplified track object.
-   *
-   * [Reference](https://developer.spotify.com/web-api/object-model/#track-object-simplified).
+   * Last.fm global playcount.
    */
-  this.responseSimple = null
+  this.lastfmGlobal = ''
+
+  /**
+   * Last.fm personal playcount.
+   */
+  this.lastfmPersonal = ''
+
+  /**
+   * Main track artist.
+   */
+  this.mainArtist = ''
+
+  /**
+   * Track name.
+   */
+  this.name = ''
+
+  /**
+   * Spotify popularity.
+   */
+  this.popularity = ''
 
   /**
    * Spotify request handler.
    */
+  this.spotify = null
+
+  /**
+   * Full track name on the form `Title - Artist`.
+   */
+  this.title = ''
+
+  /**
+   * Spotify URI
+   * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`).
+   */
+  this.uri = ''
+
+  this.entry = entry.trim()
+  this.id = id
+  this.name = entry
   this.spotify = spotify || new SpotifyRequestHandler()
+  this.uri = this.id ? ('spotify:track:' + this.id) : this.uri
 }
 
 /**
- * Track album.
- * @return {string} The track album,
- * or the empty string if not available.
+ * Clone a JSON response.
+ * @param {Object} response - The response.
  */
-Track.prototype.album = function () {
-  if (this.albumName) {
-    return this.albumName
-  } else if (this.response &amp;&amp;
-      this.response.album &amp;&amp;
-      this.response.album.name) {
-    return this.response.album.name
-  } else {
-    return ''
+Track.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
   }
-}
-
-/**
- * Track main artist.
- * @return {string} The main artist.
- */
-Track.prototype.artist = function () {
-  var response = this.response || this.responseSimple
-  if (response &amp;&amp;
-      response.artists &amp;&amp;
-      response.artists[0] &amp;&amp;
-      response.artists[0].name) {
-    return response.artists[0].name.trim()
-  } else {
-    return ''
+  if (response.album &amp;&amp;
+      response.album.name) {
+    this.album = response.album.name
   }
-}
-
-/**
- * Track artists.
- * @return {string} All the track artists, separated by `, `.
- */
-Track.prototype.artists = function () {
-  var artists = []
-  var response = this.response || this.responseSimple
-  if (response &amp;&amp;
-      response.artists) {
-    artists = this.response.artists.map(function (artist) {
+  if (response.artists) {
+    this.artists = response.artists.map(function (artist) {
       return artist.name.trim()
     })
+    this.artist = this.artists.join(', ')
+    this.mainArtist = this.artists[0]
   }
-  return artists.join(', ')
-}
-
-/**
- * Disc number.
- * @return {integer} The disc number.
- */
-Track.prototype.discNumber = function () {
-  var response = this.response || this.responseSimple
-  if (response &amp;&amp;
-      response.disc_number) {
-    return response.disc_number
+  if (this.mainArtist &amp;&amp; this.name) {
+    this.title = this.name + ' - ' + this.mainArtist
   } else {
-    return -1
+    this.title = this.name
   }
 }
 
@@ -143,30 +149,12 @@ Track.prototype.discNumber = function () {
  * @return {Promise | Track} Itself.
  */
 Track.prototype.dispatch = function () {
-  if (this.response) {
+  if (this.popularity) {
     return Promise.resolve(this)
-  } else if (this.responseSimple) {
-    return this.fetchTrack()
-  } else if (this.isURI(this.entry)) {
-    return this.fetchTrack()
-  } else if (this.isLink(this.entry)) {
+  } else if (this.id) {
     return this.fetchTrack()
   } else {
     return this.searchForTrack()
-  }
-}
-
-/**
- * Track duration.
- * @return {integer} The track duration in ms.
- */
-Track.prototype.duration = function () {
-  var response = this.response || this.responseSimple
-  if (response &amp;&amp;
-      response.duration_ms) {
-    return response.duration_ms
-  } else {
-    return -1
   }
 }
 
@@ -177,9 +165,7 @@ Track.prototype.duration = function () {
  * `false` otherwise.
  */
 Track.prototype.equals = function (track) {
-  var uri1 = this.uri()
-  var uri2 = track.uri()
-  return uri1 &amp;&amp; uri2 &amp;&amp; uri1 === uri2
+  return this.uri &amp;&amp; track.uri &amp;&amp; this.uri === track.uri
 }
 
 /**
@@ -187,12 +173,11 @@ Track.prototype.equals = function (track) {
  * @return {Promise | Track} Itself.
  */
 Track.prototype.fetchLastfm = function (user) {
-  var artist = this.artist()
-  var title = this.title()
-  this.lastfmUser = user
   var self = this
-  return lastfm.getInfo(artist, title, user).then(function (result) {
-    self.lastfmResponse = result
+  return lastfm.getInfo(this.artist, this.name, user).then(function (result) {
+    self.lastfmGlobal = parseInt(result.track.playcount)
+    self.lastfmPersonal = parseInt(result.track.userplaycount)
+    self.lastfm = self.lastfmPersonal > -1 ? self.lastfmPersonal : self.lastfmGlobal
     return self
   })
 }
@@ -203,8 +188,8 @@ Track.prototype.fetchLastfm = function (user) {
  */
 Track.prototype.fetchTrack = function () {
   var self = this
-  return this.spotify.getTrack(this.id()).then(function (result) {
-    self.response = result
+  return this.spotify.getTrack(this.id).then(function (response) {
+    self.clone(response)
     return self
   })
 }
@@ -216,138 +201,14 @@ Track.prototype.fetchTrack = function () {
  * `false` otherwise.
  */
 Track.prototype.hasArtist = function (artist) {
-  var response = this.response || this.responseSimple
-  var artists = response.artists.map(function (artist) {
-    return artist.name.trim().toLowerCase()
-  })
   artist = artist.trim().toLowerCase()
-  for (var i in artists) {
-    if (artists[i].includes(artist)) {
+  for (var i in this.artists) {
+    var trackArtist = this.artists[i].toLowerCase().trim()
+    if (trackArtist.includes(artist)) {
       return true
     }
   }
   return false
-}
-
-/**
- * Spotify ID.
- * @return {string} The Spotify ID of the track,
- * or `-1` if not available.
- */
-Track.prototype.id = function () {
-  if (this.response &amp;&amp;
-      this.response.id) {
-    return this.response.id
-  } else if (this.responseSimple &amp;&amp;
-             this.responseSimple.id) {
-    return this.responseSimple.id
-  } else if (this.isURI(this.entry)) {
-    return this.entry.substring(14)
-  } else if (this.isLink(this.entry)) {
-    return this.entry.split('/')[4]
-  } else {
-    return -1
-  }
-}
-
-/**
- * Whether a string is a Spotify link
- * on the form `http://open.spotify.com/track/ID`.
- * @param {string} str - A potential Spotify link.
- * @return {boolean} `true` if `str` is a link, `false` otherwise.
- */
-Track.prototype.isLink = function (str) {
-  return str.match(/^https?:\/\/open\.spotify\.com\/track\//i)
-}
-
-/**
- * Whether a string is a Spotify URI
- * on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`.
- * @return {boolean} `true`
- * or `-1` if not available.
- */
-Track.prototype.isURI = function (str) {
-  return str.match(/^spotify:track:/i)
-}
-
-/**
- * Last.fm global playcount.
- * @return {integer} The global playcount, or `-1` if not available.
- */
-Track.prototype.lastfm = function () {
-  var personal = this.lastfmPersonal()
-  return personal > -1 ? personal : this.lastfmGlobal()
-}
-
-/**
- * Last.fm global playcount.
- * @return {integer} The global playcount, or `-1` if not available.
- */
-Track.prototype.lastfmGlobal = function () {
-  if (this.lastfmResponse &amp;&amp;
-      this.lastfmResponse.track &amp;&amp;
-      this.lastfmResponse.track.playcount) {
-    return parseInt(this.lastfmResponse.track.playcount)
-  } else {
-    return -1
-  }
-}
-
-/**
- * Last.fm personal playcount.
- * @return {integer} The personal playcount, or `-1` if not available.
- */
-Track.prototype.lastfmPersonal = function () {
-  if (this.lastfmResponse &amp;&amp;
-      this.lastfmResponse.track &amp;&amp;
-      this.lastfmResponse.track.userplaycount) {
-    return parseInt(this.lastfmResponse.track.userplaycount)
-  } else {
-    return -1
-  }
-}
-
-/**
- * Full track name.
- * @return {string} The track name, on the form `Title - Artist`.
- */
-Track.prototype.name = function () {
-  var title = this.title()
-  if (title) {
-    var artist = this.artist()
-    if (artist) {
-      return title + ' - ' + artist
-    } else {
-      return title
-    }
-  } else {
-    return ''
-  }
-}
-
-/**
- * Spotify popularity.
- * @return {int} The Spotify popularity, or `-1` if not available.
- */
-Track.prototype.popularity = function () {
-  if (this.response) {
-    return this.response.popularity
-  } else if (this.responseSimple &amp;&amp;
-             this.responseSimple.popularity) {
-    return this.responseSimple.popularity
-  } else {
-    return -1
-  }
-}
-
-/**
- * Spotify popularity as a promise.
- * @return {Promise | int} The Spotify popularity, or `-1` if not available.
- */
-Track.prototype.popularityPromise = function () {
-  return this.refresh().then(function () {
-    return Promise.resolve(this.popularity())
-  })
 }
 
 /**
@@ -368,18 +229,26 @@ Track.prototype.refresh = function () {
  */
 Track.prototype.searchForTrack = function () {
   var self = this
-  return this.spotify.searchForTrack(this.entry).then(function (result) {
-    self.response = result.tracks.items[0]
-    return self
+  return this.spotify.searchForTrack(this.entry).then(function (response) {
+    if (response &amp;&amp;
+        response.tracks &amp;&amp;
+        response.tracks.items &amp;&amp;
+        response.tracks.items[0]) {
+      response = response.tracks.items[0]
+      self.clone(response)
+      return Promise.resolve(self)
+    } else {
+      return Promise.reject(response)
+    }
+  }).catch(function () {
+    if (self.entry.match(/^[0-9a-z]+$/i)) {
+      self.id = self.entry
+      return Promise.resolve(self)
+    } else {
+      // console.log('COULD NOT FIND ' + self.entry)
+      return Promise.reject(null)
+    }
   })
-}
-
-/**
- * Set album for track.
- * @param {string} album - The album name.
- */
-Track.prototype.setAlbum = function (album) {
-  this.albumName = album
 }
 
 /**
@@ -389,83 +258,16 @@ Track.prototype.setAlbum = function (album) {
  * `false` otherwise.
  */
 Track.prototype.similarTo = function (track) {
-  if (this.equals(track)) {
-    return true
-  } else {
-    var str1 = this.toString().toLowerCase()
-    var str2 = track.toString().toLowerCase()
-    return str1 === str2
-  }
-}
-
-/**
- * Track title.
- * @return {string} The track title.
- */
-Track.prototype.title = function () {
-  var response = this.response || this.responseSimple
-  if (response &amp;&amp;
-      response.name) {
-    return response.name
-  } else {
-    return ''
-  }
-}
-
-/**
- * Track number.
- * @return {integer} The track number.
- */
-Track.prototype.trackNumber = function () {
-  var response = this.response || this.responseSimple
-  if (response &amp;&amp;
-      response.track_number) {
-    return response.track_number
-  } else {
-    return -1
-  }
+  return this.equals(track) ||
+    this.title.toLowerCase() === track.title.toLowerCase()
 }
 
 /**
  * Full track title.
- * @return {string} The track title, on the form `Title - Artist`.
+ * @return {string} The track title.
  */
 Track.prototype.toString = function () {
-  var name = this.name()
-  if (name) {
-    return name
-  } else {
-    return this.entry
-  }
-}
-
-/**
- * Spotify URI.
- * @return {string} The Spotify URI
- * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`),
- * or the empty string if not available.
- */
-Track.prototype.uri = function () {
-  if (this.response) {
-    return this.response.uri
-  } else if (this.responseSimple) {
-    return this.responseSimple.uri
-  } else {
-    return ''
-  }
-}
-
-/**
- * Set the JSON response.
- * @param {JSON} response - The response.
- */
-Track.prototype.setResponse = function (response) {
-  if (response &amp;&amp;
-      response.popularity) {
-    this.response = response
-  } else {
-    this.responseSimple = response
-  }
+  return this.title || this.name || this.entry || this.id
 }
 
 module.exports = Track
@@ -485,7 +287,7 @@ module.exports = Track
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Jul 12 2017 13:39:18 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Jul 21 2017 00:29:06 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>
