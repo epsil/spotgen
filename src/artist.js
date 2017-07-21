@@ -15,7 +15,7 @@ function Artist (spotify, entry, id, limit) {
   /**
    * Array of albums.
    */
-  this.albums = []
+  this.albums = null
 
   /**
    * Entry string.
@@ -78,7 +78,6 @@ Artist.prototype.createQueue = function () {
     albumQueue = albumQueue.slice(0, self.limit)
   }
   return albumQueue.forEachPromise(function (album) {
-    // get album popularity
     return album.fetchAlbum()
   }).then(function (albumQueue) {
     albumQueue = albumQueue.sort(sort.album)
@@ -107,12 +106,18 @@ Artist.prototype.dispatch = function () {
  * Fetch albums.
  * @return {Promise | JSON} A JSON response.
  */
-Artist.prototype.fetchAlbums = function () {
+Artist.prototype.fetchAlbums = function (id) {
+  id = id || this.id
   var self = this
-  return this.spotify.getAlbumsByArtist(this.id).then(function (response) {
-    self.albums = response.items
-    return self
-  })
+  if (this.albums) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.getAlbumsByArtist(id).then(function (response) {
+      self.albums = response.items
+      self.id = id
+      return self
+    })
+  }
 }
 
 /**
@@ -137,8 +142,7 @@ Artist.prototype.searchForArtist = function () {
       }
     }).catch(function () {
       if (self.entry.match(/^[0-9a-z]+$/i)) {
-        self.id = self.entry
-        return Promise.resolve(self)
+        return self.fetchAlbums(self.entry)
       } else {
         return Promise.reject(null)
       }

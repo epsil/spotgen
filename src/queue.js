@@ -77,12 +77,12 @@ Queue.prototype.dedup = function () {
       if (entry.equals(other)) {
         return Promise.resolve(other)
       } else {
-        return other.refresh().then(function () {
-          return entry.refresh()
-        }).then(function () {
-          if (entry.popularity > other.popularity) {
-            Queue.set(idx, entry)
-          }
+        return other.getPopularity().then(function (otherPopularity) {
+          return entry.getPopularity().then(function (entryPopularity) {
+            if (entryPopularity > otherPopularity) {
+              Queue.set(idx, entry)
+            }
+          })
         })
       }
     }

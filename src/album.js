@@ -108,8 +108,8 @@ Album.prototype.createQueue = function () {
  * @return {Promise | Queue} A queue of tracks.
  */
 Album.prototype.dispatch = function () {
+  var self = this
   if (this.fetchTracks) {
-    var self = this
     return this.searchForAlbum().then(function () {
       return self.fetchAlbum()
     }).then(function () {
@@ -124,14 +124,30 @@ Album.prototype.dispatch = function () {
  * Fetch album metadata.
  * @return {Promise | JSON} A JSON response.
  */
-Album.prototype.fetchAlbum = function () {
+Album.prototype.fetchAlbum = function (id) {
+  id = id || this.id
   var self = this
   if (Number.isInteger(this.popularity)) {
     return Promise.resolve(this)
   } else {
-    return this.spotify.getAlbum(this.id).then(function (response) {
+    return this.spotify.getAlbum(id).then(function (response) {
       self.clone(response)
       return self
+    })
+  }
+}
+
+/**
+ * Get album popularity.
+ * @return {Promise | integer} The track popularity.
+ */
+Album.prototype.getPopularity = function () {
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this.popularity)
+  } else {
+    return self.fetchAlbum().then(function () {
+      return self.popularity
     })
   }
 }
@@ -158,9 +174,7 @@ Album.prototype.searchForAlbum = function () {
       }
     }).catch(function () {
       if (self.entry.match(/^[0-9a-z]+$/i)) {
-        self.id = self.entry
-        self.uri = 'spotify:album:' + self.id
-        return Promise.resolve(self)
+        return self.fetchAlbum(self.entry)
       } else {
         console.log('COULD NOT FIND ' + self.entry)
         return Promise.reject(null)

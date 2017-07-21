@@ -158,12 +158,32 @@ Track.prototype.fetchLastfm = function (user) {
  * Fetch track metadata.
  * @return {Promise | Track} Itself.
  */
-Track.prototype.fetchTrack = function () {
+Track.prototype.fetchTrack = function (id) {
+  id = id || this.id
   var self = this
-  return this.spotify.getTrack(this.id).then(function (response) {
-    self.clone(response)
-    return self
-  })
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.getTrack(id).then(function (response) {
+      self.clone(response)
+      return self
+    })
+  }
+}
+
+/**
+ * Get track popularity.
+ * @return {Promise | integer} The track popularity.
+ */
+Track.prototype.getPopularity = function () {
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this.popularity)
+  } else {
+    return self.refresh().then(function () {
+      return self.popularity
+    })
+  }
 }
 
 /**
@@ -214,8 +234,7 @@ Track.prototype.searchForTrack = function () {
     }
   }).catch(function () {
     if (self.entry.match(/^[0-9a-z]+$/i)) {
-      self.id = self.entry
-      return Promise.resolve(self)
+      return self.fetchTrack(self.entry)
     } else {
       // console.log('COULD NOT FIND ' + self.entry)
       return Promise.reject(null)
