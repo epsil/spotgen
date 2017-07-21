@@ -12,9 +12,23 @@ jQuery = $
  * @constructor
  * @param {string} uri - The URI of the web page to scrape.
  */
-function WebScraper (uri, parser) {
+function WebScraper (uri, count, parser) {
+  /**
+   * Number of pages to fetch.
+   */
+  this.count = 0
+
+  /**
+   * Parser instance to handle the generator string.
+   */
+  this.parser = null
+
+  /**
+   * The URI of the first page to fetch.
+   */
   this.uri = uri
 
+  this.count = count || this.count
   this.parser = parser
 }
 
@@ -44,18 +58,19 @@ function WebScraper (uri, parser) {
  * input to the generator.
  *
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} count - Number of pages to fetch.
  * @return {Promise | string} A generator string.
  */
-WebScraper.prototype.scrape = function (uri) {
+WebScraper.prototype.scrape = function (uri, count) {
   var domain = URI(uri).domain()
   if (domain === 'last.fm') {
     return this.lastfm(uri)
   } else if (domain === 'pitchfork.com') {
-    return this.pitchfork(uri)
+    return this.pitchfork(uri, count)
   } else if (domain === 'rateyourmusic.com') {
     return this.rateyourmusic(uri)
   } else if (domain === 'reddit.com') {
-    return this.reddit(uri)
+    return this.reddit(uri, count)
   } else if (domain === 'youtube.com') {
     return this.youtube(uri)
   } else {
@@ -80,7 +95,7 @@ WebScraper.prototype.createQueue = function (result) {
 WebScraper.prototype.dispatch = function () {
   var self = this
   console.log(this.uri)
-  return this.scrape(this.uri).then(function (result) {
+  return this.scrape(this.uri, this.count).then(function (result) {
     console.log(result)
     return self.createQueue(result)
   })
@@ -162,11 +177,13 @@ WebScraper.prototype.lastfm = function (uri) {
 /**
  * Scrape a Pitchfork list.
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of albums.
  */
-WebScraper.prototype.pitchfork = function (uri) {
+WebScraper.prototype.pitchfork = function (uri, count) {
   var self = this
-  function getPages (nextUri, result) {
+  count = count || 0
+  function getPages (nextUri, result, count) {
     nextUri = URI(nextUri).absoluteTo(uri).toString()
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
@@ -175,16 +192,20 @@ WebScraper.prototype.pitchfork = function (uri) {
         var album = self.trim($(this).find('h2.work-title').text())
         result += '#album ' + artist + ' - ' + album + '\n'
       })
-      var nextPage = html.find('.fts-pagination__list-item--active').next()
-      if (nextPage.length > 0) {
-        nextUri = nextPage.find('a').attr('href')
-        return getPages(nextUri, result)
-      } else {
+      if (count === 1) {
         return result.trim()
+      } else {
+        var nextPage = html.find('.fts-pagination__list-item--active').next()
+        if (nextPage.length > 0) {
+          nextUri = nextPage.find('a').attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result.trim()
+        }
       }
     })
   }
-  return getPages(uri, '')
+  return getPages(uri, '', count)
 }
 
 /**
@@ -213,56 +234,72 @@ WebScraper.prototype.rateyourmusic = function (uri) {
  * heuristic for parsing comments.
  *
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
-WebScraper.prototype.reddit = function (uri) {
+
+WebScraper.prototype.reddit = function (uri, count) {
   var self = this
-  return http(uri).then(function (data) {
-    var html = $($.parseHTML(data))
-    var result = ''
-    if (uri.match(/\/comments\//gi)) {
-      // comments thread
-      html.find('div.entry div.md').each(function () {
-        // first assumption: if there are links,
-        // they are probably links to songs
-        var links = $(this).find('a')
-        if (links.length > 0) {
-          links.each(function () {
-            var txt = $(this).text()
-            if (!txt.match(/https?:/gi)) {
-              result += self.cleanup(txt) + '\n'
-            }
-          })
-          return
+  count = count || 1
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      if (uri.match(/\/comments\//gi)) {
+        // comments thread
+        html.find('div.entry div.md').each(function () {
+          // first assumption: if there are links,
+          // they are probably links to songs
+          var links = $(this).find('a')
+          if (links.length > 0) {
+            links.each(function () {
+              var txt = $(this).text()
+              if (!txt.match(/https?:/gi)) {
+                result += self.cleanup(txt) + '\n'
+              }
+            })
+            return
+          }
+          // second assumption: if there are multiple sentences,
+          // the song is the first one
+          var body = $(this).text()
+          var sentences = body.split('.')
+          if (sentences.length > 1) {
+            result += self.cleanup(sentences[0]) + '\n'
+            return
+          }
+          // third assumption: if there are multiple lines to a comment,
+          // then the song will be on the first line with a user's
+          // comments on other lines after it
+          var lines = body.split('\n')
+          if (lines.length > 1) {
+            result += self.cleanup(lines[0]) + '\n'
+            return
+          }
+          // fall-back case
+          result += self.cleanup(body) + '\n'
+        })
+      } else {
+        // post listing
+        html.find('a.title').each(function () {
+          var track = self.cleanup($(this).text())
+          result += track + '\n'
+        })
+      }
+      if (count === 1) {
+        return result.trim()
+      } else {
+        var next = html.find('.next-button a')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result.trim()
         }
-        // second assumption: if there are multiple sentences,
-        // the song is the first one
-        var body = $(this).text()
-        var sentences = body.split('.')
-        if (sentences.length > 1) {
-          result += self.cleanup(sentences[0]) + '\n'
-          return
-        }
-        // third assumption: if there are multiple lines to a comment,
-        // then the song will be on the first line with a user's
-        // comments on other lines after it
-        var lines = body.split('\n')
-        if (lines.length > 1) {
-          result += self.cleanup(lines[0]) + '\n'
-          return
-        }
-        // fall-back case
-        result += self.cleanup(body) + '\n'
-      })
-    } else {
-      // post listing
-      html.find('a.title').each(function () {
-        var track = self.cleanup($(this).text())
-        result += track + '\n'
-      })
-    }
-    return result.trim()
-  })
+      }
+    })
+  }
+  return getPages(uri, '', count)
 }
 
 /**

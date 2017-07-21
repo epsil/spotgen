@@ -12,13 +12,13 @@ var request = require('request')
  * @return {Promise} A promise.
  */
 function http (uri, options) {
-  return http.request(uri, options).catch(function (err) {
+  return http.get(uri, options).catch(function (err) {
     var message = err + ''
     if (message.match(/XHR error/i)) {
       if (uri.match(/^http:/i)) {
-        return http.request(uri.replace(/^http:/i, 'https:'), options)
+        return http.get(uri.replace(/^http:/i, 'https:'), options)
       } else if (uri.match(/^https:/i)) {
-        return http.request(uri.replace(/^https:/i, 'http:'), options)
+        return http.get(uri.replace(/^https:/i, 'http:'), options)
       }
     }
   })
@@ -30,7 +30,7 @@ function http (uri, options) {
  * @param {Object} [options] - Request options.
  * @return {Promise} A promise.
  */
-http.request = function (uri, options) {
+http.get = function (uri, options) {
   var agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0; T312461)'
   options = options || {}
   options.headers = options.headers || {}
