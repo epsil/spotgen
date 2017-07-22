@@ -68,7 +68,7 @@ WebScraper.prototype.scrape = function (uri, count) {
   } else if (domain === 'pitchfork.com') {
     return this.pitchfork(uri, count)
   } else if (domain === 'rateyourmusic.com') {
-    return this.rateyourmusic(uri)
+    return this.rateyourmusic(uri, count)
   } else if (domain === 'reddit.com') {
     return this.reddit(uri, count)
   } else if (domain === 'youtube.com') {
@@ -141,7 +141,7 @@ WebScraper.prototype.lastfm = function (uri, count) {
     console.log(nextUri)
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
-      var result = ''
+      var lines = ''
       if (uri.match(/\/\+tracks/gi)) {
         // tracks by a single artist
         var header = html.find('header a.library-header-crumb')
@@ -150,31 +150,31 @@ WebScraper.prototype.lastfm = function (uri, count) {
         }
         var artist = self.trim(header.first().text())
         html.find('td.chartlist-name').each(function () {
-          result += artist + ' - ' + self.trim($(this).text()) + '\n'
+          lines += artist + ' - ' + self.trim($(this).text()) + '\n'
         })
       } else if (uri.match(/\/\+similar/gi)) {
         // similar artists
         html.find('h3.big-artist-list-title').each(function () {
-          result += '#top ' + self.trim($(this).text()) + '\n'
+          lines += '#top ' + self.trim($(this).text()) + '\n'
         })
       } else if (uri.match(/\/artists/gi)) {
         // list of artists
         html.find('td.chartlist-name').each(function () {
-          result += '#top ' + self.trim($(this).text()) + '\n'
+          lines += '#top ' + self.trim($(this).text()) + '\n'
         })
       } else if (uri.match(/\/albums/gi)) {
         // list of albums
         html.find('td.chartlist-name').each(function () {
-          result += '#album ' + self.trim($(this).text()) + '\n'
+          lines += '#album ' + self.trim($(this).text()) + '\n'
         })
       } else {
         // list of tracks by various artists
         html.find('td.chartlist-name').each(function () {
-          result += self.trim($(this).text()) + '\n'
+          lines += self.trim($(this).text()) + '\n'
         })
       }
-      result = result.trim()
-      console.log(result)
+      console.log(lines.trim())
+      result += lines
       if (count === 1) {
         return result
       } else {
@@ -205,13 +205,14 @@ WebScraper.prototype.pitchfork = function (uri, count) {
     console.log(nextUri)
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
+      var lines = ''
       html.find('div.artist-work').each(function () {
         var artist = self.trim($(this).find('ul.artist-list li:first').text())
         var album = self.trim($(this).find('h2.work-title').text())
-        result += '#album ' + artist + ' - ' + album + '\n'
+        lines += '#album ' + artist + ' - ' + album + '\n'
       })
-      result = result.trim()
-      console.log(result)
+      console.log(lines.trim())
+      result += lines
       if (count === 1) {
         return result
       } else {
@@ -231,23 +232,39 @@ WebScraper.prototype.pitchfork = function (uri, count) {
 /**
  * Scrape a Rate Your Music chart.
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of albums.
  */
-WebScraper.prototype.rateyourmusic = function (uri) {
+WebScraper.prototype.rateyourmusic = function (uri, count) {
   var self = this
-  console.log(uri)
-  return http(uri).then(function (data) {
-    var html = $($.parseHTML(data))
-    var result = ''
-    html.find('div.chart_details').each(function () {
-      var artist = self.trim($(this).find('a.artist').text())
-      var album = self.trim($(this).find('a.album').text())
-      result += '#album ' + artist + ' - ' + album + '\n'
+  count = count || 0
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var lines = ''
+      html.find('div.chart_details').each(function () {
+        var artist = self.trim($(this).find('a.artist').text())
+        var album = self.trim($(this).find('a.album').text())
+        lines += '#album ' + artist + ' - ' + album + '\n'
+      })
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
+      } else {
+        var next = html.find('a.navlinknext')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
+      }
     })
-    result = result.trim()
-    console.log(result)
-    return result
-  })
+  }
+  return getPages(uri, '', count)
 }
 
 /**
@@ -268,6 +285,7 @@ WebScraper.prototype.reddit = function (uri, count) {
     console.log(nextUri)
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
+      var lines = ''
       if (uri.match(/\/comments\//gi)) {
         // comments thread
         html.find('div.entry div.md').each(function () {
@@ -278,7 +296,7 @@ WebScraper.prototype.reddit = function (uri, count) {
             links.each(function () {
               var txt = $(this).text()
               if (!txt.match(/https?:/gi)) {
-                result += self.cleanup(txt) + '\n'
+                lines += self.cleanup(txt) + '\n'
               }
             })
             return
@@ -288,7 +306,7 @@ WebScraper.prototype.reddit = function (uri, count) {
           var body = $(this).text()
           var sentences = body.split('.')
           if (sentences.length > 1) {
-            result += self.cleanup(sentences[0]) + '\n'
+            lines += self.cleanup(sentences[0]) + '\n'
             return
           }
           // third assumption: if there are multiple lines to a comment,
@@ -296,21 +314,21 @@ WebScraper.prototype.reddit = function (uri, count) {
           // comments on other lines after it
           var lines = body.split('\n')
           if (lines.length > 1) {
-            result += self.cleanup(lines[0]) + '\n'
+            lines += self.cleanup(lines[0]) + '\n'
             return
           }
           // fall-back case
-          result += self.cleanup(body) + '\n'
+          lines += self.cleanup(body) + '\n'
         })
       } else {
         // post listing
         html.find('a.title').each(function () {
           var track = self.cleanup($(this).text())
-          result += track + '\n'
+          lines += track + '\n'
         })
       }
-      result = result.trim()
-      console.log(result)
+      console.log(lines.trim())
+      result += lines
       if (count === 1) {
         return result
       } else {
