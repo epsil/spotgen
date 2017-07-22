@@ -94,9 +94,7 @@ WebScraper.prototype.createQueue = function (result) {
  */
 WebScraper.prototype.dispatch = function () {
   var self = this
-  console.log(this.uri)
   return this.scrape(this.uri, this.count).then(function (result) {
-    console.log(result)
     return self.createQueue(result)
   })
 }
@@ -136,6 +134,7 @@ WebScraper.prototype.trim = function (str) {
  */
 WebScraper.prototype.lastfm = function (uri) {
   var self = this
+  console.log(uri)
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
@@ -170,7 +169,9 @@ WebScraper.prototype.lastfm = function (uri) {
         result += self.trim($(this).text()) + '\n'
       })
     }
-    return result.trim()
+    result = result.trim()
+    console.log(result)
+    return result
   })
 }
 
@@ -185,6 +186,7 @@ WebScraper.prototype.pitchfork = function (uri, count) {
   count = count || 0
   function getPages (nextUri, result, count) {
     nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
       html.find('div.artist-work').each(function () {
@@ -192,15 +194,17 @@ WebScraper.prototype.pitchfork = function (uri, count) {
         var album = self.trim($(this).find('h2.work-title').text())
         result += '#album ' + artist + ' - ' + album + '\n'
       })
+      result = result.trim()
+      console.log(result)
       if (count === 1) {
-        return result.trim()
+        return result
       } else {
         var nextPage = html.find('.fts-pagination__list-item--active').next()
         if (nextPage.length > 0) {
           nextUri = nextPage.find('a').attr('href')
           return getPages(nextUri, result, count - 1)
         } else {
-          return result.trim()
+          return result
         }
       }
     })
@@ -215,6 +219,7 @@ WebScraper.prototype.pitchfork = function (uri, count) {
  */
 WebScraper.prototype.rateyourmusic = function (uri) {
   var self = this
+  console.log(uri)
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
@@ -223,7 +228,9 @@ WebScraper.prototype.rateyourmusic = function (uri) {
       var album = self.trim($(this).find('a.album').text())
       result += '#album ' + artist + ' - ' + album + '\n'
     })
-    return result.trim()
+    result = result.trim()
+    console.log(result)
+    return result
   })
 }
 
@@ -237,12 +244,12 @@ WebScraper.prototype.rateyourmusic = function (uri) {
  * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
-
 WebScraper.prototype.reddit = function (uri, count) {
   var self = this
   count = count || 1
   function getPages (nextUri, result, count) {
     nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
       if (uri.match(/\/comments\//gi)) {
@@ -286,15 +293,17 @@ WebScraper.prototype.reddit = function (uri, count) {
           result += track + '\n'
         })
       }
+      result = result.trim()
+      console.log(result)
       if (count === 1) {
-        return result.trim()
+        return result
       } else {
         var next = html.find('.next-button a')
         if (next.length > 0) {
           nextUri = next.attr('href')
           return getPages(nextUri, result, count - 1)
         } else {
-          return result.trim()
+          return result
         }
       }
     })
@@ -313,6 +322,7 @@ WebScraper.prototype.reddit = function (uri, count) {
  */
 WebScraper.prototype.webpage = function (uri) {
   var self = this
+  console.log(uri)
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
@@ -320,7 +330,9 @@ WebScraper.prototype.webpage = function (uri) {
       var track = self.cleanup($(this).text())
       result += track + '\n'
     })
-    return result.trim()
+    result = result.trim()
+    console.log(result)
+    return result
   })
 }
 
@@ -331,6 +343,7 @@ WebScraper.prototype.webpage = function (uri) {
  */
 WebScraper.prototype.youtube = function (uri) {
   var self = this
+  console.log(uri)
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
@@ -338,7 +351,9 @@ WebScraper.prototype.youtube = function (uri) {
       var track = self.cleanup($(this).text())
       result += track + '\n'
     })
-    return result.trim()
+    result = result.trim()
+    console.log(result)
+    return result
   })
 }
 
