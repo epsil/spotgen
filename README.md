@@ -48,6 +48,18 @@ To create a playlist of a user's recently played tracks:
 
     http://www.last.fm/user/username/library
 
+To fetch multiple pages in succession, add a number parameter:
+
+    5 http://www.last.fm/user/username/library
+
+This is functionally identical to:
+
+    http://www.last.fm/user/username/library
+    http://www.last.fm/user/username/library?page=2
+    http://www.last.fm/user/username/library?page=3
+    http://www.last.fm/user/username/library?page=4
+    http://www.last.fm/user/username/library?page=5
+
 Note that Last.fm displays listening history in reverse chronological order. To create a chronological playlist, add the [`#reverse`](#reverse) command.
 
 [More on Last.fm scraping](Tips.md#lastfm).
