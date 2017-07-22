@@ -64,7 +64,7 @@ function WebScraper (uri, count, parser) {
 WebScraper.prototype.scrape = function (uri, count) {
   var domain = URI(uri).domain()
   if (domain === 'last.fm') {
-    return this.lastfm(uri)
+    return this.lastfm(uri, count)
   } else if (domain === 'pitchfork.com') {
     return this.pitchfork(uri, count)
   } else if (domain === 'rateyourmusic.com') {
@@ -130,49 +130,65 @@ WebScraper.prototype.trim = function (str) {
 /**
  * Scrape a Last.fm tracklist.
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
-WebScraper.prototype.lastfm = function (uri) {
+WebScraper.prototype.lastfm = function (uri, count) {
   var self = this
-  console.log(uri)
-  return http(uri).then(function (data) {
-    var html = $($.parseHTML(data))
-    var result = ''
-    if (uri.match(/\/\+tracks/gi)) {
-      // tracks by a single artist
-      var header = html.find('header a.library-header-crumb')
-      if (header.length === 0) {
-        header = html.find('h1.header-title')
+  count = count || 1
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var result = ''
+      if (uri.match(/\/\+tracks/gi)) {
+        // tracks by a single artist
+        var header = html.find('header a.library-header-crumb')
+        if (header.length === 0) {
+          header = html.find('h1.header-title')
+        }
+        var artist = self.trim(header.first().text())
+        html.find('td.chartlist-name').each(function () {
+          result += artist + ' - ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/\+similar/gi)) {
+        // similar artists
+        html.find('h3.big-artist-list-title').each(function () {
+          result += '#top ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/artists/gi)) {
+        // list of artists
+        html.find('td.chartlist-name').each(function () {
+          result += '#top ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/albums/gi)) {
+        // list of albums
+        html.find('td.chartlist-name').each(function () {
+          result += '#album ' + self.trim($(this).text()) + '\n'
+        })
+      } else {
+        // list of tracks by various artists
+        html.find('td.chartlist-name').each(function () {
+          result += self.trim($(this).text()) + '\n'
+        })
       }
-      var artist = self.trim(header.first().text())
-      html.find('td.chartlist-name').each(function () {
-        result += artist + ' - ' + self.trim($(this).text()) + '\n'
-      })
-    } else if (uri.match(/\/\+similar/gi)) {
-      // similar artists
-      html.find('h3.big-artist-list-title').each(function () {
-        result += '#top ' + self.trim($(this).text()) + '\n'
-      })
-    } else if (uri.match(/\/artists/gi)) {
-      // list of artists
-      html.find('td.chartlist-name').each(function () {
-        result += '#top ' + self.trim($(this).text()) + '\n'
-      })
-    } else if (uri.match(/\/albums/gi)) {
-      // list of albums
-      html.find('td.chartlist-name').each(function () {
-        result += '#album ' + self.trim($(this).text()) + '\n'
-      })
-    } else {
-      // list of tracks by various artists
-      html.find('td.chartlist-name').each(function () {
-        result += self.trim($(this).text()) + '\n'
-      })
-    }
-    result = result.trim()
-    console.log(result)
-    return result
-  })
+      result = result.trim()
+      console.log(result)
+      if (count === 1) {
+        return result
+      } else {
+        var next = html.find('.pagination-next a')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
+      }
+    })
+  }
+  return getPages(uri, '', count)
 }
 
 /**
