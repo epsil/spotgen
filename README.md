@@ -137,6 +137,14 @@ To add all the albums of an artist:
 
 Note that this command can be rather slow, as it endeavors to retrieve every track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the [`#top`](#top-tracks) command.
 
+### Playlist
+
+To add all the tracks of a playlist:
+
+    #playlist username/playlistid
+
+where `username` is the owner of the playlist and `playlistid` is the ID of the playlist (obtained from the playlist URI).
+
 ### Tracks
 
 To add a single track to the playlist, add a line on the form `TITLE - ARTIST`:

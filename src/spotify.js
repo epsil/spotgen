@@ -180,6 +180,32 @@ SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
 }
 
 /**
+ * Fetch playlist tracks.
+ *
+ * @param {string} [id] - The playlist ID.
+ * @param {string} [owner] - The owner ID.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-album/#example).
+ *
+ * @param {string} id - Album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
+  var uri = 'https://api.spotify.com/v1/users/' +
+      encodeURIComponent(owner) +
+      '/playlists/' +
+      encodeURIComponent(id) +
+      '/tracks'
+  return this.request(uri).then(function (response) {
+    if (response) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
  * Get the top tracks of an artist.
  *
  * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
@@ -288,6 +314,30 @@ SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
       if (!artist) {
         sort(response.albums.items, sort.similarAlbum(album))
       }
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for playlist.
+ *
+ * @param {string} playlist - The playlist to search for.
+
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} playlist - The track to search for.
+ * @return {Promise | JSON} JSON response.
+ */
+SpotifyRequestHandler.prototype.searchForPlaylist = function (playlist) {
+  var uri = 'https://api.spotify.com/v1/search?type=playlist&limit=50&q='
+  uri += encodeURIComponent(playlist)
+  return this.request(uri).then(function (response) {
+    if (response.playlists &&
+        response.playlists.items[0] &&
+        response.playlists.items[0].uri) {
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
