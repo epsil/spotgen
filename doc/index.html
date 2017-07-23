@@ -94,16 +94,20 @@ http://www.last.fm/user/username/library?page=5</code></pre><p>Note that Last.fm
 <pre class="prettyprint source"><code>#similar Aphex Twin</code></pre><p>This will generate a 100-track playlist consisting of the 5 most popular tracks from the 20 most similar artists to Aphex Twin.</p>
 <p>To retrieve more tracks, use <code>#similar10</code>.</p>
 <h3>Albums</h3><p>To add an album:</p>
-<pre class="prettyprint source"><code>#album Substrata - Biosphere</code></pre><h3>Artists</h3><p>To add all the albums of an artist:</p>
-<pre class="prettyprint source"><code>#artist Beach House</code></pre><p>Note that this command can be rather slow, as it endeavors to retrieve every track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the <a href="#top-tracks"><code>#top</code></a> command.</p>
+<pre class="prettyprint source"><code>#album Substrata - Biosphere</code></pre><p>Alternatively, use the album's Spotify link or Spotify URI:</p>
+<pre class="prettyprint source"><code>https://open.spotify.com/album/5QIf4hNIAksV1uMCXHVkAZ</code></pre><h3>Artists</h3><p>To add all the albums of an artist:</p>
+<pre class="prettyprint source"><code>#artist Beach House</code></pre><p>Alternatively, use the artist's Spotify link or Spotify URI:</p>
+<pre class="prettyprint source"><code>https://open.spotify.com/artist/56ZTgzPBDge0OvCGgMO3OY</code></pre><p>Note that this command can be rather slow, as it endeavors to retrieve every track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the <a href="#top-tracks"><code>#top</code></a> command.</p>
 <h3>Playlist</h3><p>To add all the tracks of a playlist:</p>
-<pre class="prettyprint source"><code>#playlist username/playlistid</code></pre><p>where <code>username</code> is the owner of the playlist and <code>playlistid</code> is the ID of the playlist (obtained from the playlist URI).</p>
-<h3>Tracks</h3><p>To add a single track to the playlist, add a line on the form <code>TITLE - ARTIST</code>:</p>
+<pre class="prettyprint source"><code>#playlist username/playlistid</code></pre><p>where <code>username</code> is the owner of the playlist and <code>playlistid</code> is the ID of the playlist.</p>
+<p>Alternatively, use the playlist's Spotify link or Spotify URI:</p>
+<pre class="prettyprint source"><code>https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D</code></pre><h3>Tracks</h3><p>To add a single track to the playlist, add a line on the form <code>TITLE - ARTIST</code>:</p>
 <pre class="prettyprint source"><code>Walk in the Park - Beach House
 Irene - Beach House
 Other People - Beach House
 Troublemaker - Beach House
-Wishes - Beach House</code></pre><p><a href="Tips.md#miscellaneous">More on single tracks</a>.</p>
+Wishes - Beach House</code></pre><p>Alternatively, use the track's Spotify link or Spotify URI:</p>
+<pre class="prettyprint source"><code>https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH</code></pre><p><a href="Tips.md#miscellaneous">More on single tracks</a>.</p>
 <h3>Duplicates</h3><p>By default, the generator automatically removes duplicate tracks. To allow duplicates, add the line:</p>
 <pre class="prettyprint source"><code>#duplicates</code></pre><h3>Reverse</h3><p>To reverse the order of the tracks, add the line:</p>
 <pre class="prettyprint source"><code>#reverse</code></pre><h3>Shuffle</h3><p>To shuffle the order of the tracks, add the line:</p>
@@ -123,19 +127,14 @@ Wishes - Beach House</code></pre><p><a href="Tips.md#miscellaneous">More on sing
 #similar Beach House
 #similar Hooverphonic</code></pre><p>This will create a Last.fm-ordered playlist of artists similar to Beach House and Hooverphonic, with each track having a different artist from the previous track.</p>
 <h2>Supported formats</h2><p>The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV files. By default, the generator outputs a list of Spotify URIs.</p>
-<h3>Import existing Spotify playlists</h3><p>One can easily work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of Spotify links:</p>
+<h3>Import existing Spotify playlists</h3><p>The generator understands Spotify links and Spotify URIs. These are obtained by opening Spotify and choosing <em>More</em> -&gt; <em>Share</em> (look for the <code>...</code> symbol). The following example creates a new playlist out of an existing playlist, applying the <a href="#order"><code>#order</code></a> command in the process:</p>
+<pre class="prettyprint source"><code>#order by popularity
+https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D</code></pre><p>Another method is to select the playlist's tracks in Spotify, copy them, and then paste them into a text file. This produces a list of Spotify links that are understood by the generator:</p>
 <pre class="prettyprint source"><code>https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
 https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
 https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
-...</code></pre><p>One can easily apply the <a href="#order"><code>#order</code></a> command to such a list:</p>
-<pre class="prettyprint source"><code>#order by popularity
-https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
-https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
-https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
-...</code></pre><p>Likewise, spotify URIs are handled as well:</p>
-<pre class="prettyprint source"><code>#order by popularity
-#alternate by album
-spotify:track:4oNXgGnumnu5oIXXyP8StH
+...</code></pre><p>Spotify URIs are also supported:</p>
+<pre class="prettyprint source"><code>spotify:track:4oNXgGnumnu5oIXXyP8StH
 spotify:track:7rAjeWkQM6cLqbPjZtXxl2
 spotify:track:2Nt4Uw91pQLXSJ28SttDdF
 ...</code></pre><h3>M3U playlists</h3><p>One can also import <a href="http://en.wikipedia.org/wiki/M3U">M3U</a> playlists (with the file extension <code>.m3u</code> or <code>.m3u8</code>), provided they contain <code>EXTM3U</code> metadata. That is, the playlist should be on the form:</p>
@@ -207,13 +206,13 @@ Twilight at Carbon Lake - Deerhunter</code></pre><p>CSV files have the advantage
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 23 2017 13:59:18 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 23 2017 22:26:11 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

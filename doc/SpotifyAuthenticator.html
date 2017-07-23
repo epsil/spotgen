@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: Artist</title>
+    <title>JSDoc: Class: SpotifyAuthenticator</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: Artist</h1>
+    <h1 class="page-title">Class: SpotifyAuthenticator</h1>
 
     
 
@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2>Artist</h2>
+        <h2>SpotifyAuthenticator</h2>
         
     
 </header>
@@ -40,14 +40,14 @@
 
     
 
-    <h4 class="name" id="Artist"><span class="type-signature"></span>new Artist<span class="signature">(spotify, entry, id<span class="signature-attributes">opt</span>, limit<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="SpotifyAuthenticator"><span class="type-signature"></span>new SpotifyAuthenticator<span class="signature">(clientId<span class="signature-attributes">opt</span>, clientSecret<span class="signature-attributes">opt</span>, token<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Artist entry.</p>
+    <p>Create a Spotify request handler.</p>
 </div>
 
 
@@ -85,69 +85,7 @@
 
         <tr>
             
-                <td class="name"><code>spotify</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"><p>Spotify request handler.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>entry</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"><p>The artist to search for.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>id</code></td>
+                <td class="name"><code>clientId</code></td>
             
 
             <td class="type">
@@ -173,14 +111,14 @@
 
             
 
-            <td class="description last"><p>The Spotify ID, if known.</p></td>
+            <td class="description last"><p>Client ID.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>limit</code></td>
+                <td class="name"><code>clientSecret</code></td>
             
 
             <td class="type">
@@ -206,7 +144,40 @@
 
             
 
-            <td class="description last"><p>The number of albums to fetch.</p></td>
+            <td class="description last"><p>Client secret key.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>token</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Access token (if already authenticated).</p></td>
         </tr>
 
     
@@ -247,7 +218,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line14">line 14</a>
+        <a href="src_auth.js.html">src/auth.js</a>, <a href="src_auth.js.html#line12">line 12</a>
     </li></ul></dd>
     
 
@@ -291,13 +262,13 @@
 
         
             
-<h4 class="name" id="albums"><span class="type-signature"></span>albums<span class="type-signature"></span></h4>
+<h4 class="name" id="clientId"><span class="type-signature"></span>clientId<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>Array of albums.</p>
+    <p>Client ID.</p>
 </div>
 
 
@@ -335,7 +306,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line18">line 18</a>
+        <a href="src_auth.js.html">src/auth.js</a>, <a href="src_auth.js.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -353,13 +324,13 @@
 
         
             
-<h4 class="name" id="entry"><span class="type-signature"></span>entry<span class="type-signature"></span></h4>
+<h4 class="name" id="clientSecret"><span class="type-signature"></span>clientSecret<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>Entry string.</p>
+    <p>Client secret key.</p>
 </div>
 
 
@@ -397,7 +368,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line23">line 23</a>
+        <a href="src_auth.js.html">src/auth.js</a>, <a href="src_auth.js.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -415,13 +386,13 @@
 
         
             
-<h4 class="name" id="id"><span class="type-signature"></span>id<span class="type-signature"></span></h4>
+<h4 class="name" id="token"><span class="type-signature"></span>token<span class="type-signature"></span></h4>
 
 
 
 
 <div class="description">
-    <p>Spotify ID.</p>
+    <p>Access token.</p>
 </div>
 
 
@@ -459,193 +430,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line28">line 28</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
-<h4 class="name" id="limit"><span class="type-signature"></span>limit<span class="type-signature"></span></h4>
-
-
-
-
-<div class="description">
-    <p>Number of tracks to fetch.</p>
-</div>
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line33">line 33</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
-<h4 class="name" id="name"><span class="type-signature"></span>name<span class="type-signature"></span></h4>
-
-
-
-
-<div class="description">
-    <p>The artist name.</p>
-</div>
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line38">line 38</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
-<h4 class="name" id="spotify"><span class="type-signature"></span>spotify<span class="type-signature"></span></h4>
-
-
-
-
-<div class="description">
-    <p>Spotify request handler.</p>
-</div>
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line43">line 43</a>
+        <a href="src_auth.js.html">src/auth.js</a>, <a href="src_auth.js.html#line26">line 26</a>
     </li></ul></dd>
     
 
@@ -672,14 +457,20 @@
 
     
 
-    <h4 class="name" id="clone"><span class="type-signature"></span>clone<span class="signature">(response)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="clientsCredentialsFlow"><span class="type-signature"></span>clientsCredentialsFlow<span class="signature">(clientId, clientSecret, grantType<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Clone a JSON response.</p>
+    <p>Authenticate with the Clients Credentials Flow.</p>
+<p>Note: this authentication method only works if the script is run
+from the command line. It does not work when run from a browser,
+because Spotify's authentication server rejects cross-site
+requests. In that case, authenticate with the Implicit Grant Flow
+instead.</p>
+<p><a href="https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow">Reference</a>.</p>
 </div>
 
 
@@ -703,6 +494,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -715,23 +508,95 @@
 
         <tr>
             
-                <td class="name"><code>response</code></td>
+                <td class="name"><code>clientId</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">string</span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>The response.</p></td>
+            <td class="description last"><p>Client ID.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>clientSecret</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Client secret key.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>grantType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Grant type, default &quot;client_credentials&quot;.</p></td>
         </tr>
 
     
@@ -772,7 +637,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line56">line 56</a>
+        <a href="src_auth.js.html">src/auth.js</a>, <a href="src_auth.js.html#line45">line 45</a>
     </li></ul></dd>
     
 
@@ -795,6 +660,31 @@
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>An access token response.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type">JSON</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -803,14 +693,128 @@
 
     
 
-    <h4 class="name" id="createQueue"><span class="type-signature"></span>createQueue<span class="signature">(response)</span><span class="type-signature"> &rarr; {Promise|<a href="Queue.html">Queue</a>}</span></h4>
+    <h4 class="name" id="getToken"><span class="type-signature"></span>getToken<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Create a queue of tracks.</p>
+    <p>Obtain a bearer access token.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_auth.js.html">src/auth.js</a>, <a href="src_auth.js.html#line109">line 109</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A bearer access token,
+or the empty string if not available.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type">string</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="implicitGrantFlow"><span class="type-signature"></span>implicitGrantFlow<span class="signature">(uri, clientId<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Authenticate with the Implicit Grant Flow.</p>
+<p>Returns a URI that the calling web application can use to redirect
+the user to a Spotify login screen. After the user has logged in,
+Spotify redirects back to the web application with an access token
+(included in the hash fragment of the URI). That token can then be
+passed to this class.</p>
+<p><a href="https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Reference</a>.</p>
 </div>
 
 
@@ -834,6 +838,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -846,23 +852,64 @@
 
         <tr>
             
-                <td class="name"><code>response</code></td>
+                <td class="name"><code>uri</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">JSON</span>
+<span class="param-type">string</span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>A JSON response object.</p></td>
+            <td class="description last"><p>Redirect URI.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>clientId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Client ID.</p></td>
         </tr>
 
     
@@ -903,7 +950,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line69">line 69</a>
+        <a href="src_auth.js.html">src/auth.js</a>, <a href="src_auth.js.html#line77">line 77</a>
     </li></ul></dd>
     
 
@@ -930,7 +977,7 @@
 
         
 <div class="param-desc">
-    <p>A queue of tracks.</p>
+    <p>An authentication URI.</p>
 </div>
 
 
@@ -941,10 +988,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Promise</span>
-|
-
-<span class="param-type"><a href="Queue.html">Queue</a></span>
+<span class="param-type">string</span>
 
 
     </dd>
@@ -959,14 +1003,14 @@
 
     
 
-    <h4 class="name" id="dispatch"><span class="type-signature"></span>dispatch<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|<a href="Queue.html">Queue</a>}</span></h4>
+    <h4 class="name" id="refreshToken"><span class="type-signature"></span>refreshToken<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Dispatch entry.</p>
+    <p>Refresh the bearer access token.</p>
 </div>
 
 
@@ -1010,7 +1054,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line96">line 96</a>
+        <a href="src_auth.js.html">src/auth.js</a>, <a href="src_auth.js.html#line93">line 93</a>
     </li></ul></dd>
     
 
@@ -1037,7 +1081,8 @@
 
         
 <div class="param-desc">
-    <p>A queue of tracks.</p>
+    <p>A new bearer access token,
+or the empty string if not available.</p>
 </div>
 
 
@@ -1051,221 +1096,7 @@
 <span class="param-type">Promise</span>
 |
 
-<span class="param-type"><a href="Queue.html">Queue</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="fetchAlbums"><span class="type-signature"></span>fetchAlbums<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Fetch albums.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line109">line 109</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>A JSON response.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Promise</span>
-|
-
-<span class="param-type">JSON</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="searchForArtist"><span class="type-signature"></span>searchForArtist<span class="signature">()</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Search for artist.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_artist.js.html">src/artist.js</a>, <a href="src_artist.js.html#line127">line 127</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>A JSON response.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Promise</span>
-|
-
-<span class="param-type">JSON</span>
+<span class="param-type">string</span>
 
 
     </dd>
@@ -1297,7 +1128,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 23 2017 22:26:11 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 23 2017 22:26:12 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

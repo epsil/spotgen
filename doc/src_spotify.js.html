@@ -26,10 +26,9 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>var base64 = require('base-64')
-var defaults = require('./defaults')
-var http = require('./http')
+            <pre class="prettyprint source linenums"><code>var http = require('./http')
 var sort = require('./sort')
+var SpotifyAuthenticator = require('./auth')
 
 /**
  * Create a Spotify request handler.
@@ -40,107 +39,9 @@ var sort = require('./sort')
  */
 function SpotifyRequestHandler (clientId, clientSecret, token) {
   /**
-   * Client ID.
+   * Spotify authenticator.
    */
-  this.clientId = clientId || defaults.id
-
-  /**
-   * Client secret key.
-   */
-  this.clientSecret = clientSecret || defaults.key
-
-  /**
-   * Access token.
-   */
-  this.token = token || ''
-}
-
-/**
- * Authenticate with the Clients Credentials Flow.
- *
- * Note: this authentication method only works if the script is run
- * from the command line. It does not work when run from a browser,
- * because Spotify's authentication server rejects cross-site
- * requests. In that case, authenticate with the Implicit Grant Flow
- * instead.
- *
- * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
- *
- * @param {string} clientId - Client ID.
- * @param {string} clientSecret - Client secret key.
- * @param {string} [grantType] - Grant type, default "client_credentials".
- * @return {Promise | JSON} An access token response.
- */
-SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, clientSecret, grantType) {
-  clientId = clientId || this.clientId
-  clientSecret = clientSecret || this.clientSecret
-  grantType = grantType || 'client_credentials'
-  var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
-  var uri = 'https://accounts.spotify.com/api/token'
-  return http.json(uri, {
-    method: 'POST',
-    headers: {
-      Authorization: auth
-    },
-    form: {
-      'grant_type': grantType
-    }
-  })
-}
-
-/**
- * Authenticate with the Implicit Grant Flow.
- *
- * Returns a URI that the calling web application can use to redirect
- * the user to a Spotify login screen. After the user has logged in,
- * Spotify redirects back to the web application with an access token
- * (included in the hash fragment of the URI). That token can then be
- * passed to this class.
- *
- * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
- *
- * @param {string} uri - Redirect URI.
- * @param {string} [clientId] - Client ID.
- * @return {string} An authentication URI.
- */
-SpotifyRequestHandler.prototype.implicitGrantFlow = function (uri, clientId) {
-  clientId = clientId || this.clientId
-  var url = 'https://accounts.spotify.com/authorize'
-  url += '/' +
-    '?client_id=' + encodeURIComponent(clientId) +
-    '&amp;response_type=' + encodeURIComponent('token') +
-    '&amp;redirect_uri=' + encodeURIComponent(uri)
-  return url
-}
-
-/**
- * Refresh the bearer access token.
- *
- * @return {Promise | string} A new bearer access token,
- * or the empty string if not available.
- */
-SpotifyRequestHandler.prototype.refreshToken = function () {
-  return this.clientsCredentialsFlow().then(function (response) {
-    if (response &amp;&amp;
-        response.access_token) {
-      this.token = response.access_token
-    }
-    return this.token
-  })
-}
-
-/**
- * Obtain a bearer access token.
- *
- * @return {Promise | string} A bearer access token,
- * or the empty string if not available.
- */
-SpotifyRequestHandler.prototype.getToken = function () {
-  if (this.token) {
-    return Promise.resolve(this.token)
-  } else {
-    return this.refreshToken()
-  }
+  this.auth = new SpotifyAuthenticator(clientId, clientSecret, token)
 }
 
 /**
@@ -208,29 +109,42 @@ SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
 }
 
 /**
- * Fetch playlist tracks.
+ * Fetch a playlist's tracks.
  *
  * @param {string} [id] - The playlist ID.
  * @param {string} [owner] - The owner ID.
  *
- * [Reference](https://developer.spotify.com/web-api/get-album/#example).
+ * [Reference](https://developer.spotify.com/web-api/get-playlists-tracks/#example).
  *
  * @param {string} id - Album ID.
  * @return {Promise | JSON} A JSON response.
  */
 SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
+  var self = this
   var uri = 'https://api.spotify.com/v1/users/' +
       encodeURIComponent(owner) +
       '/playlists/' +
       encodeURIComponent(id) +
       '/tracks'
-  return this.request(uri).then(function (response) {
-    if (response) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
+  function getTracks (uri, result) {
+    return self.request(uri).then(function (response) {
+      if (!(response &amp;&amp;
+            response.items)) {
+        return Promise.reject(response)
+      }
+      if (result) {
+        result.items = result.items.concat(response.items)
+      } else {
+        result = response
+      }
+      if (response.next) {
+        return getTracks(response.next, result)
+      } else {
+        return Promise.resolve(result)
+      }
+    })
+  }
+  return getTracks(uri)
 }
 
 /**
@@ -279,7 +193,7 @@ SpotifyRequestHandler.prototype.request = function (uri, options) {
   var self = this
   options = options || {}
   console.log(uri)
-  return this.getToken().then(function (token) {
+  return this.auth.getToken().then(function (token) {
     options.headers = options.headers || {}
     options.headers.Authorization = 'Bearer ' + token
     return http.json(uri, options)
@@ -441,13 +355,13 @@ module.exports = SpotifyRequestHandler
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 23 2017 13:59:18 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 23 2017 22:26:11 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

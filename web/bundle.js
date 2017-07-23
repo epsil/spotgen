@@ -84114,7 +84114,7 @@ Album.prototype.searchForAlbum = function () {
 
 module.exports = Album
 
-},{"./queue":548,"./spotify":552,"./track":554}],540:[function(require,module,exports){
+},{"./queue":549,"./spotify":553,"./track":555}],540:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -84269,7 +84269,126 @@ Artist.prototype.searchForArtist = function () {
 
 module.exports = Artist
 
-},{"./album":539,"./queue":548,"./sort":551,"./spotify":552}],541:[function(require,module,exports){
+},{"./album":539,"./queue":549,"./sort":552,"./spotify":553}],541:[function(require,module,exports){
+var base64 = require('base-64')
+var defaults = require('./defaults')
+var http = require('./http')
+
+/**
+ * Create a Spotify request handler.
+ * @constructor
+ * @param {string} [clientId] - Client ID.
+ * @param {string} [clientSecret] - Client secret key.
+ * @param {string} [token] - Access token (if already authenticated).
+ */
+function SpotifyAuthenticator (clientId, clientSecret, token) {
+  /**
+   * Client ID.
+   */
+  this.clientId = clientId || defaults.id
+
+  /**
+   * Client secret key.
+   */
+  this.clientSecret = clientSecret || defaults.key
+
+  /**
+   * Access token.
+   */
+  this.token = token || ''
+}
+
+/**
+ * Authenticate with the Clients Credentials Flow.
+ *
+ * Note: this authentication method only works if the script is run
+ * from the command line. It does not work when run from a browser,
+ * because Spotify's authentication server rejects cross-site
+ * requests. In that case, authenticate with the Implicit Grant Flow
+ * instead.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
+ *
+ * @param {string} clientId - Client ID.
+ * @param {string} clientSecret - Client secret key.
+ * @param {string} [grantType] - Grant type, default "client_credentials".
+ * @return {Promise | JSON} An access token response.
+ */
+SpotifyAuthenticator.prototype.clientsCredentialsFlow = function (clientId, clientSecret, grantType) {
+  clientId = clientId || this.clientId
+  clientSecret = clientSecret || this.clientSecret
+  grantType = grantType || 'client_credentials'
+  var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
+  var uri = 'https://accounts.spotify.com/api/token'
+  return http.json(uri, {
+    method: 'POST',
+    headers: {
+      Authorization: auth
+    },
+    form: {
+      'grant_type': grantType
+    }
+  })
+}
+
+/**
+ * Authenticate with the Implicit Grant Flow.
+ *
+ * Returns a URI that the calling web application can use to redirect
+ * the user to a Spotify login screen. After the user has logged in,
+ * Spotify redirects back to the web application with an access token
+ * (included in the hash fragment of the URI). That token can then be
+ * passed to this class.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
+ *
+ * @param {string} uri - Redirect URI.
+ * @param {string} [clientId] - Client ID.
+ * @return {string} An authentication URI.
+ */
+SpotifyAuthenticator.prototype.implicitGrantFlow = function (uri, clientId) {
+  clientId = clientId || this.clientId
+  var url = 'https://accounts.spotify.com/authorize'
+  url += '/' +
+    '?client_id=' + encodeURIComponent(clientId) +
+    '&response_type=' + encodeURIComponent('token') +
+    '&redirect_uri=' + encodeURIComponent(uri)
+  return url
+}
+
+/**
+ * Refresh the bearer access token.
+ *
+ * @return {Promise | string} A new bearer access token,
+ * or the empty string if not available.
+ */
+SpotifyAuthenticator.prototype.refreshToken = function () {
+  return this.clientsCredentialsFlow().then(function (response) {
+    if (response &&
+        response.access_token) {
+      this.token = response.access_token
+    }
+    return this.token
+  })
+}
+
+/**
+ * Obtain a bearer access token.
+ *
+ * @return {Promise | string} A bearer access token,
+ * or the empty string if not available.
+ */
+SpotifyAuthenticator.prototype.getToken = function () {
+  if (this.token) {
+    return Promise.resolve(this.token)
+  } else {
+    return this.refreshToken()
+  }
+}
+
+module.exports = SpotifyAuthenticator
+
+},{"./defaults":543,"./http":545,"base-64":1}],542:[function(require,module,exports){
 var stringify = require('csv-stringify/lib/sync')
 
 /**
@@ -84318,10 +84437,10 @@ CSV.prototype.toString = function () {
 
 module.exports = CSV
 
-},{"csv-stringify/lib/sync":271}],542:[function(require,module,exports){
+},{"csv-stringify/lib/sync":271}],543:[function(require,module,exports){
 var _0x22f8=['\x35\x66\x30\x63\x66\x63\x32\x32\x66\x61\x39\x65\x34\x37\x66\x65\x61\x31\x35\x61\x35\x66\x35\x63\x65\x66\x37\x64\x38\x62\x30\x37','\x65\x78\x70\x6f\x72\x74\x73'];(function(_0x2c655a,_0x2213f0){var _0x457c86=function(_0x50d308){while(--_0x50d308){_0x2c655a['\x70\x75\x73\x68'](_0x2c655a['\x73\x68\x69\x66\x74']());}};_0x457c86(++_0x2213f0);}(_0x22f8,0xe1));var _0x822f=function(_0xff0804,_0x38aff9){_0xff0804=_0xff0804-0x0;var _0x41bc24=_0x22f8[_0xff0804];return _0x41bc24;};module[_0x822f('0x0')]={'\x61\x70\x69':'\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66','\x69\x64':'\x36\x62\x36\x39\x66\x33\x62\x34\x64\x35\x33\x36\x34\x35\x37\x65\x38\x66\x39\x35\x34\x62\x33\x61\x33\x61\x65\x65\x32\x34\x35\x38','\x6b\x65\x79':_0x822f('0x1')};
 
-},{}],543:[function(require,module,exports){
+},{}],544:[function(require,module,exports){
 var eol = require('eol')
 var Album = require('./album')
 var CSV = require('./csv')
@@ -84572,8 +84691,15 @@ Generator.prototype.toString = function () {
   this.entries.forEach(function (entry) {
     if (entry instanceof Track || entry instanceof Album) {
       if (entry instanceof Track) {
-        console.log(entry.title)
-        console.log(entry.popularity + ' (' + entry.lastfm + ')')
+        var log = entry.title
+        if (entry.popularity || entry.lastfm) {
+          log += ' ('
+          log += entry.popularity ? ('Spotify popularity: ' + entry.popularity) : ''
+          log += (entry.popularity && entry.lastfm) ? ', ' : ''
+          log += entry.lastfm ? 'Last.fm rating: ' + entry.lastfm : ''
+          log += ')'
+        }
+        console.log(log)
       }
       if (self.csv) {
         var csvFormat = new CSV(entry)
@@ -84592,7 +84718,7 @@ Generator.prototype.toString = function () {
 
 module.exports = Generator
 
-},{"./album":539,"./csv":541,"./queue":548,"./spotify":552,"./track":554,"eol":273}],544:[function(require,module,exports){
+},{"./album":539,"./csv":542,"./queue":549,"./spotify":553,"./track":555,"eol":273}],545:[function(require,module,exports){
 var request = require('request')
 
 /**
@@ -84672,7 +84798,7 @@ http.json = function (uri, options) {
 
 module.exports = http
 
-},{"request":275}],545:[function(require,module,exports){
+},{"request":275}],546:[function(require,module,exports){
 var http = require('./http')
 
 module.exports = function (key) {
@@ -84725,7 +84851,7 @@ module.exports = function (key) {
   return lastfm
 }
 
-},{"./http":544}],546:[function(require,module,exports){
+},{"./http":545}],547:[function(require,module,exports){
 var defaults = require('./defaults')
 var eol = require('eol')
 var Album = require('./album')
@@ -84760,7 +84886,7 @@ Parser.prototype.parse = function (str) {
     var lines = eol.split(str)
     while (lines.length > 0) {
       var match = null
-      var line = lines.shift()
+      var line = lines.shift().trim()
       if ((match = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i))) {
         generator.ordering = match[2].toLowerCase()
         generator.lastfmUser = match[4]
@@ -84810,20 +84936,20 @@ Parser.prototype.parse = function (str) {
         }
       } else if ((match = line.match(/spotify:artist:([0-9a-z]+)/i))) {
         generator.add(new Artist(this.spotify, line, match[1]))
-      } else if ((match = line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)*artist\/(.*\/)*([0-9a-z]+)/i))) {
-        generator.add(new Artist(this.spotify, line, match[4]))
+      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*artist\/(.*\/)*([0-9a-z]+)/i))) {
+        generator.add(new Artist(this.spotify, line, match[5], parseInt(match[1])))
       } else if ((match = line.match(/spotify:album:([0-9a-z]+)/i))) {
         generator.add(new Album(this.spotify, line, match[1]))
-      } else if ((match = line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)*album\/(.*\/)*([0-9a-z]+)/i))) {
-        generator.add(new Album(this.spotify, line, match[4]))
+      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*album\/(.*\/)*([0-9a-z]+)/i))) {
+        generator.add(new Album(this.spotify, line, match[5], parseInt(match[1])))
       } else if ((match = line.match(/spotify:user:([0-9a-z]+):playlist:([0-9a-z]+)/i))) {
         generator.add(new Playlist(this.spotify, line, match[2], match[1]))
-      } else if ((match = line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)*user\/([0-9a-z]+)\/playlist\/([0-9a-z]+)/i))) {
-        generator.add(new Playlist(this.spotify, line, match[4], match[3]))
+      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*user\/([0-9a-z]+)\/playlist\/([0-9a-z]+)/i))) {
+        generator.add(new Playlist(this.spotify, line, match[5], match[4], parseInt(match[1])))
       } else if ((match = line.match(/spotify:track:([0-9a-z]+)/i))) {
         generator.add(new Track(this.spotify, line, match[1]))
-      } else if ((match = line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)*([0-9a-z]+)/i))) {
-        generator.add(new Track(this.spotify, line, match[3]))
+      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*([0-9a-z]+)/i))) {
+        generator.add(new Track(this.spotify, line, match[4]))
       } else if ((match = line.match(/^([0-9]+ )?(https?:.*)/i))) {
         generator.add(new WebScraper(match[2], parseInt(match[1]), this))
       } else if (line) {
@@ -84836,7 +84962,7 @@ Parser.prototype.parse = function (str) {
 
 module.exports = Parser
 
-},{"./album":539,"./artist":540,"./defaults":542,"./generator":543,"./playlist":547,"./scraper":549,"./similar":550,"./spotify":552,"./top":553,"./track":554,"eol":273}],547:[function(require,module,exports){
+},{"./album":539,"./artist":540,"./defaults":543,"./generator":544,"./playlist":548,"./scraper":550,"./similar":551,"./spotify":553,"./top":554,"./track":555,"eol":273}],548:[function(require,module,exports){
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
@@ -84900,7 +85026,8 @@ function Playlist (spotify, entry, id, owner, limit) {
  */
 Playlist.prototype.clone = function (response) {
   for (var prop in response) {
-    if (response.hasOwnProperty(prop)) {
+    if (response.hasOwnProperty(prop) &&
+        prop !== 'limit') {
       this[prop] = response[prop] || this[prop]
     }
   }
@@ -84981,7 +85108,7 @@ Playlist.prototype.searchForPlaylist = function () {
 
 module.exports = Playlist
 
-},{"./queue":548,"./spotify":552,"./track":554}],548:[function(require,module,exports){
+},{"./queue":549,"./spotify":553,"./track":555}],549:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -85390,7 +85517,7 @@ Queue.prototype.toArray = function () {
 
 module.exports = Queue
 
-},{"./sort":551}],549:[function(require,module,exports){
+},{"./sort":552}],550:[function(require,module,exports){
 /* global jQuery:true */
 /* exported jQuery */
 
@@ -85786,7 +85913,7 @@ WebScraper.prototype.youtube = function (uri) {
 
 module.exports = WebScraper
 
-},{"./http":544,"./util":555,"jquery":274,"urijs":537}],550:[function(require,module,exports){
+},{"./http":545,"./util":556,"jquery":274,"urijs":537}],551:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -85891,7 +86018,7 @@ Similar.prototype.searchForRelatedArtists = function () {
 
 module.exports = Similar
 
-},{"./artist":540,"./queue":548,"./spotify":552,"./top":553}],551:[function(require,module,exports){
+},{"./artist":540,"./queue":549,"./spotify":553,"./top":554}],552:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
 var util = require('./util')
 
@@ -86104,11 +86231,10 @@ sort.track = function (track) {
 
 module.exports = sort
 
-},{"./util":555,"string-similarity":400}],552:[function(require,module,exports){
-var base64 = require('base-64')
-var defaults = require('./defaults')
+},{"./util":556,"string-similarity":400}],553:[function(require,module,exports){
 var http = require('./http')
 var sort = require('./sort')
+var SpotifyAuthenticator = require('./auth')
 
 /**
  * Create a Spotify request handler.
@@ -86119,107 +86245,9 @@ var sort = require('./sort')
  */
 function SpotifyRequestHandler (clientId, clientSecret, token) {
   /**
-   * Client ID.
+   * Spotify authenticator.
    */
-  this.clientId = clientId || defaults.id
-
-  /**
-   * Client secret key.
-   */
-  this.clientSecret = clientSecret || defaults.key
-
-  /**
-   * Access token.
-   */
-  this.token = token || ''
-}
-
-/**
- * Authenticate with the Clients Credentials Flow.
- *
- * Note: this authentication method only works if the script is run
- * from the command line. It does not work when run from a browser,
- * because Spotify's authentication server rejects cross-site
- * requests. In that case, authenticate with the Implicit Grant Flow
- * instead.
- *
- * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
- *
- * @param {string} clientId - Client ID.
- * @param {string} clientSecret - Client secret key.
- * @param {string} [grantType] - Grant type, default "client_credentials".
- * @return {Promise | JSON} An access token response.
- */
-SpotifyRequestHandler.prototype.clientsCredentialsFlow = function (clientId, clientSecret, grantType) {
-  clientId = clientId || this.clientId
-  clientSecret = clientSecret || this.clientSecret
-  grantType = grantType || 'client_credentials'
-  var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
-  var uri = 'https://accounts.spotify.com/api/token'
-  return http.json(uri, {
-    method: 'POST',
-    headers: {
-      Authorization: auth
-    },
-    form: {
-      'grant_type': grantType
-    }
-  })
-}
-
-/**
- * Authenticate with the Implicit Grant Flow.
- *
- * Returns a URI that the calling web application can use to redirect
- * the user to a Spotify login screen. After the user has logged in,
- * Spotify redirects back to the web application with an access token
- * (included in the hash fragment of the URI). That token can then be
- * passed to this class.
- *
- * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
- *
- * @param {string} uri - Redirect URI.
- * @param {string} [clientId] - Client ID.
- * @return {string} An authentication URI.
- */
-SpotifyRequestHandler.prototype.implicitGrantFlow = function (uri, clientId) {
-  clientId = clientId || this.clientId
-  var url = 'https://accounts.spotify.com/authorize'
-  url += '/' +
-    '?client_id=' + encodeURIComponent(clientId) +
-    '&response_type=' + encodeURIComponent('token') +
-    '&redirect_uri=' + encodeURIComponent(uri)
-  return url
-}
-
-/**
- * Refresh the bearer access token.
- *
- * @return {Promise | string} A new bearer access token,
- * or the empty string if not available.
- */
-SpotifyRequestHandler.prototype.refreshToken = function () {
-  return this.clientsCredentialsFlow().then(function (response) {
-    if (response &&
-        response.access_token) {
-      this.token = response.access_token
-    }
-    return this.token
-  })
-}
-
-/**
- * Obtain a bearer access token.
- *
- * @return {Promise | string} A bearer access token,
- * or the empty string if not available.
- */
-SpotifyRequestHandler.prototype.getToken = function () {
-  if (this.token) {
-    return Promise.resolve(this.token)
-  } else {
-    return this.refreshToken()
-  }
+  this.auth = new SpotifyAuthenticator(clientId, clientSecret, token)
 }
 
 /**
@@ -86287,29 +86315,42 @@ SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
 }
 
 /**
- * Fetch playlist tracks.
+ * Fetch a playlist's tracks.
  *
  * @param {string} [id] - The playlist ID.
  * @param {string} [owner] - The owner ID.
  *
- * [Reference](https://developer.spotify.com/web-api/get-album/#example).
+ * [Reference](https://developer.spotify.com/web-api/get-playlists-tracks/#example).
  *
  * @param {string} id - Album ID.
  * @return {Promise | JSON} A JSON response.
  */
 SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
+  var self = this
   var uri = 'https://api.spotify.com/v1/users/' +
       encodeURIComponent(owner) +
       '/playlists/' +
       encodeURIComponent(id) +
       '/tracks'
-  return this.request(uri).then(function (response) {
-    if (response) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
+  function getTracks (uri, result) {
+    return self.request(uri).then(function (response) {
+      if (!(response &&
+            response.items)) {
+        return Promise.reject(response)
+      }
+      if (result) {
+        result.items = result.items.concat(response.items)
+      } else {
+        result = response
+      }
+      if (response.next) {
+        return getTracks(response.next, result)
+      } else {
+        return Promise.resolve(result)
+      }
+    })
+  }
+  return getTracks(uri)
 }
 
 /**
@@ -86358,7 +86399,7 @@ SpotifyRequestHandler.prototype.request = function (uri, options) {
   var self = this
   options = options || {}
   console.log(uri)
-  return this.getToken().then(function (token) {
+  return this.auth.getToken().then(function (token) {
     options.headers = options.headers || {}
     options.headers.Authorization = 'Bearer ' + token
     return http.json(uri, options)
@@ -86511,7 +86552,7 @@ SpotifyRequestHandler.prototype.searchForTrack = function (track, artist, album)
 
 module.exports = SpotifyRequestHandler
 
-},{"./defaults":542,"./http":544,"./sort":551,"base-64":1}],553:[function(require,module,exports){
+},{"./auth":541,"./http":545,"./sort":552}],554:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -86619,7 +86660,7 @@ Top.prototype.searchForArtist = function () {
 
 module.exports = Top
 
-},{"./artist":540,"./queue":548,"./spotify":552,"./track":554}],554:[function(require,module,exports){
+},{"./artist":540,"./queue":549,"./spotify":553,"./track":555}],555:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
 var SpotifyRequestHandler = require('./spotify')
@@ -86885,7 +86926,7 @@ Track.prototype.toString = function () {
 
 module.exports = Track
 
-},{"./defaults":542,"./lastfm":545,"./spotify":552}],555:[function(require,module,exports){
+},{"./defaults":543,"./lastfm":546,"./spotify":553}],556:[function(require,module,exports){
 var util = {}
 
 /**
@@ -86924,14 +86965,14 @@ util.toAscii = function (str) {
 
 module.exports = util
 
-},{}],556:[function(require,module,exports){
+},{}],557:[function(require,module,exports){
 /* global jQuery:true, localStorage, URLSearchParams */
 /* exported jQuery */
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
 var Parser = require('../src/parser')
-var SpotifyRequestHandler = require('../src/spotify')
+var SpotifyAuthenticator = require('../src/auth')
 
 console.log = function (message) {
   if (typeof message === 'string') {
@@ -87032,10 +87073,10 @@ $(function () {
       generate()
     }
   } else {
-    var spotify = new SpotifyRequestHandler()
+    var spotify = new SpotifyAuthenticator()
     var url = spotify.implicitGrantFlow(window.location.href)
     button.attr('href', url)
   }
 })
 
-},{"../src/parser":546,"../src/spotify":552,"bootstrap":2,"jquery":274}]},{},[556]);
+},{"../src/auth":541,"../src/parser":547,"bootstrap":2,"jquery":274}]},{},[557]);
