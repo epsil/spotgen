@@ -180,29 +180,42 @@ SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
 }
 
 /**
- * Fetch playlist tracks.
+ * Fetch a playlist's tracks.
  *
  * @param {string} [id] - The playlist ID.
  * @param {string} [owner] - The owner ID.
  *
- * [Reference](https://developer.spotify.com/web-api/get-album/#example).
+ * [Reference](https://developer.spotify.com/web-api/get-playlists-tracks/#example).
  *
  * @param {string} id - Album ID.
  * @return {Promise | JSON} A JSON response.
  */
 SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
+  var self = this
   var uri = 'https://api.spotify.com/v1/users/' +
       encodeURIComponent(owner) +
       '/playlists/' +
       encodeURIComponent(id) +
       '/tracks'
-  return this.request(uri).then(function (response) {
-    if (response) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
+  function getTracks (uri, result) {
+    return self.request(uri).then(function (response) {
+      if (!(response &&
+            response.items)) {
+        return Promise.reject(response)
+      }
+      if (result) {
+        result.items = result.items.concat(response.items)
+      } else {
+        result = response
+      }
+      if (response.next) {
+        return getTracks(response.next, result)
+      } else {
+        return Promise.resolve(result)
+      }
+    })
+  }
+  return getTracks(uri)
 }
 
 /**
