@@ -88583,7 +88583,7 @@ var defaults = require('./defaults')
 var http = require('./http')
 
 /**
- * Create a Spotify request handler.
+ * Create a Spotify authenticator.
  * @constructor
  * @param {string} [clientId] - Client ID.
  * @param {string} [clientSecret] - Client secret key.
