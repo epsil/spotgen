@@ -180,6 +180,196 @@
     
 
     
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="count"><span class="type-signature"></span>count<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>Number of pages to fetch.</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line19">line 19</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="parser"><span class="type-signature"></span>parser<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>Parser instance to handle the generator string.</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line24">line 24</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="uri"><span class="type-signature"></span>uri<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>The URI of the first page to fetch.</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line29">line 29</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
 
     
         <h3 class="subsection-title">Methods</h3>
@@ -240,7 +430,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line93">line 93</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line106">line 106</a>
     </li></ul></dd>
     
 
@@ -393,7 +583,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line71">line 71</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line86">line 86</a>
     </li></ul></dd>
     
 
@@ -500,7 +690,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line80">line 80</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line95">line 95</a>
     </li></ul></dd>
     
 
@@ -556,7 +746,7 @@
 
     
 
-    <h4 class="name" id="lastfm"><span class="type-signature"></span>lastfm<span class="signature">(uri)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
+    <h4 class="name" id="lastfm"><span class="type-signature"></span>lastfm<span class="signature">(uri, count<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
 
     
 
@@ -587,6 +777,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -612,10 +804,51 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
             <td class="description last"><p>The URI of the web page to scrape.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>count</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>The number of pages to scrape.</p></td>
         </tr>
 
     
@@ -656,7 +889,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line122">line 122</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line136">line 136</a>
     </li></ul></dd>
     
 
@@ -712,7 +945,7 @@
 
     
 
-    <h4 class="name" id="pitchfork"><span class="type-signature"></span>pitchfork<span class="signature">(uri)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
+    <h4 class="name" id="pitchfork"><span class="type-signature"></span>pitchfork<span class="signature">(uri, count<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
 
     
 
@@ -743,6 +976,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -768,10 +1003,51 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
             <td class="description last"><p>The URI of the web page to scrape.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>count</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>The number of pages to scrape.</p></td>
         </tr>
 
     
@@ -812,7 +1088,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line167">line 167</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line200">line 200</a>
     </li></ul></dd>
     
 
@@ -868,7 +1144,7 @@
 
     
 
-    <h4 class="name" id="rateyourmusic"><span class="type-signature"></span>rateyourmusic<span class="signature">(uri)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
+    <h4 class="name" id="rateyourmusic"><span class="type-signature"></span>rateyourmusic<span class="signature">(uri, count<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
 
     
 
@@ -899,6 +1175,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -924,10 +1202,51 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
             <td class="description last"><p>The URI of the web page to scrape.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>count</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>The number of pages to scrape.</p></td>
         </tr>
 
     
@@ -968,7 +1287,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line195">line 195</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line238">line 238</a>
     </li></ul></dd>
     
 
@@ -1024,7 +1343,7 @@
 
     
 
-    <h4 class="name" id="reddit"><span class="type-signature"></span>reddit<span class="signature">(uri)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
+    <h4 class="name" id="reddit"><span class="type-signature"></span>reddit<span class="signature">(uri, count<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
 
     
 
@@ -1057,6 +1376,8 @@ heuristic for parsing comments.</p>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -1082,10 +1403,51 @@ heuristic for parsing comments.</p>
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
             <td class="description last"><p>The URI of the web page to scrape.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>count</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>The number of pages to scrape.</p></td>
         </tr>
 
     
@@ -1126,7 +1488,7 @@ heuristic for parsing comments.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line218">line 218</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line280">line 280</a>
     </li></ul></dd>
     
 
@@ -1182,7 +1544,7 @@ heuristic for parsing comments.</p>
 
     
 
-    <h4 class="name" id="scrape"><span class="type-signature"></span>scrape<span class="signature">(uri)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
+    <h4 class="name" id="scrape"><span class="type-signature"></span>scrape<span class="signature">(uri, count)</span><span class="type-signature"> &rarr; {Promise|string}</span></h4>
 
     
 
@@ -1263,6 +1625,29 @@ input to the generator.</p>
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>count</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">integer</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Number of pages to fetch.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1300,7 +1685,7 @@ input to the generator.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line49">line 49</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line64">line 64</a>
     </li></ul></dd>
     
 
@@ -1407,7 +1792,7 @@ input to the generator.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line109">line 109</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line122">line 122</a>
     </li></ul></dd>
     
 
@@ -1562,7 +1947,7 @@ scraping functions apply.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line277">line 277</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line357">line 357</a>
     </li></ul></dd>
     
 
@@ -1718,7 +2103,7 @@ scraping functions apply.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line295">line 295</a>
+        <a href="src_scraper.js.html">src/scraper.js</a>, <a href="src_scraper.js.html#line378">line 378</a>
     </li></ul></dd>
     
 
@@ -1785,13 +2170,13 @@ scraping functions apply.</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Jul 21 2017 00:29:06 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 23 2017 13:59:18 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

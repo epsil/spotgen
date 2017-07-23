@@ -84037,8 +84037,8 @@ Album.prototype.createQueue = function () {
  * @return {Promise | Queue} A queue of tracks.
  */
 Album.prototype.dispatch = function () {
+  var self = this
   if (this.fetchTracks) {
-    var self = this
     return this.searchForAlbum().then(function () {
       return self.fetchAlbum()
     }).then(function () {
@@ -84053,14 +84053,30 @@ Album.prototype.dispatch = function () {
  * Fetch album metadata.
  * @return {Promise | JSON} A JSON response.
  */
-Album.prototype.fetchAlbum = function () {
+Album.prototype.fetchAlbum = function (id) {
+  id = id || this.id
   var self = this
   if (Number.isInteger(this.popularity)) {
     return Promise.resolve(this)
   } else {
-    return this.spotify.getAlbum(this.id).then(function (response) {
+    return this.spotify.getAlbum(id).then(function (response) {
       self.clone(response)
       return self
+    })
+  }
+}
+
+/**
+ * Get album popularity.
+ * @return {Promise | integer} The track popularity.
+ */
+Album.prototype.getPopularity = function () {
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this.popularity)
+  } else {
+    return self.fetchAlbum().then(function () {
+      return self.popularity
     })
   }
 }
@@ -84087,9 +84103,7 @@ Album.prototype.searchForAlbum = function () {
       }
     }).catch(function () {
       if (self.entry.match(/^[0-9a-z]+$/i)) {
-        self.id = self.entry
-        self.uri = 'spotify:album:' + self.id
-        return Promise.resolve(self)
+        return self.fetchAlbum(self.entry)
       } else {
         console.log('COULD NOT FIND ' + self.entry)
         return Promise.reject(null)
@@ -84100,7 +84114,7 @@ Album.prototype.searchForAlbum = function () {
 
 module.exports = Album
 
-},{"./queue":547,"./spotify":551,"./track":553}],540:[function(require,module,exports){
+},{"./queue":548,"./spotify":552,"./track":554}],540:[function(require,module,exports){
 var Album = require('./album')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -84118,7 +84132,7 @@ function Artist (spotify, entry, id, limit) {
   /**
    * Array of albums.
    */
-  this.albums = []
+  this.albums = null
 
   /**
    * Entry string.
@@ -84181,7 +84195,6 @@ Artist.prototype.createQueue = function () {
     albumQueue = albumQueue.slice(0, self.limit)
   }
   return albumQueue.forEachPromise(function (album) {
-    // get album popularity
     return album.fetchAlbum()
   }).then(function (albumQueue) {
     albumQueue = albumQueue.sort(sort.album)
@@ -84210,12 +84223,18 @@ Artist.prototype.dispatch = function () {
  * Fetch albums.
  * @return {Promise | JSON} A JSON response.
  */
-Artist.prototype.fetchAlbums = function () {
+Artist.prototype.fetchAlbums = function (id) {
+  id = id || this.id
   var self = this
-  return this.spotify.getAlbumsByArtist(this.id).then(function (response) {
-    self.albums = response.items
-    return self
-  })
+  if (this.albums) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.getAlbumsByArtist(id).then(function (response) {
+      self.albums = response.items
+      self.id = id
+      return self
+    })
+  }
 }
 
 /**
@@ -84240,8 +84259,7 @@ Artist.prototype.searchForArtist = function () {
       }
     }).catch(function () {
       if (self.entry.match(/^[0-9a-z]+$/i)) {
-        self.id = self.entry
-        return Promise.resolve(self)
+        return self.fetchAlbums(self.entry)
       } else {
         return Promise.reject(null)
       }
@@ -84251,7 +84269,7 @@ Artist.prototype.searchForArtist = function () {
 
 module.exports = Artist
 
-},{"./album":539,"./queue":547,"./sort":550,"./spotify":551}],541:[function(require,module,exports){
+},{"./album":539,"./queue":548,"./sort":551,"./spotify":552}],541:[function(require,module,exports){
 var stringify = require('csv-stringify/lib/sync')
 
 /**
@@ -84574,7 +84592,7 @@ Generator.prototype.toString = function () {
 
 module.exports = Generator
 
-},{"./album":539,"./csv":541,"./queue":547,"./spotify":551,"./track":553,"eol":273}],544:[function(require,module,exports){
+},{"./album":539,"./csv":541,"./queue":548,"./spotify":552,"./track":554,"eol":273}],544:[function(require,module,exports){
 var request = require('request')
 
 /**
@@ -84589,13 +84607,13 @@ var request = require('request')
  * @return {Promise} A promise.
  */
 function http (uri, options) {
-  return http.request(uri, options).catch(function (err) {
+  return http.get(uri, options).catch(function (err) {
     var message = err + ''
     if (message.match(/XHR error/i)) {
       if (uri.match(/^http:/i)) {
-        return http.request(uri.replace(/^http:/i, 'https:'), options)
+        return http.get(uri.replace(/^http:/i, 'https:'), options)
       } else if (uri.match(/^https:/i)) {
-        return http.request(uri.replace(/^https:/i, 'http:'), options)
+        return http.get(uri.replace(/^https:/i, 'http:'), options)
       }
     }
   })
@@ -84607,7 +84625,7 @@ function http (uri, options) {
  * @param {Object} [options] - Request options.
  * @return {Promise} A promise.
  */
-http.request = function (uri, options) {
+http.get = function (uri, options) {
   var agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0; T312461)'
   options = options || {}
   options.headers = options.headers || {}
@@ -84713,6 +84731,7 @@ var eol = require('eol')
 var Album = require('./album')
 var Artist = require('./artist')
 var Generator = require('./generator')
+var Playlist = require('./playlist')
 var Similar = require('./similar')
 var SpotifyRequestHandler = require('./spotify')
 var Top = require('./top')
@@ -84740,17 +84759,15 @@ Parser.prototype.parse = function (str) {
   if (str) {
     var lines = eol.split(str)
     while (lines.length > 0) {
+      var match = null
       var line = lines.shift()
-      if (line.match(/^#(SORT|ORDER)\s+BY/i)) {
-        var orderMatch = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i)
-        generator.ordering = orderMatch[2].toLowerCase()
-        generator.lastfmUser = orderMatch[4]
-      } else if (line.match(/^#GROUP\s+BY/i)) {
-        var groupMatch = line.match(/^#GROUP\s+BY\s+(.*)/i)
-        generator.grouping = groupMatch[1].toLowerCase()
-      } else if (line.match(/^#ALTERNATE\s+BY/i)) {
-        var alternateMatch = line.match(/^#ALTERNATE\s+BY\s+(.*)/i)
-        generator.alternating = alternateMatch[1].toLowerCase()
+      if ((match = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i))) {
+        generator.ordering = match[2].toLowerCase()
+        generator.lastfmUser = match[4]
+      } else if ((match = line.match(/^#GROUP\s+BY\s+(.*)/i))) {
+        generator.grouping = match[1].toLowerCase()
+      } else if ((match = line.match(/^#ALTERNATE\s+BY\s+(.*)/i))) {
+        generator.alternating = match[1].toLowerCase()
       } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
         generator.unique = false
       } else if (line.match(/^#REVERSE/i)) {
@@ -84767,58 +84784,48 @@ Parser.prototype.parse = function (str) {
                  line.match(/^#EXTM3U/i) ||
                  line.match(/^sep=,/i)) {
         // comment
-      } else if (line.match(/^#ALBUM(ID)?[0-9]*\s+/i)) {
-        var albumMatch = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i)
-        var albumId = albumMatch[2]
-        var albumLimit = parseInt(albumMatch[3])
-        var albumEntry = albumMatch[4]
-        var album = new Album(this.spotify, albumEntry, null, albumLimit)
-        if (albumId) {
+      } else if ((match = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i))) {
+        var album = new Album(this.spotify, match[4], null, parseInt(match[3]))
+        if (match[2]) {
           album.fetchTracks = false
         }
         generator.add(album)
-      } else if (line.match(/^#ARTIST[0-9]*\s+/i)) {
-        var artistMatch = line.match(/^#ARTIST([0-9]*)\s+(.*)/i)
-        var artistLimit = parseInt(artistMatch[1])
-        var artistEntry = artistMatch[2]
-        var artist = new Artist(this.spotify, artistEntry, null, artistLimit)
-        generator.add(artist)
-      } else if (line.match(/^#TOP[0-9]*\s+/i)) {
-        var topMatch = line.match(/^#TOP([0-9]*)\s+(.*)/i)
-        var topLimit = parseInt(topMatch[1])
-        var topEntry = topMatch[2]
-        var top = new Top(this.spotify, topEntry, null, topLimit)
-        generator.add(top)
-      } else if (line.match(/^#SIMILAR[0-9]*\s+/i)) {
-        var similarMatch = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i)
-        var similarLimit = parseInt(similarMatch[1])
-        var similarEntry = similarMatch[2]
-        var similar = new Similar(this.spotify, similarEntry, null, similarLimit)
-        generator.add(similar)
-      } else if (line.match(/^#EXTINF/i)) {
-        var match = line.match(/^#EXTINF:[0-9]+,(.*)/i)
-        if (match) {
-          generator.add(new Track(this.spotify, match[1]))
+      } else if ((match = line.match(/^#ARTIST([0-9]*)\s+(.*)/i))) {
+        generator.add(new Artist(this.spotify, match[2], null, parseInt(match[1])))
+      } else if ((match = line.match(/^#TOP([0-9]*)\s+(.*)/i))) {
+        generator.add(new Top(this.spotify, match[2], null, parseInt(match[1])))
+      } else if ((match = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i))) {
+        generator.add(new Similar(this.spotify, match[2], null, parseInt(match[1])))
+      } else if ((match = line.match(/^#PLAYLIST([0-9]*)\s+([0-9a-z]+)[\s/]([0-9a-z]+)/i))) {
+        generator.add(new Playlist(this.spotify, line, match[3], match[2], parseInt(match[1])))
+      } else if ((match = line.match(/^#PLAYLIST([0-9]*)\s+(.*)/i))) {
+        generator.add(new Playlist(this.spotify, match[2], null, null, parseInt(match[1])))
+      } else if ((match = line.match(/^#EXTINF(:[0-9]+,(.*))?/i))) {
+        if (match[1]) {
+          generator.add(new Track(this.spotify, match[2]))
           if (lines.length > 0 &&
               !lines[0].match(/^#/)) {
             lines.shift()
           }
         }
-      } else if (line.match(/spotify:artist:[0-9a-z]+/i)) {
-        generator.add(new Artist(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)?artist/i)) {
-        generator.add(new Artist(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/spotify:album:[0-9a-z]+/i)) {
-        generator.add(new Album(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)?album/i)) {
-        generator.add(new Album(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/spotify:track:[0-9a-z]+/i)) {
-        generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/^https?:\/\/(.*\.)?spotify\.com/i)) {
-        generator.add(new Track(this.spotify, line, line.match(/[0-9a-z]+$/i)))
-      } else if (line.match(/^https?:/i)) {
-        var scraper = new WebScraper(line, this)
-        generator.add(scraper)
+      } else if ((match = line.match(/spotify:artist:([0-9a-z]+)/i))) {
+        generator.add(new Artist(this.spotify, line, match[1]))
+      } else if ((match = line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)*artist\/(.*\/)*([0-9a-z]+)/i))) {
+        generator.add(new Artist(this.spotify, line, match[4]))
+      } else if ((match = line.match(/spotify:album:([0-9a-z]+)/i))) {
+        generator.add(new Album(this.spotify, line, match[1]))
+      } else if ((match = line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)*album\/(.*\/)*([0-9a-z]+)/i))) {
+        generator.add(new Album(this.spotify, line, match[4]))
+      } else if ((match = line.match(/spotify:user:([0-9a-z]+):playlist:([0-9a-z]+)/i))) {
+        generator.add(new Playlist(this.spotify, line, match[2], match[1]))
+      } else if ((match = line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)*user\/([0-9a-z]+)\/playlist\/([0-9a-z]+)/i))) {
+        generator.add(new Playlist(this.spotify, line, match[4], match[3]))
+      } else if ((match = line.match(/spotify:track:([0-9a-z]+)/i))) {
+        generator.add(new Track(this.spotify, line, match[1]))
+      } else if ((match = line.match(/^https?:\/\/(.*\.)?spotify\.com\/(.*\/)*([0-9a-z]+)/i))) {
+        generator.add(new Track(this.spotify, line, match[3]))
+      } else if ((match = line.match(/^([0-9]+ )?(https?:.*)/i))) {
+        generator.add(new WebScraper(match[2], parseInt(match[1]), this))
       } else if (line) {
         generator.add(new Track(this.spotify, line))
       }
@@ -84829,7 +84836,152 @@ Parser.prototype.parse = function (str) {
 
 module.exports = Parser
 
-},{"./album":539,"./artist":540,"./defaults":542,"./generator":543,"./scraper":548,"./similar":549,"./spotify":551,"./top":552,"./track":553,"eol":273}],547:[function(require,module,exports){
+},{"./album":539,"./artist":540,"./defaults":542,"./generator":543,"./playlist":547,"./scraper":549,"./similar":550,"./spotify":552,"./top":553,"./track":554,"eol":273}],547:[function(require,module,exports){
+var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
+var Track = require('./track')
+
+/**
+ * Create playlist entry.
+ * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
+ * @param {string} entry - The playlist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of tracks to fetch.
+ */
+function Playlist (spotify, entry, id, owner, limit) {
+  /**
+   * Entry string.
+   */
+  this.entry = ''
+
+  /**
+   * The ID of the playlist.
+   */
+  this.id = ''
+
+  /**
+   * Playlist tracks.
+   */
+  this.items = []
+
+  /**
+   * Number of tracks to fetch.
+   */
+  this.limit = null
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = null
+
+  /**
+   * The user who owns the playlist.
+   */
+  this.owner = {}
+
+  /**
+   * Spotify URI
+   * (a string on the form `spotify:user:xxxxxxxx:playlist:xxxxxxxxxxxxxxxxxxxxxx`).
+   */
+  this.uri = ''
+
+  this.entry = entry.trim()
+  this.id = id || this.id
+  this.limit = limit
+  this.owner.id = owner || this.owner.id
+  this.spotify = spotify || new SpotifyRequestHandler()
+  this.uri = (this.owner.id && this.id) ? ('spotify:user:' + this.owner.id + ':playlist:' + this.id) : this.uri
+}
+
+/**
+ * Clone a JSON response.
+ * @param {Object} response - The response.
+ */
+Playlist.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
+  }
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {JSON} response - A JSON response object.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Playlist.prototype.createQueue = function () {
+  var self = this
+  var tracks = this.items.map(function (item) {
+    var track = new Track(self.spotify, self.entry)
+    track.clone(item.track)
+    return track
+  })
+  var queue = new Queue(tracks)
+  if (self.limit) {
+    queue = queue.slice(0, self.limit)
+  }
+  return queue
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Playlist.prototype.dispatch = function () {
+  var self = this
+  return this.searchForPlaylist().then(function () {
+    return self.fetchPlaylist()
+  }).then(function () {
+    return self.createQueue()
+  })
+}
+
+/**
+ * Fetch playlist tracks.
+ * @return {Promise | JSON} A JSON response.
+ */
+Playlist.prototype.fetchPlaylist = function (id, owner) {
+  id = id || this.id
+  owner = owner || (this.owner && this.owner.id)
+  var self = this
+  return this.spotify.getPlaylist(id, owner).then(function (response) {
+    self.clone(response)
+    return self
+  })
+}
+
+/**
+ * Search for playlist.
+ * @return {Promise | JSON} A JSON response, or `null` if not found.
+ */
+Playlist.prototype.searchForPlaylist = function () {
+  var self = this
+  if (this.id && this.owner && this.owner.id) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.searchForPlaylist(this.entry).then(function (response) {
+      if (response &&
+          response.playlists &&
+          response.playlists.items &&
+          response.playlists.items[0]) {
+        response = response.playlists.items[0]
+        self.clone(response)
+        return Promise.resolve(self)
+      } else {
+        return Promise.reject(response)
+      }
+    }).catch(function () {
+      // console.log('COULD NOT FIND ' + self.entry)
+      return Promise.reject(null)
+    })
+  }
+}
+
+module.exports = Playlist
+
+},{"./queue":548,"./spotify":552,"./track":554}],548:[function(require,module,exports){
 var sort = require('./sort')
 
 /**
@@ -84909,12 +85061,12 @@ Queue.prototype.dedup = function () {
       if (entry.equals(other)) {
         return Promise.resolve(other)
       } else {
-        return other.refresh().then(function () {
-          return entry.refresh()
-        }).then(function () {
-          if (entry.popularity > other.popularity) {
-            Queue.set(idx, entry)
-          }
+        return other.getPopularity().then(function (otherPopularity) {
+          return entry.getPopularity().then(function (entryPopularity) {
+            if (entryPopularity > otherPopularity) {
+              Queue.set(idx, entry)
+            }
+          })
         })
       }
     }
@@ -85238,7 +85390,7 @@ Queue.prototype.toArray = function () {
 
 module.exports = Queue
 
-},{"./sort":550}],548:[function(require,module,exports){
+},{"./sort":551}],549:[function(require,module,exports){
 /* global jQuery:true */
 /* exported jQuery */
 
@@ -85253,9 +85405,23 @@ jQuery = $
  * @constructor
  * @param {string} uri - The URI of the web page to scrape.
  */
-function WebScraper (uri, parser) {
+function WebScraper (uri, count, parser) {
+  /**
+   * Number of pages to fetch.
+   */
+  this.count = 0
+
+  /**
+   * Parser instance to handle the generator string.
+   */
+  this.parser = null
+
+  /**
+   * The URI of the first page to fetch.
+   */
   this.uri = uri
 
+  this.count = count || this.count
   this.parser = parser
 }
 
@@ -85285,18 +85451,19 @@ function WebScraper (uri, parser) {
  * input to the generator.
  *
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} count - Number of pages to fetch.
  * @return {Promise | string} A generator string.
  */
-WebScraper.prototype.scrape = function (uri) {
+WebScraper.prototype.scrape = function (uri, count) {
   var domain = URI(uri).domain()
   if (domain === 'last.fm') {
-    return this.lastfm(uri)
+    return this.lastfm(uri, count)
   } else if (domain === 'pitchfork.com') {
-    return this.pitchfork(uri)
+    return this.pitchfork(uri, count)
   } else if (domain === 'rateyourmusic.com') {
-    return this.rateyourmusic(uri)
+    return this.rateyourmusic(uri, count)
   } else if (domain === 'reddit.com') {
-    return this.reddit(uri)
+    return this.reddit(uri, count)
   } else if (domain === 'youtube.com') {
     return this.youtube(uri)
   } else {
@@ -85320,9 +85487,7 @@ WebScraper.prototype.createQueue = function (result) {
  */
 WebScraper.prototype.dispatch = function () {
   var self = this
-  console.log(this.uri)
-  return this.scrape(this.uri).then(function (result) {
-    console.log(result)
+  return this.scrape(this.uri, this.count).then(function (result) {
     return self.createQueue(result)
   })
 }
@@ -85358,93 +85523,141 @@ WebScraper.prototype.trim = function (str) {
 /**
  * Scrape a Last.fm tracklist.
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
-WebScraper.prototype.lastfm = function (uri) {
+WebScraper.prototype.lastfm = function (uri, count) {
   var self = this
-  return http(uri).then(function (data) {
-    var html = $($.parseHTML(data))
-    var result = ''
-    if (uri.match(/\/\+tracks/gi)) {
-      // tracks by a single artist
-      var header = html.find('header a.library-header-crumb')
-      if (header.length === 0) {
-        header = html.find('h1.header-title')
+  count = count || 1
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var lines = ''
+      if (uri.match(/\/\+tracks/gi)) {
+        // tracks by a single artist
+        var header = html.find('header a.library-header-crumb')
+        if (header.length === 0) {
+          header = html.find('h1.header-title')
+        }
+        var artist = self.trim(header.first().text())
+        html.find('td.chartlist-name').each(function () {
+          lines += artist + ' - ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/\+similar/gi)) {
+        // similar artists
+        html.find('h3.big-artist-list-title').each(function () {
+          lines += '#top ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/artists/gi)) {
+        // list of artists
+        html.find('td.chartlist-name').each(function () {
+          lines += '#top ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/albums/gi)) {
+        // list of albums
+        html.find('td.chartlist-name').each(function () {
+          lines += '#album ' + self.trim($(this).text()) + '\n'
+        })
+      } else {
+        // list of tracks by various artists
+        html.find('td.chartlist-name').each(function () {
+          lines += self.trim($(this).text()) + '\n'
+        })
       }
-      var artist = self.trim(header.first().text())
-      html.find('td.chartlist-name').each(function () {
-        result += artist + ' - ' + self.trim($(this).text()) + '\n'
-      })
-    } else if (uri.match(/\/\+similar/gi)) {
-      // similar artists
-      html.find('h3.big-artist-list-title').each(function () {
-        result += '#top ' + self.trim($(this).text()) + '\n'
-      })
-    } else if (uri.match(/\/artists/gi)) {
-      // list of artists
-      html.find('td.chartlist-name').each(function () {
-        result += '#top ' + self.trim($(this).text()) + '\n'
-      })
-    } else if (uri.match(/\/albums/gi)) {
-      // list of albums
-      html.find('td.chartlist-name').each(function () {
-        result += '#album ' + self.trim($(this).text()) + '\n'
-      })
-    } else {
-      // list of tracks by various artists
-      html.find('td.chartlist-name').each(function () {
-        result += self.trim($(this).text()) + '\n'
-      })
-    }
-    return result.trim()
-  })
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
+      } else {
+        var next = html.find('.pagination-next a')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
+      }
+    })
+  }
+  return getPages(uri, '', count)
 }
 
 /**
  * Scrape a Pitchfork list.
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of albums.
  */
-WebScraper.prototype.pitchfork = function (uri) {
+WebScraper.prototype.pitchfork = function (uri, count) {
   var self = this
-  function getPages (nextUri, result) {
+  count = count || 0
+  function getPages (nextUri, result, count) {
     nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
+      var lines = ''
       html.find('div.artist-work').each(function () {
         var artist = self.trim($(this).find('ul.artist-list li:first').text())
         var album = self.trim($(this).find('h2.work-title').text())
-        result += '#album ' + artist + ' - ' + album + '\n'
+        lines += '#album ' + artist + ' - ' + album + '\n'
       })
-      var nextPage = html.find('.fts-pagination__list-item--active').next()
-      if (nextPage.length > 0) {
-        nextUri = nextPage.find('a').attr('href')
-        return getPages(nextUri, result)
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
       } else {
-        return result.trim()
+        var nextPage = html.find('.fts-pagination__list-item--active').next()
+        if (nextPage.length > 0) {
+          nextUri = nextPage.find('a').attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
       }
     })
   }
-  return getPages(uri, '')
+  return getPages(uri, '', count)
 }
 
 /**
  * Scrape a Rate Your Music chart.
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of albums.
  */
-WebScraper.prototype.rateyourmusic = function (uri) {
+WebScraper.prototype.rateyourmusic = function (uri, count) {
   var self = this
-  return http(uri).then(function (data) {
-    var html = $($.parseHTML(data))
-    var result = ''
-    html.find('div.chart_details').each(function () {
-      var artist = self.trim($(this).find('a.artist').text())
-      var album = self.trim($(this).find('a.album').text())
-      result += '#album ' + artist + ' - ' + album + '\n'
+  count = count || 0
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var lines = ''
+      html.find('div.chart_details').each(function () {
+        var artist = self.trim($(this).find('a.artist').text())
+        var album = self.trim($(this).find('a.album').text())
+        lines += '#album ' + artist + ' - ' + album + '\n'
+      })
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
+      } else {
+        var next = html.find('a.navlinknext')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
+      }
     })
-    return result.trim()
-  })
+  }
+  return getPages(uri, '', count)
 }
 
 /**
@@ -85454,56 +85667,75 @@ WebScraper.prototype.rateyourmusic = function (uri) {
  * heuristic for parsing comments.
  *
  * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
-WebScraper.prototype.reddit = function (uri) {
+WebScraper.prototype.reddit = function (uri, count) {
   var self = this
-  return http(uri).then(function (data) {
-    var html = $($.parseHTML(data))
-    var result = ''
-    if (uri.match(/\/comments\//gi)) {
-      // comments thread
-      html.find('div.entry div.md').each(function () {
-        // first assumption: if there are links,
-        // they are probably links to songs
-        var links = $(this).find('a')
-        if (links.length > 0) {
-          links.each(function () {
-            var txt = $(this).text()
-            if (!txt.match(/https?:/gi)) {
-              result += self.cleanup(txt) + '\n'
-            }
-          })
-          return
+  count = count || 1
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var lines = ''
+      if (uri.match(/\/comments\//gi)) {
+        // comments thread
+        html.find('div.entry div.md').each(function () {
+          // first assumption: if there are links,
+          // they are probably links to songs
+          var links = $(this).find('a')
+          if (links.length > 0) {
+            links.each(function () {
+              var txt = $(this).text()
+              if (!txt.match(/https?:/gi)) {
+                lines += self.cleanup(txt) + '\n'
+              }
+            })
+            return
+          }
+          // second assumption: if there are multiple sentences,
+          // the song is the first one
+          var body = $(this).text()
+          var sentences = body.split('.')
+          if (sentences.length > 1) {
+            lines += self.cleanup(sentences[0]) + '\n'
+            return
+          }
+          // third assumption: if there are multiple lines to a comment,
+          // then the song will be on the first line with a user's
+          // comments on other lines after it
+          var lines = body.split('\n')
+          if (lines.length > 1) {
+            lines += self.cleanup(lines[0]) + '\n'
+            return
+          }
+          // fall-back case
+          lines += self.cleanup(body) + '\n'
+        })
+      } else {
+        // post listing
+        html.find('a.title').each(function () {
+          var track = self.cleanup($(this).text())
+          lines += track + '\n'
+        })
+      }
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
+      } else {
+        var next = html.find('.next-button a')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
         }
-        // second assumption: if there are multiple sentences,
-        // the song is the first one
-        var body = $(this).text()
-        var sentences = body.split('.')
-        if (sentences.length > 1) {
-          result += self.cleanup(sentences[0]) + '\n'
-          return
-        }
-        // third assumption: if there are multiple lines to a comment,
-        // then the song will be on the first line with a user's
-        // comments on other lines after it
-        var lines = body.split('\n')
-        if (lines.length > 1) {
-          result += self.cleanup(lines[0]) + '\n'
-          return
-        }
-        // fall-back case
-        result += self.cleanup(body) + '\n'
-      })
-    } else {
-      // post listing
-      html.find('a.title').each(function () {
-        var track = self.cleanup($(this).text())
-        result += track + '\n'
-      })
-    }
-    return result.trim()
-  })
+      }
+    })
+  }
+  return getPages(uri, '', count)
 }
 
 /**
@@ -85517,6 +85749,7 @@ WebScraper.prototype.reddit = function (uri) {
  */
 WebScraper.prototype.webpage = function (uri) {
   var self = this
+  console.log(uri)
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
@@ -85524,7 +85757,9 @@ WebScraper.prototype.webpage = function (uri) {
       var track = self.cleanup($(this).text())
       result += track + '\n'
     })
-    return result.trim()
+    result = result.trim()
+    console.log(result)
+    return result
   })
 }
 
@@ -85535,6 +85770,7 @@ WebScraper.prototype.webpage = function (uri) {
  */
 WebScraper.prototype.youtube = function (uri) {
   var self = this
+  console.log(uri)
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
@@ -85542,13 +85778,15 @@ WebScraper.prototype.youtube = function (uri) {
       var track = self.cleanup($(this).text())
       result += track + '\n'
     })
-    return result.trim()
+    result = result.trim()
+    console.log(result)
+    return result
   })
 }
 
 module.exports = WebScraper
 
-},{"./http":544,"./util":554,"jquery":274,"urijs":537}],549:[function(require,module,exports){
+},{"./http":544,"./util":555,"jquery":274,"urijs":537}],550:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -85653,7 +85891,7 @@ Similar.prototype.searchForRelatedArtists = function () {
 
 module.exports = Similar
 
-},{"./artist":540,"./queue":547,"./spotify":551,"./top":552}],550:[function(require,module,exports){
+},{"./artist":540,"./queue":548,"./spotify":552,"./top":553}],551:[function(require,module,exports){
 var stringSimilarity = require('string-similarity')
 var util = require('./util')
 
@@ -85866,7 +86104,7 @@ sort.track = function (track) {
 
 module.exports = sort
 
-},{"./util":554,"string-similarity":400}],551:[function(require,module,exports){
+},{"./util":555,"string-similarity":400}],552:[function(require,module,exports){
 var base64 = require('base-64')
 var defaults = require('./defaults')
 var http = require('./http')
@@ -86049,6 +86287,32 @@ SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
 }
 
 /**
+ * Fetch playlist tracks.
+ *
+ * @param {string} [id] - The playlist ID.
+ * @param {string} [owner] - The owner ID.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-album/#example).
+ *
+ * @param {string} id - Album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
+  var uri = 'https://api.spotify.com/v1/users/' +
+      encodeURIComponent(owner) +
+      '/playlists/' +
+      encodeURIComponent(id) +
+      '/tracks'
+  return this.request(uri).then(function (response) {
+    if (response) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
  * Get the top tracks of an artist.
  *
  * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
@@ -86137,18 +86401,50 @@ SpotifyRequestHandler.prototype.searchForArtist = function (artist) {
  * [Reference](https://developer.spotify.com/web-api/search-item/#example).
  *
  * @param {string} album - The album to search for.
+ * @param {string} [artist] - The album artist.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.searchForAlbum = function (album) {
+SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
+  var query = album
+  if (artist) {
+    query = 'album:"' + album + '"'
+    query += artist ? (' artist:"' + artist + '"') : ''
+  }
   var uri = 'https://api.spotify.com/v1/search?type=album&q='
-  uri += encodeURIComponent(album)
+  uri += encodeURIComponent(query)
   return this.request(uri).then(function (response) {
     if (response &&
         response.albums &&
         response.albums.items[0] &&
         response.albums.items[0].id) {
       // sort results by string similarity
-      sort(response.albums.items, sort.similarAlbum(album))
+      if (!artist) {
+        sort(response.albums.items, sort.similarAlbum(album))
+      }
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for playlist.
+ *
+ * @param {string} playlist - The playlist to search for.
+
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} playlist - The track to search for.
+ * @return {Promise | JSON} JSON response.
+ */
+SpotifyRequestHandler.prototype.searchForPlaylist = function (playlist) {
+  var uri = 'https://api.spotify.com/v1/search?type=playlist&limit=50&q='
+  uri += encodeURIComponent(playlist)
+  return this.request(uri).then(function (response) {
+    if (response.playlists &&
+        response.playlists.items[0] &&
+        response.playlists.items[0].uri) {
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -86183,11 +86479,19 @@ SpotifyRequestHandler.prototype.searchForRelatedArtists = function (id) {
  * [Reference](https://developer.spotify.com/web-api/search-item/#example).
  *
  * @param {string} track - The track to search for.
+ * @param {string} [artist] - The track artist.
+ * @param {string} [album] - The track album.
  * @return {Promise | JSON} JSON response.
  */
-SpotifyRequestHandler.prototype.searchForTrack = function (track) {
+SpotifyRequestHandler.prototype.searchForTrack = function (track, artist, album) {
+  var query = track
+  if (artist || album) {
+    query = 'track:"' + track + '"'
+    query += artist ? (' artist:"' + artist + '"') : ''
+    query += album ? (' album:"' + album + '"') : ''
+  }
   var uri = 'https://api.spotify.com/v1/search?type=track&limit=50&q='
-  uri += encodeURIComponent(track)
+  uri += encodeURIComponent(query)
   return this.request(uri).then(function (response) {
     if (response.tracks &&
         response.tracks.items[0] &&
@@ -86195,7 +86499,9 @@ SpotifyRequestHandler.prototype.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      sort(response.tracks.items, sort.track(track))
+      if (!(album && artist)) {
+        sort(response.tracks.items, sort.track(track))
+      }
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -86205,7 +86511,7 @@ SpotifyRequestHandler.prototype.searchForTrack = function (track) {
 
 module.exports = SpotifyRequestHandler
 
-},{"./defaults":542,"./http":544,"./sort":550,"base-64":1}],552:[function(require,module,exports){
+},{"./defaults":542,"./http":544,"./sort":551,"base-64":1}],553:[function(require,module,exports){
 var Artist = require('./artist')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -86313,7 +86619,7 @@ Top.prototype.searchForArtist = function () {
 
 module.exports = Top
 
-},{"./artist":540,"./queue":547,"./spotify":551,"./track":553}],553:[function(require,module,exports){
+},{"./artist":540,"./queue":548,"./spotify":552,"./track":554}],554:[function(require,module,exports){
 var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
 var SpotifyRequestHandler = require('./spotify')
@@ -86474,12 +86780,32 @@ Track.prototype.fetchLastfm = function (user) {
  * Fetch track metadata.
  * @return {Promise | Track} Itself.
  */
-Track.prototype.fetchTrack = function () {
+Track.prototype.fetchTrack = function (id) {
+  id = id || this.id
   var self = this
-  return this.spotify.getTrack(this.id).then(function (response) {
-    self.clone(response)
-    return self
-  })
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.getTrack(id).then(function (response) {
+      self.clone(response)
+      return self
+    })
+  }
+}
+
+/**
+ * Get track popularity.
+ * @return {Promise | integer} The track popularity.
+ */
+Track.prototype.getPopularity = function () {
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this.popularity)
+  } else {
+    return self.refresh().then(function () {
+      return self.popularity
+    })
+  }
 }
 
 /**
@@ -86530,8 +86856,7 @@ Track.prototype.searchForTrack = function () {
     }
   }).catch(function () {
     if (self.entry.match(/^[0-9a-z]+$/i)) {
-      self.id = self.entry
-      return Promise.resolve(self)
+      return self.fetchTrack(self.entry)
     } else {
       // console.log('COULD NOT FIND ' + self.entry)
       return Promise.reject(null)
@@ -86560,7 +86885,7 @@ Track.prototype.toString = function () {
 
 module.exports = Track
 
-},{"./defaults":542,"./lastfm":545,"./spotify":551}],554:[function(require,module,exports){
+},{"./defaults":542,"./lastfm":545,"./spotify":552}],555:[function(require,module,exports){
 var util = {}
 
 /**
@@ -86599,7 +86924,7 @@ util.toAscii = function (str) {
 
 module.exports = util
 
-},{}],555:[function(require,module,exports){
+},{}],556:[function(require,module,exports){
 /* global jQuery:true, localStorage, URLSearchParams */
 /* exported jQuery */
 var $ = require('jquery')
@@ -86713,4 +87038,4 @@ $(function () {
   }
 })
 
-},{"../src/parser":546,"../src/spotify":551,"bootstrap":2,"jquery":274}]},{},[555]);
+},{"../src/parser":546,"../src/spotify":552,"bootstrap":2,"jquery":274}]},{},[556]);

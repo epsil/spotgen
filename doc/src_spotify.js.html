@@ -208,6 +208,32 @@ SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
 }
 
 /**
+ * Fetch playlist tracks.
+ *
+ * @param {string} [id] - The playlist ID.
+ * @param {string} [owner] - The owner ID.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-album/#example).
+ *
+ * @param {string} id - Album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
+  var uri = 'https://api.spotify.com/v1/users/' +
+      encodeURIComponent(owner) +
+      '/playlists/' +
+      encodeURIComponent(id) +
+      '/tracks'
+  return this.request(uri).then(function (response) {
+    if (response) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
  * Get the top tracks of an artist.
  *
  * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
@@ -296,18 +322,50 @@ SpotifyRequestHandler.prototype.searchForArtist = function (artist) {
  * [Reference](https://developer.spotify.com/web-api/search-item/#example).
  *
  * @param {string} album - The album to search for.
+ * @param {string} [artist] - The album artist.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.searchForAlbum = function (album) {
+SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
+  var query = album
+  if (artist) {
+    query = 'album:"' + album + '"'
+    query += artist ? (' artist:"' + artist + '"') : ''
+  }
   var uri = 'https://api.spotify.com/v1/search?type=album&amp;q='
-  uri += encodeURIComponent(album)
+  uri += encodeURIComponent(query)
   return this.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.albums &amp;&amp;
         response.albums.items[0] &amp;&amp;
         response.albums.items[0].id) {
       // sort results by string similarity
-      sort(response.albums.items, sort.similarAlbum(album))
+      if (!artist) {
+        sort(response.albums.items, sort.similarAlbum(album))
+      }
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for playlist.
+ *
+ * @param {string} playlist - The playlist to search for.
+
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} playlist - The track to search for.
+ * @return {Promise | JSON} JSON response.
+ */
+SpotifyRequestHandler.prototype.searchForPlaylist = function (playlist) {
+  var uri = 'https://api.spotify.com/v1/search?type=playlist&amp;limit=50&amp;q='
+  uri += encodeURIComponent(playlist)
+  return this.request(uri).then(function (response) {
+    if (response.playlists &amp;&amp;
+        response.playlists.items[0] &amp;&amp;
+        response.playlists.items[0].uri) {
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -342,11 +400,19 @@ SpotifyRequestHandler.prototype.searchForRelatedArtists = function (id) {
  * [Reference](https://developer.spotify.com/web-api/search-item/#example).
  *
  * @param {string} track - The track to search for.
+ * @param {string} [artist] - The track artist.
+ * @param {string} [album] - The track album.
  * @return {Promise | JSON} JSON response.
  */
-SpotifyRequestHandler.prototype.searchForTrack = function (track) {
+SpotifyRequestHandler.prototype.searchForTrack = function (track, artist, album) {
+  var query = track
+  if (artist || album) {
+    query = 'track:"' + track + '"'
+    query += artist ? (' artist:"' + artist + '"') : ''
+    query += album ? (' album:"' + album + '"') : ''
+  }
   var uri = 'https://api.spotify.com/v1/search?type=track&amp;limit=50&amp;q='
-  uri += encodeURIComponent(track)
+  uri += encodeURIComponent(query)
   return this.request(uri).then(function (response) {
     if (response.tracks &amp;&amp;
         response.tracks.items[0] &amp;&amp;
@@ -354,7 +420,9 @@ SpotifyRequestHandler.prototype.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      sort(response.tracks.items, sort.track(track))
+      if (!(album &amp;&amp; artist)) {
+        sort(response.tracks.items, sort.track(track))
+      }
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -373,13 +441,13 @@ module.exports = SpotifyRequestHandler
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Jul 21 2017 00:29:06 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 23 2017 13:59:18 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

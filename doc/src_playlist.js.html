@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: src/artist.js</title>
+    <title>JSDoc: Source: src/playlist.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: src/artist.js</h1>
+    <h1 class="page-title">Source: src/playlist.js</h1>
 
     
 
@@ -26,34 +26,33 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>var Album = require('./album')
-var Queue = require('./queue')
+            <pre class="prettyprint source linenums"><code>var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
-var sort = require('./sort')
+var Track = require('./track')
 
 /**
- * Artist entry.
+ * Create playlist entry.
  * @constructor
  * @param {SpotifyRequestHandler} spotify - Spotify request handler.
- * @param {string} entry - The artist to search for.
+ * @param {string} entry - The playlist to search for.
  * @param {string} [id] - The Spotify ID, if known.
- * @param {string} [limit] - The number of albums to fetch.
+ * @param {string} [limit] - The number of tracks to fetch.
  */
-function Artist (spotify, entry, id, limit) {
-  /**
-   * Array of albums.
-   */
-  this.albums = null
-
+function Playlist (spotify, entry, id, owner, limit) {
   /**
    * Entry string.
    */
   this.entry = ''
 
   /**
-   * Spotify ID.
+   * The ID of the playlist.
    */
   this.id = ''
+
+  /**
+   * Playlist tracks.
+   */
+  this.items = []
 
   /**
    * Number of tracks to fetch.
@@ -61,27 +60,34 @@ function Artist (spotify, entry, id, limit) {
   this.limit = null
 
   /**
-   * The artist name.
-   */
-  this.name = ''
-
-  /**
    * Spotify request handler.
    */
   this.spotify = null
 
+  /**
+   * The user who owns the playlist.
+   */
+  this.owner = {}
+
+  /**
+   * Spotify URI
+   * (a string on the form `spotify:user:xxxxxxxx:playlist:xxxxxxxxxxxxxxxxxxxxxx`).
+   */
+  this.uri = ''
+
   this.entry = entry.trim()
-  this.id = id
+  this.id = id || this.id
   this.limit = limit
-  this.name = entry
+  this.owner.id = owner || this.owner.id
   this.spotify = spotify || new SpotifyRequestHandler()
+  this.uri = (this.owner.id &amp;&amp; this.id) ? ('spotify:user:' + this.owner.id + ':playlist:' + this.id) : this.uri
 }
 
 /**
  * Clone a JSON response.
  * @param {Object} response - The response.
  */
-Artist.prototype.clone = function (response) {
+Playlist.prototype.clone = function (response) {
   for (var prop in response) {
     if (response.hasOwnProperty(prop)) {
       this[prop] = response[prop] || this[prop]
@@ -94,91 +100,75 @@ Artist.prototype.clone = function (response) {
  * @param {JSON} response - A JSON response object.
  * @return {Promise | Queue} A queue of tracks.
  */
-Artist.prototype.createQueue = function () {
+Playlist.prototype.createQueue = function () {
   var self = this
-  var albums = self.albums.map(function (item) {
-    var album = new Album(self.spotify, self.entry)
-    album.clone(item)
-    return album
+  var tracks = this.items.map(function (item) {
+    var track = new Track(self.spotify, self.entry)
+    track.clone(item.track)
+    return track
   })
-  var albumQueue = new Queue(albums)
+  var queue = new Queue(tracks)
   if (self.limit) {
-    albumQueue = albumQueue.slice(0, self.limit)
+    queue = queue.slice(0, self.limit)
   }
-  return albumQueue.forEachPromise(function (album) {
-    return album.fetchAlbum()
-  }).then(function (albumQueue) {
-    albumQueue = albumQueue.sort(sort.album)
-    return albumQueue.dispatch()
-  }).then(function (queue) {
-    return queue.flatten().filter(function (track) {
-      return track.hasArtist(self.name)
-    })
-  })
+  return queue
 }
 
 /**
  * Dispatch entry.
  * @return {Promise | Queue} A queue of tracks.
  */
-Artist.prototype.dispatch = function () {
+Playlist.prototype.dispatch = function () {
   var self = this
-  return this.searchForArtist().then(function () {
-    return self.fetchAlbums()
+  return this.searchForPlaylist().then(function () {
+    return self.fetchPlaylist()
   }).then(function () {
     return self.createQueue()
   })
 }
 
 /**
- * Fetch albums.
+ * Fetch playlist tracks.
  * @return {Promise | JSON} A JSON response.
  */
-Artist.prototype.fetchAlbums = function (id) {
+Playlist.prototype.fetchPlaylist = function (id, owner) {
   id = id || this.id
+  owner = owner || (this.owner &amp;&amp; this.owner.id)
   var self = this
-  if (this.albums) {
-    return Promise.resolve(this)
-  } else {
-    return this.spotify.getAlbumsByArtist(id).then(function (response) {
-      self.albums = response.items
-      self.id = id
-      return self
-    })
-  }
+  return this.spotify.getPlaylist(id, owner).then(function (response) {
+    self.clone(response)
+    return self
+  })
 }
 
 /**
- * Search for artist.
- * @return {Promise | JSON} A JSON response.
+ * Search for playlist.
+ * @return {Promise | JSON} A JSON response, or `null` if not found.
  */
-Artist.prototype.searchForArtist = function () {
+Playlist.prototype.searchForPlaylist = function () {
   var self = this
-  if (this.id) {
+  if (this.id &amp;&amp; this.owner &amp;&amp; this.owner.id) {
     return Promise.resolve(this)
   } else {
-    return this.spotify.searchForArtist(this.entry).then(function (response) {
+    return this.spotify.searchForPlaylist(this.entry).then(function (response) {
       if (response &amp;&amp;
-          response.artists &amp;&amp;
-          response.artists.items &amp;&amp;
-          response.artists.items[0]) {
-        response = response.artists.items[0]
+          response.playlists &amp;&amp;
+          response.playlists.items &amp;&amp;
+          response.playlists.items[0]) {
+        response = response.playlists.items[0]
         self.clone(response)
         return Promise.resolve(self)
       } else {
         return Promise.reject(response)
       }
     }).catch(function () {
-      if (self.entry.match(/^[0-9a-z]+$/i)) {
-        return self.fetchAlbums(self.entry)
-      } else {
-        return Promise.reject(null)
-      }
+      // console.log('COULD NOT FIND ' + self.entry)
+      return Promise.reject(null)
     })
   }
 }
 
-module.exports = Artist
+module.exports = Playlist
 </code></pre>
         </article>
     </section>
