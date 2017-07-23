@@ -61,7 +61,8 @@ function Playlist (spotify, entry, id, owner, limit) {
  */
 Playlist.prototype.clone = function (response) {
   for (var prop in response) {
-    if (response.hasOwnProperty(prop)) {
+    if (response.hasOwnProperty(prop) &&
+        prop !== 'limit') {
       this[prop] = response[prop] || this[prop]
     }
   }

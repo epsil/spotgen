@@ -236,25 +236,20 @@ The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV f
 
 ### Import existing Spotify playlists
 
-One can easily work with existing Spotify playlists. By selecting the playlist's tracks in Spotify, copying them and then pasting them as text somewhere else, one obtains a list of Spotify links:
+The generator understands Spotify links and Spotify URIs. These are obtained by opening Spotify and choosing *More* -> *Share* (look for the `...` symbol). The following example creates a new playlist out of an existing playlist, applying the [`#order`](#order) command in the process:
+
+    #order by popularity
+    https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D
+
+Another method is to select the playlist's tracks in Spotify, copy them, and then paste them into a text file. This produces a list of Spotify links that are understood by the generator:
 
     https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
     https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
     https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
     ...
 
-One can easily apply the [`#order`](#order) command to such a list:
+Spotify URIs are also supported:
 
-    #order by popularity
-    https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
-    https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
-    https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
-    ...
-
-Likewise, spotify URIs are handled as well:
-
-    #order by popularity
-    #alternate by album
     spotify:track:4oNXgGnumnu5oIXXyP8StH
     spotify:track:7rAjeWkQM6cLqbPjZtXxl2
     spotify:track:2Nt4Uw91pQLXSJ28SttDdF
