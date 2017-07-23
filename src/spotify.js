@@ -268,18 +268,26 @@ SpotifyRequestHandler.prototype.searchForArtist = function (artist) {
  * [Reference](https://developer.spotify.com/web-api/search-item/#example).
  *
  * @param {string} album - The album to search for.
+ * @param {string} [artist] - The album artist.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.searchForAlbum = function (album) {
+SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
+  var query = album
+  if (artist) {
+    query = 'album:"' + album + '"'
+    query += artist ? (' artist:"' + artist + '"') : ''
+  }
   var uri = 'https://api.spotify.com/v1/search?type=album&q='
-  uri += encodeURIComponent(album)
+  uri += encodeURIComponent(query)
   return this.request(uri).then(function (response) {
     if (response &&
         response.albums &&
         response.albums.items[0] &&
         response.albums.items[0].id) {
       // sort results by string similarity
-      sort(response.albums.items, sort.similarAlbum(album))
+      if (!artist) {
+        sort(response.albums.items, sort.similarAlbum(album))
+      }
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
@@ -314,11 +322,19 @@ SpotifyRequestHandler.prototype.searchForRelatedArtists = function (id) {
  * [Reference](https://developer.spotify.com/web-api/search-item/#example).
  *
  * @param {string} track - The track to search for.
+ * @param {string} [artist] - The track artist.
+ * @param {string} [album] - The track album.
  * @return {Promise | JSON} JSON response.
  */
-SpotifyRequestHandler.prototype.searchForTrack = function (track) {
+SpotifyRequestHandler.prototype.searchForTrack = function (track, artist, album) {
+  var query = track
+  if (artist || album) {
+    query = 'track:"' + track + '"'
+    query += artist ? (' artist:"' + artist + '"') : ''
+    query += album ? (' album:"' + album + '"') : ''
+  }
   var uri = 'https://api.spotify.com/v1/search?type=track&limit=50&q='
-  uri += encodeURIComponent(track)
+  uri += encodeURIComponent(query)
   return this.request(uri).then(function (response) {
     if (response.tracks &&
         response.tracks.items[0] &&
@@ -326,7 +342,9 @@ SpotifyRequestHandler.prototype.searchForTrack = function (track) {
       // Sort results by string similarity. This takes care of some
       // odd cases where a random track from an album of the same name
       // is returned as the first hit.
-      sort(response.tracks.items, sort.track(track))
+      if (!(album && artist)) {
+        sort(response.tracks.items, sort.track(track))
+      }
       return Promise.resolve(response)
     } else {
       return Promise.reject(response)
