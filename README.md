@@ -129,11 +129,19 @@ To add an album:
 
     #album Substrata - Biosphere
 
+Alternatively, use the album's Spotify link or Spotify URI:
+
+    https://open.spotify.com/album/5QIf4hNIAksV1uMCXHVkAZ
+
 ### Artists
 
 To add all the albums of an artist:
 
     #artist Beach House
+
+Alternatively, use the artist's Spotify link or Spotify URI:
+
+    https://open.spotify.com/artist/56ZTgzPBDge0OvCGgMO3OY
 
 Note that this command can be rather slow, as it endeavors to retrieve every track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the [`#top`](#top-tracks) command.
 
@@ -143,7 +151,11 @@ To add all the tracks of a playlist:
 
     #playlist username/playlistid
 
-where `username` is the owner of the playlist and `playlistid` is the ID of the playlist (obtained from the playlist URI).
+where `username` is the owner of the playlist and `playlistid` is the ID of the playlist.
+
+Alternatively, use the playlist's Spotify link or Spotify URI:
+
+    https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D
 
 ### Tracks
 
@@ -154,6 +166,10 @@ To add a single track to the playlist, add a line on the form `TITLE - ARTIST`:
     Other People - Beach House
     Troublemaker - Beach House
     Wishes - Beach House
+
+Alternatively, use the track's Spotify link or Spotify URI:
+
+    https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
 
 [More on single tracks](Tips.md#miscellaneous).
 
