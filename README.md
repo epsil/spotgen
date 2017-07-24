@@ -236,7 +236,7 @@ The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV f
 
 ### Import existing Spotify playlists
 
-The generator understands Spotify links and Spotify URIs. These are obtained by opening Spotify and choosing *More* -> *Share* (look for the `...` symbol). The following example creates a new playlist out of an existing playlist, applying the [`#order`](#order) command in the process:
+The generator understands Spotify links and Spotify URIs. These are obtained by opening the item in Spotify and choosing *More* -> *Share* (look for the `...` symbol). The following example creates a new playlist out of an existing playlist, applying the [`#order`](#order) command in the process:
 
     #order by popularity
     https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D
