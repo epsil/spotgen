@@ -1,4 +1,3 @@
-var defaults = require('./defaults')
 var eol = require('eol')
 var Album = require('./album')
 var Artist = require('./artist')
@@ -15,7 +14,7 @@ var WebScraper = require('./scraper')
  * @constructor
  */
 function Parser (token, handler) {
-  this.spotify = handler || new SpotifyRequestHandler(defaults.id, defaults.key, token)
+  this.spotify = handler || new SpotifyRequestHandler()
 }
 
 /**
