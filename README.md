@@ -1,7 +1,9 @@
 [Spotify Playlist Generator](https://epsil.github.io/spotify/)
 ==============================================================
 
-> A tool for converting, processing and generating [Spotify](http://www.spotify.com/) playlists, as well as leveraging [Last.fm](http://last.fm/) user data.
+> A tool for converting, processing and generating
+> [Spotify](http://www.spotify.com/) playlists, scraping information
+> off of websites, and leveraging [Last.fm](http://last.fm/) user data.
 >
 > <https://epsil.github.io/spotify/>
 
