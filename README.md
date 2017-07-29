@@ -1,7 +1,7 @@
 spotgen
 =======
 
-A tool for converting, processing and generating [Spotify](http://www.spotify.com/) playlists, scraping information off of websites, and leveraging [Last.fm](http://last.fm/) user data.
+A tool for generating [Spotify](http://www.spotify.com/) playlists programmatically. Convert websites to Spotify playlists, incorporate [Last.fm](http://last.fm/) listener data, and employ algorithms to order the tracks.
 
 Installation
 ------------
@@ -36,7 +36,9 @@ To **import** the playlist into Spotify:
 Commands
 --------
 
-Below follows a list of **generator commands**. One can generate a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
+The generator defines a *domain-specific language* for creating Spotify playlists. One can create a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
+
+Below follows a list of **generator commands**.
 
 ### Web scraping
 
