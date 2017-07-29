@@ -1,29 +1,21 @@
-[Spotify Playlist Generator](https://epsil.github.io/spotify/)
-==============================================================
+# spotgen
 
-> A tool for converting, processing and generating
-> [Spotify](http://www.spotify.com/) playlists, scraping information
-> off of websites, and leveraging [Last.fm](http://last.fm/) user data.
->
-> <https://epsil.github.io/spotify/>
-
-Examples
---------
-
--   [Pitchfork's 50 Best Albums of 2016](examples/pitchfork-50-best-albums-of-2016.spotify.txt) ([source](examples/pitchfork-50-best-albums-of-2016.txt))
--   [Pitchfork's Honorable Mentions of 2015](examples/pitchfork-honorable-mentions-of-2015.spotify.txt) ([source](examples/pitchfork-honorable-mentions-of-2015.txt))
--   [Pitchfork's 50 Best Ambient Albums of All Time](examples/pitchfork-50-best-ambient-albums-of-all-time.spotify.txt) ([source](examples/pitchfork-50-best-ambient-albums-of-all-time.txt))
--   [Rate Your Music's Top Albums of 2016](examples/rateyourmusic-top-albums-of-2016.spotify.txt) ([source](examples/rateyourmusic-top-albums-of-2016.txt))
--   [Rate Your Music's Top Dream Pop Albums](examples/rateyourmusic-top-dreampop-albums.spotify.txt) ([source](examples/rateyourmusic-top-dreampop-albums.txt))
--   [Rate Your Music's Top Shoegaze Albums](examples/rateyourmusic-top-shoegaze-albums.spotify.txt) ([source](examples/rateyourmusic-top-shoegaze-albums.txt))
--   [Rolling Stone's 500 Greatest Songs of All Time](examples/rollingstone-500-greatest-songs-of-all-time.spotify.txt) ([source](examples/rollingstone-500-greatest-songs-of-all-time.txt))
-
-[More examples](Tips.md#recipes).
+> A tool for converting, processing and generating [Spotify](http://www.spotify.com/) playlists, scraping information off of websites, and leveraging [Last.fm](http://last.fm/) user data.
 
 Usage
 -----
 
-Create a **text file** containing one or more of the commands listed below. Then pass it to the generator (either the [web version](#web-version) or the [command-line version](#command-line-script)), and it will be **converted** to a Spotify playlist.
+### Web version
+
+<https://epsil.github.io/spotify/>
+
+### Command-line version
+
+    spotgen input.txt output.spotify.txt
+
+where `input.txt` is a textfile containing one or more of the [commands](#commands) below, and `output.spotify.txt` is a list of Spotify links.
+
+### Importing the playlist
 
 To **import** the playlist into Spotify:
 
@@ -31,10 +23,19 @@ To **import** the playlist into Spotify:
 2.  **Create a new playlist in Spotify:** Choose *File -> New Playlist* (<kbd>Ctrl</kbd> + <kbd>N</kbd>).
 3.  **Paste into the playlist:** Select the playlist and choose *Edit -> Paste* (<kbd>Ctrl</kbd> + <kbd>V</kbd>).
 
-Below follows a list of **generator commands**. One can generate a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
+Installation
+------------
+
+Install [Node](http://nodejs.org/) and fetch the package with:
+
+    npm install -g spotgen
+
+The script can now be invoked from the command line as `spotgen`. (On some systems, it might be necessary to prepend the `npm` command with `sudo`.)
 
 Commands
 --------
+
+Below follows a list of **generator commands**. One can generate a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
 
 ### Web scraping
 
@@ -304,28 +305,19 @@ To output to this format, add the line `#csv`:
 
 CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs. (The URIs might, conceivably, change or become outdated. On the other hand, the title, artist and album of a track can be used to find that track on any music streaming service.)
 
-Command-line script
--------------------
+Developer version
+-----------------
 
-A command-line version is available. It requires [Node](http://nodejs.org/) to be installed.
+Instead of installing the package with `npm`, one can fetch the source code from [GitHub](https://github.com/epsil/spotgen):
 
-After installing Node, fetch the source code, which is located at [GitHub](https://github.com/epsil/spotgen):
+    git clone https://github.com/epsil/spotgen.git
 
-    $ git clone https://github.com/epsil/spotgen.git
+Then install it with `npm link`:
 
-Alternatively, download a [ZIP file](https://github.com/epsil/spotgen/archive/master.zip).
+    cd spotgen
+    npm link
 
-Install the script with `npm link`:
-
-    $ cd spotgen
-    $ npm link
-
-Then the script can be invoked as `spotgen`.
-
-[More on the command-line version](Tips.md#multiple-playlists).
-
-Web version
------------
+The latest developer version can then be obtained with `git pull`.
 
 The generator is also available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotify/>.
 
@@ -335,7 +327,7 @@ The web version does not support [web scraping](#web-scraping), due to browser l
 
 It is also possible to run the web version locally:
 
-    $ npm run http
+    npm run http
 
 This will start up a `http-server` instance at <http://localhost:9000/>.
 
