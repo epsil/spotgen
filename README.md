@@ -7,7 +7,7 @@ Usage
 
 ### Web version
 
-<https://epsil.github.io/spotify/>
+<https://epsil.github.io/spotgen/>
 
 ### Command-line version
 
@@ -319,7 +319,7 @@ Then install it with `npm link`:
 
 The latest developer version can then be obtained with `git pull`.
 
-The generator is also available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotify/>.
+The generator is also available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotgen/>.
 
 The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the [command-line version](#command-line-script) can be used without logging in.)
 
@@ -338,9 +338,9 @@ For more information about authentication, see the [Spotify Web API](http://deve
 Links
 -----
 
--   [Web interface](https://epsil.github.io/spotify/)
+-   [Web interface](https://epsil.github.io/spotgen/)
 -   [GitHub repository](https://github.com/epsil/spotgen)
--   [Developer documentation](https://epsil.github.io/spotify/doc/)
+-   [Developer documentation](https://epsil.github.io/spotgen/doc/)
 -   [Spotify Web API documentation](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow)
 -   [Additional tips](Tips.md)
 

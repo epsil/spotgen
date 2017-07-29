@@ -155,7 +155,7 @@ to the compatible text file
     Troublemaker - Beach House
     Wishes - Beach House
 
-Since file name standards vary, the transformation requires some personal judgment; that is why it is not built into the script. See this [blog post](https://epsil.github.io/blog/2013/11/23/#fn3) for more examples.
+Since file name standards vary, the transformation requires some personal judgment; that is why it is not built into the script. (See this [blog post](https://epsil.github.io/blog/2013/11/23/#fn3) for more examples.)
 
 Note that other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advanced_Stream_Redirector), [PLS](https://en.wikipedia.org/wiki/PLS_%28file_format%29), [WPL](https://en.wikipedia.org/wiki/Windows_Media_Player_Playlist) and [XSPF](https://en.wikipedia.org/wiki/XML_Shareable_Playlist_Format), are difficult to work with directly. Therefore, it is recommended to save to M3U format and proceed as outlined above.
 
