@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: src/generator.js</title>
+    <title>JSDoc: Source: lib/collection.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: src/generator.js</h1>
+    <h1 class="page-title">Source: lib/collection.js</h1>
 
     
 
@@ -34,11 +34,11 @@ var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
 
 /**
- * Create a playlist generator.
+ * Create a playlist collection.
  * @constructor
  * @param {SpotifyRequestHandler} [spotify] - Spotify request handler.
  */
-function Generator (spotify) {
+function Collection (spotify) {
   /**
    * Playlist alternating.
    */
@@ -85,24 +85,24 @@ function Generator (spotify) {
   this.unique = true
 
   /**
-   * Whether to remove duplicates.
+   * Spotify request handler.
    */
   this.spotify = spotify || new SpotifyRequestHandler()
 }
 
 /**
- * Add an entry to the end of the generator queue.
+ * Add an entry to the end of the collection queue.
  * @param {Track | Album | Artist} entry -
  * The entry to add.
  */
-Generator.prototype.add = function (entry) {
+Collection.prototype.add = function (entry) {
   this.entries.add(entry)
 }
 
 /**
- * Alternate the generator entries.
+ * Alternate the collection entries.
  */
-Generator.prototype.alternate = function () {
+Collection.prototype.alternate = function () {
   var self = this
   if (this.alternating === 'artist') {
     return this.entries.alternate(function (track) {
@@ -125,9 +125,9 @@ Generator.prototype.alternate = function () {
 
 /**
  * Remove duplicate entries.
- * @return {Promise|Generator} - Itself.
+ * @return {Promise | Collection} - Itself.
  */
-Generator.prototype.dedup = function () {
+Collection.prototype.dedup = function () {
   if (this.unique) {
     return this.entries.dedup()
   }
@@ -135,10 +135,10 @@ Generator.prototype.dedup = function () {
 }
 
 /**
- * Dispatch all the entries in the generator.
+ * Dispatch all the entries in the collection.
  * @return {Promise | Queue} A queue of results.
  */
-Generator.prototype.dispatch = function () {
+Collection.prototype.dispatch = function () {
   var self = this
   return this.fetchTracks().then(function () {
     return self.dedup()
@@ -154,12 +154,12 @@ Generator.prototype.dispatch = function () {
 }
 
 /**
- * Dispatch all the entries in the generator
+ * Dispatch all the entries in the collection
  * and return the track listing.
  * @return {Promise | string} A newline-separated list
  * of Spotify URIs.
  */
-Generator.prototype.execute = function () {
+Collection.prototype.execute = function () {
   var self = this
   return this.dispatch().then(function () {
     return self.toString()
@@ -167,10 +167,10 @@ Generator.prototype.execute = function () {
 }
 
 /**
- * Fetch Last.fm metadata of each generator entry.
+ * Fetch Last.fm metadata of each collection entry.
  * @return {Promise | Queue} A queue of results.
  */
-Generator.prototype.fetchLastfm = function () {
+Collection.prototype.fetchLastfm = function () {
   var self = this
   return this.entries.forEachPromise(function (entry) {
     return entry.fetchLastfm(self.lastfmUser)
@@ -178,10 +178,10 @@ Generator.prototype.fetchLastfm = function () {
 }
 
 /**
- * Dispatch the entries in the generator.
+ * Dispatch the entries in the collection.
  * @return {Promise} A Promise to perform the action.
  */
-Generator.prototype.fetchTracks = function () {
+Collection.prototype.fetchTracks = function () {
   var self = this
   return this.entries.dispatch().then(function (queue) {
     self.entries = queue.flatten()
@@ -190,9 +190,9 @@ Generator.prototype.fetchTracks = function () {
 }
 
 /**
- * Group the generator entries.
+ * Group the collection entries.
  */
-Generator.prototype.group = function () {
+Collection.prototype.group = function () {
   var self = this
   if (this.grouping === 'artist') {
     return this.entries.group(function (track) {
@@ -214,10 +214,10 @@ Generator.prototype.group = function () {
 }
 
 /**
- * Order the generator entries.
+ * Order the collection entries.
  * @return {Promise} A Promise to perform the action.
  */
-Generator.prototype.order = function () {
+Collection.prototype.order = function () {
   var self = this
   if (this.ordering === 'popularity') {
     return this.refreshTracks().then(function () {
@@ -233,17 +233,17 @@ Generator.prototype.order = function () {
 }
 
 /**
- * Print the generator to the console.
+ * Print the collection to the console.
  */
-Generator.prototype.print = function () {
+Collection.prototype.print = function () {
   console.log(this.toString())
 }
 
 /**
- * Refresh the metadata of each generator entry.
+ * Refresh the metadata of each collection entry.
  * @return {Promise} A Promise to perform the action.
  */
-Generator.prototype.refreshTracks = function () {
+Collection.prototype.refreshTracks = function () {
   var self = this
   return this.entries.dispatch().then(function (result) {
     self.entries = result.flatten()
@@ -252,9 +252,9 @@ Generator.prototype.refreshTracks = function () {
 
 /**
  * Reverse the order of the entries.
- * @return {Promise|Generator} - Itself.
+ * @return {Promise | Collection} - Itself.
  */
-Generator.prototype.reorder = function () {
+Collection.prototype.reorder = function () {
   if (this.reverse) {
     return this.entries.reverse()
   } else if (this.shuffle) {
@@ -264,10 +264,10 @@ Generator.prototype.reorder = function () {
 }
 
 /**
- * Convert the generator to a string.
+ * Convert the collection to a string.
  * @return {string} A newline-separated list of Spotify URIs.
  */
-Generator.prototype.toString = function () {
+Collection.prototype.toString = function () {
   var self = this
   var result = ''
   if (self.csv) {
@@ -301,7 +301,7 @@ Generator.prototype.toString = function () {
   return result
 }
 
-module.exports = Generator
+module.exports = Collection
 </code></pre>
         </article>
     </section>
@@ -312,13 +312,13 @@ module.exports = Generator
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sat Jul 29 2017 15:53:05 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 30 2017 00:21:32 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

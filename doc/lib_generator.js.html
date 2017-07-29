@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: index.js</title>
+    <title>JSDoc: Source: lib/generator.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: index.js</h1>
+    <h1 class="page-title">Source: lib/generator.js</h1>
 
     
 
@@ -26,34 +26,43 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>#!/usr/bin/env node
-/* global document:true, window:true */
-
-var fs = require('fs')
-var jsdom = require('jsdom').jsdom
-document = jsdom()
-window = document.defaultView
-var Generator = require('./lib/generator')
+            <pre class="prettyprint source linenums"><code>var Parser = require('./parser')
+var SpotifyRequestHandler = require('./spotify')
 
 /**
- * Main method.
- * Invoked when run from the command line.
+ * Create a playlist generator.
+ * @constructor
+ * @param {string} [str] - A newline-separated string of
+ * entries on the form `TITLE - ARTIST`. May also contain
+ * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` commands.
+ * @param {string} [token] - Access token (if already authenticated).
+ * @param {string} [clientId] - Client ID.
+ * @param {string} [clientSecret] - Client secret key.
  */
-function main () {
-  var input = process.argv[2] || 'input.txt'
-  var output = process.argv[3] || 'output.spotify.txt'
-  var str = fs.readFileSync(input, 'utf8').toString()
-  var generator = new Generator(str)
-  generator.generate().then(function (str) {
-    fs.writeFile(output, str, function (err) {
-      if (err) { return }
-      console.log('Wrote to ' + output)
-    })
-  })
+function Generator (str, token, clientId, clientSecret) {
+  /**
+   * Spotify request handler.
+   */
+  this.handler = new SpotifyRequestHandler(clientId, clientSecret, token)
+
+  /**
+   * String parser.
+   */
+  this.parser = new Parser(null, this.handler)
+
+  /**
+   * Playlist collection.
+   */
+  this.collection = this.parser.parse(str)
 }
 
-if (require.main === module) {
-  main()
+/**
+ * Generate a playlist.
+ * @return {Promise | string} A newline-separated list
+ * of Spotify URIs.
+ */
+Generator.prototype.generate = function () {
+  return this.collection.execute()
 }
 
 module.exports = Generator

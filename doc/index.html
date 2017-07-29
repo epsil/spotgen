@@ -43,21 +43,20 @@
 
 
     <section>
-        <article><h1>spotgen</h1><blockquote>
-<p>A tool for converting, processing and generating <a href="http://www.spotify.com/">Spotify</a> playlists, scraping information off of websites, and leveraging <a href="http://last.fm/">Last.fm</a> user data.</p>
-</blockquote>
+        <article><h1>spotgen</h1><p>A tool for generating <a href="http://www.spotify.com/">Spotify</a> playlists programmatically. Convert websites to Spotify playlists, incorporate <a href="http://last.fm/">Last.fm</a> listener data, and employ algorithms to order the tracks.</p>
+<h2>Installation</h2><p>Install <a href="http://nodejs.org/">Node</a> and fetch the package with:</p>
+<pre class="prettyprint source"><code>npm install -g spotgen</code></pre><p>The script can now be invoked from the command line as <code>spotgen</code>. (On some systems, it might be necessary to prepend the <code>npm</code> command with <code>sudo</code>.)</p>
 <h2>Usage</h2><h3>Web version</h3><https://epsil.github.io/spotgen/>
 
-<h3>Command-line version</h3><pre class="prettyprint source"><code>spotgen input.txt output.spotify.txt</code></pre><p>where <code>input.txt</code> is a textfile containing one or more of the <a href="#commands">commands</a> below, and <code>output.spotify.txt</code> is a list of Spotify links.</p>
+<h3>Command-line version</h3><pre class="prettyprint source"><code>spotgen input.txt output.spotify.txt</code></pre><p>where <code>input.txt</code> is a text file containing one or more of the <a href="#commands">commands</a> below, and <code>output.spotify.txt</code> is a list of Spotify URIs.</p>
 <h3>Importing the playlist</h3><p>To <strong>import</strong> the playlist into Spotify:</p>
 <ol>
 <li><strong>Copy the output of the generator:</strong> Choose <em>Edit -&gt; Copy</em> (<kbd>Ctrl</kbd> + <kbd>C</kbd>).</li>
 <li><strong>Create a new playlist in Spotify:</strong> Choose <em>File -&gt; New Playlist</em> (<kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
 <li><strong>Paste into the playlist:</strong> Select the playlist and choose <em>Edit -&gt; Paste</em> (<kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
 </ol>
-<h2>Installation</h2><p>Install <a href="http://nodejs.org/">Node</a> and fetch the package with:</p>
-<pre class="prettyprint source"><code>npm install -g spotgen</code></pre><p>The script can now be invoked from the command line as <code>spotgen</code>. (On some systems, it might be necessary to prepend the <code>npm</code> command with <code>sudo</code>.)</p>
-<h2>Commands</h2><p>Below follows a list of <strong>generator commands</strong>. One can generate a playlist in many ways: on the basis of <a href="#tracks">track titles</a>, <a href="#albums">album titles</a>, <a href="#artists">artist names</a>, <a href="#similar-artists">similar artists</a>, <a href="#top-tracks">top tracks</a> or <a href="#web-scraping">webpages</a>.</p>
+<h2>Commands</h2><p>The generator defines a <em>domain-specific language</em> for creating Spotify playlists. One can create a playlist in many ways: on the basis of <a href="#tracks">track titles</a>, <a href="#albums">album titles</a>, <a href="#artists">artist names</a>, <a href="#similar-artists">similar artists</a>, <a href="#top-tracks">top tracks</a> or <a href="#web-scraping">webpages</a>.</p>
+<p>Below follows a list of <strong>generator commands</strong>.</p>
 <h3>Web scraping</h3><p>The generator can scrape data from web pages. Note that this functionality is only available in the <a href="#command-line-script">command-line version</a>.</p>
 <h4>Last.fm</h4><p>The generator can be instructed to fetch data from <a href="http://last.fm/">Last.fm</a>'s webpages simply by supplying the page's address. For example, to create a playlist of artists similar to an artist, add the line:</p>
 <pre class="prettyprint source"><code>http://www.last.fm/music/Artist+Name/+similar</code></pre><p>To create a playlist of a user's recently played tracks:</p>
@@ -171,6 +170,7 @@ npm link</code></pre><p>The latest developer version can then be obtained with <
 <p>For more information about authentication, see the <a href="http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Spotify Web API</a> documentation.</p>
 <h2>Links</h2><ul>
 <li><a href="https://epsil.github.io/spotgen/">Web interface</a></li>
+<li><a href="https://www.npmjs.com/package/spotgen">npm package</a></li>
 <li><a href="https://github.com/epsil/spotgen">GitHub repository</a></li>
 <li><a href="https://epsil.github.io/spotgen/doc/">Developer documentation</a></li>
 <li><a href="http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Spotify Web API documentation</a></li>
@@ -195,13 +195,13 @@ npm link</code></pre><p>The latest developer version can then be obtained with <
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sat Jul 29 2017 15:53:05 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 30 2017 00:21:33 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

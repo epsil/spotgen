@@ -1,4 +1,3087 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
+var Track = require('./track')
+
+/**
+ * Create album entry.
+ * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
+ * @param {string} entry - The album to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of tracks to fetch.
+ */
+function Album (spotify, entry, id, limit) {
+  /**
+   * Entry string.
+   */
+  this.entry = ''
+
+  /**
+   * Whether to fetch tracks.
+   */
+  this.fetchTracks = true
+
+  /**
+   * Spotify ID.
+   */
+  this.id = ''
+
+  /**
+   * Number of albums to fetch.
+   */
+  this.limit = null
+
+  /**
+   * The album name.
+   */
+  this.name = ''
+
+  /**
+   * The album popularity.
+   * @return {string} - The album popularity.
+   */
+  this.popularity = null
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = null
+
+  /**
+   * Album tracks.
+   */
+  this.tracks = []
+
+  /**
+   * Spotify URI
+   * (a string on the form `spotify:album:xxxxxxxxxxxxxxxxxxxxxx`).
+   */
+  this.uri = ''
+
+  this.entry = entry.trim()
+  this.id = id
+  this.limit = limit
+  this.name = entry
+  this.spotify = spotify || new SpotifyRequestHandler()
+  this.uri = this.id ? ('spotify:album:' + this.id) : this.uri
+}
+
+/**
+ * Clone a JSON response.
+ * @param {Object} response - The response.
+ */
+Album.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
+  }
+  if (response &&
+      response.tracks &&
+      response.tracks.items) {
+    this.tracks = response.tracks.items
+  }
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {JSON} response - A JSON response object.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Album.prototype.createQueue = function () {
+  var self = this
+  var tracks = this.tracks.map(function (item) {
+    var track = new Track(self.spotify, self.entry)
+    track.clone(item)
+    track.album = self.name
+    return track
+  })
+  var queue = new Queue(tracks)
+  if (self.limit) {
+    queue = queue.slice(0, self.limit)
+  }
+  return queue
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Album.prototype.dispatch = function () {
+  var self = this
+  if (this.fetchTracks) {
+    return this.searchForAlbum().then(function () {
+      return self.fetchAlbum()
+    }).then(function () {
+      return self.createQueue()
+    })
+  } else {
+    return this.searchForAlbum()
+  }
+}
+
+/**
+ * Fetch album metadata.
+ * @return {Promise | JSON} A JSON response.
+ */
+Album.prototype.fetchAlbum = function (id) {
+  id = id || this.id
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.getAlbum(id).then(function (response) {
+      self.clone(response)
+      return self
+    })
+  }
+}
+
+/**
+ * Get album popularity.
+ * @return {Promise | integer} The track popularity.
+ */
+Album.prototype.getPopularity = function () {
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this.popularity)
+  } else {
+    return self.fetchAlbum().then(function () {
+      return self.popularity
+    })
+  }
+}
+
+/**
+ * Search for album if not known.
+ * @return {Promise | JSON} A JSON response, or `null` if not found.
+ */
+Album.prototype.searchForAlbum = function () {
+  var self = this
+  if (this.id) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.searchForAlbum(this.entry).then(function (response) {
+      if (response &&
+          response.albums &&
+          response.albums.items &&
+          response.albums.items[0]) {
+        response = response.albums.items[0]
+        self.clone(response)
+        return Promise.resolve(self)
+      } else {
+        return Promise.reject(response)
+      }
+    }).catch(function () {
+      if (self.entry.match(/^[0-9a-z]+$/i)) {
+        return self.fetchAlbum(self.entry)
+      } else {
+        console.log('COULD NOT FIND ' + self.entry)
+        return Promise.reject(null)
+      }
+    })
+  }
+}
+
+module.exports = Album
+
+},{"./queue":12,"./spotify":16,"./track":18}],2:[function(require,module,exports){
+var Album = require('./album')
+var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
+var sort = require('./sort')
+
+/**
+ * Artist entry.
+ * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
+ * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of albums to fetch.
+ */
+function Artist (spotify, entry, id, limit) {
+  /**
+   * Array of albums.
+   */
+  this.albums = null
+
+  /**
+   * Entry string.
+   */
+  this.entry = ''
+
+  /**
+   * Spotify ID.
+   */
+  this.id = ''
+
+  /**
+   * Number of tracks to fetch.
+   */
+  this.limit = null
+
+  /**
+   * The artist name.
+   */
+  this.name = ''
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = null
+
+  this.entry = entry.trim()
+  this.id = id
+  this.limit = limit
+  this.name = entry
+  this.spotify = spotify || new SpotifyRequestHandler()
+}
+
+/**
+ * Clone a JSON response.
+ * @param {Object} response - The response.
+ */
+Artist.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
+  }
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {JSON} response - A JSON response object.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Artist.prototype.createQueue = function () {
+  var self = this
+  var albums = self.albums.map(function (item) {
+    var album = new Album(self.spotify, self.entry)
+    album.clone(item)
+    return album
+  })
+  var albumQueue = new Queue(albums)
+  if (self.limit) {
+    albumQueue = albumQueue.slice(0, self.limit)
+  }
+  return albumQueue.forEachPromise(function (album) {
+    return album.fetchAlbum()
+  }).then(function (albumQueue) {
+    albumQueue = albumQueue.sort(sort.album)
+    return albumQueue.dispatch()
+  }).then(function (queue) {
+    return queue.flatten().filter(function (track) {
+      return track.hasArtist(self.name)
+    })
+  })
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Artist.prototype.dispatch = function () {
+  var self = this
+  return this.searchForArtist().then(function () {
+    return self.fetchAlbums()
+  }).then(function () {
+    return self.createQueue()
+  })
+}
+
+/**
+ * Fetch albums.
+ * @return {Promise | JSON} A JSON response.
+ */
+Artist.prototype.fetchAlbums = function (id) {
+  id = id || this.id
+  var self = this
+  if (this.albums) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.getAlbumsByArtist(id).then(function (response) {
+      self.albums = response.items
+      self.id = id
+      return self
+    })
+  }
+}
+
+/**
+ * Search for artist.
+ * @return {Promise | JSON} A JSON response.
+ */
+Artist.prototype.searchForArtist = function () {
+  var self = this
+  if (this.id) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.searchForArtist(this.entry).then(function (response) {
+      if (response &&
+          response.artists &&
+          response.artists.items &&
+          response.artists.items[0]) {
+        response = response.artists.items[0]
+        self.clone(response)
+        return Promise.resolve(self)
+      } else {
+        return Promise.reject(response)
+      }
+    }).catch(function () {
+      if (self.entry.match(/^[0-9a-z]+$/i)) {
+        return self.fetchAlbums(self.entry)
+      } else {
+        return Promise.reject(null)
+      }
+    })
+  }
+}
+
+module.exports = Artist
+
+},{"./album":1,"./queue":12,"./sort":15,"./spotify":16}],3:[function(require,module,exports){
+var base64 = require('base-64')
+var defaults = require('./defaults')
+var http = require('./http')
+
+/**
+ * Create a Spotify authenticator.
+ * @constructor
+ * @param {string} [clientId] - Client ID.
+ * @param {string} [clientSecret] - Client secret key.
+ * @param {string} [token] - Access token (if already authenticated).
+ */
+function SpotifyAuthenticator (clientId, clientSecret, token) {
+  /**
+   * Client ID.
+   */
+  this.clientId = clientId || defaults.id
+
+  /**
+   * Client secret key.
+   */
+  this.clientSecret = clientSecret || defaults.key
+
+  /**
+   * Access token.
+   */
+  this.token = token || ''
+}
+
+/**
+ * Authenticate with the Clients Credentials Flow.
+ *
+ * Note: this authentication method only works if the script is run
+ * from the command line. It does not work when run from a browser,
+ * because Spotify's authentication server rejects cross-site
+ * requests. In that case, authenticate with the Implicit Grant Flow
+ * instead.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
+ *
+ * @param {string} clientId - Client ID.
+ * @param {string} clientSecret - Client secret key.
+ * @param {string} [grantType] - Grant type, default "client_credentials".
+ * @return {Promise | JSON} An access token response.
+ */
+SpotifyAuthenticator.prototype.clientsCredentialsFlow = function (clientId, clientSecret, grantType) {
+  clientId = clientId || this.clientId
+  clientSecret = clientSecret || this.clientSecret
+  grantType = grantType || 'client_credentials'
+  var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
+  var uri = 'https://accounts.spotify.com/api/token'
+  return http.json(uri, {
+    method: 'POST',
+    headers: {
+      Authorization: auth
+    },
+    form: {
+      'grant_type': grantType
+    }
+  })
+}
+
+/**
+ * Authenticate with the Implicit Grant Flow.
+ *
+ * Returns a URI that the calling web application can use to redirect
+ * the user to a Spotify login screen. After the user has logged in,
+ * Spotify redirects back to the web application with an access token
+ * (included in the hash fragment of the URI). That token can then be
+ * passed to this class.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
+ *
+ * @param {string} uri - Redirect URI.
+ * @param {string} [clientId] - Client ID.
+ * @return {string} An authentication URI.
+ */
+SpotifyAuthenticator.prototype.implicitGrantFlow = function (uri, clientId) {
+  clientId = clientId || this.clientId
+  var url = 'https://accounts.spotify.com/authorize'
+  url += '/' +
+    '?client_id=' + encodeURIComponent(clientId) +
+    '&response_type=' + encodeURIComponent('token') +
+    '&redirect_uri=' + encodeURIComponent(uri)
+  return url
+}
+
+/**
+ * Refresh the bearer access token.
+ *
+ * @return {Promise | string} A new bearer access token,
+ * or the empty string if not available.
+ */
+SpotifyAuthenticator.prototype.refreshToken = function () {
+  return this.clientsCredentialsFlow().then(function (response) {
+    if (response &&
+        response.access_token) {
+      this.token = response.access_token
+    }
+    return this.token
+  })
+}
+
+/**
+ * Obtain a bearer access token.
+ *
+ * @return {Promise | string} A bearer access token,
+ * or the empty string if not available.
+ */
+SpotifyAuthenticator.prototype.getToken = function () {
+  if (this.token) {
+    return Promise.resolve(this.token)
+  } else {
+    return this.refreshToken()
+  }
+}
+
+module.exports = SpotifyAuthenticator
+
+},{"./defaults":6,"./http":8,"base-64":20}],4:[function(require,module,exports){
+var eol = require('eol')
+var Album = require('./album')
+var CSV = require('./csv')
+var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
+var Track = require('./track')
+
+/**
+ * Create a playlist collection.
+ * @constructor
+ * @param {SpotifyRequestHandler} [spotify] - Spotify request handler.
+ */
+function Collection (spotify) {
+  /**
+   * Playlist alternating.
+   */
+  this.alternating = null
+
+  /**
+   * Whether to output as CSV.
+   */
+  this.csv = false
+
+  /**
+   * List of entries.
+   */
+  this.entries = new Queue()
+
+  /**
+   * Playlist grouping.
+   */
+  this.grouping = null
+
+  /**
+   * Last.fm user.
+   */
+  this.lastfmUser = null
+
+  /**
+   * Playlist order.
+   */
+  this.ordering = null
+
+  /**
+   * Whether to reverse the playlist order.
+   */
+  this.reverse = false
+
+  /**
+   * Whether to shuffle the playlist.
+   */
+  this.shuffle = false
+
+  /**
+   * Whether to remove duplicates.
+   */
+  this.unique = true
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = spotify || new SpotifyRequestHandler()
+}
+
+/**
+ * Add an entry to the end of the collection queue.
+ * @param {Track | Album | Artist} entry -
+ * The entry to add.
+ */
+Collection.prototype.add = function (entry) {
+  this.entries.add(entry)
+}
+
+/**
+ * Alternate the collection entries.
+ */
+Collection.prototype.alternate = function () {
+  var self = this
+  if (this.alternating === 'artist') {
+    return this.entries.alternate(function (track) {
+      return track.artist().toLowerCase()
+    })
+  } else if (this.alternating === 'album') {
+    return this.refreshTracks().then(function () {
+      return self.entries.alternate(function (track) {
+        return track.album().toLowerCase()
+      })
+    })
+  } else if (this.alternating === 'entry') {
+    return this.entries.alternate(function (track) {
+      return track.entry.toLowerCase()
+    })
+  } else {
+    return Promise.resolve(this.entries)
+  }
+}
+
+/**
+ * Remove duplicate entries.
+ * @return {Promise | Collection} - Itself.
+ */
+Collection.prototype.dedup = function () {
+  if (this.unique) {
+    return this.entries.dedup()
+  }
+  return Promise.resolve(this.entries)
+}
+
+/**
+ * Dispatch all the entries in the collection.
+ * @return {Promise | Queue} A queue of results.
+ */
+Collection.prototype.dispatch = function () {
+  var self = this
+  return this.fetchTracks().then(function () {
+    return self.dedup()
+  }).then(function () {
+    return self.order()
+  }).then(function () {
+    return self.group()
+  }).then(function () {
+    return self.alternate()
+  }).then(function () {
+    return self.reorder()
+  })
+}
+
+/**
+ * Dispatch all the entries in the collection
+ * and return the track listing.
+ * @return {Promise | string} A newline-separated list
+ * of Spotify URIs.
+ */
+Collection.prototype.execute = function () {
+  var self = this
+  return this.dispatch().then(function () {
+    return self.toString()
+  })
+}
+
+/**
+ * Fetch Last.fm metadata of each collection entry.
+ * @return {Promise | Queue} A queue of results.
+ */
+Collection.prototype.fetchLastfm = function () {
+  var self = this
+  return this.entries.forEachPromise(function (entry) {
+    return entry.fetchLastfm(self.lastfmUser)
+  })
+}
+
+/**
+ * Dispatch the entries in the collection.
+ * @return {Promise} A Promise to perform the action.
+ */
+Collection.prototype.fetchTracks = function () {
+  var self = this
+  return this.entries.dispatch().then(function (queue) {
+    self.entries = queue.flatten()
+    return self.entries
+  })
+}
+
+/**
+ * Group the collection entries.
+ */
+Collection.prototype.group = function () {
+  var self = this
+  if (this.grouping === 'artist') {
+    return this.entries.group(function (track) {
+      return track.artist().toLowerCase()
+    })
+  } else if (this.grouping === 'album') {
+    return this.refreshTracks().then(function () {
+      return self.entries.group(function (track) {
+        return track.album().toLowerCase()
+      })
+    })
+  } else if (this.grouping === 'entry') {
+    return this.entries.group(function (track) {
+      return track.entry.toLowerCase()
+    })
+  } else {
+    return Promise.resolve(this.entries)
+  }
+}
+
+/**
+ * Order the collection entries.
+ * @return {Promise} A Promise to perform the action.
+ */
+Collection.prototype.order = function () {
+  var self = this
+  if (this.ordering === 'popularity') {
+    return this.refreshTracks().then(function () {
+      self.entries.orderByPopularity()
+    })
+  } else if (this.ordering === 'lastfm') {
+    return this.fetchLastfm().then(function () {
+      self.entries.orderByLastfm()
+    })
+  } else {
+    return Promise.resolve(this.entries)
+  }
+}
+
+/**
+ * Print the collection to the console.
+ */
+Collection.prototype.print = function () {
+  console.log(this.toString())
+}
+
+/**
+ * Refresh the metadata of each collection entry.
+ * @return {Promise} A Promise to perform the action.
+ */
+Collection.prototype.refreshTracks = function () {
+  var self = this
+  return this.entries.dispatch().then(function (result) {
+    self.entries = result.flatten()
+  })
+}
+
+/**
+ * Reverse the order of the entries.
+ * @return {Promise | Collection} - Itself.
+ */
+Collection.prototype.reorder = function () {
+  if (this.reverse) {
+    return this.entries.reverse()
+  } else if (this.shuffle) {
+    return this.entries.shuffle()
+  }
+  return Promise.resolve(this.entries)
+}
+
+/**
+ * Convert the collection to a string.
+ * @return {string} A newline-separated list of Spotify URIs.
+ */
+Collection.prototype.toString = function () {
+  var self = this
+  var result = ''
+  if (self.csv) {
+    result += 'sep=,\n'
+  }
+  this.entries.forEach(function (entry) {
+    if (entry instanceof Track || entry instanceof Album) {
+      if (entry instanceof Track) {
+        var log = entry.title
+        if (entry.popularity || entry.lastfm) {
+          log += ' ('
+          log += entry.popularity ? ('Spotify popularity: ' + entry.popularity) : ''
+          log += (entry.popularity && entry.lastfm) ? ', ' : ''
+          log += entry.lastfm ? 'Last.fm rating: ' + entry.lastfm : ''
+          log += ')'
+        }
+        console.log(log)
+      }
+      if (self.csv) {
+        var csvFormat = new CSV(entry)
+        var csvLine = csvFormat.toString()
+        result += csvLine + '\n'
+      } else {
+        if (entry.uri) {
+          result += entry.uri + '\n'
+        }
+      }
+    }
+  })
+  result = eol.auto(result.trim())
+  return result
+}
+
+module.exports = Collection
+
+},{"./album":1,"./csv":5,"./queue":12,"./spotify":16,"./track":18,"eol":292}],5:[function(require,module,exports){
+var stringify = require('csv-stringify/lib/sync')
+
+/**
+ * Create CSV formatter.
+ * @constructor
+ * @param {track} track - A track with fetched metadata.
+ */
+function CSV (track) {
+  /**
+   * A track with fetched metadata.
+   */
+  this.track = track
+}
+
+/**
+ * Track data in CSV format, with the following fields:
+ *
+ * Spotify URI,
+ * Track Name,
+ * Artist Name,
+ * Album Name,
+ * Disc Number,
+ * Track Number,
+ * Track Duration,
+ * Added By,
+ * Added At
+ *
+ * @return {string} Track data in CSV format.
+ */
+CSV.prototype.toString = function () {
+  function numberToString (num) {
+    return (num < 0) ? '' : num
+  }
+  return stringify([[
+    this.track.uri,
+    this.track.name,
+    this.track.artist,
+    this.track.album,
+    numberToString(this.track.disc_number),
+    numberToString(this.track.track_number),
+    numberToString(this.track.duration_ms),
+    numberToString(this.track.popularity),
+    numberToString(this.track.lastfm)
+  ]]).trim()
+}
+
+module.exports = CSV
+
+},{"csv-stringify/lib/sync":290}],6:[function(require,module,exports){
+var _0x22f8=['\x35\x66\x30\x63\x66\x63\x32\x32\x66\x61\x39\x65\x34\x37\x66\x65\x61\x31\x35\x61\x35\x66\x35\x63\x65\x66\x37\x64\x38\x62\x30\x37','\x65\x78\x70\x6f\x72\x74\x73'];(function(_0x2c655a,_0x2213f0){var _0x457c86=function(_0x50d308){while(--_0x50d308){_0x2c655a['\x70\x75\x73\x68'](_0x2c655a['\x73\x68\x69\x66\x74']());}};_0x457c86(++_0x2213f0);}(_0x22f8,0xe1));var _0x822f=function(_0xff0804,_0x38aff9){_0xff0804=_0xff0804-0x0;var _0x41bc24=_0x22f8[_0xff0804];return _0x41bc24;};module[_0x822f('0x0')]={'\x61\x70\x69':'\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66','\x69\x64':'\x36\x62\x36\x39\x66\x33\x62\x34\x64\x35\x33\x36\x34\x35\x37\x65\x38\x66\x39\x35\x34\x62\x33\x61\x33\x61\x65\x65\x32\x34\x35\x38','\x6b\x65\x79':_0x822f('0x1')};
+
+},{}],7:[function(require,module,exports){
+var Parser = require('./parser')
+var SpotifyRequestHandler = require('./spotify')
+
+/**
+ * Create a playlist generator.
+ * @constructor
+ * @param {string} [str] - A newline-separated string of
+ * entries on the form `TITLE - ARTIST`. May also contain
+ * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` commands.
+ * @param {string} [token] - Access token (if already authenticated).
+ * @param {string} [clientId] - Client ID.
+ * @param {string} [clientSecret] - Client secret key.
+ */
+function Generator (str, token, clientId, clientSecret) {
+  /**
+   * Spotify request handler.
+   */
+  this.handler = new SpotifyRequestHandler(clientId, clientSecret, token)
+
+  /**
+   * String parser.
+   */
+  this.parser = new Parser(null, this.handler)
+
+  /**
+   * Playlist collection.
+   */
+  this.collection = this.parser.parse(str)
+}
+
+/**
+ * Generate a playlist.
+ * @return {Promise | string} A newline-separated list
+ * of Spotify URIs.
+ */
+Generator.prototype.generate = function () {
+  return this.collection.execute()
+}
+
+module.exports = Generator
+
+},{"./parser":10,"./spotify":16}],8:[function(require,module,exports){
+var request = require('request')
+
+/**
+ * Perform a HTTP(S) request.
+ *
+ * If the script is hosted on a HTTPS server, we cannot perform
+ * HTTP requests because of the Same Origin Policy. Therefore,
+ * this function falls back to HTTPS if HTTP fails.
+ *
+ * @param {string} uri - The URI to look up.
+ * @param {Object} [options] - Request options.
+ * @return {Promise} A promise.
+ */
+function http (uri, options) {
+  return http.get(uri, options).catch(function (err) {
+    var message = err + ''
+    if (message.match(/XHR error/i)) {
+      if (uri.match(/^http:/i)) {
+        return http.get(uri.replace(/^http:/i, 'https:'), options)
+      } else if (uri.match(/^https:/i)) {
+        return http.get(uri.replace(/^https:/i, 'http:'), options)
+      }
+    }
+  })
+}
+
+/**
+ * Perform a HTTP request.
+ * @param {string} uri - The URI to look up.
+ * @param {Object} [options] - Request options.
+ * @return {Promise} A promise.
+ */
+http.get = function (uri, options) {
+  var agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0; T312461)'
+  options = options || {}
+  options.headers = options.headers || {}
+  options.headers['User-Agent'] = options.headers['User-Agent'] || agent
+  var delay = options.delay || 100
+  options.uri = uri || options.uri
+  options.method = options.method || 'GET'
+  delete options.delay
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      request(options, function (err, response, body) {
+        if (err) {
+          reject(err)
+        } else if (response.statusCode !== 200) {
+          reject(response.statusCode)
+        } else {
+          resolve(body)
+        }
+      })
+    }, delay)
+  })
+}
+
+/**
+ * Perform a HTTP JSON request.
+ * @param {string} uri - The URI to look up.
+ * @param {Object} [options] - Request options.
+ * @return {Promise | JSON} A JSON response.
+ */
+http.json = function (uri, options) {
+  return http(uri, options).then(function (response) {
+    try {
+      response = JSON.parse(response)
+    } catch (e) {
+      return Promise.reject(e)
+    }
+    if (response.error) {
+      return Promise.reject(response)
+    } else {
+      return Promise.resolve(response)
+    }
+  })
+}
+
+module.exports = http
+
+},{"request":294}],9:[function(require,module,exports){
+var http = require('./http')
+
+module.exports = function (key) {
+  var lastfm = {}
+
+  /**
+   * Get the Last.fm metadata for a track.
+   *
+   * [Reference](http://www.last.fm/api/show/track.getInfo).
+   *
+   * @param {String} artist - The artist.
+   * @param {String} title - The title.
+   * @param {boolean} [correct] - Whether to autocorrect misspellings,
+   * default true.
+   * @return {Promise | JSON} The track info.
+   */
+  lastfm.getInfo = function (artist, title, user, correct) {
+    var uri = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
+    correct = (correct === undefined) ? true : correct
+    correct = correct ? 1 : 0
+    return lastfm.request(uri, {
+      qs: {
+        artist: artist,
+        track: title,
+        user: user,
+        autocorrect: correct,
+        format: 'json'
+      }
+    }).then(function (result) {
+      if (result && !result.error && result.track) {
+        return Promise.resolve(result)
+      } else {
+        return Promise.reject(result)
+      }
+    })
+  }
+
+  /**
+   * Perform a Last.fm request.
+   * @param {string} uri - The URI to look up.
+   */
+  lastfm.request = function (uri, options) {
+    console.log(uri +
+                '&artist=' + encodeURIComponent(options.qs.artist) +
+                '&track=' + encodeURIComponent(options.qs.track))
+    options.qs.api_key = key
+    return http.json(uri, options)
+  }
+
+  return lastfm
+}
+
+},{"./http":8}],10:[function(require,module,exports){
+var eol = require('eol')
+var Album = require('./album')
+var Artist = require('./artist')
+var Collection = require('./collection')
+var Playlist = require('./playlist')
+var Similar = require('./similar')
+var SpotifyRequestHandler = require('./spotify')
+var Top = require('./top')
+var Track = require('./track')
+var WebScraper = require('./scraper')
+
+/**
+ * Create a parser.
+ * @constructor
+ */
+function Parser (token, handler) {
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = handler || new SpotifyRequestHandler(null, null, token)
+}
+
+/**
+ * Parse a string and create a playlist collection.
+ * @param {string} [str] - A newline-separated string of
+ * entries on the form `TITLE - ARTIST`. May also contain
+ * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` commands.
+ * @return {Collection} A playlist collection.
+ */
+Parser.prototype.parse = function (str) {
+  var collection = new Collection(this.spotify)
+  str = str.trim()
+  if (str) {
+    var lines = eol.split(str)
+    while (lines.length > 0) {
+      var match = null
+      var line = lines.shift().trim()
+      if ((match = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i))) {
+        collection.ordering = match[2].toLowerCase()
+        collection.lastfmUser = match[4]
+      } else if ((match = line.match(/^#GROUP\s+BY\s+(.*)/i))) {
+        collection.grouping = match[1].toLowerCase()
+      } else if ((match = line.match(/^#ALTERNATE\s+BY\s+(.*)/i))) {
+        collection.alternating = match[1].toLowerCase()
+      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
+        collection.unique = false
+      } else if (line.match(/^#REVERSE/i)) {
+        collection.reverse = true
+      } else if (line.match(/^#SHUFFLE/i)) {
+        collection.shuffle = true
+      } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
+        collection.unique = true
+      } else if (line.match(/^#DEDUP/i)) {
+        collection.unique = false
+      } else if (line.match(/^#(CSV|CVS)/i)) {
+        collection.csv = true
+      } else if (line.match(/^##/i) ||
+                 line.match(/^#EXTM3U/i) ||
+                 line.match(/^sep=,/i)) {
+        // comment
+      } else if ((match = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i))) {
+        var album = new Album(this.spotify, match[4], null, parseInt(match[3]))
+        if (match[2]) {
+          album.fetchTracks = false
+        }
+        collection.add(album)
+      } else if ((match = line.match(/^#ARTIST([0-9]*)\s+(.*)/i))) {
+        collection.add(new Artist(this.spotify, match[2], null, parseInt(match[1])))
+      } else if ((match = line.match(/^#TOP([0-9]*)\s+(.*)/i))) {
+        collection.add(new Top(this.spotify, match[2], null, parseInt(match[1])))
+      } else if ((match = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i))) {
+        collection.add(new Similar(this.spotify, match[2], null, parseInt(match[1])))
+      } else if ((match = line.match(/^#PLAYLIST([0-9]*)\s+([0-9a-z]+)[\s/]([0-9a-z]+)/i))) {
+        collection.add(new Playlist(this.spotify, line, match[3], match[2], parseInt(match[1])))
+      } else if ((match = line.match(/^#PLAYLIST([0-9]*)\s+(.*)/i))) {
+        collection.add(new Playlist(this.spotify, match[2], null, null, parseInt(match[1])))
+      } else if ((match = line.match(/^#EXTINF(:[0-9]+,(.*))?/i))) {
+        if (match[1]) {
+          collection.add(new Track(this.spotify, match[2]))
+          if (lines.length > 0 &&
+              !lines[0].match(/^#/)) {
+            lines.shift()
+          }
+        }
+      } else if ((match = line.match(/spotify:artist:([0-9a-z]+)/i))) {
+        collection.add(new Artist(this.spotify, line, match[1]))
+      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*artist\/(.*\/)*([0-9a-z]+)/i))) {
+        collection.add(new Artist(this.spotify, line, match[5], parseInt(match[1])))
+      } else if ((match = line.match(/spotify:album:([0-9a-z]+)/i))) {
+        collection.add(new Album(this.spotify, line, match[1]))
+      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*album\/(.*\/)*([0-9a-z]+)/i))) {
+        collection.add(new Album(this.spotify, line, match[5], parseInt(match[1])))
+      } else if ((match = line.match(/spotify:user:([0-9a-z]+):playlist:([0-9a-z]+)/i))) {
+        collection.add(new Playlist(this.spotify, line, match[2], match[1]))
+      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*user\/([0-9a-z]+)\/playlist\/([0-9a-z]+)/i))) {
+        collection.add(new Playlist(this.spotify, line, match[5], match[4], parseInt(match[1])))
+      } else if ((match = line.match(/spotify:track:([0-9a-z]+)/i))) {
+        collection.add(new Track(this.spotify, line, match[1]))
+      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*([0-9a-z]+)/i))) {
+        collection.add(new Track(this.spotify, line, match[4]))
+      } else if ((match = line.match(/^([0-9]+ )?(https?:.*)/i))) {
+        collection.add(new WebScraper(match[2], parseInt(match[1]), this))
+      } else if (line) {
+        collection.add(new Track(this.spotify, line))
+      }
+    }
+  }
+  return collection
+}
+
+module.exports = Parser
+
+},{"./album":1,"./artist":2,"./collection":4,"./playlist":11,"./scraper":13,"./similar":14,"./spotify":16,"./top":17,"./track":18,"eol":292}],11:[function(require,module,exports){
+var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
+var Track = require('./track')
+
+/**
+ * Create playlist entry.
+ * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
+ * @param {string} entry - The playlist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of tracks to fetch.
+ */
+function Playlist (spotify, entry, id, owner, limit) {
+  /**
+   * Entry string.
+   */
+  this.entry = ''
+
+  /**
+   * The ID of the playlist.
+   */
+  this.id = ''
+
+  /**
+   * Playlist tracks.
+   */
+  this.items = []
+
+  /**
+   * Number of tracks to fetch.
+   */
+  this.limit = null
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = null
+
+  /**
+   * The user who owns the playlist.
+   */
+  this.owner = {}
+
+  /**
+   * Spotify URI
+   * (a string on the form `spotify:user:xxxxxxxx:playlist:xxxxxxxxxxxxxxxxxxxxxx`).
+   */
+  this.uri = ''
+
+  this.entry = entry.trim()
+  this.id = id || this.id
+  this.limit = limit
+  this.owner.id = owner || this.owner.id
+  this.spotify = spotify || new SpotifyRequestHandler()
+  this.uri = (this.owner.id && this.id) ? ('spotify:user:' + this.owner.id + ':playlist:' + this.id) : this.uri
+}
+
+/**
+ * Clone a JSON response.
+ * @param {Object} response - The response.
+ */
+Playlist.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop) &&
+        prop !== 'limit') {
+      this[prop] = response[prop] || this[prop]
+    }
+  }
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {JSON} response - A JSON response object.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Playlist.prototype.createQueue = function () {
+  var self = this
+  var tracks = this.items.map(function (item) {
+    var track = new Track(self.spotify, self.entry)
+    track.clone(item.track)
+    return track
+  })
+  var queue = new Queue(tracks)
+  if (self.limit) {
+    queue = queue.slice(0, self.limit)
+  }
+  return queue
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Playlist.prototype.dispatch = function () {
+  var self = this
+  return this.searchForPlaylist().then(function () {
+    return self.fetchPlaylist()
+  }).then(function () {
+    return self.createQueue()
+  })
+}
+
+/**
+ * Fetch playlist tracks.
+ * @return {Promise | JSON} A JSON response.
+ */
+Playlist.prototype.fetchPlaylist = function (id, owner) {
+  id = id || this.id
+  owner = owner || (this.owner && this.owner.id)
+  var self = this
+  return this.spotify.getPlaylist(id, owner).then(function (response) {
+    self.clone(response)
+    return self
+  })
+}
+
+/**
+ * Search for playlist.
+ * @return {Promise | JSON} A JSON response, or `null` if not found.
+ */
+Playlist.prototype.searchForPlaylist = function () {
+  var self = this
+  if (this.id && this.owner && this.owner.id) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.searchForPlaylist(this.entry).then(function (response) {
+      if (response &&
+          response.playlists &&
+          response.playlists.items &&
+          response.playlists.items[0]) {
+        response = response.playlists.items[0]
+        self.clone(response)
+        return Promise.resolve(self)
+      } else {
+        return Promise.reject(response)
+      }
+    }).catch(function () {
+      // console.log('COULD NOT FIND ' + self.entry)
+      return Promise.reject(null)
+    })
+  }
+}
+
+module.exports = Playlist
+
+},{"./queue":12,"./spotify":16,"./track":18}],12:[function(require,module,exports){
+var sort = require('./sort')
+
+/**
+ * Create a queue of playlist entries.
+ * @constructor
+ * @param {Array} [arr] - An array of playlist entries.
+ */
+function Queue (arr) {
+  /**
+   * Array of entries.
+   */
+  this.queue = []
+
+  if (arr) {
+    this.queue = arr
+  }
+}
+
+/**
+ * Add an entry to the end of the queue.
+ * @param {Track | Album | Artist} entry -
+ * The entry to add.
+ */
+Queue.prototype.add = function (entry) {
+  this.queue.push(entry)
+}
+
+/**
+ * Group entries and interleave them.
+ * @param {Function} fn - A grouping function.
+ * Takes an entry as input and returns a grouping key,
+ * a string, as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.alternate = function (fn) {
+  this.groupBy(fn)
+  this.interleave()
+}
+
+/**
+ * Concatenate with another queue.
+ * @param {Queue} queue - Another queue to append to this queue.
+ * @return {Queue} - A new queue containing all the entries
+ * from this queue followed by all the entries from the other queue.
+ */
+Queue.prototype.concat = function (queue) {
+  return new Queue(this.toArray().concat(queue.toArray()))
+}
+
+/**
+ * Whether the queue contains an entry.
+ * @param {Track | Album | Artist} entry -
+ * The entry to check for.
+ * @return {boolean} - `true` if the queue contains `entry`,
+ * `false` otherwise.
+ */
+Queue.prototype.contains = function (obj) {
+  return this.indexOf(obj) >= 0
+}
+
+/**
+ * Remove duplicate entries.
+ * If a track occurs more than once, the version with
+ * the highest Spotify popularity is preferred.
+ * @return {Promise | Queue} - Itself.
+ */
+Queue.prototype.dedup = function () {
+  var self = this
+  var result = new Queue()
+  return self.forEachPromise(function (entry) {
+    if (!result.contains(entry)) {
+      result.add(entry)
+      return Promise.resolve(entry)
+    } else {
+      var idx = self.indexOf(entry)
+      var other = result.get(idx)
+      if (entry.equals(other)) {
+        return Promise.resolve(other)
+      } else {
+        return other.getPopularity().then(function (otherPopularity) {
+          return entry.getPopularity().then(function (entryPopularity) {
+            if (entryPopularity > otherPopularity) {
+              Queue.set(idx, entry)
+            }
+          })
+        })
+      }
+    }
+  }).then(function () {
+    self.queue = result.toArray()
+    return self
+  })
+}
+
+/**
+ * Dispatch all entries in sequence.
+ * Ensure that only one entry is dispatched at a time.
+ * @return {Promise | Queue} A queue of results.
+ */
+Queue.prototype.dispatch = function () {
+  return this.forEachPromise(function (entry) {
+    return entry.dispatch()
+  })
+}
+
+/**
+ * Filter the queue by a predicate.
+ * @param {Function} fn - A predicate function.
+ * Takes the current entry as input and returns
+ * `true` if it passes the test, `false` otherwise.
+ * @return {Queue} - A new queue.
+ */
+Queue.prototype.filter = function (fn) {
+  return new Queue(this.toArray().filter(fn))
+}
+
+/**
+ * Transform a nested queue into a flat queue.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.flatten = function () {
+  var result = []
+  for (var i in this.queue) {
+    var entry = this.queue[i]
+    if (entry instanceof Queue) {
+      entry = entry.flatten()
+      result = result.concat(entry.queue)
+    } else {
+      result.push(entry)
+    }
+  }
+  this.queue = result
+  return this
+}
+
+/**
+ * Iterate over the queue.
+ * @param {Function} fn - An iterator function.
+ * Takes the current entry as input and returns
+ * the modified value as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.forEach = function (fn) {
+  this.queue.forEach(fn)
+  return this
+}
+
+/**
+ * Similar to Queue.forEach(), but with promises.
+ * Each iteration must return a promise
+ * (e.g., by invoking a promise-returning method).
+ *
+ * The execution is strictly sequential to prevent overloading
+ * the server. (If parallel execution is needed, use a library
+ * function like Promise.all() instead.)
+ *
+ * @param {Function} fn - An iterator function.
+ * Takes an entry as input and returns a promise.
+ * @return {Promise | Queue} A promise that invokes
+ * each promise in sequence. The promise's value is
+ * a queue of the values of each invoked promise.
+ */
+Queue.prototype.forEachPromise = function (fn) {
+  var result = new Queue()
+  var ready = Promise.resolve(null)
+  this.queue.forEach(function (entry) {
+    ready = ready.then(function () {
+      return fn(entry)
+    }).then(function (value) {
+      result.add(value)
+    }).catch(function () { })
+  })
+  return ready.then(function () {
+    return result
+  })
+}
+
+/**
+ * Get a playlist entry.
+ * @param {integer} idx - The index of the entry.
+ * The indices start at 0.
+ */
+Queue.prototype.get = function (idx) {
+  return this.queue[idx]
+}
+
+/**
+ * Group entries.
+ * @param {Function} fn - A grouping function.
+ * Takes an entry as input and returns a grouping key,
+ * a string, as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.group = function (fn) {
+  this.groupBy(fn)
+  this.flatten()
+}
+
+/**
+ * Group entries.
+ * @param {Function} fn - A grouping function.
+ * Takes an entry as input and returns a grouping key,
+ * a string, as output.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.groupBy = function (fn) {
+  var map = []
+  var rest = []
+  var result = []
+  for (var i in this.queue) {
+    var entry = this.queue[i]
+    var key = fn(entry)
+    if (typeof key !== 'string' || key.trim() === '') {
+      rest.push(entry)
+    } else {
+      if (!map[key]) {
+        map[key] = new Queue()
+      }
+      map[key].add(entry)
+    }
+  }
+  for (var k in map) {
+    result.push(map[k])
+  }
+  result = result.concat(rest)
+  this.queue = result
+  return this
+}
+
+/**
+ * Get the index of an entry.
+ * @param {Object} obj - The entry to find.
+ * @return The index of `obj`, or `-1` if not found.
+ * The indices start at 0.
+ */
+Queue.prototype.indexOf = function (obj) {
+  for (var i in this.queue) {
+    var entry = this.queue[i]
+    if (entry === obj ||
+        (entry && entry.similarTo &&
+         obj && obj.similarTo &&
+         entry.similarTo(obj))) {
+      return i
+    }
+  }
+  return -1
+}
+
+/**
+ * Interleave a nested queue into a flat queue.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.interleave = function () {
+  var queues = this
+  var result = new Queue()
+  var temp = new Queue()
+  function iterator (queue) {
+    if (!queue.isEmpty()) {
+      var entry = queue.shift()
+      result.add(entry)
+    }
+    if (!queue.isEmpty()) {
+      temp.add(queue)
+    }
+  }
+  while (!queues.isEmpty()) {
+    queues.forEach(iterator)
+    queues = temp
+    temp = new Queue()
+  }
+  this.queue = result.queue
+  return this
+}
+
+/**
+ * Whether the playlist is empty.
+ * @return {boolean} - `true` if empty, `false` otherwise.
+ */
+Queue.prototype.isEmpty = function () {
+  return this.size() <= 0
+}
+
+/**
+ * Map a function over the queue.
+ * @param {Function} fn - An iterator function.
+ * Takes the current entry as input and returns
+ * the modified value as output.
+ * @return {Queue} - A new queue.
+ */
+Queue.prototype.map = function (fn) {
+  return new Queue(this.toArray().map(fn))
+}
+
+/**
+ * Reverse the order of the queue.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.reverse = function () {
+  this.queue.reverse()
+  return this
+}
+
+/**
+ * Set a playlist entry.
+ * @param {integer} idx - The index of the entry.
+ * The indices start at 0. If out of bounds,
+ * the entry is added at the end.
+ * @param {Object} entry - The entry to add.
+ */
+Queue.prototype.set = function (idx, entry) {
+  if (idx < 0 || idx >= this.size()) {
+    this.add(entry)
+  } else {
+    this.queue[idx] = entry
+  }
+}
+
+/**
+ * The playlist size.
+ * @return {integer} - The number of entries.
+ */
+Queue.prototype.size = function () {
+  return this.queue.length
+}
+
+/**
+ * Slice a queue.
+ * @param {integer} start - The index of the first element.
+ * @param {integer} end - The index of the last element (not included).
+ * @return {Queue} - A new queue containing all elements
+ * from `start` (inclusive) to `end` (exclusive).
+ */
+Queue.prototype.slice = function (start, end) {
+  return new Queue(this.toArray().slice(start, end))
+}
+
+/**
+ * Sort the queue.
+ * @param {Function} fn - A sorting function.
+ * Takes two entries as input and returns
+ * `-1` if the first entry is less than the second,
+ * `1` if the first entry is greater than the second, and
+ * `0` if the entries are equal.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.sort = function (fn) {
+  sort(this.queue, fn)
+  return this
+}
+
+/**
+ * Order the playlist entries by Last.fm playcount.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.orderByLastfm = function () {
+  return this.sort(sort.lastfm)
+}
+
+/**
+ * Order the playlist entries by Spotify popularity.
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.orderByPopularity = function () {
+  return this.sort(sort.popularity)
+}
+
+/**
+ * Remove the first element from the queue.
+ * @return {Object} - The first element, or `undefined`
+ * if the queue is empty.
+ */
+Queue.prototype.shift = function () {
+  return this.queue.shift()
+}
+
+/**
+ * Shuffle the elements in the queue.
+ *
+ * Uses the Fisher-Yates algorithm.
+ *
+ * @return {Queue} - Itself.
+ */
+Queue.prototype.shuffle = function () {
+  var counter = this.queue.length
+  // while there are elements in the array ...
+  while (counter > 0) {
+    // ... pick a random index ...
+    var index = Math.floor(Math.random() * counter)
+    // ... decrease the counter by 1 ...
+    counter--
+    // ... and swap the last element with it
+    var temp = this.queue[counter]
+    this.queue[counter] = this.queue[index]
+    this.queue[index] = temp
+  }
+  return this
+}
+
+/**
+ * Convert queue to array.
+ * @return {Array} An array of playlist entries.
+ */
+Queue.prototype.toArray = function () {
+  return this.queue
+}
+
+module.exports = Queue
+
+},{"./sort":15}],13:[function(require,module,exports){
+/* global jQuery:true */
+/* exported jQuery */
+
+var http = require('./http')
+var util = require('./util')
+var URI = require('urijs')
+var $ = require('jquery')
+jQuery = $
+
+/**
+ * Create a web scraper.
+ * @constructor
+ * @param {string} uri - The URI of the web page to scrape.
+ */
+function WebScraper (uri, count, parser) {
+  /**
+   * Number of pages to fetch.
+   */
+  this.count = 0
+
+  /**
+   * Parser instance to handle the generator string.
+   */
+  this.parser = null
+
+  /**
+   * The URI of the first page to fetch.
+   */
+  this.uri = uri
+
+  this.count = count || this.count
+  this.parser = parser
+}
+
+/**
+ * Scrape a web page.
+ *
+ * This function inspects the host of the web page and invokes an
+ * appropriate scraping function. The scraping functions are written
+ * in the following manner: they take the web page URI as input,
+ * fetch the page, and return a generator string as output (wrapped
+ * in a Promise). Schematically:
+ *
+ *           web page:                      generator string
+ *     +-------------------+                   (Promise):
+ *     | track1 by artist1 |    scraping
+ *     +-------------------+    function    artist1 - track1
+ *     | track2 by artist2 |    =======>    artist2 - track2
+ *     +-------------------+                artist3 - track3
+ *     | track3 by artist3 |
+ *     +-------------------+
+ *
+ * In the example above, the scraping function converts a table of
+ * tracks to a generator string on the form `ARTIST - TRACK`. If the
+ * input were an albums chart, then the output would be a string of
+ * `#album` commands instead. In other words, the scraping function
+ * should extract the *meaning* of the web page and express it as
+ * input to the generator.
+ *
+ * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} count - Number of pages to fetch.
+ * @return {Promise | string} A generator string.
+ */
+WebScraper.prototype.scrape = function (uri, count) {
+  var domain = URI(uri).domain()
+  if (domain === 'last.fm') {
+    return this.lastfm(uri, count)
+  } else if (domain === 'pitchfork.com') {
+    return this.pitchfork(uri, count)
+  } else if (domain === 'rateyourmusic.com') {
+    return this.rateyourmusic(uri, count)
+  } else if (domain === 'reddit.com') {
+    return this.reddit(uri, count)
+  } else if (domain === 'youtube.com') {
+    return this.youtube(uri)
+  } else {
+    return this.webpage(uri)
+  }
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {string} result - A newline-separated list of tracks.
+ * @return {Promise | Queue} A queue of results.
+ */
+WebScraper.prototype.createQueue = function (result) {
+  var collection = this.parser.parse(result)
+  return collection.dispatch()
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of results.
+ */
+WebScraper.prototype.dispatch = function () {
+  var self = this
+  return this.scrape(this.uri, this.count).then(function (result) {
+    return self.createQueue(result)
+  })
+}
+
+/**
+ * Clean up a string's contents.
+ * @return {string} A new string.
+ */
+WebScraper.prototype.cleanup = function (str) {
+  str = str.replace(/].*/gi, ']')
+    .replace(/\).*/gi, ')')
+    .replace(/\[[^\]]*]/gi, '')
+    .replace(/\([^)]*\)/gi, '')
+    .replace(/-+/gi, '-')
+    .replace(/\.+/gi, '.')
+    .replace(/[^-'.\w\s]/gi, '')
+  str = this.trim(str)
+  return str
+}
+
+/**
+ * Clean up a string's whitespace.
+ * @return {string} A new string.
+ */
+WebScraper.prototype.trim = function (str) {
+  str = str || ''
+  str = str.trim()
+  str = str.replace(/[\s]+/g, ' ')
+  str = util.toAscii(str)
+  return str
+}
+
+/**
+ * Scrape a Last.fm tracklist.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
+ * @return {Promise | string} A newline-separated list of tracks.
+ */
+WebScraper.prototype.lastfm = function (uri, count) {
+  var self = this
+  count = count || 1
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var lines = ''
+      if (uri.match(/\/\+tracks/gi)) {
+        // tracks by a single artist
+        var header = html.find('header a.library-header-crumb')
+        if (header.length === 0) {
+          header = html.find('h1.header-title')
+        }
+        var artist = self.trim(header.first().text())
+        html.find('td.chartlist-name').each(function () {
+          lines += artist + ' - ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/\+similar/gi)) {
+        // similar artists
+        html.find('h3.big-artist-list-title').each(function () {
+          lines += '#top ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/artists/gi)) {
+        // list of artists
+        html.find('td.chartlist-name').each(function () {
+          lines += '#top ' + self.trim($(this).text()) + '\n'
+        })
+      } else if (uri.match(/\/albums/gi)) {
+        // list of albums
+        html.find('td.chartlist-name').each(function () {
+          lines += '#album ' + self.trim($(this).text()) + '\n'
+        })
+      } else {
+        // list of tracks by various artists
+        html.find('td.chartlist-name').each(function () {
+          lines += self.trim($(this).text()) + '\n'
+        })
+      }
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
+      } else {
+        var next = html.find('.pagination-next a')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
+      }
+    })
+  }
+  return getPages(uri, '', count)
+}
+
+/**
+ * Scrape a Pitchfork list.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.pitchfork = function (uri, count) {
+  var self = this
+  count = count || 0
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var lines = ''
+      html.find('div.artist-work').each(function () {
+        var artist = self.trim($(this).find('ul.artist-list li:first').text())
+        var album = self.trim($(this).find('h2.work-title').text())
+        lines += '#album ' + artist + ' - ' + album + '\n'
+      })
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
+      } else {
+        var nextPage = html.find('.fts-pagination__list-item--active').next()
+        if (nextPage.length > 0) {
+          nextUri = nextPage.find('a').attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
+      }
+    })
+  }
+  return getPages(uri, '', count)
+}
+
+/**
+ * Scrape a Rate Your Music chart.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
+ * @return {Promise | string} A newline-separated list of albums.
+ */
+WebScraper.prototype.rateyourmusic = function (uri, count) {
+  var self = this
+  count = count || 0
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var lines = ''
+      html.find('div.chart_details').each(function () {
+        var artist = self.trim($(this).find('a.artist').text())
+        var album = self.trim($(this).find('a.album').text())
+        lines += '#album ' + artist + ' - ' + album + '\n'
+      })
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
+      } else {
+        var next = html.find('a.navlinknext')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
+      }
+    })
+  }
+  return getPages(uri, '', count)
+}
+
+/**
+ * Scrape a Reddit forum.
+ *
+ * Handles post listing and comment threads. Employs Bob Nisco's
+ * heuristic for parsing comments.
+ *
+ * @param {string} uri - The URI of the web page to scrape.
+ * @param {integer} [count] - The number of pages to scrape.
+ * @return {Promise | string} A newline-separated list of tracks.
+ */
+WebScraper.prototype.reddit = function (uri, count) {
+  var self = this
+  count = count || 1
+  function getPages (nextUri, result, count) {
+    nextUri = URI(nextUri).absoluteTo(uri).toString()
+    console.log(nextUri)
+    return http(nextUri).then(function (data) {
+      var html = $($.parseHTML(data))
+      var lines = ''
+      if (uri.match(/\/comments\//gi)) {
+        // comments thread
+        html.find('div.entry div.md').each(function () {
+          // first assumption: if there are links,
+          // they are probably links to songs
+          var links = $(this).find('a')
+          if (links.length > 0) {
+            links.each(function () {
+              var txt = $(this).text()
+              if (!txt.match(/https?:/gi)) {
+                lines += self.cleanup(txt) + '\n'
+              }
+            })
+            return
+          }
+          // second assumption: if there are multiple sentences,
+          // the song is the first one
+          var body = $(this).text()
+          var sentences = body.split('.')
+          if (sentences.length > 1) {
+            lines += self.cleanup(sentences[0]) + '\n'
+            return
+          }
+          // third assumption: if there are multiple lines to a comment,
+          // then the song will be on the first line with a user's
+          // comments on other lines after it
+          var lines = body.split('\n')
+          if (lines.length > 1) {
+            lines += self.cleanup(lines[0]) + '\n'
+            return
+          }
+          // fall-back case
+          lines += self.cleanup(body) + '\n'
+        })
+      } else {
+        // post listing
+        html.find('a.title').each(function () {
+          var track = self.cleanup($(this).text())
+          lines += track + '\n'
+        })
+      }
+      console.log(lines.trim())
+      result += lines
+      if (count === 1) {
+        return result
+      } else {
+        var next = html.find('.next-button a')
+        if (next.length > 0) {
+          nextUri = next.attr('href')
+          return getPages(nextUri, result, count - 1)
+        } else {
+          return result
+        }
+      }
+    })
+  }
+  return getPages(uri, '', count)
+}
+
+/**
+ * Scrape a web page.
+ *
+ * This is a fall-back function in case none of the other
+ * scraping functions apply.
+ *
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of tracks.
+ */
+WebScraper.prototype.webpage = function (uri) {
+  var self = this
+  console.log(uri)
+  return http(uri).then(function (data) {
+    var html = $($.parseHTML(data))
+    var result = ''
+    html.find('a').each(function () {
+      var track = self.cleanup($(this).text())
+      result += track + '\n'
+    })
+    result = result.trim()
+    console.log(result)
+    return result
+  })
+}
+
+/**
+ * Scrape a YouTube playlist.
+ * @param {string} uri - The URI of the web page to scrape.
+ * @return {Promise | string} A newline-separated list of tracks.
+ */
+WebScraper.prototype.youtube = function (uri) {
+  var self = this
+  console.log(uri)
+  return http(uri).then(function (data) {
+    var html = $($.parseHTML(data))
+    var result = ''
+    html.find('div.playlist-video-description h4, a.pl-video-title-link').each(function () {
+      var track = self.cleanup($(this).text())
+      result += track + '\n'
+    })
+    result = result.trim()
+    console.log(result)
+    return result
+  })
+}
+
+module.exports = WebScraper
+
+},{"./http":8,"./util":19,"jquery":293,"urijs":556}],14:[function(require,module,exports){
+var Artist = require('./artist')
+var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
+var Top = require('./top')
+
+/**
+ * Similar entry.
+ * @constructor
+ * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ */
+function Similar (spotify, entry, id, trackLimit, artistLimit) {
+  /**
+   * Array of related artists.
+   */
+  this.artists = []
+
+  /**
+   * Number of artists to fetch.
+   */
+  this.artistLimit = 20
+
+  /**
+   * Entry string.
+   */
+  this.entry = null
+
+  /**
+   * Spotify ID.
+   */
+  this.id = ''
+
+  /**
+   * Number of tracks to fetch per artist.
+   */
+  this.trackLimit = 5
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = null
+
+  this.entry = entry.trim()
+  this.id = id
+  this.spotify = spotify || new SpotifyRequestHandler()
+  this.trackLimit = trackLimit || this.trackLimit
+  this.artistLimit = artistLimit || this.artistLimit
+}
+
+/**
+ * Create a queue of tracks.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Similar.prototype.createQueue = function () {
+  var self = this
+  var artists = this.artists.map(function (artist) {
+    return new Top(self.spotify, self.entry, artist.id, self.limit)
+  })
+  var queue = new Queue(artists)
+  queue = queue.slice(0, self.artistLimit)
+  return queue.dispatch().then(function (result) {
+    return result.interleave()
+  })
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Similar.prototype.dispatch = function () {
+  var self = this
+  return this.searchForArtist().then(function () {
+    return self.searchForRelatedArtists()
+  }).then(function () {
+    return self.createQueue()
+  })
+}
+
+/**
+ * Search for artist.
+ * @return {Promise} A Promise to perform the action.
+ */
+Similar.prototype.searchForArtist = function () {
+  var self = this
+  var artist = new Artist(this.spotify, this.entry)
+  return artist.searchForArtist().then(function (artist) {
+    self.id = artist.id
+  })
+}
+
+/**
+ * Search for related artists.
+ * @return {Promise} A Promise to perform the action.
+ */
+Similar.prototype.searchForRelatedArtists = function () {
+  var self = this
+  return this.spotify.searchForRelatedArtists(this.id).then(function (response) {
+    self.artists = response.artists
+    return self
+  })
+}
+
+module.exports = Similar
+
+},{"./artist":2,"./queue":12,"./spotify":16,"./top":17}],15:[function(require,module,exports){
+var stringSimilarity = require('string-similarity')
+var util = require('./util')
+
+/**
+ * Stable sort, preserving the original order when possible.
+ * @param {Array} arr - The array to sort.
+ * @param {function} [fn] - A comparison function that returns
+ * `-1` if the first argument scores less than the second argument,
+ * `1` if the first argument scores more than the second argument,
+ * and `0` if the scores are equal.
+ * @return {Array} - The array, sorted.
+ */
+function sort (arr, fn) {
+  fn = fn || sort.ascending()
+  var i = 0
+  var pairs = arr.map(function (x) {
+    return {
+      idx: i++,
+      val: x
+    }
+  })
+  pairs = pairs.sort(function (a, b) {
+    var x = fn(a.val, b.val)
+    if (x) { return x }
+    return (a.idx < b.idx) ? -1 : ((a.idx > b.idx) ? 1 : 0)
+  })
+  for (i = 0; i < arr.length; i++) {
+    arr[i] = pairs[i].val
+  }
+  return arr
+}
+
+/**
+ * Create an ascending comparison function.
+ * @param {function} fn - A scoring function.
+ * @return {function} - A comparison function that returns
+ * `-1` if the first argument scores less than the second argument,
+ * `1` if the first argument scores more than the second argument,
+ * and `0` if the scores are equal.
+ */
+sort.ascending = function (fn) {
+  fn = fn || util.identity
+  return function (a, b) {
+    var x = fn(a)
+    var y = fn(b)
+    return (x < y) ? -1 : ((x > y) ? 1 : 0)
+  }
+}
+
+/**
+ * Create a descending comparison function.
+ * @param {function} fn - A scoring function.
+ * @return {function} - A comparison function that returns
+ * `-1` if the first argument scores more than the second argument,
+ * `1` if the first argument scores less than the second argument,
+ * and `0` if the scores are equal.
+ */
+sort.descending = function (fn) {
+  fn = fn || util.identity
+  return function (a, b) {
+    var x = fn(a)
+    var y = fn(b)
+    return (x < y) ? 1 : ((x > y) ? -1 : 0)
+  }
+}
+
+/**
+ * Combine comparison functions.
+ * @param {...function} fn - A comparison function.
+ * @return {function} - A combined comparison function that returns
+ * the first comparison value unless the comparands are equal,
+ * in which case it returns the next value.
+ */
+sort.combine = function () {
+  var args = Array.prototype.slice.call(arguments)
+  return args.reduce(function (fn1, fn2) {
+    return function (a, b) {
+      var val = fn1(a, b)
+      return (val === 0) ? fn2(a, b) : val
+    }
+  })
+}
+
+/**
+ * Compare tracks by Spotify popularity.
+ * @param {Track} a - A track.
+ * @param {Track} b - A track.
+ * @return {integer} - `1` if `a` is less than `b`,
+ * `-1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.popularity = sort.descending(function (x) {
+  return x.popularity || -1
+})
+
+/**
+ * Compare tracks by Last.fm rating.
+ * @param {Track} a - A track.
+ * @param {Track} b - A track.
+ * @return {integer} - `1` if `a` is less than `b`,
+ * `-1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.lastfm = sort.combine(sort.descending(function (x) {
+  return x.lastfmPersonal
+}), sort.descending(function (x) {
+  return x.lastfmGlobal
+}), sort.popularity)
+
+/**
+ * Compare albums by type. Proper albums are ranked highest,
+ * followed by singles, guest albums, and compilation albums.
+ * @param {JSON} a - An album.
+ * @param {JSON} b - An album.
+ * @return {integer} - `-1` if `a` is less than `b`,
+ * `1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.type = sort.descending(function (album) {
+  var rankings = {
+    'album': 4,
+    'single': 3,
+    'appears_on': 2,
+    'compilation': 1
+  }
+  var type = album.album_type
+  return rankings[type] || 0
+})
+
+/**
+ * Compare albums by type and popularity.
+ * @param {JSON} a - An album.
+ * @param {JSON} b - An album.
+ * @return {integer} - `-1` if `a` is less than `b`,
+ * `1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.album = sort.combine(sort.type, sort.popularity)
+
+/**
+ * Sort objects by similarity to a string.
+ * @param {function} fn - A function returning the object's name
+ * as a string.
+ * @param {string} str - The string to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.similarity = function (fn, str) {
+  return sort.descending(function (x) {
+    return stringSimilarity.compareTwoStrings(fn(x), str)
+  })
+}
+
+/**
+ * Sort album objects by similarity to a string.
+ * @param {string} album - The string to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.similarAlbum = function (album) {
+  return sort.similarity(function (x) {
+    return x.name + ' - ' + (x.artists[0].name || '')
+  }, album)
+}
+
+/**
+ * Sort artist objects by similarity to a string.
+ * @param {string} artist - The string to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.similarArtist = function (artist) {
+  return sort.similarity(function (x) {
+    return x.name
+  }, artist)
+}
+
+/**
+ * Sort track objects by similarity to a string.
+ * @param {string} track - The string to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.similarTrack = function (track) {
+  return sort.similarity(function (x) {
+    return x.name + ' - ' + (x.artists[0].name || '')
+  }, track)
+}
+
+/**
+ * Sort track objects by censorship.
+ * Explicit tracks are preferred over censored ones.
+ * @param {Track} a - A track.
+ * @param {Track} b - A track.
+ * @return {integer} - `1` if `a` is less than `b`,
+ * `-1` if `a` is greater than `b`,
+ * and `0` if `a` is equal to `b`.
+ */
+sort.censorship = sort.descending(function (x) {
+  return x.explicit ? 1 : 0
+})
+
+/**
+ * Sort track objects by similarity to a track,
+ * popularity, and censorship.
+ * @param {string} track - The track to compare against.
+ * @return {function} - A comparison function.
+ */
+sort.track = function (track) {
+  return sort.combine(sort.similarTrack(track),
+                      sort.popularity,
+                      sort.censorship)
+}
+
+module.exports = sort
+
+},{"./util":19,"string-similarity":419}],16:[function(require,module,exports){
+var http = require('./http')
+var sort = require('./sort')
+var SpotifyAuthenticator = require('./auth')
+
+/**
+ * Create a Spotify request handler.
+ * @constructor
+ * @param {string} [clientId] - Client ID.
+ * @param {string} [clientSecret] - Client secret key.
+ * @param {string} [token] - Access token (if already authenticated).
+ */
+function SpotifyRequestHandler (clientId, clientSecret, token) {
+  /**
+   * Spotify authenticator.
+   */
+  this.auth = new SpotifyAuthenticator(clientId, clientSecret, token)
+}
+
+/**
+ * Fetch album metadata.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-album/#example).
+ *
+ * @param {string} id - Album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.getAlbum = function (id) {
+  var uri = 'https://api.spotify.com/v1/albums/'
+  uri += encodeURIComponent(id)
+  return this.request(uri).then(function (response) {
+    if (response &&
+        response.id) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Get all albums by an artist.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-artists-albums/#example).
+ *
+ * @param {string} id - Artist ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
+  var self = this
+  var uri = 'https://api.spotify.com/v1/artists/'
+  uri += encodeURIComponent(id) + '/albums?limit=50'
+
+  function getAlbums (uri, result) {
+    return self.request(uri).then(function (response) {
+      if (!(response &&
+            response.items)) {
+        return Promise.reject(response)
+      }
+      if (result) {
+        result.items = result.items.concat(response.items)
+      } else {
+        result = response
+      }
+      if (response.next) {
+        return getAlbums(response.next, result)
+      } else {
+        return Promise.resolve(result)
+      }
+    })
+  }
+
+  // sort albums by type
+  function sortAlbums (response) {
+    if (response && response.items) {
+      sort(response.items, sort.album)
+    }
+    return response
+  }
+
+  return getAlbums(uri).then(sortAlbums)
+}
+
+/**
+ * Fetch a playlist's tracks.
+ *
+ * @param {string} [id] - The playlist ID.
+ * @param {string} [owner] - The owner ID.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-playlists-tracks/#example).
+ *
+ * @param {string} id - Album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
+  var self = this
+  var uri = 'https://api.spotify.com/v1/users/' +
+      encodeURIComponent(owner) +
+      '/playlists/' +
+      encodeURIComponent(id) +
+      '/tracks'
+  function getTracks (uri, result) {
+    return self.request(uri).then(function (response) {
+      if (!(response &&
+            response.items)) {
+        return Promise.reject(response)
+      }
+      if (result) {
+        result.items = result.items.concat(response.items)
+      } else {
+        result = response
+      }
+      if (response.next) {
+        return getTracks(response.next, result)
+      } else {
+        return Promise.resolve(result)
+      }
+    })
+  }
+  return getTracks(uri)
+}
+
+/**
+ * Get the top tracks of an artist.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
+ *
+ * @param {string} id - Artist ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.getTopTracks = function (id) {
+  var uri = 'https://api.spotify.com/v1/artists/'
+  uri += encodeURIComponent(id) + '/top-tracks?country=US'
+  return this.request(uri).then(function (response) {
+    if (response &&
+        response.tracks) {
+      sort(response.tracks, sort.popularity)
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Get a track.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-track/#example).
+ *
+ * @param {string} id - Track ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.getTrack = function (id) {
+  var uri = 'https://api.spotify.com/v1/tracks/'
+  uri += encodeURIComponent(id)
+  return this.request(uri)
+}
+
+/**
+ * Perform a Spotify request.
+ * @param {string} uri - The URI to resolve.
+ * @param {Object} [options] - Request options.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.request = function (uri, options) {
+  var self = this
+  options = options || {}
+  console.log(uri)
+  return this.auth.getToken().then(function (token) {
+    options.headers = options.headers || {}
+    options.headers.Authorization = 'Bearer ' + token
+    return http.json(uri, options)
+  }).catch(function (status) {
+    return self.refreshToken().then(function (token) {
+      options.headers.Authorization = 'Bearer ' + token
+      return http.json(uri, options)
+    })
+  })
+}
+
+/**
+ * Search for artist.
+ *
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} artist - The artist to search for.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.searchForArtist = function (artist) {
+  var uri = 'https://api.spotify.com/v1/search?type=artist&q='
+  uri += encodeURIComponent(artist)
+  return this.request(uri).then(function (response) {
+    if (response &&
+        response.artists &&
+        response.artists.items[0] &&
+        response.artists.items[0].id) {
+      // sort results by string similarity
+      sort(response.artists.items, sort.similarArtist(artist))
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for album.
+ *
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} album - The album to search for.
+ * @param {string} [artist] - The album artist.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
+  var query = album
+  if (artist) {
+    query = 'album:"' + album + '"'
+    query += artist ? (' artist:"' + artist + '"') : ''
+  }
+  var uri = 'https://api.spotify.com/v1/search?type=album&q='
+  uri += encodeURIComponent(query)
+  return this.request(uri).then(function (response) {
+    if (response &&
+        response.albums &&
+        response.albums.items[0] &&
+        response.albums.items[0].id) {
+      // sort results by string similarity
+      if (!artist) {
+        sort(response.albums.items, sort.similarAlbum(album))
+      }
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for playlist.
+ *
+ * @param {string} playlist - The playlist to search for.
+
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} playlist - The track to search for.
+ * @return {Promise | JSON} JSON response.
+ */
+SpotifyRequestHandler.prototype.searchForPlaylist = function (playlist) {
+  var uri = 'https://api.spotify.com/v1/search?type=playlist&limit=50&q='
+  uri += encodeURIComponent(playlist)
+  return this.request(uri).then(function (response) {
+    if (response.playlists &&
+        response.playlists.items[0] &&
+        response.playlists.items[0].uri) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for related artists.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
+ *
+ * @param {string} id - The album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyRequestHandler.prototype.searchForRelatedArtists = function (id) {
+  var uri = 'https://api.spotify.com/v1/artists/'
+  uri += encodeURIComponent(id) + '/related-artists'
+  return this.request(uri).then(function (response) {
+    if (response &&
+        response.artists) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+/**
+ * Search for track.
+ *
+ * [Reference](https://developer.spotify.com/web-api/search-item/#example).
+ *
+ * @param {string} track - The track to search for.
+ * @param {string} [artist] - The track artist.
+ * @param {string} [album] - The track album.
+ * @return {Promise | JSON} JSON response.
+ */
+SpotifyRequestHandler.prototype.searchForTrack = function (track, artist, album) {
+  var query = track
+  if (artist || album) {
+    query = 'track:"' + track + '"'
+    query += artist ? (' artist:"' + artist + '"') : ''
+    query += album ? (' album:"' + album + '"') : ''
+  }
+  var uri = 'https://api.spotify.com/v1/search?type=track&limit=50&q='
+  uri += encodeURIComponent(query)
+  return this.request(uri).then(function (response) {
+    if (response.tracks &&
+        response.tracks.items[0] &&
+        response.tracks.items[0].uri) {
+      // Sort results by string similarity. This takes care of some
+      // odd cases where a random track from an album of the same name
+      // is returned as the first hit.
+      if (!(album && artist)) {
+        sort(response.tracks.items, sort.track(track))
+      }
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(response)
+    }
+  })
+}
+
+module.exports = SpotifyRequestHandler
+
+},{"./auth":3,"./http":8,"./sort":15}],17:[function(require,module,exports){
+var Artist = require('./artist')
+var Queue = require('./queue')
+var SpotifyRequestHandler = require('./spotify')
+var Track = require('./track')
+
+/**
+ * Top entry.
+ * @constructor
+ * @param {string} entry - The artist to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ * @param {string} [limit] - The number of tracks to fetch.
+ */
+function Top (spotify, entry, id, limit) {
+  /**
+   * Entry string.
+   */
+  this.entry = null
+
+  /**
+   * Spotify ID.
+   */
+  this.id = ''
+
+  /**
+   * Number of tracks to fetch.
+   */
+  this.limit = null
+
+  /**
+   * Top tracks.
+   */
+  this.tracks = []
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = null
+
+  this.entry = entry.trim()
+  this.id = id
+  this.limit = limit
+  this.spotify = spotify || new SpotifyRequestHandler()
+}
+
+/**
+ * Create a queue of tracks.
+ * @param {JSON} response - A JSON response object.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Top.prototype.createQueue = function () {
+  var self = this
+  var tracks = this.tracks.map(function (item) {
+    var track = new Track(this.spotify, self.entry)
+    track.clone(item)
+    return track
+  })
+  var trackQueue = new Queue(tracks)
+  if (self.limit) {
+    trackQueue = trackQueue.slice(0, self.limit)
+  }
+  return trackQueue
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Queue} A queue of tracks.
+ */
+Top.prototype.dispatch = function () {
+  var self = this
+  return this.searchForArtist().then(function () {
+    return self.fetchTopTracks()
+  }).then(function () {
+    return self.createQueue()
+  })
+}
+
+/**
+ * Fetch top tracks.
+ * @return {Promise | JSON} A JSON response.
+ */
+Top.prototype.fetchTopTracks = function () {
+  var self = this
+  return this.spotify.getTopTracks(this.id).then(function (response) {
+    self.tracks = response.tracks
+    return self
+  })
+}
+
+/**
+ * Search for the artist's ID if not known.
+ * @return {Promise} A Promise to perform the action.
+ */
+Top.prototype.searchForArtist = function () {
+  var self = this
+  if (this.id) {
+    return Promise.resolve(this)
+  } else {
+    var artist = new Artist(this.spotify, this.entry)
+    return artist.searchForArtist().then(function (artist) {
+      self.id = artist.id
+      return self
+    })
+  }
+}
+
+module.exports = Top
+
+},{"./artist":2,"./queue":12,"./spotify":16,"./track":18}],18:[function(require,module,exports){
+var defaults = require('./defaults')
+var lastfm = require('./lastfm')(defaults.api)
+var SpotifyRequestHandler = require('./spotify')
+
+/**
+ * Create track entry.
+ * @constructor
+ * @param {SpotifyRequestHandler} spotify - Spotify request handler.
+ * @param {string} entry - The track to search for.
+ * @param {string} [id] - The Spotify ID, if known.
+ */
+function Track (spotify, entry, id) {
+  /**
+   * Album name.
+   */
+  this.album = ''
+
+  /**
+   * Track artists, separated by `,`.
+   */
+  this.artist = ''
+
+  /**
+   * Array of track artists.
+   */
+  this.artists = []
+
+  /**
+   * Entry string.
+   */
+  this.entry = ''
+
+  /**
+   * Spotify ID.
+   */
+  this.id = ''
+
+  /**
+   * Last.fm global playcount.
+   */
+  this.lastfm = ''
+
+  /**
+   * Last.fm global playcount.
+   */
+  this.lastfmGlobal = ''
+
+  /**
+   * Last.fm personal playcount.
+   */
+  this.lastfmPersonal = ''
+
+  /**
+   * Main track artist.
+   */
+  this.mainArtist = ''
+
+  /**
+   * Track name.
+   */
+  this.name = ''
+
+  /**
+   * Spotify popularity.
+   */
+  this.popularity = ''
+
+  /**
+   * Spotify request handler.
+   */
+  this.spotify = null
+
+  /**
+   * Full track name on the form `Title - Artist`.
+   */
+  this.title = ''
+
+  /**
+   * Spotify URI
+   * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`).
+   */
+  this.uri = ''
+
+  this.entry = entry.trim()
+  this.id = id
+  this.name = entry
+  this.spotify = spotify || new SpotifyRequestHandler()
+  this.uri = this.id ? ('spotify:track:' + this.id) : this.uri
+}
+
+/**
+ * Clone a JSON response.
+ * @param {Object} response - The response.
+ */
+Track.prototype.clone = function (response) {
+  for (var prop in response) {
+    if (response.hasOwnProperty(prop)) {
+      this[prop] = response[prop] || this[prop]
+    }
+  }
+  if (response.album &&
+      response.album.name) {
+    this.album = response.album.name
+  }
+  if (response.artists) {
+    this.artists = response.artists.map(function (artist) {
+      return artist.name.trim()
+    })
+    this.artist = this.artists.join(', ')
+    this.mainArtist = this.artists[0]
+  }
+  if (this.mainArtist && this.name) {
+    this.title = this.name + ' - ' + this.mainArtist
+  } else {
+    this.title = this.name
+  }
+}
+
+/**
+ * Dispatch entry.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.dispatch = function () {
+  if (this.popularity) {
+    return Promise.resolve(this)
+  } else if (this.id) {
+    return this.fetchTrack()
+  } else {
+    return this.searchForTrack()
+  }
+}
+
+/**
+ * Whether this track is equal to another track.
+ * @param {Track} track - The track to compare against.
+ * @return {boolean} `true` if the tracks are equal,
+ * `false` otherwise.
+ */
+Track.prototype.equals = function (track) {
+  return this.uri && track.uri && this.uri === track.uri
+}
+
+/**
+ * Fetch Last.fm information.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.fetchLastfm = function (user) {
+  var self = this
+  return lastfm.getInfo(this.artist, this.name, user).then(function (result) {
+    self.lastfmGlobal = parseInt(result.track.playcount)
+    self.lastfmPersonal = parseInt(result.track.userplaycount)
+    self.lastfm = self.lastfmPersonal > -1 ? self.lastfmPersonal : self.lastfmGlobal
+    return self
+  })
+}
+
+/**
+ * Fetch track metadata.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.fetchTrack = function (id) {
+  id = id || this.id
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.getTrack(id).then(function (response) {
+      self.clone(response)
+      return self
+    })
+  }
+}
+
+/**
+ * Get track popularity.
+ * @return {Promise | integer} The track popularity.
+ */
+Track.prototype.getPopularity = function () {
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this.popularity)
+  } else {
+    return self.refresh().then(function () {
+      return self.popularity
+    })
+  }
+}
+
+/**
+ * Whether the track has the given artist.
+ * @param {string} artist - The artist.
+ * @return {boolean} `true` the track has the artist,
+ * `false` otherwise.
+ */
+Track.prototype.hasArtist = function (artist) {
+  artist = artist.trim().toLowerCase()
+  for (var i in this.artists) {
+    var trackArtist = this.artists[i].toLowerCase().trim()
+    if (trackArtist.includes(artist)) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Refresh track metadata.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.refresh = function () {
+  var self = this
+  return self.dispatch().then(function () {
+    return self.dispatch()
+  })
+}
+
+/**
+ * Search for track.
+ * @param {string} query - The query text.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.searchForTrack = function () {
+  var self = this
+  return this.spotify.searchForTrack(this.entry).then(function (response) {
+    if (response &&
+        response.tracks &&
+        response.tracks.items &&
+        response.tracks.items[0]) {
+      response = response.tracks.items[0]
+      self.clone(response)
+      return Promise.resolve(self)
+    } else {
+      return Promise.reject(response)
+    }
+  }).catch(function () {
+    if (self.entry.match(/^[0-9a-z]+$/i)) {
+      return self.fetchTrack(self.entry)
+    } else {
+      // console.log('COULD NOT FIND ' + self.entry)
+      return Promise.reject(null)
+    }
+  })
+}
+
+/**
+ * Whether this track is similar to another track.
+ * @param {Track} track - The track to compare against.
+ * @return {boolean} `true` if the tracks are similar,
+ * `false` otherwise.
+ */
+Track.prototype.similarTo = function (track) {
+  return this.equals(track) ||
+    this.title.toLowerCase() === track.title.toLowerCase()
+}
+
+/**
+ * Full track title.
+ * @return {string} The track title.
+ */
+Track.prototype.toString = function () {
+  return this.title || this.name || this.entry || this.id
+}
+
+module.exports = Track
+
+},{"./defaults":6,"./lastfm":9,"./spotify":16}],19:[function(require,module,exports){
+var util = {}
+
+/**
+ * Identity function.
+ * @param {Object} x - A value.
+ * @return {Object} - The same value.
+ */
+util.identity = function (x) {
+  return x
+}
+
+/**
+ * Replace Unicode characters with their ASCII equivalents.
+ * @param {string} x - A string.
+ * @return {string} - A new string.
+ */
+util.toAscii = function (str) {
+  return str.replace(/[\u2018\u2019\u00b4]/g, "'")
+    .replace(/[\u201c\u201d\u2033]/g, '"')
+    .replace(/[\u2212\u2022\u00b7\u25aa]/g, '-')
+    .replace(/[\u2013\u2015]/g, '-')
+    .replace(/\u2014/g, '-')
+    // .replace(/[\u2013\u2015]/g, '--')
+    // .replace(/\u2014/g, '---')
+    .replace(/\u2026/g, '...')
+    .replace(/[ ]+\n/g, '\n')
+    .replace(/\s*\\\n/g, '\\\n')
+    .replace(/\s*\\\n\s*\\\n/g, '\n\n')
+    .replace(/\s*\\\n\n/g, '\n\n')
+    .replace(/\n-\n/g, '\n')
+    .replace(/\n\n\s*\\\n/g, '\n\n')
+    .replace(/\n\n\n*/g, '\n\n')
+    .replace(/[ ]+$/gm, '')
+    .replace(/^\s+|[\s\\]+$/g, '')
+}
+
+module.exports = util
+
+},{}],20:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/base64 v0.1.0 by @mathias | MIT license */
 ;(function(root) {
@@ -167,7 +3250,7 @@
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],2:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // This file is autogenerated via the `commonjs` Grunt task. You can require() this file in a CommonJS environment.
 require('../../js/transition.js')
 require('../../js/alert.js')
@@ -181,7 +3264,7 @@ require('../../js/popover.js')
 require('../../js/scrollspy.js')
 require('../../js/tab.js')
 require('../../js/affix.js')
-},{"../../js/affix.js":3,"../../js/alert.js":4,"../../js/button.js":5,"../../js/carousel.js":6,"../../js/collapse.js":7,"../../js/dropdown.js":8,"../../js/modal.js":9,"../../js/popover.js":10,"../../js/scrollspy.js":11,"../../js/tab.js":12,"../../js/tooltip.js":13,"../../js/transition.js":14}],3:[function(require,module,exports){
+},{"../../js/affix.js":22,"../../js/alert.js":23,"../../js/button.js":24,"../../js/carousel.js":25,"../../js/collapse.js":26,"../../js/dropdown.js":27,"../../js/modal.js":28,"../../js/popover.js":29,"../../js/scrollspy.js":30,"../../js/tab.js":31,"../../js/tooltip.js":32,"../../js/transition.js":33}],22:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: affix.js v3.3.7
  * http://getbootstrap.com/javascript/#affix
@@ -345,7 +3428,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],4:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: alert.js v3.3.7
  * http://getbootstrap.com/javascript/#alerts
@@ -441,7 +3524,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],5:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: button.js v3.3.7
  * http://getbootstrap.com/javascript/#buttons
@@ -568,7 +3651,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],6:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: carousel.js v3.3.7
  * http://getbootstrap.com/javascript/#carousel
@@ -807,7 +3890,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],7:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: collapse.js v3.3.7
  * http://getbootstrap.com/javascript/#collapse
@@ -1021,7 +4104,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],8:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: dropdown.js v3.3.7
  * http://getbootstrap.com/javascript/#dropdowns
@@ -1188,7 +4271,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],9:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: modal.js v3.3.7
  * http://getbootstrap.com/javascript/#modals
@@ -1529,7 +4612,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],10:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: popover.js v3.3.7
  * http://getbootstrap.com/javascript/#popovers
@@ -1639,7 +4722,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],11:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: scrollspy.js v3.3.7
  * http://getbootstrap.com/javascript/#scrollspy
@@ -1813,7 +4896,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],12:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tab.js v3.3.7
  * http://getbootstrap.com/javascript/#tabs
@@ -1970,7 +5053,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],13:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: tooltip.js v3.3.7
  * http://getbootstrap.com/javascript/#tooltip
@@ -2492,7 +5575,7 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],14:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /* ========================================================================
  * Bootstrap: transition.js v3.3.7
  * http://getbootstrap.com/javascript/#transitions
@@ -2553,9 +5636,9 @@ require('../../js/affix.js')
 
 }(jQuery);
 
-},{}],15:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 
-},{}],16:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
 //
 // THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
@@ -2916,9 +5999,9 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-},{"util/":266}],17:[function(require,module,exports){
-arguments[4][15][0].apply(exports,arguments)
-},{"dup":15}],18:[function(require,module,exports){
+},{"util/":285}],36:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34}],37:[function(require,module,exports){
 'use strict';
 
 
@@ -3022,7 +6105,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],19:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -3056,7 +6139,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],20:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 'use strict';
 
 
@@ -3108,7 +6191,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],21:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -3151,7 +6234,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],22:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 'use strict';
 
 var utils   = require('../utils/common');
@@ -5008,7 +8091,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":18,"./adler32":19,"./crc32":21,"./messages":26,"./trees":27}],23:[function(require,module,exports){
+},{"../utils/common":37,"./adler32":38,"./crc32":40,"./messages":45,"./trees":46}],42:[function(require,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -5336,7 +8419,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],24:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 'use strict';
 
 
@@ -6876,7 +9959,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":18,"./adler32":19,"./crc32":21,"./inffast":23,"./inftrees":25}],25:[function(require,module,exports){
+},{"../utils/common":37,"./adler32":38,"./crc32":40,"./inffast":42,"./inftrees":44}],44:[function(require,module,exports){
 'use strict';
 
 
@@ -7205,7 +10288,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":18}],26:[function(require,module,exports){
+},{"../utils/common":37}],45:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -7220,7 +10303,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],27:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 'use strict';
 
 
@@ -8424,7 +11507,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":18}],28:[function(require,module,exports){
+},{"../utils/common":37}],47:[function(require,module,exports){
 'use strict';
 
 
@@ -8455,7 +11538,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],29:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 (function (process,Buffer){
 var msg = require('pako/lib/zlib/messages');
 var zstream = require('pako/lib/zlib/zstream');
@@ -8695,7 +11778,7 @@ Zlib.prototype._error = function(status) {
 exports.Zlib = Zlib;
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":233,"buffer":31,"pako/lib/zlib/constants":20,"pako/lib/zlib/deflate.js":22,"pako/lib/zlib/inflate.js":24,"pako/lib/zlib/messages":26,"pako/lib/zlib/zstream":28}],30:[function(require,module,exports){
+},{"_process":252,"buffer":50,"pako/lib/zlib/constants":39,"pako/lib/zlib/deflate.js":41,"pako/lib/zlib/inflate.js":43,"pako/lib/zlib/messages":45,"pako/lib/zlib/zstream":47}],49:[function(require,module,exports){
 (function (process,Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9309,7 +12392,7 @@ util.inherits(InflateRaw, Zlib);
 util.inherits(Unzip, Zlib);
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./binding":29,"_process":233,"_stream_transform":252,"assert":16,"buffer":31,"util":266}],31:[function(require,module,exports){
+},{"./binding":48,"_process":252,"_stream_transform":271,"assert":35,"buffer":50,"util":285}],50:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -11102,7 +14185,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":32,"ieee754":33,"isarray":34}],32:[function(require,module,exports){
+},{"base64-js":51,"ieee754":52,"isarray":53}],51:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -11218,7 +14301,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],33:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -11304,14 +14387,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],34:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],35:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 'use strict'
 
 exports.randomBytes = exports.rng = exports.pseudoRandomBytes = exports.prng = require('randombytes')
@@ -11390,7 +14473,7 @@ var publicEncrypt = require('public-encrypt')
   }
 })
 
-},{"browserify-cipher":36,"browserify-sign":66,"browserify-sign/algos":65,"create-ecdh":133,"create-hash":159,"create-hmac":172,"diffie-hellman":173,"pbkdf2":180,"public-encrypt":182,"randombytes":227}],36:[function(require,module,exports){
+},{"browserify-cipher":55,"browserify-sign":85,"browserify-sign/algos":84,"create-ecdh":152,"create-hash":178,"create-hmac":191,"diffie-hellman":192,"pbkdf2":199,"public-encrypt":201,"randombytes":246}],55:[function(require,module,exports){
 var ebtk = require('evp_bytestokey')
 var aes = require('browserify-aes/browser')
 var DES = require('browserify-des')
@@ -11465,7 +14548,7 @@ function getCiphers () {
 }
 exports.listCiphers = exports.getCiphers = getCiphers
 
-},{"browserify-aes/browser":39,"browserify-aes/modes":43,"browserify-des":54,"browserify-des/modes":55,"evp_bytestokey":64}],37:[function(require,module,exports){
+},{"browserify-aes/browser":58,"browserify-aes/modes":62,"browserify-des":73,"browserify-des/modes":74,"evp_bytestokey":83}],56:[function(require,module,exports){
 (function (Buffer){
 // based on the aes implimentation in triple sec
 // https://github.com/keybase/triplesec
@@ -11646,7 +14729,7 @@ AES.prototype._doCryptBlock = function (M, keySchedule, SUB_MIX, SBOX) {
 exports.AES = AES
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],38:[function(require,module,exports){
+},{"buffer":50}],57:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -11747,7 +14830,7 @@ function xorTest (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":37,"./ghash":42,"buffer":31,"buffer-xor":51,"cipher-base":52,"inherits":230}],39:[function(require,module,exports){
+},{"./aes":56,"./ghash":61,"buffer":50,"buffer-xor":70,"cipher-base":71,"inherits":249}],58:[function(require,module,exports){
 var ciphers = require('./encrypter')
 exports.createCipher = exports.Cipher = ciphers.createCipher
 exports.createCipheriv = exports.Cipheriv = ciphers.createCipheriv
@@ -11760,7 +14843,7 @@ function getCiphers () {
 }
 exports.listCiphers = exports.getCiphers = getCiphers
 
-},{"./decrypter":40,"./encrypter":41,"./modes":43}],40:[function(require,module,exports){
+},{"./decrypter":59,"./encrypter":60,"./modes":62}],59:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -11901,7 +14984,7 @@ exports.createDecipher = createDecipher
 exports.createDecipheriv = createDecipheriv
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":37,"./authCipher":38,"./modes":43,"./modes/cbc":44,"./modes/cfb":45,"./modes/cfb1":46,"./modes/cfb8":47,"./modes/ctr":48,"./modes/ecb":49,"./modes/ofb":50,"./streamCipher":53,"buffer":31,"cipher-base":52,"evp_bytestokey":64,"inherits":230}],41:[function(require,module,exports){
+},{"./aes":56,"./authCipher":57,"./modes":62,"./modes/cbc":63,"./modes/cfb":64,"./modes/cfb1":65,"./modes/cfb8":66,"./modes/ctr":67,"./modes/ecb":68,"./modes/ofb":69,"./streamCipher":72,"buffer":50,"cipher-base":71,"evp_bytestokey":83,"inherits":249}],60:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -12027,7 +15110,7 @@ exports.createCipheriv = createCipheriv
 exports.createCipher = createCipher
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":37,"./authCipher":38,"./modes":43,"./modes/cbc":44,"./modes/cfb":45,"./modes/cfb1":46,"./modes/cfb8":47,"./modes/ctr":48,"./modes/ecb":49,"./modes/ofb":50,"./streamCipher":53,"buffer":31,"cipher-base":52,"evp_bytestokey":64,"inherits":230}],42:[function(require,module,exports){
+},{"./aes":56,"./authCipher":57,"./modes":62,"./modes/cbc":63,"./modes/cfb":64,"./modes/cfb1":65,"./modes/cfb8":66,"./modes/ctr":67,"./modes/ecb":68,"./modes/ofb":69,"./streamCipher":72,"buffer":50,"cipher-base":71,"evp_bytestokey":83,"inherits":249}],61:[function(require,module,exports){
 (function (Buffer){
 var zeros = new Buffer(16)
 zeros.fill(0)
@@ -12129,7 +15212,7 @@ function xor (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],43:[function(require,module,exports){
+},{"buffer":50}],62:[function(require,module,exports){
 exports['aes-128-ecb'] = {
   cipher: 'AES',
   key: 128,
@@ -12302,7 +15385,7 @@ exports['aes-256-gcm'] = {
   type: 'auth'
 }
 
-},{}],44:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 var xor = require('buffer-xor')
 
 exports.encrypt = function (self, block) {
@@ -12321,7 +15404,7 @@ exports.decrypt = function (self, block) {
   return xor(out, pad)
 }
 
-},{"buffer-xor":51}],45:[function(require,module,exports){
+},{"buffer-xor":70}],64:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -12356,7 +15439,7 @@ function encryptStart (self, data, decrypt) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"buffer-xor":51}],46:[function(require,module,exports){
+},{"buffer":50,"buffer-xor":70}],65:[function(require,module,exports){
 (function (Buffer){
 function encryptByte (self, byteParam, decrypt) {
   var pad
@@ -12394,7 +15477,7 @@ function shiftIn (buffer, value) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],47:[function(require,module,exports){
+},{"buffer":50}],66:[function(require,module,exports){
 (function (Buffer){
 function encryptByte (self, byteParam, decrypt) {
   var pad = self._cipher.encryptBlock(self._prev)
@@ -12413,7 +15496,7 @@ exports.encrypt = function (self, chunk, decrypt) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],48:[function(require,module,exports){
+},{"buffer":50}],67:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -12448,7 +15531,7 @@ exports.encrypt = function (self, chunk) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"buffer-xor":51}],49:[function(require,module,exports){
+},{"buffer":50,"buffer-xor":70}],68:[function(require,module,exports){
 exports.encrypt = function (self, block) {
   return self._cipher.encryptBlock(block)
 }
@@ -12456,7 +15539,7 @@ exports.decrypt = function (self, block) {
   return self._cipher.decryptBlock(block)
 }
 
-},{}],50:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -12476,7 +15559,7 @@ exports.encrypt = function (self, chunk) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"buffer-xor":51}],51:[function(require,module,exports){
+},{"buffer":50,"buffer-xor":70}],70:[function(require,module,exports){
 (function (Buffer){
 module.exports = function xor (a, b) {
   var length = Math.min(a.length, b.length)
@@ -12490,7 +15573,7 @@ module.exports = function xor (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],52:[function(require,module,exports){
+},{"buffer":50}],71:[function(require,module,exports){
 (function (Buffer){
 var Transform = require('stream').Transform
 var inherits = require('inherits')
@@ -12584,7 +15667,7 @@ CipherBase.prototype._toString = function (value, enc, fin) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"inherits":230,"stream":254,"string_decoder":261}],53:[function(require,module,exports){
+},{"buffer":50,"inherits":249,"stream":273,"string_decoder":280}],72:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -12613,7 +15696,7 @@ StreamCipher.prototype._final = function () {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":37,"buffer":31,"cipher-base":52,"inherits":230}],54:[function(require,module,exports){
+},{"./aes":56,"buffer":50,"cipher-base":71,"inherits":249}],73:[function(require,module,exports){
 (function (Buffer){
 var CipherBase = require('cipher-base')
 var des = require('des.js')
@@ -12660,7 +15743,7 @@ DES.prototype._final = function () {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"cipher-base":56,"des.js":57,"inherits":230}],55:[function(require,module,exports){
+},{"buffer":50,"cipher-base":75,"des.js":76,"inherits":249}],74:[function(require,module,exports){
 exports['des-ecb'] = {
   key: 8,
   iv: 0
@@ -12686,9 +15769,9 @@ exports['des-ede'] = {
   iv: 0
 }
 
-},{}],56:[function(require,module,exports){
-arguments[4][52][0].apply(exports,arguments)
-},{"buffer":31,"dup":52,"inherits":230,"stream":254,"string_decoder":261}],57:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
+arguments[4][71][0].apply(exports,arguments)
+},{"buffer":50,"dup":71,"inherits":249,"stream":273,"string_decoder":280}],76:[function(require,module,exports){
 'use strict';
 
 exports.utils = require('./des/utils');
@@ -12697,7 +15780,7 @@ exports.DES = require('./des/des');
 exports.CBC = require('./des/cbc');
 exports.EDE = require('./des/ede');
 
-},{"./des/cbc":58,"./des/cipher":59,"./des/des":60,"./des/ede":61,"./des/utils":62}],58:[function(require,module,exports){
+},{"./des/cbc":77,"./des/cipher":78,"./des/des":79,"./des/ede":80,"./des/utils":81}],77:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -12764,7 +15847,7 @@ proto._update = function _update(inp, inOff, out, outOff) {
   }
 };
 
-},{"inherits":230,"minimalistic-assert":63}],59:[function(require,module,exports){
+},{"inherits":249,"minimalistic-assert":82}],78:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -12907,7 +15990,7 @@ Cipher.prototype._finalDecrypt = function _finalDecrypt() {
   return this._unpad(out);
 };
 
-},{"minimalistic-assert":63}],60:[function(require,module,exports){
+},{"minimalistic-assert":82}],79:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -13052,7 +16135,7 @@ DES.prototype._decrypt = function _decrypt(state, lStart, rStart, out, off) {
   utils.rip(l, r, out, off);
 };
 
-},{"../des":57,"inherits":230,"minimalistic-assert":63}],61:[function(require,module,exports){
+},{"../des":76,"inherits":249,"minimalistic-assert":82}],80:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -13109,7 +16192,7 @@ EDE.prototype._update = function _update(inp, inOff, out, outOff) {
 EDE.prototype._pad = DES.prototype._pad;
 EDE.prototype._unpad = DES.prototype._unpad;
 
-},{"../des":57,"inherits":230,"minimalistic-assert":63}],62:[function(require,module,exports){
+},{"../des":76,"inherits":249,"minimalistic-assert":82}],81:[function(require,module,exports){
 'use strict';
 
 exports.readUInt32BE = function readUInt32BE(bytes, off) {
@@ -13367,7 +16450,7 @@ exports.padSplit = function padSplit(num, size, group) {
   return out.join(' ');
 };
 
-},{}],63:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 module.exports = assert;
 
 function assert(val, msg) {
@@ -13380,7 +16463,7 @@ assert.equal = function assertEqual(l, r, msg) {
     throw new Error(msg || ('Assertion failed: ' + l + ' != ' + r));
 };
 
-},{}],64:[function(require,module,exports){
+},{}],83:[function(require,module,exports){
 (function (Buffer){
 var md5 = require('create-hash/md5')
 module.exports = EVP_BytesToKey
@@ -13452,7 +16535,7 @@ function EVP_BytesToKey (password, salt, keyLen, ivLen) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"create-hash/md5":161}],65:[function(require,module,exports){
+},{"buffer":50,"create-hash/md5":180}],84:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 exports['RSA-SHA224'] = exports.sha224WithRSAEncryption = {
@@ -13528,7 +16611,7 @@ exports['RSA-MD5'] = exports.md5WithRSAEncryption = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],66:[function(require,module,exports){
+},{"buffer":50}],85:[function(require,module,exports){
 (function (Buffer){
 var _algos = require('./algos')
 var createHash = require('create-hash')
@@ -13635,7 +16718,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./algos":65,"./sign":131,"./verify":132,"buffer":31,"create-hash":159,"inherits":230,"stream":254}],67:[function(require,module,exports){
+},{"./algos":84,"./sign":150,"./verify":151,"buffer":50,"create-hash":178,"inherits":249,"stream":273}],86:[function(require,module,exports){
 'use strict'
 exports['1.3.132.0.10'] = 'secp256k1'
 
@@ -13649,7 +16732,7 @@ exports['1.3.132.0.34'] = 'p384'
 
 exports['1.3.132.0.35'] = 'p521'
 
-},{}],68:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 (function (module, exports) {
   'use strict';
 
@@ -17078,7 +20161,7 @@ exports['1.3.132.0.35'] = 'p521'
   };
 })(typeof module === 'undefined' || module, this);
 
-},{}],69:[function(require,module,exports){
+},{}],88:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 var randomBytes = require('randombytes');
@@ -17122,7 +20205,7 @@ function getr(priv) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bn.js":68,"buffer":31,"randombytes":227}],70:[function(require,module,exports){
+},{"bn.js":87,"buffer":50,"randombytes":246}],89:[function(require,module,exports){
 'use strict';
 
 var elliptic = exports;
@@ -17138,7 +20221,7 @@ elliptic.curves = require('./elliptic/curves');
 elliptic.ec = require('./elliptic/ec');
 elliptic.eddsa = require('./elliptic/eddsa');
 
-},{"../package.json":93,"./elliptic/curve":73,"./elliptic/curves":76,"./elliptic/ec":77,"./elliptic/eddsa":80,"./elliptic/hmac-drbg":83,"./elliptic/utils":85,"brorand":86}],71:[function(require,module,exports){
+},{"../package.json":112,"./elliptic/curve":92,"./elliptic/curves":95,"./elliptic/ec":96,"./elliptic/eddsa":99,"./elliptic/hmac-drbg":102,"./elliptic/utils":104,"brorand":105}],90:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -17515,7 +20598,7 @@ BasePoint.prototype.dblp = function dblp(k) {
   return r;
 };
 
-},{"../../elliptic":70,"bn.js":68}],72:[function(require,module,exports){
+},{"../../elliptic":89,"bn.js":87}],91:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -17950,7 +21033,7 @@ Point.prototype.eqXToP = function eqXToP(x) {
 Point.prototype.toP = Point.prototype.normalize;
 Point.prototype.mixedAdd = Point.prototype.add;
 
-},{"../../elliptic":70,"../curve":73,"bn.js":68,"inherits":230}],73:[function(require,module,exports){
+},{"../../elliptic":89,"../curve":92,"bn.js":87,"inherits":249}],92:[function(require,module,exports){
 'use strict';
 
 var curve = exports;
@@ -17960,7 +21043,7 @@ curve.short = require('./short');
 curve.mont = require('./mont');
 curve.edwards = require('./edwards');
 
-},{"./base":71,"./edwards":72,"./mont":74,"./short":75}],74:[function(require,module,exports){
+},{"./base":90,"./edwards":91,"./mont":93,"./short":94}],93:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -18142,7 +21225,7 @@ Point.prototype.getX = function getX() {
   return this.x.fromRed();
 };
 
-},{"../../elliptic":70,"../curve":73,"bn.js":68,"inherits":230}],75:[function(require,module,exports){
+},{"../../elliptic":89,"../curve":92,"bn.js":87,"inherits":249}],94:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -19082,7 +22165,7 @@ JPoint.prototype.isInfinity = function isInfinity() {
   return this.z.cmpn(0) === 0;
 };
 
-},{"../../elliptic":70,"../curve":73,"bn.js":68,"inherits":230}],76:[function(require,module,exports){
+},{"../../elliptic":89,"../curve":92,"bn.js":87,"inherits":249}],95:[function(require,module,exports){
 'use strict';
 
 var curves = exports;
@@ -19289,7 +22372,7 @@ defineCurve('secp256k1', {
   ]
 });
 
-},{"../elliptic":70,"./precomputed/secp256k1":84,"hash.js":87}],77:[function(require,module,exports){
+},{"../elliptic":89,"./precomputed/secp256k1":103,"hash.js":106}],96:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -19528,7 +22611,7 @@ EC.prototype.getKeyRecoveryParam = function(e, signature, Q, enc) {
   throw new Error('Unable to find valid recovery factor');
 };
 
-},{"../../elliptic":70,"./key":78,"./signature":79,"bn.js":68}],78:[function(require,module,exports){
+},{"../../elliptic":89,"./key":97,"./signature":98,"bn.js":87}],97:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -19637,7 +22720,7 @@ KeyPair.prototype.inspect = function inspect() {
          ' pub: ' + (this.pub && this.pub.inspect()) + ' >';
 };
 
-},{"bn.js":68}],79:[function(require,module,exports){
+},{"bn.js":87}],98:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -19774,7 +22857,7 @@ Signature.prototype.toDER = function toDER(enc) {
   return utils.encode(res, enc);
 };
 
-},{"../../elliptic":70,"bn.js":68}],80:[function(require,module,exports){
+},{"../../elliptic":89,"bn.js":87}],99:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
@@ -19894,7 +22977,7 @@ EDDSA.prototype.isPoint = function isPoint(val) {
   return val instanceof this.pointClass;
 };
 
-},{"../../elliptic":70,"./key":81,"./signature":82,"hash.js":87}],81:[function(require,module,exports){
+},{"../../elliptic":89,"./key":100,"./signature":101,"hash.js":106}],100:[function(require,module,exports){
 'use strict';
 
 var elliptic = require('../../elliptic');
@@ -19992,7 +23075,7 @@ KeyPair.prototype.getPublic = function getPublic(enc) {
 
 module.exports = KeyPair;
 
-},{"../../elliptic":70}],82:[function(require,module,exports){
+},{"../../elliptic":89}],101:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -20060,7 +23143,7 @@ Signature.prototype.toHex = function toHex() {
 
 module.exports = Signature;
 
-},{"../../elliptic":70,"bn.js":68}],83:[function(require,module,exports){
+},{"../../elliptic":89,"bn.js":87}],102:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
@@ -20176,7 +23259,7 @@ HmacDRBG.prototype.generate = function generate(len, enc, add, addEnc) {
   return utils.encode(res, enc);
 };
 
-},{"../elliptic":70,"hash.js":87}],84:[function(require,module,exports){
+},{"../elliptic":89,"hash.js":106}],103:[function(require,module,exports){
 module.exports = {
   doubles: {
     step: 4,
@@ -20958,7 +24041,7 @@ module.exports = {
   }
 };
 
-},{}],85:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 'use strict';
 
 var utils = exports;
@@ -21132,7 +24215,7 @@ function intFromLE(bytes) {
 utils.intFromLE = intFromLE;
 
 
-},{"bn.js":68}],86:[function(require,module,exports){
+},{"bn.js":87}],105:[function(require,module,exports){
 var r;
 
 module.exports = function rand(len) {
@@ -21191,7 +24274,7 @@ if (typeof window === 'object') {
   }
 }
 
-},{"crypto":17}],87:[function(require,module,exports){
+},{"crypto":36}],106:[function(require,module,exports){
 var hash = exports;
 
 hash.utils = require('./hash/utils');
@@ -21208,7 +24291,7 @@ hash.sha384 = hash.sha.sha384;
 hash.sha512 = hash.sha.sha512;
 hash.ripemd160 = hash.ripemd.ripemd160;
 
-},{"./hash/common":88,"./hash/hmac":89,"./hash/ripemd":90,"./hash/sha":91,"./hash/utils":92}],88:[function(require,module,exports){
+},{"./hash/common":107,"./hash/hmac":108,"./hash/ripemd":109,"./hash/sha":110,"./hash/utils":111}],107:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 var assert = utils.assert;
@@ -21301,7 +24384,7 @@ BlockHash.prototype._pad = function pad() {
   return res;
 };
 
-},{"../hash":87}],89:[function(require,module,exports){
+},{"../hash":106}],108:[function(require,module,exports){
 var hmac = exports;
 
 var hash = require('../hash');
@@ -21351,7 +24434,7 @@ Hmac.prototype.digest = function digest(enc) {
   return this.outer.digest(enc);
 };
 
-},{"../hash":87}],90:[function(require,module,exports){
+},{"../hash":106}],109:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 
@@ -21497,7 +24580,7 @@ var sh = [
   8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
 ];
 
-},{"../hash":87}],91:[function(require,module,exports){
+},{"../hash":106}],110:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 var assert = utils.assert;
@@ -22063,7 +25146,7 @@ function g1_512_lo(xh, xl) {
   return r;
 }
 
-},{"../hash":87}],92:[function(require,module,exports){
+},{"../hash":106}],111:[function(require,module,exports){
 var utils = exports;
 var inherits = require('inherits');
 
@@ -22322,7 +25405,7 @@ function shr64_lo(ah, al, num) {
 };
 exports.shr64_lo = shr64_lo;
 
-},{"inherits":230}],93:[function(require,module,exports){
+},{"inherits":249}],112:[function(require,module,exports){
 module.exports={
   "name": "elliptic",
   "version": "6.3.2",
@@ -22408,7 +25491,7 @@ module.exports={
   "readme": "ERROR: No README data found!"
 }
 
-},{}],94:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 module.exports={"2.16.840.1.101.3.4.1.1": "aes-128-ecb",
 "2.16.840.1.101.3.4.1.2": "aes-128-cbc",
 "2.16.840.1.101.3.4.1.3": "aes-128-ofb",
@@ -22422,7 +25505,7 @@ module.exports={"2.16.840.1.101.3.4.1.1": "aes-128-ecb",
 "2.16.840.1.101.3.4.1.43": "aes-256-ofb",
 "2.16.840.1.101.3.4.1.44": "aes-256-cfb"
 }
-},{}],95:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 // from https://github.com/indutny/self-signed/blob/gh-pages/lib/asn1.js
 // Fedor, you are amazing.
 
@@ -22541,7 +25624,7 @@ exports.signature = asn1.define('signature', function () {
   )
 })
 
-},{"asn1.js":98}],96:[function(require,module,exports){
+},{"asn1.js":117}],115:[function(require,module,exports){
 (function (Buffer){
 // adapted from https://github.com/apatil/pemstrip
 var findProc = /Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: AES-((?:128)|(?:192)|(?:256))-CBC,([0-9A-H]+)\r?\n\r?\n([0-9A-z\n\r\+\/\=]+)\r?\n/m
@@ -22575,7 +25658,7 @@ module.exports = function (okey, password) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"browserify-aes":115,"buffer":31,"evp_bytestokey":130}],97:[function(require,module,exports){
+},{"browserify-aes":134,"buffer":50,"evp_bytestokey":149}],116:[function(require,module,exports){
 (function (Buffer){
 var asn1 = require('./asn1')
 var aesid = require('./aesid.json')
@@ -22680,7 +25763,7 @@ function decrypt (data, password) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aesid.json":94,"./asn1":95,"./fixProc":96,"browserify-aes":115,"buffer":31,"pbkdf2":180}],98:[function(require,module,exports){
+},{"./aesid.json":113,"./asn1":114,"./fixProc":115,"browserify-aes":134,"buffer":50,"pbkdf2":199}],117:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -22691,7 +25774,7 @@ asn1.constants = require('./asn1/constants');
 asn1.decoders = require('./asn1/decoders');
 asn1.encoders = require('./asn1/encoders');
 
-},{"./asn1/api":99,"./asn1/base":101,"./asn1/constants":105,"./asn1/decoders":107,"./asn1/encoders":110,"bn.js":68}],99:[function(require,module,exports){
+},{"./asn1/api":118,"./asn1/base":120,"./asn1/constants":124,"./asn1/decoders":126,"./asn1/encoders":129,"bn.js":87}],118:[function(require,module,exports){
 var asn1 = require('../asn1');
 var inherits = require('inherits');
 
@@ -22754,7 +25837,7 @@ Entity.prototype.encode = function encode(data, enc, /* internal */ reporter) {
   return this._getEncoder(enc).encode(data, reporter);
 };
 
-},{"../asn1":98,"inherits":230,"vm":267}],100:[function(require,module,exports){
+},{"../asn1":117,"inherits":249,"vm":286}],119:[function(require,module,exports){
 var inherits = require('inherits');
 var Reporter = require('../base').Reporter;
 var Buffer = require('buffer').Buffer;
@@ -22872,7 +25955,7 @@ EncoderBuffer.prototype.join = function join(out, offset) {
   return out;
 };
 
-},{"../base":101,"buffer":31,"inherits":230}],101:[function(require,module,exports){
+},{"../base":120,"buffer":50,"inherits":249}],120:[function(require,module,exports){
 var base = exports;
 
 base.Reporter = require('./reporter').Reporter;
@@ -22880,7 +25963,7 @@ base.DecoderBuffer = require('./buffer').DecoderBuffer;
 base.EncoderBuffer = require('./buffer').EncoderBuffer;
 base.Node = require('./node');
 
-},{"./buffer":100,"./node":102,"./reporter":103}],102:[function(require,module,exports){
+},{"./buffer":119,"./node":121,"./reporter":122}],121:[function(require,module,exports){
 var Reporter = require('../base').Reporter;
 var EncoderBuffer = require('../base').EncoderBuffer;
 var DecoderBuffer = require('../base').DecoderBuffer;
@@ -23516,7 +26599,7 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
   return /^[A-Za-z0-9 '\(\)\+,\-\.\/:=\?]*$/.test(str);
 };
 
-},{"../base":101,"minimalistic-assert":112}],103:[function(require,module,exports){
+},{"../base":120,"minimalistic-assert":131}],122:[function(require,module,exports){
 var inherits = require('inherits');
 
 function Reporter(options) {
@@ -23639,7 +26722,7 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
   return this;
 };
 
-},{"inherits":230}],104:[function(require,module,exports){
+},{"inherits":249}],123:[function(require,module,exports){
 var constants = require('../constants');
 
 exports.tagClass = {
@@ -23683,7 +26766,7 @@ exports.tag = {
 };
 exports.tagByName = constants._reverse(exports.tag);
 
-},{"../constants":105}],105:[function(require,module,exports){
+},{"../constants":124}],124:[function(require,module,exports){
 var constants = exports;
 
 // Helper
@@ -23704,7 +26787,7 @@ constants._reverse = function reverse(map) {
 
 constants.der = require('./der');
 
-},{"./der":104}],106:[function(require,module,exports){
+},{"./der":123}],125:[function(require,module,exports){
 var inherits = require('inherits');
 
 var asn1 = require('../../asn1');
@@ -24030,13 +27113,13 @@ function derDecodeLen(buf, primitive, fail) {
   return len;
 }
 
-},{"../../asn1":98,"inherits":230}],107:[function(require,module,exports){
+},{"../../asn1":117,"inherits":249}],126:[function(require,module,exports){
 var decoders = exports;
 
 decoders.der = require('./der');
 decoders.pem = require('./pem');
 
-},{"./der":106,"./pem":108}],108:[function(require,module,exports){
+},{"./der":125,"./pem":127}],127:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
@@ -24087,7 +27170,7 @@ PEMDecoder.prototype.decode = function decode(data, options) {
   return DERDecoder.prototype.decode.call(this, input, options);
 };
 
-},{"./der":106,"buffer":31,"inherits":230}],109:[function(require,module,exports){
+},{"./der":125,"buffer":50,"inherits":249}],128:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
@@ -24384,13 +27467,13 @@ function encodeTag(tag, primitive, cls, reporter) {
   return res;
 }
 
-},{"../../asn1":98,"buffer":31,"inherits":230}],110:[function(require,module,exports){
+},{"../../asn1":117,"buffer":50,"inherits":249}],129:[function(require,module,exports){
 var encoders = exports;
 
 encoders.der = require('./der');
 encoders.pem = require('./pem');
 
-},{"./der":109,"./pem":111}],111:[function(require,module,exports){
+},{"./der":128,"./pem":130}],130:[function(require,module,exports){
 var inherits = require('inherits');
 
 var DEREncoder = require('./der');
@@ -24413,45 +27496,45 @@ PEMEncoder.prototype.encode = function encode(data, options) {
   return out.join('\n');
 };
 
-},{"./der":109,"inherits":230}],112:[function(require,module,exports){
+},{"./der":128,"inherits":249}],131:[function(require,module,exports){
+arguments[4][82][0].apply(exports,arguments)
+},{"dup":82}],132:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"buffer":50,"dup":56}],133:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"./aes":132,"./ghash":137,"buffer":50,"buffer-xor":146,"cipher-base":147,"dup":57,"inherits":249}],134:[function(require,module,exports){
+arguments[4][58][0].apply(exports,arguments)
+},{"./decrypter":135,"./encrypter":136,"./modes":138,"dup":58}],135:[function(require,module,exports){
+arguments[4][59][0].apply(exports,arguments)
+},{"./aes":132,"./authCipher":133,"./modes":138,"./modes/cbc":139,"./modes/cfb":140,"./modes/cfb1":141,"./modes/cfb8":142,"./modes/ctr":143,"./modes/ecb":144,"./modes/ofb":145,"./streamCipher":148,"buffer":50,"cipher-base":147,"dup":59,"evp_bytestokey":149,"inherits":249}],136:[function(require,module,exports){
+arguments[4][60][0].apply(exports,arguments)
+},{"./aes":132,"./authCipher":133,"./modes":138,"./modes/cbc":139,"./modes/cfb":140,"./modes/cfb1":141,"./modes/cfb8":142,"./modes/ctr":143,"./modes/ecb":144,"./modes/ofb":145,"./streamCipher":148,"buffer":50,"cipher-base":147,"dup":60,"evp_bytestokey":149,"inherits":249}],137:[function(require,module,exports){
+arguments[4][61][0].apply(exports,arguments)
+},{"buffer":50,"dup":61}],138:[function(require,module,exports){
+arguments[4][62][0].apply(exports,arguments)
+},{"dup":62}],139:[function(require,module,exports){
 arguments[4][63][0].apply(exports,arguments)
-},{"dup":63}],113:[function(require,module,exports){
-arguments[4][37][0].apply(exports,arguments)
-},{"buffer":31,"dup":37}],114:[function(require,module,exports){
-arguments[4][38][0].apply(exports,arguments)
-},{"./aes":113,"./ghash":118,"buffer":31,"buffer-xor":127,"cipher-base":128,"dup":38,"inherits":230}],115:[function(require,module,exports){
-arguments[4][39][0].apply(exports,arguments)
-},{"./decrypter":116,"./encrypter":117,"./modes":119,"dup":39}],116:[function(require,module,exports){
-arguments[4][40][0].apply(exports,arguments)
-},{"./aes":113,"./authCipher":114,"./modes":119,"./modes/cbc":120,"./modes/cfb":121,"./modes/cfb1":122,"./modes/cfb8":123,"./modes/ctr":124,"./modes/ecb":125,"./modes/ofb":126,"./streamCipher":129,"buffer":31,"cipher-base":128,"dup":40,"evp_bytestokey":130,"inherits":230}],117:[function(require,module,exports){
-arguments[4][41][0].apply(exports,arguments)
-},{"./aes":113,"./authCipher":114,"./modes":119,"./modes/cbc":120,"./modes/cfb":121,"./modes/cfb1":122,"./modes/cfb8":123,"./modes/ctr":124,"./modes/ecb":125,"./modes/ofb":126,"./streamCipher":129,"buffer":31,"cipher-base":128,"dup":41,"evp_bytestokey":130,"inherits":230}],118:[function(require,module,exports){
-arguments[4][42][0].apply(exports,arguments)
-},{"buffer":31,"dup":42}],119:[function(require,module,exports){
-arguments[4][43][0].apply(exports,arguments)
-},{"dup":43}],120:[function(require,module,exports){
-arguments[4][44][0].apply(exports,arguments)
-},{"buffer-xor":127,"dup":44}],121:[function(require,module,exports){
-arguments[4][45][0].apply(exports,arguments)
-},{"buffer":31,"buffer-xor":127,"dup":45}],122:[function(require,module,exports){
-arguments[4][46][0].apply(exports,arguments)
-},{"buffer":31,"dup":46}],123:[function(require,module,exports){
-arguments[4][47][0].apply(exports,arguments)
-},{"buffer":31,"dup":47}],124:[function(require,module,exports){
-arguments[4][48][0].apply(exports,arguments)
-},{"buffer":31,"buffer-xor":127,"dup":48}],125:[function(require,module,exports){
-arguments[4][49][0].apply(exports,arguments)
-},{"dup":49}],126:[function(require,module,exports){
-arguments[4][50][0].apply(exports,arguments)
-},{"buffer":31,"buffer-xor":127,"dup":50}],127:[function(require,module,exports){
-arguments[4][51][0].apply(exports,arguments)
-},{"buffer":31,"dup":51}],128:[function(require,module,exports){
-arguments[4][52][0].apply(exports,arguments)
-},{"buffer":31,"dup":52,"inherits":230,"stream":254,"string_decoder":261}],129:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"./aes":113,"buffer":31,"cipher-base":128,"dup":53,"inherits":230}],130:[function(require,module,exports){
+},{"buffer-xor":146,"dup":63}],140:[function(require,module,exports){
 arguments[4][64][0].apply(exports,arguments)
-},{"buffer":31,"create-hash/md5":161,"dup":64}],131:[function(require,module,exports){
+},{"buffer":50,"buffer-xor":146,"dup":64}],141:[function(require,module,exports){
+arguments[4][65][0].apply(exports,arguments)
+},{"buffer":50,"dup":65}],142:[function(require,module,exports){
+arguments[4][66][0].apply(exports,arguments)
+},{"buffer":50,"dup":66}],143:[function(require,module,exports){
+arguments[4][67][0].apply(exports,arguments)
+},{"buffer":50,"buffer-xor":146,"dup":67}],144:[function(require,module,exports){
+arguments[4][68][0].apply(exports,arguments)
+},{"dup":68}],145:[function(require,module,exports){
+arguments[4][69][0].apply(exports,arguments)
+},{"buffer":50,"buffer-xor":146,"dup":69}],146:[function(require,module,exports){
+arguments[4][70][0].apply(exports,arguments)
+},{"buffer":50,"dup":70}],147:[function(require,module,exports){
+arguments[4][71][0].apply(exports,arguments)
+},{"buffer":50,"dup":71,"inherits":249,"stream":273,"string_decoder":280}],148:[function(require,module,exports){
+arguments[4][72][0].apply(exports,arguments)
+},{"./aes":132,"buffer":50,"cipher-base":147,"dup":72,"inherits":249}],149:[function(require,module,exports){
+arguments[4][83][0].apply(exports,arguments)
+},{"buffer":50,"create-hash/md5":180,"dup":83}],150:[function(require,module,exports){
 (function (Buffer){
 // much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var createHmac = require('create-hmac')
@@ -24640,7 +27723,7 @@ module.exports.getKey = getKey
 module.exports.makeKey = makeKey
 
 }).call(this,require("buffer").Buffer)
-},{"./curves":67,"bn.js":68,"browserify-rsa":69,"buffer":31,"create-hmac":172,"elliptic":70,"parse-asn1":97}],132:[function(require,module,exports){
+},{"./curves":86,"bn.js":87,"browserify-rsa":88,"buffer":50,"create-hmac":191,"elliptic":89,"parse-asn1":116}],151:[function(require,module,exports){
 (function (Buffer){
 // much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var curves = require('./curves')
@@ -24747,7 +27830,7 @@ function checkValue (b, q) {
 module.exports = verify
 
 }).call(this,require("buffer").Buffer)
-},{"./curves":67,"bn.js":68,"buffer":31,"elliptic":70,"parse-asn1":97}],133:[function(require,module,exports){
+},{"./curves":86,"bn.js":87,"buffer":50,"elliptic":89,"parse-asn1":116}],152:[function(require,module,exports){
 (function (Buffer){
 var elliptic = require('elliptic');
 var BN = require('bn.js');
@@ -24873,55 +27956,55 @@ function formatReturnValue(bn, enc, len) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bn.js":134,"buffer":31,"elliptic":135}],134:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],135:[function(require,module,exports){
-arguments[4][70][0].apply(exports,arguments)
-},{"../package.json":158,"./elliptic/curve":138,"./elliptic/curves":141,"./elliptic/ec":142,"./elliptic/eddsa":145,"./elliptic/hmac-drbg":148,"./elliptic/utils":150,"brorand":151,"dup":70}],136:[function(require,module,exports){
-arguments[4][71][0].apply(exports,arguments)
-},{"../../elliptic":135,"bn.js":134,"dup":71}],137:[function(require,module,exports){
-arguments[4][72][0].apply(exports,arguments)
-},{"../../elliptic":135,"../curve":138,"bn.js":134,"dup":72,"inherits":230}],138:[function(require,module,exports){
-arguments[4][73][0].apply(exports,arguments)
-},{"./base":136,"./edwards":137,"./mont":139,"./short":140,"dup":73}],139:[function(require,module,exports){
-arguments[4][74][0].apply(exports,arguments)
-},{"../../elliptic":135,"../curve":138,"bn.js":134,"dup":74,"inherits":230}],140:[function(require,module,exports){
-arguments[4][75][0].apply(exports,arguments)
-},{"../../elliptic":135,"../curve":138,"bn.js":134,"dup":75,"inherits":230}],141:[function(require,module,exports){
-arguments[4][76][0].apply(exports,arguments)
-},{"../elliptic":135,"./precomputed/secp256k1":149,"dup":76,"hash.js":152}],142:[function(require,module,exports){
-arguments[4][77][0].apply(exports,arguments)
-},{"../../elliptic":135,"./key":143,"./signature":144,"bn.js":134,"dup":77}],143:[function(require,module,exports){
-arguments[4][78][0].apply(exports,arguments)
-},{"bn.js":134,"dup":78}],144:[function(require,module,exports){
-arguments[4][79][0].apply(exports,arguments)
-},{"../../elliptic":135,"bn.js":134,"dup":79}],145:[function(require,module,exports){
-arguments[4][80][0].apply(exports,arguments)
-},{"../../elliptic":135,"./key":146,"./signature":147,"dup":80,"hash.js":152}],146:[function(require,module,exports){
-arguments[4][81][0].apply(exports,arguments)
-},{"../../elliptic":135,"dup":81}],147:[function(require,module,exports){
-arguments[4][82][0].apply(exports,arguments)
-},{"../../elliptic":135,"bn.js":134,"dup":82}],148:[function(require,module,exports){
-arguments[4][83][0].apply(exports,arguments)
-},{"../elliptic":135,"dup":83,"hash.js":152}],149:[function(require,module,exports){
-arguments[4][84][0].apply(exports,arguments)
-},{"dup":84}],150:[function(require,module,exports){
-arguments[4][85][0].apply(exports,arguments)
-},{"bn.js":134,"dup":85}],151:[function(require,module,exports){
-arguments[4][86][0].apply(exports,arguments)
-},{"crypto":17,"dup":86}],152:[function(require,module,exports){
+},{"bn.js":153,"buffer":50,"elliptic":154}],153:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"./hash/common":153,"./hash/hmac":154,"./hash/ripemd":155,"./hash/sha":156,"./hash/utils":157,"dup":87}],153:[function(require,module,exports){
-arguments[4][88][0].apply(exports,arguments)
-},{"../hash":152,"dup":88}],154:[function(require,module,exports){
+},{"dup":87}],154:[function(require,module,exports){
 arguments[4][89][0].apply(exports,arguments)
-},{"../hash":152,"dup":89}],155:[function(require,module,exports){
+},{"../package.json":177,"./elliptic/curve":157,"./elliptic/curves":160,"./elliptic/ec":161,"./elliptic/eddsa":164,"./elliptic/hmac-drbg":167,"./elliptic/utils":169,"brorand":170,"dup":89}],155:[function(require,module,exports){
 arguments[4][90][0].apply(exports,arguments)
-},{"../hash":152,"dup":90}],156:[function(require,module,exports){
+},{"../../elliptic":154,"bn.js":153,"dup":90}],156:[function(require,module,exports){
 arguments[4][91][0].apply(exports,arguments)
-},{"../hash":152,"dup":91}],157:[function(require,module,exports){
+},{"../../elliptic":154,"../curve":157,"bn.js":153,"dup":91,"inherits":249}],157:[function(require,module,exports){
 arguments[4][92][0].apply(exports,arguments)
-},{"dup":92,"inherits":230}],158:[function(require,module,exports){
+},{"./base":155,"./edwards":156,"./mont":158,"./short":159,"dup":92}],158:[function(require,module,exports){
+arguments[4][93][0].apply(exports,arguments)
+},{"../../elliptic":154,"../curve":157,"bn.js":153,"dup":93,"inherits":249}],159:[function(require,module,exports){
+arguments[4][94][0].apply(exports,arguments)
+},{"../../elliptic":154,"../curve":157,"bn.js":153,"dup":94,"inherits":249}],160:[function(require,module,exports){
+arguments[4][95][0].apply(exports,arguments)
+},{"../elliptic":154,"./precomputed/secp256k1":168,"dup":95,"hash.js":171}],161:[function(require,module,exports){
+arguments[4][96][0].apply(exports,arguments)
+},{"../../elliptic":154,"./key":162,"./signature":163,"bn.js":153,"dup":96}],162:[function(require,module,exports){
+arguments[4][97][0].apply(exports,arguments)
+},{"bn.js":153,"dup":97}],163:[function(require,module,exports){
+arguments[4][98][0].apply(exports,arguments)
+},{"../../elliptic":154,"bn.js":153,"dup":98}],164:[function(require,module,exports){
+arguments[4][99][0].apply(exports,arguments)
+},{"../../elliptic":154,"./key":165,"./signature":166,"dup":99,"hash.js":171}],165:[function(require,module,exports){
+arguments[4][100][0].apply(exports,arguments)
+},{"../../elliptic":154,"dup":100}],166:[function(require,module,exports){
+arguments[4][101][0].apply(exports,arguments)
+},{"../../elliptic":154,"bn.js":153,"dup":101}],167:[function(require,module,exports){
+arguments[4][102][0].apply(exports,arguments)
+},{"../elliptic":154,"dup":102,"hash.js":171}],168:[function(require,module,exports){
+arguments[4][103][0].apply(exports,arguments)
+},{"dup":103}],169:[function(require,module,exports){
+arguments[4][104][0].apply(exports,arguments)
+},{"bn.js":153,"dup":104}],170:[function(require,module,exports){
+arguments[4][105][0].apply(exports,arguments)
+},{"crypto":36,"dup":105}],171:[function(require,module,exports){
+arguments[4][106][0].apply(exports,arguments)
+},{"./hash/common":172,"./hash/hmac":173,"./hash/ripemd":174,"./hash/sha":175,"./hash/utils":176,"dup":106}],172:[function(require,module,exports){
+arguments[4][107][0].apply(exports,arguments)
+},{"../hash":171,"dup":107}],173:[function(require,module,exports){
+arguments[4][108][0].apply(exports,arguments)
+},{"../hash":171,"dup":108}],174:[function(require,module,exports){
+arguments[4][109][0].apply(exports,arguments)
+},{"../hash":171,"dup":109}],175:[function(require,module,exports){
+arguments[4][110][0].apply(exports,arguments)
+},{"../hash":171,"dup":110}],176:[function(require,module,exports){
+arguments[4][111][0].apply(exports,arguments)
+},{"dup":111,"inherits":249}],177:[function(require,module,exports){
 module.exports={
   "name": "elliptic",
   "version": "6.3.2",
@@ -25006,7 +28089,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.3.2.tgz"
 }
 
-},{}],159:[function(require,module,exports){
+},{}],178:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var inherits = require('inherits')
@@ -25062,7 +28145,7 @@ module.exports = function createHash (alg) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./md5":161,"buffer":31,"cipher-base":162,"inherits":230,"ripemd160":163,"sha.js":165}],160:[function(require,module,exports){
+},{"./md5":180,"buffer":50,"cipher-base":181,"inherits":249,"ripemd160":182,"sha.js":184}],179:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var intSize = 4;
@@ -25099,7 +28182,7 @@ function hash(buf, fn, hashSize, bigEndian) {
 }
 exports.hash = hash;
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],161:[function(require,module,exports){
+},{"buffer":50}],180:[function(require,module,exports){
 'use strict';
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
@@ -25256,9 +28339,9 @@ function bit_rol(num, cnt)
 module.exports = function md5(buf) {
   return helpers.hash(buf, core_md5, 16);
 };
-},{"./helpers":160}],162:[function(require,module,exports){
-arguments[4][52][0].apply(exports,arguments)
-},{"buffer":31,"dup":52,"inherits":230,"stream":254,"string_decoder":261}],163:[function(require,module,exports){
+},{"./helpers":179}],181:[function(require,module,exports){
+arguments[4][71][0].apply(exports,arguments)
+},{"buffer":50,"dup":71,"inherits":249,"stream":273,"string_decoder":280}],182:[function(require,module,exports){
 (function (Buffer){
 /*
 CryptoJS v3.1.2
@@ -25472,7 +28555,7 @@ function ripemd160 (message) {
 module.exports = ripemd160
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],164:[function(require,module,exports){
+},{"buffer":50}],183:[function(require,module,exports){
 (function (Buffer){
 // prototype class for hash functions
 function Hash (blockSize, finalSize) {
@@ -25545,7 +28628,7 @@ Hash.prototype._update = function () {
 module.exports = Hash
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],165:[function(require,module,exports){
+},{"buffer":50}],184:[function(require,module,exports){
 var exports = module.exports = function SHA (algorithm) {
   algorithm = algorithm.toLowerCase()
 
@@ -25562,7 +28645,7 @@ exports.sha256 = require('./sha256')
 exports.sha384 = require('./sha384')
 exports.sha512 = require('./sha512')
 
-},{"./sha":166,"./sha1":167,"./sha224":168,"./sha256":169,"./sha384":170,"./sha512":171}],166:[function(require,module,exports){
+},{"./sha":185,"./sha1":186,"./sha224":187,"./sha256":188,"./sha384":189,"./sha512":190}],185:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-0, as defined
@@ -25659,7 +28742,7 @@ Sha.prototype._hash = function () {
 module.exports = Sha
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":164,"buffer":31,"inherits":230}],167:[function(require,module,exports){
+},{"./hash":183,"buffer":50,"inherits":249}],186:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
@@ -25761,7 +28844,7 @@ Sha1.prototype._hash = function () {
 module.exports = Sha1
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":164,"buffer":31,"inherits":230}],168:[function(require,module,exports){
+},{"./hash":183,"buffer":50,"inherits":249}],187:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -25817,7 +28900,7 @@ Sha224.prototype._hash = function () {
 module.exports = Sha224
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":164,"./sha256":169,"buffer":31,"inherits":230}],169:[function(require,module,exports){
+},{"./hash":183,"./sha256":188,"buffer":50,"inherits":249}],188:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -25955,7 +29038,7 @@ Sha256.prototype._hash = function () {
 module.exports = Sha256
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":164,"buffer":31,"inherits":230}],170:[function(require,module,exports){
+},{"./hash":183,"buffer":50,"inherits":249}],189:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var SHA512 = require('./sha512')
@@ -26015,7 +29098,7 @@ Sha384.prototype._hash = function () {
 module.exports = Sha384
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":164,"./sha512":171,"buffer":31,"inherits":230}],171:[function(require,module,exports){
+},{"./hash":183,"./sha512":190,"buffer":50,"inherits":249}],190:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var Hash = require('./hash')
@@ -26278,7 +29361,7 @@ Sha512.prototype._hash = function () {
 module.exports = Sha512
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":164,"buffer":31,"inherits":230}],172:[function(require,module,exports){
+},{"./hash":183,"buffer":50,"inherits":249}],191:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var createHash = require('create-hash/browser');
@@ -26350,7 +29433,7 @@ module.exports = function createHmac(alg, key) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"create-hash/browser":159,"inherits":230,"stream":254}],173:[function(require,module,exports){
+},{"buffer":50,"create-hash/browser":178,"inherits":249,"stream":273}],192:[function(require,module,exports){
 (function (Buffer){
 var generatePrime = require('./lib/generatePrime')
 var primes = require('./lib/primes.json')
@@ -26396,7 +29479,7 @@ exports.DiffieHellmanGroup = exports.createDiffieHellmanGroup = exports.getDiffi
 exports.createDiffieHellman = exports.DiffieHellman = createDiffieHellman
 
 }).call(this,require("buffer").Buffer)
-},{"./lib/dh":174,"./lib/generatePrime":175,"./lib/primes.json":176,"buffer":31}],174:[function(require,module,exports){
+},{"./lib/dh":193,"./lib/generatePrime":194,"./lib/primes.json":195,"buffer":50}],193:[function(require,module,exports){
 (function (Buffer){
 var BN = require('bn.js');
 var MillerRabin = require('miller-rabin');
@@ -26564,7 +29647,7 @@ function formatReturnValue(bn, enc) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./generatePrime":175,"bn.js":177,"buffer":31,"miller-rabin":178,"randombytes":227}],175:[function(require,module,exports){
+},{"./generatePrime":194,"bn.js":196,"buffer":50,"miller-rabin":197,"randombytes":246}],194:[function(require,module,exports){
 var randomBytes = require('randombytes');
 module.exports = findPrime;
 findPrime.simpleSieve = simpleSieve;
@@ -26671,7 +29754,7 @@ function findPrime(bits, gen) {
 
 }
 
-},{"bn.js":177,"miller-rabin":178,"randombytes":227}],176:[function(require,module,exports){
+},{"bn.js":196,"miller-rabin":197,"randombytes":246}],195:[function(require,module,exports){
 module.exports={
     "modp1": {
         "gen": "02",
@@ -26706,9 +29789,9 @@ module.exports={
         "prime": "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca18217c32905e462e36ce3be39e772c180e86039b2783a2ec07a28fb5c55df06f4c52c9de2bcbf6955817183995497cea956ae515d2261898fa051015728e5a8aaac42dad33170d04507a33a85521abdf1cba64ecfb850458dbef0a8aea71575d060c7db3970f85a6e1e4c7abf5ae8cdb0933d71e8c94e04a25619dcee3d2261ad2ee6bf12ffa06d98a0864d87602733ec86a64521f2b18177b200cbbe117577a615d6c770988c0bad946e208e24fa074e5ab3143db5bfce0fd108e4b82d120a92108011a723c12a787e6d788719a10bdba5b2699c327186af4e23c1a946834b6150bda2583e9ca2ad44ce8dbbbc2db04de8ef92e8efc141fbecaa6287c59474e6bc05d99b2964fa090c3a2233ba186515be7ed1f612970cee2d7afb81bdd762170481cd0069127d5b05aa993b4ea988d8fddc186ffb7dc90a6c08f4df435c93402849236c3fab4d27c7026c1d4dcb2602646dec9751e763dba37bdf8ff9406ad9e530ee5db382f413001aeb06a53ed9027d831179727b0865a8918da3edbebcf9b14ed44ce6cbaced4bb1bdb7f1447e6cc254b332051512bd7af426fb8f401378cd2bf5983ca01c64b92ecf032ea15d1721d03f482d7ce6e74fef6d55e702f46980c82b5a84031900b1c9e59e7c97fbec7e8f323a97a7e36cc88be0f1d45b7ff585ac54bd407b22b4154aacc8f6d7ebf48e1d814cc5ed20f8037e0a79715eef29be32806a1d58bb7c5da76f550aa3d8a1fbff0eb19ccb1a313d55cda56c9ec2ef29632387fe8d76e3c0468043e8f663f4860ee12bf2d5b0b7474d6e694f91e6dbe115974a3926f12fee5e438777cb6a932df8cd8bec4d073b931ba3bc832b68d9dd300741fa7bf8afc47ed2576f6936ba424663aab639c5ae4f5683423b4742bf1c978238f16cbe39d652de3fdb8befc848ad922222e04a4037c0713eb57a81a23f0c73473fc646cea306b4bcbc8862f8385ddfa9d4b7fa2c087e879683303ed5bdd3a062b3cf5b3a278a66d2a13f83f44f82ddf310ee074ab6a364597e899a0255dc164f31cc50846851df9ab48195ded7ea1b1d510bd7ee74d73faf36bc31ecfa268359046f4eb879f924009438b481c6cd7889a002ed5ee382bc9190da6fc026e479558e4475677e9aa9e3050e2765694dfc81f56e880b96e7160c980dd98edd3dfffffffffffffffff"
     }
 }
-},{}],177:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],178:[function(require,module,exports){
+},{}],196:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87}],197:[function(require,module,exports){
 var bn = require('bn.js');
 var brorand = require('brorand');
 
@@ -26823,9 +29906,9 @@ MillerRabin.prototype.getDivisor = function getDivisor(n, k) {
   return false;
 };
 
-},{"bn.js":177,"brorand":179}],179:[function(require,module,exports){
-arguments[4][86][0].apply(exports,arguments)
-},{"crypto":17,"dup":86}],180:[function(require,module,exports){
+},{"bn.js":196,"brorand":198}],198:[function(require,module,exports){
+arguments[4][105][0].apply(exports,arguments)
+},{"crypto":36,"dup":105}],199:[function(require,module,exports){
 (function (process,Buffer){
 var createHmac = require('create-hmac')
 var checkParameters = require('./precondition')
@@ -26897,7 +29980,7 @@ exports.pbkdf2Sync = function (password, salt, iterations, keylen, digest) {
 }
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./precondition":181,"_process":233,"buffer":31,"create-hmac":172}],181:[function(require,module,exports){
+},{"./precondition":200,"_process":252,"buffer":50,"create-hmac":191}],200:[function(require,module,exports){
 var MAX_ALLOC = Math.pow(2, 30) - 1 // default in iojs
 module.exports = function (iterations, keylen) {
   if (typeof iterations !== 'number') {
@@ -26917,7 +30000,7 @@ module.exports = function (iterations, keylen) {
   }
 }
 
-},{}],182:[function(require,module,exports){
+},{}],201:[function(require,module,exports){
 exports.publicEncrypt = require('./publicEncrypt');
 exports.privateDecrypt = require('./privateDecrypt');
 
@@ -26928,7 +30011,7 @@ exports.privateEncrypt = function privateEncrypt(key, buf) {
 exports.publicDecrypt = function publicDecrypt(key, buf) {
   return exports.privateDecrypt(key, buf, true);
 };
-},{"./privateDecrypt":223,"./publicEncrypt":224}],183:[function(require,module,exports){
+},{"./privateDecrypt":242,"./publicEncrypt":243}],202:[function(require,module,exports){
 (function (Buffer){
 var createHash = require('create-hash');
 module.exports = function (seed, len) {
@@ -26947,85 +30030,85 @@ function i2ops(c) {
   return out;
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"create-hash":159}],184:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],185:[function(require,module,exports){
-arguments[4][69][0].apply(exports,arguments)
-},{"bn.js":184,"buffer":31,"dup":69,"randombytes":227}],186:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],187:[function(require,module,exports){
-arguments[4][95][0].apply(exports,arguments)
-},{"asn1.js":190,"dup":95}],188:[function(require,module,exports){
-arguments[4][96][0].apply(exports,arguments)
-},{"browserify-aes":207,"buffer":31,"dup":96,"evp_bytestokey":222}],189:[function(require,module,exports){
-arguments[4][97][0].apply(exports,arguments)
-},{"./aesid.json":186,"./asn1":187,"./fixProc":188,"browserify-aes":207,"buffer":31,"dup":97,"pbkdf2":180}],190:[function(require,module,exports){
-arguments[4][98][0].apply(exports,arguments)
-},{"./asn1/api":191,"./asn1/base":193,"./asn1/constants":197,"./asn1/decoders":199,"./asn1/encoders":202,"bn.js":184,"dup":98}],191:[function(require,module,exports){
-arguments[4][99][0].apply(exports,arguments)
-},{"../asn1":190,"dup":99,"inherits":230,"vm":267}],192:[function(require,module,exports){
-arguments[4][100][0].apply(exports,arguments)
-},{"../base":193,"buffer":31,"dup":100,"inherits":230}],193:[function(require,module,exports){
-arguments[4][101][0].apply(exports,arguments)
-},{"./buffer":192,"./node":194,"./reporter":195,"dup":101}],194:[function(require,module,exports){
-arguments[4][102][0].apply(exports,arguments)
-},{"../base":193,"dup":102,"minimalistic-assert":204}],195:[function(require,module,exports){
-arguments[4][103][0].apply(exports,arguments)
-},{"dup":103,"inherits":230}],196:[function(require,module,exports){
-arguments[4][104][0].apply(exports,arguments)
-},{"../constants":197,"dup":104}],197:[function(require,module,exports){
-arguments[4][105][0].apply(exports,arguments)
-},{"./der":196,"dup":105}],198:[function(require,module,exports){
-arguments[4][106][0].apply(exports,arguments)
-},{"../../asn1":190,"dup":106,"inherits":230}],199:[function(require,module,exports){
-arguments[4][107][0].apply(exports,arguments)
-},{"./der":198,"./pem":200,"dup":107}],200:[function(require,module,exports){
-arguments[4][108][0].apply(exports,arguments)
-},{"./der":198,"buffer":31,"dup":108,"inherits":230}],201:[function(require,module,exports){
-arguments[4][109][0].apply(exports,arguments)
-},{"../../asn1":190,"buffer":31,"dup":109,"inherits":230}],202:[function(require,module,exports){
-arguments[4][110][0].apply(exports,arguments)
-},{"./der":201,"./pem":203,"dup":110}],203:[function(require,module,exports){
-arguments[4][111][0].apply(exports,arguments)
-},{"./der":201,"dup":111,"inherits":230}],204:[function(require,module,exports){
+},{"buffer":50,"create-hash":178}],203:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87}],204:[function(require,module,exports){
+arguments[4][88][0].apply(exports,arguments)
+},{"bn.js":203,"buffer":50,"dup":88,"randombytes":246}],205:[function(require,module,exports){
+arguments[4][113][0].apply(exports,arguments)
+},{"dup":113}],206:[function(require,module,exports){
+arguments[4][114][0].apply(exports,arguments)
+},{"asn1.js":209,"dup":114}],207:[function(require,module,exports){
+arguments[4][115][0].apply(exports,arguments)
+},{"browserify-aes":226,"buffer":50,"dup":115,"evp_bytestokey":241}],208:[function(require,module,exports){
+arguments[4][116][0].apply(exports,arguments)
+},{"./aesid.json":205,"./asn1":206,"./fixProc":207,"browserify-aes":226,"buffer":50,"dup":116,"pbkdf2":199}],209:[function(require,module,exports){
+arguments[4][117][0].apply(exports,arguments)
+},{"./asn1/api":210,"./asn1/base":212,"./asn1/constants":216,"./asn1/decoders":218,"./asn1/encoders":221,"bn.js":203,"dup":117}],210:[function(require,module,exports){
+arguments[4][118][0].apply(exports,arguments)
+},{"../asn1":209,"dup":118,"inherits":249,"vm":286}],211:[function(require,module,exports){
+arguments[4][119][0].apply(exports,arguments)
+},{"../base":212,"buffer":50,"dup":119,"inherits":249}],212:[function(require,module,exports){
+arguments[4][120][0].apply(exports,arguments)
+},{"./buffer":211,"./node":213,"./reporter":214,"dup":120}],213:[function(require,module,exports){
+arguments[4][121][0].apply(exports,arguments)
+},{"../base":212,"dup":121,"minimalistic-assert":223}],214:[function(require,module,exports){
+arguments[4][122][0].apply(exports,arguments)
+},{"dup":122,"inherits":249}],215:[function(require,module,exports){
+arguments[4][123][0].apply(exports,arguments)
+},{"../constants":216,"dup":123}],216:[function(require,module,exports){
+arguments[4][124][0].apply(exports,arguments)
+},{"./der":215,"dup":124}],217:[function(require,module,exports){
+arguments[4][125][0].apply(exports,arguments)
+},{"../../asn1":209,"dup":125,"inherits":249}],218:[function(require,module,exports){
+arguments[4][126][0].apply(exports,arguments)
+},{"./der":217,"./pem":219,"dup":126}],219:[function(require,module,exports){
+arguments[4][127][0].apply(exports,arguments)
+},{"./der":217,"buffer":50,"dup":127,"inherits":249}],220:[function(require,module,exports){
+arguments[4][128][0].apply(exports,arguments)
+},{"../../asn1":209,"buffer":50,"dup":128,"inherits":249}],221:[function(require,module,exports){
+arguments[4][129][0].apply(exports,arguments)
+},{"./der":220,"./pem":222,"dup":129}],222:[function(require,module,exports){
+arguments[4][130][0].apply(exports,arguments)
+},{"./der":220,"dup":130,"inherits":249}],223:[function(require,module,exports){
+arguments[4][82][0].apply(exports,arguments)
+},{"dup":82}],224:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"buffer":50,"dup":56}],225:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"./aes":224,"./ghash":229,"buffer":50,"buffer-xor":238,"cipher-base":239,"dup":57,"inherits":249}],226:[function(require,module,exports){
+arguments[4][58][0].apply(exports,arguments)
+},{"./decrypter":227,"./encrypter":228,"./modes":230,"dup":58}],227:[function(require,module,exports){
+arguments[4][59][0].apply(exports,arguments)
+},{"./aes":224,"./authCipher":225,"./modes":230,"./modes/cbc":231,"./modes/cfb":232,"./modes/cfb1":233,"./modes/cfb8":234,"./modes/ctr":235,"./modes/ecb":236,"./modes/ofb":237,"./streamCipher":240,"buffer":50,"cipher-base":239,"dup":59,"evp_bytestokey":241,"inherits":249}],228:[function(require,module,exports){
+arguments[4][60][0].apply(exports,arguments)
+},{"./aes":224,"./authCipher":225,"./modes":230,"./modes/cbc":231,"./modes/cfb":232,"./modes/cfb1":233,"./modes/cfb8":234,"./modes/ctr":235,"./modes/ecb":236,"./modes/ofb":237,"./streamCipher":240,"buffer":50,"cipher-base":239,"dup":60,"evp_bytestokey":241,"inherits":249}],229:[function(require,module,exports){
+arguments[4][61][0].apply(exports,arguments)
+},{"buffer":50,"dup":61}],230:[function(require,module,exports){
+arguments[4][62][0].apply(exports,arguments)
+},{"dup":62}],231:[function(require,module,exports){
 arguments[4][63][0].apply(exports,arguments)
-},{"dup":63}],205:[function(require,module,exports){
-arguments[4][37][0].apply(exports,arguments)
-},{"buffer":31,"dup":37}],206:[function(require,module,exports){
-arguments[4][38][0].apply(exports,arguments)
-},{"./aes":205,"./ghash":210,"buffer":31,"buffer-xor":219,"cipher-base":220,"dup":38,"inherits":230}],207:[function(require,module,exports){
-arguments[4][39][0].apply(exports,arguments)
-},{"./decrypter":208,"./encrypter":209,"./modes":211,"dup":39}],208:[function(require,module,exports){
-arguments[4][40][0].apply(exports,arguments)
-},{"./aes":205,"./authCipher":206,"./modes":211,"./modes/cbc":212,"./modes/cfb":213,"./modes/cfb1":214,"./modes/cfb8":215,"./modes/ctr":216,"./modes/ecb":217,"./modes/ofb":218,"./streamCipher":221,"buffer":31,"cipher-base":220,"dup":40,"evp_bytestokey":222,"inherits":230}],209:[function(require,module,exports){
-arguments[4][41][0].apply(exports,arguments)
-},{"./aes":205,"./authCipher":206,"./modes":211,"./modes/cbc":212,"./modes/cfb":213,"./modes/cfb1":214,"./modes/cfb8":215,"./modes/ctr":216,"./modes/ecb":217,"./modes/ofb":218,"./streamCipher":221,"buffer":31,"cipher-base":220,"dup":41,"evp_bytestokey":222,"inherits":230}],210:[function(require,module,exports){
-arguments[4][42][0].apply(exports,arguments)
-},{"buffer":31,"dup":42}],211:[function(require,module,exports){
-arguments[4][43][0].apply(exports,arguments)
-},{"dup":43}],212:[function(require,module,exports){
-arguments[4][44][0].apply(exports,arguments)
-},{"buffer-xor":219,"dup":44}],213:[function(require,module,exports){
-arguments[4][45][0].apply(exports,arguments)
-},{"buffer":31,"buffer-xor":219,"dup":45}],214:[function(require,module,exports){
-arguments[4][46][0].apply(exports,arguments)
-},{"buffer":31,"dup":46}],215:[function(require,module,exports){
-arguments[4][47][0].apply(exports,arguments)
-},{"buffer":31,"dup":47}],216:[function(require,module,exports){
-arguments[4][48][0].apply(exports,arguments)
-},{"buffer":31,"buffer-xor":219,"dup":48}],217:[function(require,module,exports){
-arguments[4][49][0].apply(exports,arguments)
-},{"dup":49}],218:[function(require,module,exports){
-arguments[4][50][0].apply(exports,arguments)
-},{"buffer":31,"buffer-xor":219,"dup":50}],219:[function(require,module,exports){
-arguments[4][51][0].apply(exports,arguments)
-},{"buffer":31,"dup":51}],220:[function(require,module,exports){
-arguments[4][52][0].apply(exports,arguments)
-},{"buffer":31,"dup":52,"inherits":230,"stream":254,"string_decoder":261}],221:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"./aes":205,"buffer":31,"cipher-base":220,"dup":53,"inherits":230}],222:[function(require,module,exports){
+},{"buffer-xor":238,"dup":63}],232:[function(require,module,exports){
 arguments[4][64][0].apply(exports,arguments)
-},{"buffer":31,"create-hash/md5":161,"dup":64}],223:[function(require,module,exports){
+},{"buffer":50,"buffer-xor":238,"dup":64}],233:[function(require,module,exports){
+arguments[4][65][0].apply(exports,arguments)
+},{"buffer":50,"dup":65}],234:[function(require,module,exports){
+arguments[4][66][0].apply(exports,arguments)
+},{"buffer":50,"dup":66}],235:[function(require,module,exports){
+arguments[4][67][0].apply(exports,arguments)
+},{"buffer":50,"buffer-xor":238,"dup":67}],236:[function(require,module,exports){
+arguments[4][68][0].apply(exports,arguments)
+},{"dup":68}],237:[function(require,module,exports){
+arguments[4][69][0].apply(exports,arguments)
+},{"buffer":50,"buffer-xor":238,"dup":69}],238:[function(require,module,exports){
+arguments[4][70][0].apply(exports,arguments)
+},{"buffer":50,"dup":70}],239:[function(require,module,exports){
+arguments[4][71][0].apply(exports,arguments)
+},{"buffer":50,"dup":71,"inherits":249,"stream":273,"string_decoder":280}],240:[function(require,module,exports){
+arguments[4][72][0].apply(exports,arguments)
+},{"./aes":224,"buffer":50,"cipher-base":239,"dup":72,"inherits":249}],241:[function(require,module,exports){
+arguments[4][83][0].apply(exports,arguments)
+},{"buffer":50,"create-hash/md5":180,"dup":83}],242:[function(require,module,exports){
 (function (Buffer){
 var parseKeys = require('parse-asn1');
 var mgf = require('./mgf');
@@ -27136,7 +30219,7 @@ function compare(a, b){
   return dif;
 }
 }).call(this,require("buffer").Buffer)
-},{"./mgf":183,"./withPublic":225,"./xor":226,"bn.js":184,"browserify-rsa":185,"buffer":31,"create-hash":159,"parse-asn1":189}],224:[function(require,module,exports){
+},{"./mgf":202,"./withPublic":244,"./xor":245,"bn.js":203,"browserify-rsa":204,"buffer":50,"create-hash":178,"parse-asn1":208}],243:[function(require,module,exports){
 (function (Buffer){
 var parseKeys = require('parse-asn1');
 var randomBytes = require('randombytes');
@@ -27234,7 +30317,7 @@ function nonZero(len, crypto) {
   return out;
 }
 }).call(this,require("buffer").Buffer)
-},{"./mgf":183,"./withPublic":225,"./xor":226,"bn.js":184,"browserify-rsa":185,"buffer":31,"create-hash":159,"parse-asn1":189,"randombytes":227}],225:[function(require,module,exports){
+},{"./mgf":202,"./withPublic":244,"./xor":245,"bn.js":203,"browserify-rsa":204,"buffer":50,"create-hash":178,"parse-asn1":208,"randombytes":246}],244:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 function withPublic(paddedMsg, key) {
@@ -27247,7 +30330,7 @@ function withPublic(paddedMsg, key) {
 
 module.exports = withPublic;
 }).call(this,require("buffer").Buffer)
-},{"bn.js":184,"buffer":31}],226:[function(require,module,exports){
+},{"bn.js":203,"buffer":50}],245:[function(require,module,exports){
 module.exports = function xor(a, b) {
   var len = a.length;
   var i = -1;
@@ -27256,7 +30339,7 @@ module.exports = function xor(a, b) {
   }
   return a
 };
-},{}],227:[function(require,module,exports){
+},{}],246:[function(require,module,exports){
 (function (process,global,Buffer){
 'use strict'
 
@@ -27296,7 +30379,7 @@ function randomBytes (size, cb) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"_process":233,"buffer":31}],228:[function(require,module,exports){
+},{"_process":252,"buffer":50}],247:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27600,7 +30683,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],229:[function(require,module,exports){
+},{}],248:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -27616,7 +30699,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":255}],230:[function(require,module,exports){
+},{"http":274}],249:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -27641,7 +30724,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],231:[function(require,module,exports){
+},{}],250:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -27664,7 +30747,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],232:[function(require,module,exports){
+},{}],251:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -27892,7 +30975,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":233}],233:[function(require,module,exports){
+},{"_process":252}],252:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -28074,7 +31157,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],234:[function(require,module,exports){
+},{}],253:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -28611,7 +31694,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],235:[function(require,module,exports){
+},{}],254:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28697,7 +31780,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],236:[function(require,module,exports){
+},{}],255:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28784,16 +31867,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],237:[function(require,module,exports){
+},{}],256:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":235,"./encode":236}],238:[function(require,module,exports){
+},{"./decode":254,"./encode":255}],257:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":239}],239:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":258}],258:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -28869,7 +31952,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":241,"./_stream_writable":243,"core-util-is":246,"inherits":230,"process-nextick-args":248}],240:[function(require,module,exports){
+},{"./_stream_readable":260,"./_stream_writable":262,"core-util-is":265,"inherits":249,"process-nextick-args":267}],259:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -28896,7 +31979,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":242,"core-util-is":246,"inherits":230}],241:[function(require,module,exports){
+},{"./_stream_transform":261,"core-util-is":265,"inherits":249}],260:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -29840,7 +32923,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":239,"./internal/streams/BufferList":244,"_process":233,"buffer":31,"buffer-shims":245,"core-util-is":246,"events":228,"inherits":230,"isarray":247,"process-nextick-args":248,"string_decoder/":261,"util":17}],242:[function(require,module,exports){
+},{"./_stream_duplex":258,"./internal/streams/BufferList":263,"_process":252,"buffer":50,"buffer-shims":264,"core-util-is":265,"events":247,"inherits":249,"isarray":266,"process-nextick-args":267,"string_decoder/":280,"util":36}],261:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -30023,7 +33106,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":239,"core-util-is":246,"inherits":230}],243:[function(require,module,exports){
+},{"./_stream_duplex":258,"core-util-is":265,"inherits":249}],262:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -30580,7 +33663,7 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":239,"_process":233,"buffer":31,"buffer-shims":245,"core-util-is":246,"events":228,"inherits":230,"process-nextick-args":248,"util-deprecate":249}],244:[function(require,module,exports){
+},{"./_stream_duplex":258,"_process":252,"buffer":50,"buffer-shims":264,"core-util-is":265,"events":247,"inherits":249,"process-nextick-args":267,"util-deprecate":268}],263:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('buffer').Buffer;
@@ -30645,7 +33728,7 @@ BufferList.prototype.concat = function (n) {
   }
   return ret;
 };
-},{"buffer":31,"buffer-shims":245}],245:[function(require,module,exports){
+},{"buffer":50,"buffer-shims":264}],264:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -30757,7 +33840,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"buffer":31}],246:[function(require,module,exports){
+},{"buffer":50}],265:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -30868,9 +33951,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":231}],247:[function(require,module,exports){
-arguments[4][34][0].apply(exports,arguments)
-},{"dup":34}],248:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":250}],266:[function(require,module,exports){
+arguments[4][53][0].apply(exports,arguments)
+},{"dup":53}],267:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -30917,7 +34000,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":233}],249:[function(require,module,exports){
+},{"_process":252}],268:[function(require,module,exports){
 (function (global){
 
 /**
@@ -30988,10 +34071,10 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],250:[function(require,module,exports){
+},{}],269:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":240}],251:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":259}],270:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -31011,13 +34094,13 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":239,"./lib/_stream_passthrough.js":240,"./lib/_stream_readable.js":241,"./lib/_stream_transform.js":242,"./lib/_stream_writable.js":243,"_process":233}],252:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":258,"./lib/_stream_passthrough.js":259,"./lib/_stream_readable.js":260,"./lib/_stream_transform.js":261,"./lib/_stream_writable.js":262,"_process":252}],271:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":242}],253:[function(require,module,exports){
+},{"./lib/_stream_transform.js":261}],272:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":243}],254:[function(require,module,exports){
+},{"./lib/_stream_writable.js":262}],273:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31146,7 +34229,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":228,"inherits":230,"readable-stream/duplex.js":238,"readable-stream/passthrough.js":250,"readable-stream/readable.js":251,"readable-stream/transform.js":252,"readable-stream/writable.js":253}],255:[function(require,module,exports){
+},{"events":247,"inherits":249,"readable-stream/duplex.js":257,"readable-stream/passthrough.js":269,"readable-stream/readable.js":270,"readable-stream/transform.js":271,"readable-stream/writable.js":272}],274:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -31228,7 +34311,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":257,"builtin-status-codes":259,"url":262,"xtend":269}],256:[function(require,module,exports){
+},{"./lib/request":276,"builtin-status-codes":278,"url":281,"xtend":288}],275:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -31272,7 +34355,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],257:[function(require,module,exports){
+},{}],276:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -31558,7 +34641,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":256,"./response":258,"_process":233,"buffer":31,"inherits":230,"readable-stream":251,"to-arraybuffer":260}],258:[function(require,module,exports){
+},{"./capability":275,"./response":277,"_process":252,"buffer":50,"inherits":249,"readable-stream":270,"to-arraybuffer":279}],277:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -31742,7 +34825,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":256,"_process":233,"buffer":31,"inherits":230,"readable-stream":251}],259:[function(require,module,exports){
+},{"./capability":275,"_process":252,"buffer":50,"inherits":249,"readable-stream":270}],278:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -31807,7 +34890,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],260:[function(require,module,exports){
+},{}],279:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -31836,7 +34919,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":31}],261:[function(require,module,exports){
+},{"buffer":50}],280:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32059,7 +35142,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":31}],262:[function(require,module,exports){
+},{"buffer":50}],281:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32793,7 +35876,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":263,"punycode":234,"querystring":237}],263:[function(require,module,exports){
+},{"./util":282,"punycode":253,"querystring":256}],282:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -32811,16 +35894,16 @@ module.exports = {
   }
 };
 
-},{}],264:[function(require,module,exports){
-arguments[4][230][0].apply(exports,arguments)
-},{"dup":230}],265:[function(require,module,exports){
+},{}],283:[function(require,module,exports){
+arguments[4][249][0].apply(exports,arguments)
+},{"dup":249}],284:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],266:[function(require,module,exports){
+},{}],285:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -33410,7 +36493,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":265,"_process":233,"inherits":264}],267:[function(require,module,exports){
+},{"./support/isBuffer":284,"_process":252,"inherits":283}],286:[function(require,module,exports){
 var indexOf = require('indexof');
 
 var Object_keys = function (obj) {
@@ -33550,7 +36633,7 @@ exports.createContext = Script.createContext = function (context) {
     return copy;
 };
 
-},{"indexof":268}],268:[function(require,module,exports){
+},{"indexof":287}],287:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -33561,7 +36644,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],269:[function(require,module,exports){
+},{}],288:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -33582,7 +36665,7 @@ function extend() {
     return target
 }
 
-},{}],270:[function(require,module,exports){
+},{}],289:[function(require,module,exports){
 (function (process){
 // Generated by CoffeeScript 1.10.0
 var Stringifier, get, stream, util;
@@ -33895,7 +36978,7 @@ Stringifier.prototype.stringify = function(line) {
 };
 
 }).call(this,require('_process'))
-},{"_process":233,"lodash.get":272,"stream":254,"util":266}],271:[function(require,module,exports){
+},{"_process":252,"lodash.get":291,"stream":273,"util":285}],290:[function(require,module,exports){
 (function (Buffer){
 // Generated by CoffeeScript 1.10.0
 var StringDecoder, stringify;
@@ -33929,7 +37012,7 @@ module.exports = function(records, options) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./index":270,"buffer":31,"string_decoder":261}],272:[function(require,module,exports){
+},{"./index":289,"buffer":50,"string_decoder":280}],291:[function(require,module,exports){
 (function (global){
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -34864,7 +37947,7 @@ function get(object, path, defaultValue) {
 module.exports = get;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],273:[function(require,module,exports){
+},{}],292:[function(require,module,exports){
 (function (process){
 !function(root, name, make) {
   if (typeof module != 'undefined' && module.exports) module.exports = make()
@@ -34905,7 +37988,7 @@ module.exports = get;
 });
 
 }).call(this,require('_process'))
-},{"_process":233}],274:[function(require,module,exports){
+},{"_process":252}],293:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v3.1.1
  * https://jquery.com/
@@ -45127,7 +48210,7 @@ if ( !noGlobal ) {
 return jQuery;
 } );
 
-},{}],275:[function(require,module,exports){
+},{}],294:[function(require,module,exports){
 // Copyright 2010-2012 Mikeal Rogers
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -45285,7 +48368,7 @@ Object.defineProperty(request, 'debug', {
   }
 })
 
-},{"./lib/cookies":277,"./lib/helpers":280,"./request":399,"extend":292}],276:[function(require,module,exports){
+},{"./lib/cookies":296,"./lib/helpers":299,"./request":418,"extend":311}],295:[function(require,module,exports){
 'use strict'
 
 var caseless = require('caseless')
@@ -45455,7 +48538,7 @@ Auth.prototype.onResponse = function (response) {
 
 exports.Auth = Auth
 
-},{"./helpers":280,"caseless":289,"uuid":398}],277:[function(require,module,exports){
+},{"./helpers":299,"caseless":308,"uuid":417}],296:[function(require,module,exports){
 'use strict'
 
 var tough = require('tough-cookie')
@@ -45496,7 +48579,7 @@ exports.jar = function(store) {
   return new RequestJar(store)
 }
 
-},{"tough-cookie":389}],278:[function(require,module,exports){
+},{"tough-cookie":408}],297:[function(require,module,exports){
 (function (process){
 'use strict'
 
@@ -45579,7 +48662,7 @@ function getProxyFromURI(uri) {
 module.exports = getProxyFromURI
 
 }).call(this,require('_process'))
-},{"_process":233}],279:[function(require,module,exports){
+},{"_process":252}],298:[function(require,module,exports){
 'use strict'
 
 var fs = require('fs')
@@ -45796,7 +48879,7 @@ Har.prototype.options = function (options) {
 
 exports.Har = Har
 
-},{"extend":292,"fs":15,"har-validator":296,"querystring":237}],280:[function(require,module,exports){
+},{"extend":311,"fs":34,"har-validator":315,"querystring":256}],299:[function(require,module,exports){
 (function (process,Buffer){
 'use strict'
 
@@ -45865,7 +48948,7 @@ exports.version               = version
 exports.defer                 = defer
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":233,"buffer":31,"crypto":35,"json-stringify-safe":378}],281:[function(require,module,exports){
+},{"_process":252,"buffer":50,"crypto":54,"json-stringify-safe":397}],300:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 
@@ -45981,7 +49064,7 @@ Multipart.prototype.onRequest = function (options) {
 exports.Multipart = Multipart
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"combined-stream":290,"isstream":377,"uuid":398}],282:[function(require,module,exports){
+},{"buffer":50,"combined-stream":309,"isstream":396,"uuid":417}],301:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 
@@ -46132,7 +49215,7 @@ OAuth.prototype.onRequest = function (_oauth) {
 exports.OAuth = OAuth
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"caseless":289,"crypto":35,"oauth-sign":382,"qs":384,"url":262,"uuid":398}],283:[function(require,module,exports){
+},{"buffer":50,"caseless":308,"crypto":54,"oauth-sign":401,"qs":403,"url":281,"uuid":417}],302:[function(require,module,exports){
 'use strict'
 
 var qs = require('qs')
@@ -46185,7 +49268,7 @@ Querystring.prototype.unescape = querystring.unescape
 
 exports.Querystring = Querystring
 
-},{"qs":384,"querystring":237}],284:[function(require,module,exports){
+},{"qs":403,"querystring":256}],303:[function(require,module,exports){
 'use strict'
 
 var url = require('url')
@@ -46344,7 +49427,7 @@ Redirect.prototype.onResponse = function (response) {
 
 exports.Redirect = Redirect
 
-},{"url":262}],285:[function(require,module,exports){
+},{"url":281}],304:[function(require,module,exports){
 'use strict'
 
 var url = require('url')
@@ -46522,7 +49605,7 @@ Tunnel.defaultProxyHeaderWhiteList = defaultProxyHeaderWhiteList
 Tunnel.defaultProxyHeaderExclusiveList = defaultProxyHeaderExclusiveList
 exports.Tunnel = Tunnel
 
-},{"tunnel-agent":396,"url":262}],286:[function(require,module,exports){
+},{"tunnel-agent":415,"url":281}],305:[function(require,module,exports){
 
 /*!
  *  Copyright 2010 LearnBoost <dev@learnboost.com>
@@ -46736,7 +49819,7 @@ function canonicalizeResource (resource) {
 }
 module.exports.canonicalizeResource = canonicalizeResource
 
-},{"crypto":35,"url":262}],287:[function(require,module,exports){
+},{"crypto":54,"url":281}],306:[function(require,module,exports){
 (function (process,Buffer){
 var aws4 = exports,
     url = require('url'),
@@ -47063,7 +50146,7 @@ aws4.sign = function(request, credentials) {
 }
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./lru":288,"_process":233,"buffer":31,"crypto":35,"querystring":237,"url":262}],288:[function(require,module,exports){
+},{"./lru":307,"_process":252,"buffer":50,"crypto":54,"querystring":256,"url":281}],307:[function(require,module,exports){
 module.exports = function(size) {
   return new LruCache(size)
 }
@@ -47161,7 +50244,7 @@ function DoublyLinkedNode(key, val) {
   this.next = null
 }
 
-},{}],289:[function(require,module,exports){
+},{}],308:[function(require,module,exports){
 function Caseless (dict) {
   this.dict = dict || {}
 }
@@ -47229,7 +50312,7 @@ module.exports.httpify = function (resp, headers) {
   return c
 }
 
-},{}],290:[function(require,module,exports){
+},{}],309:[function(require,module,exports){
 (function (Buffer){
 var util = require('util');
 var Stream = require('stream').Stream;
@@ -47421,7 +50504,7 @@ CombinedStream.prototype._emitError = function(err) {
 };
 
 }).call(this,{"isBuffer":require("../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":231,"delayed-stream":291,"stream":254,"util":266}],291:[function(require,module,exports){
+},{"../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":250,"delayed-stream":310,"stream":273,"util":285}],310:[function(require,module,exports){
 var Stream = require('stream').Stream;
 var util = require('util');
 
@@ -47530,7 +50613,7 @@ DelayedStream.prototype._checkIfMaxDataSizeExceeded = function() {
   this.emit('error', new Error(message));
 };
 
-},{"stream":254,"util":266}],292:[function(require,module,exports){
+},{"stream":273,"util":285}],311:[function(require,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -47618,7 +50701,7 @@ module.exports = function extend() {
 };
 
 
-},{}],293:[function(require,module,exports){
+},{}],312:[function(require,module,exports){
 module.exports = ForeverAgent
 ForeverAgent.SSL = ForeverAgentSSL
 
@@ -47758,11 +50841,11 @@ function createConnectionSSL (port, host, options) {
   return tls.connect(options);
 }
 
-},{"http":255,"https":229,"net":15,"tls":15,"util":266}],294:[function(require,module,exports){
+},{"http":274,"https":248,"net":34,"tls":34,"util":285}],313:[function(require,module,exports){
 /* eslint-env browser */
 module.exports = typeof self == 'object' ? self.FormData : window.FormData;
 
-},{}],295:[function(require,module,exports){
+},{}],314:[function(require,module,exports){
 'use strict'
 
 function ValidationError (errors) {
@@ -47774,7 +50857,7 @@ ValidationError.prototype = Error.prototype
 
 module.exports = ValidationError
 
-},{}],296:[function(require,module,exports){
+},{}],315:[function(require,module,exports){
 'use strict'
 
 var Promise = require('pinkie-promise')
@@ -47798,7 +50881,7 @@ Object.keys(schemas).map(function (name) {
   module.exports[name] = promisify(schemas[name])
 })
 
-},{"./runner":297,"./schemas":305,"pinkie-promise":321}],297:[function(require,module,exports){
+},{"./runner":316,"./schemas":324,"pinkie-promise":340}],316:[function(require,module,exports){
 'use strict'
 
 var schemas = require('./schemas')
@@ -47829,7 +50912,7 @@ module.exports = function (schema, data, cb) {
   return valid
 }
 
-},{"./error":295,"./schemas":305,"is-my-json-valid":315}],298:[function(require,module,exports){
+},{"./error":314,"./schemas":324,"is-my-json-valid":334}],317:[function(require,module,exports){
 module.exports={
   "properties": {
     "beforeRequest": {
@@ -47844,7 +50927,7 @@ module.exports={
   }
 }
 
-},{}],299:[function(require,module,exports){
+},{}],318:[function(require,module,exports){
 module.exports={
   "oneOf": [{
     "type": "object",
@@ -47877,7 +50960,7 @@ module.exports={
   }]
 }
 
-},{}],300:[function(require,module,exports){
+},{}],319:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -47906,7 +50989,7 @@ module.exports={
   }
 }
 
-},{}],301:[function(require,module,exports){
+},{}],320:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -47942,7 +51025,7 @@ module.exports={
   }
 }
 
-},{}],302:[function(require,module,exports){
+},{}],321:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -47962,7 +51045,7 @@ module.exports={
   }
 }
 
-},{}],303:[function(require,module,exports){
+},{}],322:[function(require,module,exports){
 module.exports={
   "type": "object",
   "optional": true,
@@ -48015,7 +51098,7 @@ module.exports={
   }
 }
 
-},{}],304:[function(require,module,exports){
+},{}],323:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -48028,7 +51111,7 @@ module.exports={
   }
 }
 
-},{}],305:[function(require,module,exports){
+},{}],324:[function(require,module,exports){
 'use strict'
 
 var schemas = {
@@ -48079,7 +51162,7 @@ schemas.har.properties.log = schemas.log
 
 module.exports = schemas
 
-},{"./cache.json":298,"./cacheEntry.json":299,"./content.json":300,"./cookie.json":301,"./creator.json":302,"./entry.json":303,"./har.json":304,"./log.json":306,"./page.json":307,"./pageTimings.json":308,"./postData.json":309,"./record.json":310,"./request.json":311,"./response.json":312,"./timings.json":313}],306:[function(require,module,exports){
+},{"./cache.json":317,"./cacheEntry.json":318,"./content.json":319,"./cookie.json":320,"./creator.json":321,"./entry.json":322,"./har.json":323,"./log.json":325,"./page.json":326,"./pageTimings.json":327,"./postData.json":328,"./record.json":329,"./request.json":330,"./response.json":331,"./timings.json":332}],325:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -48115,7 +51198,7 @@ module.exports={
   }
 }
 
-},{}],307:[function(require,module,exports){
+},{}],326:[function(require,module,exports){
 module.exports={
   "type": "object",
   "optional": true,
@@ -48147,7 +51230,7 @@ module.exports={
   }
 }
 
-},{}],308:[function(require,module,exports){
+},{}],327:[function(require,module,exports){
 module.exports={
   "type": "object",
   "properties": {
@@ -48165,7 +51248,7 @@ module.exports={
   }
 }
 
-},{}],309:[function(require,module,exports){
+},{}],328:[function(require,module,exports){
 module.exports={
   "type": "object",
   "optional": true,
@@ -48208,7 +51291,7 @@ module.exports={
   }
 }
 
-},{}],310:[function(require,module,exports){
+},{}],329:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -48228,7 +51311,7 @@ module.exports={
   }
 }
 
-},{}],311:[function(require,module,exports){
+},{}],330:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -48285,7 +51368,7 @@ module.exports={
   }
 }
 
-},{}],312:[function(require,module,exports){
+},{}],331:[function(require,module,exports){
 module.exports={
   "type": "object",
   "required": [
@@ -48339,7 +51422,7 @@ module.exports={
   }
 }
 
-},{}],313:[function(require,module,exports){
+},{}],332:[function(require,module,exports){
 module.exports={
   "required": [
     "send",
@@ -48381,7 +51464,7 @@ module.exports={
   }
 }
 
-},{}],314:[function(require,module,exports){
+},{}],333:[function(require,module,exports){
 exports['date-time'] = /^\d{4}-(?:0[0-9]{1}|1[0-2]{1})-[0-9]{2}[tT ]\d{2}:\d{2}:\d{2}(\.\d+)?([zZ]|[+-]\d{2}:\d{2})$/
 exports['date'] = /^\d{4}-(?:0[0-9]{1}|1[0-2]{1})-[0-9]{2}$/
 exports['time'] = /^\d{2}:\d{2}:\d{2}$/
@@ -48397,7 +51480,7 @@ exports['style'] = /\s*(.+?):\s*([^;]+);?/g
 exports['phone'] = /^\+(?:[0-9] ?){6,14}[0-9]$/
 exports['utc-millisec'] = /^[0-9]{1,15}\.?[0-9]{0,15}$/
 
-},{}],315:[function(require,module,exports){
+},{}],334:[function(require,module,exports){
 var genobj = require('generate-object-property')
 var genfun = require('generate-function')
 var jsonpointer = require('jsonpointer')
@@ -48993,7 +52076,7 @@ module.exports.filter = function(schema, opts) {
   }
 }
 
-},{"./formats":314,"generate-function":316,"generate-object-property":317,"jsonpointer":319,"xtend":320}],316:[function(require,module,exports){
+},{"./formats":333,"generate-function":335,"generate-object-property":336,"jsonpointer":338,"xtend":339}],335:[function(require,module,exports){
 var util = require('util')
 
 var INDENT_START = /[\{\[]/
@@ -49056,7 +52139,7 @@ module.exports = function() {
   return line
 }
 
-},{"util":266}],317:[function(require,module,exports){
+},{"util":285}],336:[function(require,module,exports){
 var isProperty = require('is-property')
 
 var gen = function(obj, prop) {
@@ -49070,13 +52153,13 @@ gen.property = function (prop) {
 
 module.exports = gen
 
-},{"is-property":318}],318:[function(require,module,exports){
+},{"is-property":337}],337:[function(require,module,exports){
 "use strict"
 function isProperty(str) {
   return /^[$A-Z\_a-z\xaa\xb5\xba\xc0-\xd6\xd8-\xf6\xf8-\u02c1\u02c6-\u02d1\u02e0-\u02e4\u02ec\u02ee\u0370-\u0374\u0376\u0377\u037a-\u037d\u0386\u0388-\u038a\u038c\u038e-\u03a1\u03a3-\u03f5\u03f7-\u0481\u048a-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05d0-\u05ea\u05f0-\u05f2\u0620-\u064a\u066e\u066f\u0671-\u06d3\u06d5\u06e5\u06e6\u06ee\u06ef\u06fa-\u06fc\u06ff\u0710\u0712-\u072f\u074d-\u07a5\u07b1\u07ca-\u07ea\u07f4\u07f5\u07fa\u0800-\u0815\u081a\u0824\u0828\u0840-\u0858\u08a0\u08a2-\u08ac\u0904-\u0939\u093d\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097f\u0985-\u098c\u098f\u0990\u0993-\u09a8\u09aa-\u09b0\u09b2\u09b6-\u09b9\u09bd\u09ce\u09dc\u09dd\u09df-\u09e1\u09f0\u09f1\u0a05-\u0a0a\u0a0f\u0a10\u0a13-\u0a28\u0a2a-\u0a30\u0a32\u0a33\u0a35\u0a36\u0a38\u0a39\u0a59-\u0a5c\u0a5e\u0a72-\u0a74\u0a85-\u0a8d\u0a8f-\u0a91\u0a93-\u0aa8\u0aaa-\u0ab0\u0ab2\u0ab3\u0ab5-\u0ab9\u0abd\u0ad0\u0ae0\u0ae1\u0b05-\u0b0c\u0b0f\u0b10\u0b13-\u0b28\u0b2a-\u0b30\u0b32\u0b33\u0b35-\u0b39\u0b3d\u0b5c\u0b5d\u0b5f-\u0b61\u0b71\u0b83\u0b85-\u0b8a\u0b8e-\u0b90\u0b92-\u0b95\u0b99\u0b9a\u0b9c\u0b9e\u0b9f\u0ba3\u0ba4\u0ba8-\u0baa\u0bae-\u0bb9\u0bd0\u0c05-\u0c0c\u0c0e-\u0c10\u0c12-\u0c28\u0c2a-\u0c33\u0c35-\u0c39\u0c3d\u0c58\u0c59\u0c60\u0c61\u0c85-\u0c8c\u0c8e-\u0c90\u0c92-\u0ca8\u0caa-\u0cb3\u0cb5-\u0cb9\u0cbd\u0cde\u0ce0\u0ce1\u0cf1\u0cf2\u0d05-\u0d0c\u0d0e-\u0d10\u0d12-\u0d3a\u0d3d\u0d4e\u0d60\u0d61\u0d7a-\u0d7f\u0d85-\u0d96\u0d9a-\u0db1\u0db3-\u0dbb\u0dbd\u0dc0-\u0dc6\u0e01-\u0e30\u0e32\u0e33\u0e40-\u0e46\u0e81\u0e82\u0e84\u0e87\u0e88\u0e8a\u0e8d\u0e94-\u0e97\u0e99-\u0e9f\u0ea1-\u0ea3\u0ea5\u0ea7\u0eaa\u0eab\u0ead-\u0eb0\u0eb2\u0eb3\u0ebd\u0ec0-\u0ec4\u0ec6\u0edc-\u0edf\u0f00\u0f40-\u0f47\u0f49-\u0f6c\u0f88-\u0f8c\u1000-\u102a\u103f\u1050-\u1055\u105a-\u105d\u1061\u1065\u1066\u106e-\u1070\u1075-\u1081\u108e\u10a0-\u10c5\u10c7\u10cd\u10d0-\u10fa\u10fc-\u1248\u124a-\u124d\u1250-\u1256\u1258\u125a-\u125d\u1260-\u1288\u128a-\u128d\u1290-\u12b0\u12b2-\u12b5\u12b8-\u12be\u12c0\u12c2-\u12c5\u12c8-\u12d6\u12d8-\u1310\u1312-\u1315\u1318-\u135a\u1380-\u138f\u13a0-\u13f4\u1401-\u166c\u166f-\u167f\u1681-\u169a\u16a0-\u16ea\u16ee-\u16f0\u1700-\u170c\u170e-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176c\u176e-\u1770\u1780-\u17b3\u17d7\u17dc\u1820-\u1877\u1880-\u18a8\u18aa\u18b0-\u18f5\u1900-\u191c\u1950-\u196d\u1970-\u1974\u1980-\u19ab\u19c1-\u19c7\u1a00-\u1a16\u1a20-\u1a54\u1aa7\u1b05-\u1b33\u1b45-\u1b4b\u1b83-\u1ba0\u1bae\u1baf\u1bba-\u1be5\u1c00-\u1c23\u1c4d-\u1c4f\u1c5a-\u1c7d\u1ce9-\u1cec\u1cee-\u1cf1\u1cf5\u1cf6\u1d00-\u1dbf\u1e00-\u1f15\u1f18-\u1f1d\u1f20-\u1f45\u1f48-\u1f4d\u1f50-\u1f57\u1f59\u1f5b\u1f5d\u1f5f-\u1f7d\u1f80-\u1fb4\u1fb6-\u1fbc\u1fbe\u1fc2-\u1fc4\u1fc6-\u1fcc\u1fd0-\u1fd3\u1fd6-\u1fdb\u1fe0-\u1fec\u1ff2-\u1ff4\u1ff6-\u1ffc\u2071\u207f\u2090-\u209c\u2102\u2107\u210a-\u2113\u2115\u2119-\u211d\u2124\u2126\u2128\u212a-\u212d\u212f-\u2139\u213c-\u213f\u2145-\u2149\u214e\u2160-\u2188\u2c00-\u2c2e\u2c30-\u2c5e\u2c60-\u2ce4\u2ceb-\u2cee\u2cf2\u2cf3\u2d00-\u2d25\u2d27\u2d2d\u2d30-\u2d67\u2d6f\u2d80-\u2d96\u2da0-\u2da6\u2da8-\u2dae\u2db0-\u2db6\u2db8-\u2dbe\u2dc0-\u2dc6\u2dc8-\u2dce\u2dd0-\u2dd6\u2dd8-\u2dde\u2e2f\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303c\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fc-\u30ff\u3105-\u312d\u3131-\u318e\u31a0-\u31ba\u31f0-\u31ff\u3400-\u4db5\u4e00-\u9fcc\ua000-\ua48c\ua4d0-\ua4fd\ua500-\ua60c\ua610-\ua61f\ua62a\ua62b\ua640-\ua66e\ua67f-\ua697\ua6a0-\ua6ef\ua717-\ua71f\ua722-\ua788\ua78b-\ua78e\ua790-\ua793\ua7a0-\ua7aa\ua7f8-\ua801\ua803-\ua805\ua807-\ua80a\ua80c-\ua822\ua840-\ua873\ua882-\ua8b3\ua8f2-\ua8f7\ua8fb\ua90a-\ua925\ua930-\ua946\ua960-\ua97c\ua984-\ua9b2\ua9cf\uaa00-\uaa28\uaa40-\uaa42\uaa44-\uaa4b\uaa60-\uaa76\uaa7a\uaa80-\uaaaf\uaab1\uaab5\uaab6\uaab9-\uaabd\uaac0\uaac2\uaadb-\uaadd\uaae0-\uaaea\uaaf2-\uaaf4\uab01-\uab06\uab09-\uab0e\uab11-\uab16\uab20-\uab26\uab28-\uab2e\uabc0-\uabe2\uac00-\ud7a3\ud7b0-\ud7c6\ud7cb-\ud7fb\uf900-\ufa6d\ufa70-\ufad9\ufb00-\ufb06\ufb13-\ufb17\ufb1d\ufb1f-\ufb28\ufb2a-\ufb36\ufb38-\ufb3c\ufb3e\ufb40\ufb41\ufb43\ufb44\ufb46-\ufbb1\ufbd3-\ufd3d\ufd50-\ufd8f\ufd92-\ufdc7\ufdf0-\ufdfb\ufe70-\ufe74\ufe76-\ufefc\uff21-\uff3a\uff41-\uff5a\uff66-\uffbe\uffc2-\uffc7\uffca-\uffcf\uffd2-\uffd7\uffda-\uffdc][$A-Z\_a-z\xaa\xb5\xba\xc0-\xd6\xd8-\xf6\xf8-\u02c1\u02c6-\u02d1\u02e0-\u02e4\u02ec\u02ee\u0370-\u0374\u0376\u0377\u037a-\u037d\u0386\u0388-\u038a\u038c\u038e-\u03a1\u03a3-\u03f5\u03f7-\u0481\u048a-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05d0-\u05ea\u05f0-\u05f2\u0620-\u064a\u066e\u066f\u0671-\u06d3\u06d5\u06e5\u06e6\u06ee\u06ef\u06fa-\u06fc\u06ff\u0710\u0712-\u072f\u074d-\u07a5\u07b1\u07ca-\u07ea\u07f4\u07f5\u07fa\u0800-\u0815\u081a\u0824\u0828\u0840-\u0858\u08a0\u08a2-\u08ac\u0904-\u0939\u093d\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097f\u0985-\u098c\u098f\u0990\u0993-\u09a8\u09aa-\u09b0\u09b2\u09b6-\u09b9\u09bd\u09ce\u09dc\u09dd\u09df-\u09e1\u09f0\u09f1\u0a05-\u0a0a\u0a0f\u0a10\u0a13-\u0a28\u0a2a-\u0a30\u0a32\u0a33\u0a35\u0a36\u0a38\u0a39\u0a59-\u0a5c\u0a5e\u0a72-\u0a74\u0a85-\u0a8d\u0a8f-\u0a91\u0a93-\u0aa8\u0aaa-\u0ab0\u0ab2\u0ab3\u0ab5-\u0ab9\u0abd\u0ad0\u0ae0\u0ae1\u0b05-\u0b0c\u0b0f\u0b10\u0b13-\u0b28\u0b2a-\u0b30\u0b32\u0b33\u0b35-\u0b39\u0b3d\u0b5c\u0b5d\u0b5f-\u0b61\u0b71\u0b83\u0b85-\u0b8a\u0b8e-\u0b90\u0b92-\u0b95\u0b99\u0b9a\u0b9c\u0b9e\u0b9f\u0ba3\u0ba4\u0ba8-\u0baa\u0bae-\u0bb9\u0bd0\u0c05-\u0c0c\u0c0e-\u0c10\u0c12-\u0c28\u0c2a-\u0c33\u0c35-\u0c39\u0c3d\u0c58\u0c59\u0c60\u0c61\u0c85-\u0c8c\u0c8e-\u0c90\u0c92-\u0ca8\u0caa-\u0cb3\u0cb5-\u0cb9\u0cbd\u0cde\u0ce0\u0ce1\u0cf1\u0cf2\u0d05-\u0d0c\u0d0e-\u0d10\u0d12-\u0d3a\u0d3d\u0d4e\u0d60\u0d61\u0d7a-\u0d7f\u0d85-\u0d96\u0d9a-\u0db1\u0db3-\u0dbb\u0dbd\u0dc0-\u0dc6\u0e01-\u0e30\u0e32\u0e33\u0e40-\u0e46\u0e81\u0e82\u0e84\u0e87\u0e88\u0e8a\u0e8d\u0e94-\u0e97\u0e99-\u0e9f\u0ea1-\u0ea3\u0ea5\u0ea7\u0eaa\u0eab\u0ead-\u0eb0\u0eb2\u0eb3\u0ebd\u0ec0-\u0ec4\u0ec6\u0edc-\u0edf\u0f00\u0f40-\u0f47\u0f49-\u0f6c\u0f88-\u0f8c\u1000-\u102a\u103f\u1050-\u1055\u105a-\u105d\u1061\u1065\u1066\u106e-\u1070\u1075-\u1081\u108e\u10a0-\u10c5\u10c7\u10cd\u10d0-\u10fa\u10fc-\u1248\u124a-\u124d\u1250-\u1256\u1258\u125a-\u125d\u1260-\u1288\u128a-\u128d\u1290-\u12b0\u12b2-\u12b5\u12b8-\u12be\u12c0\u12c2-\u12c5\u12c8-\u12d6\u12d8-\u1310\u1312-\u1315\u1318-\u135a\u1380-\u138f\u13a0-\u13f4\u1401-\u166c\u166f-\u167f\u1681-\u169a\u16a0-\u16ea\u16ee-\u16f0\u1700-\u170c\u170e-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176c\u176e-\u1770\u1780-\u17b3\u17d7\u17dc\u1820-\u1877\u1880-\u18a8\u18aa\u18b0-\u18f5\u1900-\u191c\u1950-\u196d\u1970-\u1974\u1980-\u19ab\u19c1-\u19c7\u1a00-\u1a16\u1a20-\u1a54\u1aa7\u1b05-\u1b33\u1b45-\u1b4b\u1b83-\u1ba0\u1bae\u1baf\u1bba-\u1be5\u1c00-\u1c23\u1c4d-\u1c4f\u1c5a-\u1c7d\u1ce9-\u1cec\u1cee-\u1cf1\u1cf5\u1cf6\u1d00-\u1dbf\u1e00-\u1f15\u1f18-\u1f1d\u1f20-\u1f45\u1f48-\u1f4d\u1f50-\u1f57\u1f59\u1f5b\u1f5d\u1f5f-\u1f7d\u1f80-\u1fb4\u1fb6-\u1fbc\u1fbe\u1fc2-\u1fc4\u1fc6-\u1fcc\u1fd0-\u1fd3\u1fd6-\u1fdb\u1fe0-\u1fec\u1ff2-\u1ff4\u1ff6-\u1ffc\u2071\u207f\u2090-\u209c\u2102\u2107\u210a-\u2113\u2115\u2119-\u211d\u2124\u2126\u2128\u212a-\u212d\u212f-\u2139\u213c-\u213f\u2145-\u2149\u214e\u2160-\u2188\u2c00-\u2c2e\u2c30-\u2c5e\u2c60-\u2ce4\u2ceb-\u2cee\u2cf2\u2cf3\u2d00-\u2d25\u2d27\u2d2d\u2d30-\u2d67\u2d6f\u2d80-\u2d96\u2da0-\u2da6\u2da8-\u2dae\u2db0-\u2db6\u2db8-\u2dbe\u2dc0-\u2dc6\u2dc8-\u2dce\u2dd0-\u2dd6\u2dd8-\u2dde\u2e2f\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303c\u3041-\u3096\u309d-\u309f\u30a1-\u30fa\u30fc-\u30ff\u3105-\u312d\u3131-\u318e\u31a0-\u31ba\u31f0-\u31ff\u3400-\u4db5\u4e00-\u9fcc\ua000-\ua48c\ua4d0-\ua4fd\ua500-\ua60c\ua610-\ua61f\ua62a\ua62b\ua640-\ua66e\ua67f-\ua697\ua6a0-\ua6ef\ua717-\ua71f\ua722-\ua788\ua78b-\ua78e\ua790-\ua793\ua7a0-\ua7aa\ua7f8-\ua801\ua803-\ua805\ua807-\ua80a\ua80c-\ua822\ua840-\ua873\ua882-\ua8b3\ua8f2-\ua8f7\ua8fb\ua90a-\ua925\ua930-\ua946\ua960-\ua97c\ua984-\ua9b2\ua9cf\uaa00-\uaa28\uaa40-\uaa42\uaa44-\uaa4b\uaa60-\uaa76\uaa7a\uaa80-\uaaaf\uaab1\uaab5\uaab6\uaab9-\uaabd\uaac0\uaac2\uaadb-\uaadd\uaae0-\uaaea\uaaf2-\uaaf4\uab01-\uab06\uab09-\uab0e\uab11-\uab16\uab20-\uab26\uab28-\uab2e\uabc0-\uabe2\uac00-\ud7a3\ud7b0-\ud7c6\ud7cb-\ud7fb\uf900-\ufa6d\ufa70-\ufad9\ufb00-\ufb06\ufb13-\ufb17\ufb1d\ufb1f-\ufb28\ufb2a-\ufb36\ufb38-\ufb3c\ufb3e\ufb40\ufb41\ufb43\ufb44\ufb46-\ufbb1\ufbd3-\ufd3d\ufd50-\ufd8f\ufd92-\ufdc7\ufdf0-\ufdfb\ufe70-\ufe74\ufe76-\ufefc\uff21-\uff3a\uff41-\uff5a\uff66-\uffbe\uffc2-\uffc7\uffca-\uffcf\uffd2-\uffd7\uffda-\uffdc0-9\u0300-\u036f\u0483-\u0487\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7\u0610-\u061a\u064b-\u0669\u0670\u06d6-\u06dc\u06df-\u06e4\u06e7\u06e8\u06ea-\u06ed\u06f0-\u06f9\u0711\u0730-\u074a\u07a6-\u07b0\u07c0-\u07c9\u07eb-\u07f3\u0816-\u0819\u081b-\u0823\u0825-\u0827\u0829-\u082d\u0859-\u085b\u08e4-\u08fe\u0900-\u0903\u093a-\u093c\u093e-\u094f\u0951-\u0957\u0962\u0963\u0966-\u096f\u0981-\u0983\u09bc\u09be-\u09c4\u09c7\u09c8\u09cb-\u09cd\u09d7\u09e2\u09e3\u09e6-\u09ef\u0a01-\u0a03\u0a3c\u0a3e-\u0a42\u0a47\u0a48\u0a4b-\u0a4d\u0a51\u0a66-\u0a71\u0a75\u0a81-\u0a83\u0abc\u0abe-\u0ac5\u0ac7-\u0ac9\u0acb-\u0acd\u0ae2\u0ae3\u0ae6-\u0aef\u0b01-\u0b03\u0b3c\u0b3e-\u0b44\u0b47\u0b48\u0b4b-\u0b4d\u0b56\u0b57\u0b62\u0b63\u0b66-\u0b6f\u0b82\u0bbe-\u0bc2\u0bc6-\u0bc8\u0bca-\u0bcd\u0bd7\u0be6-\u0bef\u0c01-\u0c03\u0c3e-\u0c44\u0c46-\u0c48\u0c4a-\u0c4d\u0c55\u0c56\u0c62\u0c63\u0c66-\u0c6f\u0c82\u0c83\u0cbc\u0cbe-\u0cc4\u0cc6-\u0cc8\u0cca-\u0ccd\u0cd5\u0cd6\u0ce2\u0ce3\u0ce6-\u0cef\u0d02\u0d03\u0d3e-\u0d44\u0d46-\u0d48\u0d4a-\u0d4d\u0d57\u0d62\u0d63\u0d66-\u0d6f\u0d82\u0d83\u0dca\u0dcf-\u0dd4\u0dd6\u0dd8-\u0ddf\u0df2\u0df3\u0e31\u0e34-\u0e3a\u0e47-\u0e4e\u0e50-\u0e59\u0eb1\u0eb4-\u0eb9\u0ebb\u0ebc\u0ec8-\u0ecd\u0ed0-\u0ed9\u0f18\u0f19\u0f20-\u0f29\u0f35\u0f37\u0f39\u0f3e\u0f3f\u0f71-\u0f84\u0f86\u0f87\u0f8d-\u0f97\u0f99-\u0fbc\u0fc6\u102b-\u103e\u1040-\u1049\u1056-\u1059\u105e-\u1060\u1062-\u1064\u1067-\u106d\u1071-\u1074\u1082-\u108d\u108f-\u109d\u135d-\u135f\u1712-\u1714\u1732-\u1734\u1752\u1753\u1772\u1773\u17b4-\u17d3\u17dd\u17e0-\u17e9\u180b-\u180d\u1810-\u1819\u18a9\u1920-\u192b\u1930-\u193b\u1946-\u194f\u19b0-\u19c0\u19c8\u19c9\u19d0-\u19d9\u1a17-\u1a1b\u1a55-\u1a5e\u1a60-\u1a7c\u1a7f-\u1a89\u1a90-\u1a99\u1b00-\u1b04\u1b34-\u1b44\u1b50-\u1b59\u1b6b-\u1b73\u1b80-\u1b82\u1ba1-\u1bad\u1bb0-\u1bb9\u1be6-\u1bf3\u1c24-\u1c37\u1c40-\u1c49\u1c50-\u1c59\u1cd0-\u1cd2\u1cd4-\u1ce8\u1ced\u1cf2-\u1cf4\u1dc0-\u1de6\u1dfc-\u1dff\u200c\u200d\u203f\u2040\u2054\u20d0-\u20dc\u20e1\u20e5-\u20f0\u2cef-\u2cf1\u2d7f\u2de0-\u2dff\u302a-\u302f\u3099\u309a\ua620-\ua629\ua66f\ua674-\ua67d\ua69f\ua6f0\ua6f1\ua802\ua806\ua80b\ua823-\ua827\ua880\ua881\ua8b4-\ua8c4\ua8d0-\ua8d9\ua8e0-\ua8f1\ua900-\ua909\ua926-\ua92d\ua947-\ua953\ua980-\ua983\ua9b3-\ua9c0\ua9d0-\ua9d9\uaa29-\uaa36\uaa43\uaa4c\uaa4d\uaa50-\uaa59\uaa7b\uaab0\uaab2-\uaab4\uaab7\uaab8\uaabe\uaabf\uaac1\uaaeb-\uaaef\uaaf5\uaaf6\uabe3-\uabea\uabec\uabed\uabf0-\uabf9\ufb1e\ufe00-\ufe0f\ufe20-\ufe26\ufe33\ufe34\ufe4d-\ufe4f\uff10-\uff19\uff3f]*$/.test(str)
 }
 module.exports = isProperty
-},{}],319:[function(require,module,exports){
+},{}],338:[function(require,module,exports){
 var hasExcape = /~/
 var escapeMatcher = /~[01]/g
 function escapeReplacer (m) {
@@ -49171,14 +52254,14 @@ exports.get = get
 exports.set = set
 exports.compile = compile
 
-},{}],320:[function(require,module,exports){
-arguments[4][269][0].apply(exports,arguments)
-},{"dup":269}],321:[function(require,module,exports){
+},{}],339:[function(require,module,exports){
+arguments[4][288][0].apply(exports,arguments)
+},{"dup":288}],340:[function(require,module,exports){
 'use strict';
 
 module.exports = typeof Promise === 'function' ? Promise : require('pinkie');
 
-},{"pinkie":322}],322:[function(require,module,exports){
+},{"pinkie":341}],341:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -49474,7 +52557,7 @@ Promise.reject = function (reason) {
 module.exports = Promise;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],323:[function(require,module,exports){
+},{}],342:[function(require,module,exports){
 /*
     HTTP Hawk Authentication Scheme
     Copyright (c) 2012-2014, Eran Hammer <eran@hammer.io>
@@ -50113,7 +53196,7 @@ if (typeof module !== 'undefined' && module.exports) {
 /* eslint-enable */
 // $lab:coverage:on$
 
-},{}],324:[function(require,module,exports){
+},{}],343:[function(require,module,exports){
 // Copyright 2015 Joyent, Inc.
 
 var parser = require('./parser');
@@ -50144,7 +53227,7 @@ module.exports = {
   verifyHMAC: verify.verifyHMAC
 };
 
-},{"./parser":325,"./signer":326,"./utils":327,"./verify":328}],325:[function(require,module,exports){
+},{"./parser":344,"./signer":345,"./utils":346,"./verify":347}],344:[function(require,module,exports){
 // Copyright 2012 Joyent, Inc.  All rights reserved.
 
 var assert = require('assert-plus');
@@ -50464,7 +53547,7 @@ module.exports = {
 
 };
 
-},{"./utils":327,"assert-plus":329,"util":266}],326:[function(require,module,exports){
+},{"./utils":346,"assert-plus":348,"util":285}],345:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2012 Joyent, Inc.  All rights reserved.
 
@@ -50867,7 +53950,7 @@ module.exports = {
 };
 
 }).call(this,{"isBuffer":require("../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":231,"./utils":327,"assert-plus":329,"crypto":35,"http":255,"jsprim":330,"sshpk":351,"util":266}],327:[function(require,module,exports){
+},{"../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":250,"./utils":346,"assert-plus":348,"crypto":54,"http":274,"jsprim":349,"sshpk":370,"util":285}],346:[function(require,module,exports){
 // Copyright 2012 Joyent, Inc.  All rights reserved.
 
 var assert = require('assert-plus');
@@ -50981,7 +54064,7 @@ module.exports = {
   }
 };
 
-},{"assert-plus":329,"sshpk":351,"util":266}],328:[function(require,module,exports){
+},{"assert-plus":348,"sshpk":370,"util":285}],347:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -51073,7 +54156,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./utils":327,"assert-plus":329,"buffer":31,"crypto":35,"sshpk":351}],329:[function(require,module,exports){
+},{"./utils":346,"assert-plus":348,"buffer":50,"crypto":54,"sshpk":370}],348:[function(require,module,exports){
 (function (Buffer,process){
 // Copyright (c) 2012, Mark Cavage. All rights reserved.
 // Copyright 2015 Joyent, Inc.
@@ -51283,7 +54366,7 @@ function _setExports(ndebug) {
 module.exports = _setExports(process.env.NODE_NDEBUG);
 
 }).call(this,{"isBuffer":require("../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")},require('_process'))
-},{"../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":231,"_process":233,"assert":16,"stream":254,"util":266}],330:[function(require,module,exports){
+},{"../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":250,"_process":252,"assert":35,"stream":273,"util":285}],349:[function(require,module,exports){
 /*
  * lib/jsprim.js: utilities for primitive JavaScript types
  */
@@ -51773,7 +54856,7 @@ function mergeObjects(provided, overrides, defaults)
 	return (rv);
 }
 
-},{"assert":16,"extsprintf":331,"json-schema":332,"util":266,"verror":333}],331:[function(require,module,exports){
+},{"assert":35,"extsprintf":350,"json-schema":351,"util":285,"verror":352}],350:[function(require,module,exports){
 /*
  * extsprintf.js: extended POSIX-style sprintf
  */
@@ -51941,7 +55024,7 @@ function dumpException(ex)
 	return (ret);
 }
 
-},{"assert":16,"util":266}],332:[function(require,module,exports){
+},{"assert":35,"util":285}],351:[function(require,module,exports){
 /**
  * JSONSchema Validator - Validates JavaScript objects using JSON Schemas
  *	(http://www.json.com/json-schema-proposal/)
@@ -52216,7 +55299,7 @@ exports.mustBeValid = function(result){
 return exports;
 }));
 
-},{}],333:[function(require,module,exports){
+},{}],352:[function(require,module,exports){
 /*
  * verror.js: richer JavaScript errors
  */
@@ -52375,7 +55458,7 @@ WError.prototype.cause = function we_cause(c)
 	return (this.we_cause);
 };
 
-},{"assert":16,"extsprintf":331,"util":266}],334:[function(require,module,exports){
+},{"assert":35,"extsprintf":350,"util":285}],353:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -52547,7 +55630,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31}],335:[function(require,module,exports){
+},{"buffer":50}],354:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2016 Joyent, Inc.
 
@@ -52842,7 +55925,7 @@ Certificate._oldVersionDetect = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":334,"./errors":338,"./fingerprint":339,"./formats/openssh-cert":341,"./formats/x509":349,"./formats/x509-pem":348,"./identity":350,"./key":352,"./private-key":353,"./signature":354,"./utils":356,"assert-plus":363,"buffer":31,"crypto":35,"util":266}],336:[function(require,module,exports){
+},{"./algs":353,"./errors":357,"./fingerprint":358,"./formats/openssh-cert":360,"./formats/x509":368,"./formats/x509-pem":367,"./identity":369,"./key":371,"./private-key":372,"./signature":373,"./utils":375,"assert-plus":382,"buffer":50,"crypto":54,"util":285}],355:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -53157,7 +56240,7 @@ ECPrivate.prototype.deriveSharedSecret = function (pubKey) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":334,"./key":352,"./private-key":353,"./utils":356,"assert-plus":363,"buffer":31,"crypto":35,"ecc-jsbn":365,"ecc-jsbn/lib/ec":366,"jodid25519":368,"jsbn":374}],337:[function(require,module,exports){
+},{"./algs":353,"./key":371,"./private-key":372,"./utils":375,"assert-plus":382,"buffer":50,"crypto":54,"ecc-jsbn":384,"ecc-jsbn/lib/ec":385,"jodid25519":387,"jsbn":393}],356:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -53257,7 +56340,7 @@ Signer.prototype.sign = function () {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./signature":354,"assert-plus":363,"buffer":31,"stream":254,"tweetnacl":375,"util":266}],338:[function(require,module,exports){
+},{"./signature":373,"assert-plus":382,"buffer":50,"stream":273,"tweetnacl":394,"util":285}],357:[function(require,module,exports){
 // Copyright 2015 Joyent, Inc.
 
 var assert = require('assert-plus');
@@ -53343,7 +56426,7 @@ module.exports = {
 	CertificateParseError: CertificateParseError
 };
 
-},{"assert-plus":363,"util":266}],339:[function(require,module,exports){
+},{"assert-plus":382,"util":285}],358:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -53508,7 +56591,7 @@ Fingerprint._oldVersionDetect = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":334,"./certificate":335,"./errors":338,"./key":352,"./utils":356,"assert-plus":363,"buffer":31,"crypto":35}],340:[function(require,module,exports){
+},{"./algs":353,"./certificate":354,"./errors":357,"./key":371,"./utils":375,"assert-plus":382,"buffer":50,"crypto":54}],359:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -53585,7 +56668,7 @@ function write(key, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../key":352,"../private-key":353,"../utils":356,"./pem":342,"./rfc4253":345,"./ssh":347,"assert-plus":363,"buffer":31}],341:[function(require,module,exports){
+},{"../key":371,"../private-key":372,"../utils":375,"./pem":361,"./rfc4253":364,"./ssh":366,"assert-plus":382,"buffer":50}],360:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2016 Joyent, Inc.
 
@@ -53878,7 +56961,7 @@ function getCertType(key) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":334,"../certificate":335,"../identity":350,"../key":352,"../private-key":353,"../signature":354,"../ssh-buffer":355,"../utils":356,"./rfc4253":345,"assert-plus":363,"buffer":31,"crypto":35}],342:[function(require,module,exports){
+},{"../algs":353,"../certificate":354,"../identity":369,"../key":371,"../private-key":372,"../signature":373,"../ssh-buffer":374,"../utils":375,"./rfc4253":364,"assert-plus":382,"buffer":50,"crypto":54}],361:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -54068,7 +57151,7 @@ function write(key, options, type) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":334,"../errors":338,"../key":352,"../private-key":353,"../utils":356,"./pkcs1":343,"./pkcs8":344,"./rfc4253":345,"./ssh-private":346,"asn1":362,"assert-plus":363,"buffer":31,"crypto":35}],343:[function(require,module,exports){
+},{"../algs":353,"../errors":357,"../key":371,"../private-key":372,"../utils":375,"./pkcs1":362,"./pkcs8":363,"./rfc4253":364,"./ssh-private":365,"asn1":381,"assert-plus":382,"buffer":50,"crypto":54}],362:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -54392,7 +57475,7 @@ function writePkcs1ECDSAPrivate(der, key) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":334,"../key":352,"../private-key":353,"../utils":356,"./pem":342,"./pkcs8":344,"asn1":362,"assert-plus":363,"buffer":31}],344:[function(require,module,exports){
+},{"../algs":353,"../key":371,"../private-key":372,"../utils":375,"./pem":361,"./pkcs8":363,"asn1":381,"assert-plus":382,"buffer":50}],363:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -54901,7 +57984,7 @@ function writePkcs8ECDSAPrivate(key, der) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":334,"../key":352,"../private-key":353,"../utils":356,"./pem":342,"asn1":362,"assert-plus":363,"buffer":31}],345:[function(require,module,exports){
+},{"../algs":353,"../key":371,"../private-key":372,"../utils":375,"./pem":361,"asn1":381,"assert-plus":382,"buffer":50}],364:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -55051,7 +58134,7 @@ function write(key, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":334,"../key":352,"../private-key":353,"../ssh-buffer":355,"../utils":356,"assert-plus":363,"buffer":31}],346:[function(require,module,exports){
+},{"../algs":353,"../key":371,"../private-key":372,"../ssh-buffer":374,"../utils":375,"assert-plus":382,"buffer":50}],365:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -55316,7 +58399,7 @@ function write(key, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":334,"../errors":338,"../key":352,"../private-key":353,"../ssh-buffer":355,"../utils":356,"./pem":342,"./rfc4253":345,"asn1":362,"assert-plus":363,"bcrypt-pbkdf":364,"buffer":31,"crypto":35}],347:[function(require,module,exports){
+},{"../algs":353,"../errors":357,"../key":371,"../private-key":372,"../ssh-buffer":374,"../utils":375,"./pem":361,"./rfc4253":364,"asn1":381,"assert-plus":382,"bcrypt-pbkdf":383,"buffer":50,"crypto":54}],366:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -55434,7 +58517,7 @@ function write(key, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../key":352,"../private-key":353,"../utils":356,"./rfc4253":345,"./ssh-private":346,"assert-plus":363,"buffer":31}],348:[function(require,module,exports){
+},{"../key":371,"../private-key":372,"../utils":375,"./rfc4253":364,"./ssh-private":365,"assert-plus":382,"buffer":50}],367:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2016 Joyent, Inc.
 
@@ -55515,7 +58598,7 @@ function write(cert, options) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":334,"../certificate":335,"../identity":350,"../key":352,"../private-key":353,"../signature":354,"../utils":356,"./pem":342,"./x509":349,"asn1":362,"assert-plus":363,"buffer":31}],349:[function(require,module,exports){
+},{"../algs":353,"../certificate":354,"../identity":369,"../key":371,"../private-key":372,"../signature":373,"../utils":375,"./pem":361,"./x509":368,"asn1":381,"assert-plus":382,"buffer":50}],368:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2016 Joyent, Inc.
 
@@ -56003,7 +59086,7 @@ function writeTBSCert(cert, der) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../algs":334,"../certificate":335,"../identity":350,"../key":352,"../private-key":353,"../signature":354,"../utils":356,"./pem":342,"./pkcs8":344,"asn1":362,"assert-plus":363,"buffer":31}],350:[function(require,module,exports){
+},{"../algs":353,"../certificate":354,"../identity":369,"../key":371,"../private-key":372,"../signature":373,"../utils":375,"./pem":361,"./pkcs8":363,"asn1":381,"assert-plus":382,"buffer":50}],369:[function(require,module,exports){
 // Copyright 2016 Joyent, Inc.
 
 module.exports = Identity;
@@ -56260,7 +59343,7 @@ Identity._oldVersionDetect = function (obj) {
 	return ([1, 0]);
 };
 
-},{"./algs":334,"./errors":338,"./fingerprint":339,"./signature":354,"./utils":356,"asn1":362,"assert-plus":363,"crypto":35,"util":266}],351:[function(require,module,exports){
+},{"./algs":353,"./errors":357,"./fingerprint":358,"./signature":373,"./utils":375,"asn1":381,"assert-plus":382,"crypto":54,"util":285}],370:[function(require,module,exports){
 // Copyright 2015 Joyent, Inc.
 
 var Key = require('./key');
@@ -56300,7 +59383,7 @@ module.exports = {
 	CertificateParseError: errs.CertificateParseError
 };
 
-},{"./certificate":335,"./errors":338,"./fingerprint":339,"./identity":350,"./key":352,"./private-key":353,"./signature":354}],352:[function(require,module,exports){
+},{"./certificate":354,"./errors":357,"./fingerprint":358,"./identity":369,"./key":371,"./private-key":372,"./signature":373}],371:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -56574,7 +59657,7 @@ Key._oldVersionDetect = function (obj) {
 };
 
 }).call(this,{"isBuffer":require("../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":231,"./algs":334,"./dhe":336,"./ed-compat":337,"./errors":338,"./fingerprint":339,"./formats/auto":340,"./formats/pem":342,"./formats/pkcs1":343,"./formats/pkcs8":344,"./formats/rfc4253":345,"./formats/ssh":347,"./formats/ssh-private":346,"./private-key":353,"./signature":354,"./utils":356,"assert-plus":363,"crypto":35}],353:[function(require,module,exports){
+},{"../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":250,"./algs":353,"./dhe":355,"./ed-compat":356,"./errors":357,"./fingerprint":358,"./formats/auto":359,"./formats/pem":361,"./formats/pkcs1":362,"./formats/pkcs8":363,"./formats/rfc4253":364,"./formats/ssh":366,"./formats/ssh-private":365,"./private-key":372,"./signature":373,"./utils":375,"assert-plus":382,"crypto":54}],372:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -56809,7 +59892,7 @@ PrivateKey._oldVersionDetect = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":334,"./ed-compat":337,"./errors":338,"./fingerprint":339,"./formats/auto":340,"./formats/pem":342,"./formats/pkcs1":343,"./formats/pkcs8":344,"./formats/rfc4253":345,"./formats/ssh-private":346,"./key":352,"./signature":354,"./utils":356,"assert-plus":363,"buffer":31,"crypto":35,"jodid25519":368,"util":266}],354:[function(require,module,exports){
+},{"./algs":353,"./ed-compat":356,"./errors":357,"./fingerprint":358,"./formats/auto":359,"./formats/pem":361,"./formats/pkcs1":362,"./formats/pkcs8":363,"./formats/rfc4253":364,"./formats/ssh-private":365,"./key":371,"./signature":373,"./utils":375,"assert-plus":382,"buffer":50,"crypto":54,"jodid25519":387,"util":285}],373:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -57058,7 +60141,7 @@ Signature._oldVersionDetect = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./algs":334,"./errors":338,"./ssh-buffer":355,"./utils":356,"asn1":362,"assert-plus":363,"buffer":31,"crypto":35}],355:[function(require,module,exports){
+},{"./algs":353,"./errors":357,"./ssh-buffer":374,"./utils":375,"asn1":381,"assert-plus":382,"buffer":50,"crypto":54}],374:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -57210,7 +60293,7 @@ SSHBuffer.prototype.write = function (buf) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert-plus":363,"buffer":31}],356:[function(require,module,exports){
+},{"assert-plus":382,"buffer":50}],375:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2015 Joyent, Inc.
 
@@ -57502,7 +60585,7 @@ function opensshCipherInfo(cipher) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./private-key":353,"assert-plus":363,"buffer":31,"crypto":35,"jsbn":374}],357:[function(require,module,exports){
+},{"./private-key":372,"assert-plus":382,"buffer":50,"crypto":54,"jsbn":393}],376:[function(require,module,exports){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 
@@ -57517,7 +60600,7 @@ module.exports = {
 
 };
 
-},{}],358:[function(require,module,exports){
+},{}],377:[function(require,module,exports){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 var errors = require('./errors');
@@ -57546,7 +60629,7 @@ for (var e in errors) {
     module.exports[e] = errors[e];
 }
 
-},{"./errors":357,"./reader":359,"./types":360,"./writer":361}],359:[function(require,module,exports){
+},{"./errors":376,"./reader":378,"./types":379,"./writer":380}],378:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
@@ -57811,7 +60894,7 @@ Reader.prototype._readTag = function(tag) {
 module.exports = Reader;
 
 }).call(this,require("buffer").Buffer)
-},{"./errors":357,"./types":360,"assert":16,"buffer":31}],360:[function(require,module,exports){
+},{"./errors":376,"./types":379,"assert":35,"buffer":50}],379:[function(require,module,exports){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 
@@ -57849,7 +60932,7 @@ module.exports = {
   Context: 128
 };
 
-},{}],361:[function(require,module,exports){
+},{}],380:[function(require,module,exports){
 (function (Buffer){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
@@ -58169,7 +61252,7 @@ Writer.prototype._ensure = function(len) {
 module.exports = Writer;
 
 }).call(this,require("buffer").Buffer)
-},{"./errors":357,"./types":360,"assert":16,"buffer":31}],362:[function(require,module,exports){
+},{"./errors":376,"./types":379,"assert":35,"buffer":50}],381:[function(require,module,exports){
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
 // If you have no idea what ASN.1 or BER is, see this:
@@ -58191,7 +61274,7 @@ module.exports = {
 
 };
 
-},{"./ber/index":358}],363:[function(require,module,exports){
+},{"./ber/index":377}],382:[function(require,module,exports){
 (function (Buffer,process){
 // Copyright (c) 2012, Mark Cavage. All rights reserved.
 // Copyright 2015 Joyent, Inc.
@@ -58406,7 +61489,7 @@ function _setExports(ndebug) {
 module.exports = _setExports(process.env.NODE_NDEBUG);
 
 }).call(this,{"isBuffer":require("../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")},require('_process'))
-},{"../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":231,"_process":233,"assert":16,"stream":254,"util":266}],364:[function(require,module,exports){
+},{"../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":250,"_process":252,"assert":35,"stream":273,"util":285}],383:[function(require,module,exports){
 'use strict';
 
 var crypto_hash_sha512 = require('tweetnacl').lowlevel.crypto_hash;
@@ -58967,7 +62050,7 @@ module.exports = {
       pbkdf: bcrypt_pbkdf
 };
 
-},{"tweetnacl":375}],365:[function(require,module,exports){
+},{"tweetnacl":394}],384:[function(require,module,exports){
 (function (Buffer){
 var crypto = require("crypto");
 var BigInteger = require("jsbn").BigInteger;
@@ -59028,7 +62111,7 @@ exports.ECKey = function(curve, key, isPublic)
 
 
 }).call(this,require("buffer").Buffer)
-},{"./lib/ec.js":366,"./lib/sec.js":367,"buffer":31,"crypto":35,"jsbn":374}],366:[function(require,module,exports){
+},{"./lib/ec.js":385,"./lib/sec.js":386,"buffer":50,"crypto":54,"jsbn":393}],385:[function(require,module,exports){
 // Basic Javascript Elliptic Curve implementation
 // Ported loosely from BouncyCastle's Java EC code
 // Only Fp curves implemented for now
@@ -59591,7 +62674,7 @@ var exports = {
 
 module.exports = exports
 
-},{"jsbn":374}],367:[function(require,module,exports){
+},{"jsbn":393}],386:[function(require,module,exports){
 // Named EC curves
 
 // Requires ec.js, jsbn.js, and jsbn2.js
@@ -59763,7 +62846,7 @@ module.exports = {
   "secp256r1":secp256r1
 }
 
-},{"./ec.js":366,"jsbn":374}],368:[function(require,module,exports){
+},{"./ec.js":385,"jsbn":393}],387:[function(require,module,exports){
 "use strict";
 
 /*
@@ -59800,7 +62883,7 @@ var utils = require('./lib/utils');
 
 module.exports = ns;
 
-},{"./lib/curve255":370,"./lib/dh":371,"./lib/eddsa":372,"./lib/utils":373}],369:[function(require,module,exports){
+},{"./lib/curve255":389,"./lib/dh":390,"./lib/eddsa":391,"./lib/utils":392}],388:[function(require,module,exports){
 "use strict";
 /**
  * @fileOverview
@@ -60283,7 +63366,7 @@ var crypto = require('crypto');
 
 module.exports = ns;
 
-},{"crypto":35}],370:[function(require,module,exports){
+},{"crypto":54}],389:[function(require,module,exports){
 "use strict";
 /**
  * @fileOverview
@@ -60506,7 +63589,7 @@ var utils = require('./utils');
 
 module.exports = ns;
 
-},{"./core":369,"./utils":373}],371:[function(require,module,exports){
+},{"./core":388,"./utils":392}],390:[function(require,module,exports){
 (function (Buffer){
 "use strict";
 /**
@@ -60621,7 +63704,7 @@ var curve255 = require('./curve255');
 module.exports = ns;
 
 }).call(this,require("buffer").Buffer)
-},{"./core":369,"./curve255":370,"./utils":373,"buffer":31}],372:[function(require,module,exports){
+},{"./core":388,"./curve255":389,"./utils":392,"buffer":50}],391:[function(require,module,exports){
 (function (Buffer){
 "use strict";
 /**
@@ -61198,7 +64281,7 @@ var crypto = require('crypto');
 module.exports = ns;
 
 }).call(this,{"isBuffer":require("../../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":231,"./core":369,"./curve255":370,"./utils":373,"crypto":35,"jsbn":374}],373:[function(require,module,exports){
+},{"../../../../../../../../browserify/node_modules/insert-module-globals/node_modules/is-buffer/index.js":250,"./core":388,"./curve255":389,"./utils":392,"crypto":54,"jsbn":393}],392:[function(require,module,exports){
 "use strict";
 /**
  * @fileOverview
@@ -61398,7 +64481,7 @@ var core = require('./core');
 
 module.exports = ns;
 
-},{"./core":369}],374:[function(require,module,exports){
+},{"./core":388}],393:[function(require,module,exports){
 (function(){
 
     // Copyright (c) 2005  Tom Wu
@@ -62758,7 +65841,7 @@ module.exports = ns;
 
 }).call(this);
 
-},{}],375:[function(require,module,exports){
+},{}],394:[function(require,module,exports){
 (function(nacl) {
 'use strict';
 
@@ -65148,7 +68231,7 @@ nacl.setPRNG = function(fn) {
 
 })(typeof module !== 'undefined' && module.exports ? module.exports : (self.nacl = self.nacl || {}));
 
-},{"crypto":17}],376:[function(require,module,exports){
+},{"crypto":36}],395:[function(require,module,exports){
 module.exports      = isTypedArray
 isTypedArray.strict = isStrictTypedArray
 isTypedArray.loose  = isLooseTypedArray
@@ -65191,7 +68274,7 @@ function isLooseTypedArray(arr) {
   return names[toString.call(arr)]
 }
 
-},{}],377:[function(require,module,exports){
+},{}],396:[function(require,module,exports){
 var stream = require('stream')
 
 
@@ -65220,7 +68303,7 @@ module.exports.isReadable = isReadable
 module.exports.isWritable = isWritable
 module.exports.isDuplex   = isDuplex
 
-},{"stream":254}],378:[function(require,module,exports){
+},{"stream":273}],397:[function(require,module,exports){
 exports = module.exports = stringify
 exports.getSerialize = serializer
 
@@ -65249,7 +68332,7 @@ function serializer(replacer, cycleReplacer) {
   }
 }
 
-},{}],379:[function(require,module,exports){
+},{}],398:[function(require,module,exports){
 /*!
  * mime-types
  * Copyright(c) 2014 Jonathan Ong
@@ -65439,7 +68522,7 @@ function populateMaps (extensions, types) {
   })
 }
 
-},{"mime-db":381,"path":232}],380:[function(require,module,exports){
+},{"mime-db":400,"path":251}],399:[function(require,module,exports){
 module.exports={
   "application/1d-interleaved-parityfec": {
     "source": "iana"
@@ -72153,7 +75236,7 @@ module.exports={
   }
 }
 
-},{}],381:[function(require,module,exports){
+},{}],400:[function(require,module,exports){
 /*!
  * mime-db
  * Copyright(c) 2014 Jonathan Ong
@@ -72166,7 +75249,7 @@ module.exports={
 
 module.exports = require('./db.json')
 
-},{"./db.json":380}],382:[function(require,module,exports){
+},{"./db.json":399}],401:[function(require,module,exports){
 var crypto = require('crypto')
   , qs = require('querystring')
   ;
@@ -72304,7 +75387,7 @@ exports.rfc3986 = rfc3986
 exports.generateBase = generateBase
 
 
-},{"crypto":35,"querystring":237}],383:[function(require,module,exports){
+},{"crypto":54,"querystring":256}],402:[function(require,module,exports){
 'use strict';
 
 var replace = String.prototype.replace;
@@ -72324,7 +75407,7 @@ module.exports = {
     RFC3986: 'RFC3986'
 };
 
-},{}],384:[function(require,module,exports){
+},{}],403:[function(require,module,exports){
 'use strict';
 
 var stringify = require('./stringify');
@@ -72337,7 +75420,7 @@ module.exports = {
     stringify: stringify
 };
 
-},{"./formats":383,"./parse":385,"./stringify":386}],385:[function(require,module,exports){
+},{"./formats":402,"./parse":404,"./stringify":405}],404:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -72505,7 +75588,7 @@ module.exports = function (str, opts) {
     return utils.compact(obj);
 };
 
-},{"./utils":387}],386:[function(require,module,exports){
+},{"./utils":406}],405:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -72694,7 +75777,7 @@ module.exports = function (object, opts) {
     return keys.join(delimiter);
 };
 
-},{"./formats":383,"./utils":387}],387:[function(require,module,exports){
+},{"./formats":402,"./utils":406}],406:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
@@ -72876,7 +75959,7 @@ exports.isBuffer = function (obj) {
     return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
 };
 
-},{}],388:[function(require,module,exports){
+},{}],407:[function(require,module,exports){
 (function (Buffer){
 var util = require('util')
 var Stream = require('stream')
@@ -72982,7 +76065,7 @@ function alignedWrite(buffer) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":31,"stream":254,"string_decoder":261,"util":266}],389:[function(require,module,exports){
+},{"buffer":50,"stream":273,"string_decoder":280,"util":285}],408:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -74320,7 +77403,7 @@ module.exports = {
   canonicalDomain: canonicalDomain
 };
 
-},{"../package.json":395,"./memstore":390,"./pathMatch":391,"./permuteDomain":392,"./pubsuffix":393,"./store":394,"net":15,"punycode":234,"url":262}],390:[function(require,module,exports){
+},{"../package.json":414,"./memstore":409,"./pathMatch":410,"./permuteDomain":411,"./pubsuffix":412,"./store":413,"net":34,"punycode":253,"url":281}],409:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -74492,7 +77575,7 @@ MemoryCookieStore.prototype.getAllCookies = function(cb) {
   cb(null, cookies);
 };
 
-},{"./pathMatch":391,"./permuteDomain":392,"./store":394,"util":266}],391:[function(require,module,exports){
+},{"./pathMatch":410,"./permuteDomain":411,"./store":413,"util":285}],410:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -74555,7 +77638,7 @@ function pathMatch (reqPath, cookiePath) {
 
 exports.pathMatch = pathMatch;
 
-},{}],392:[function(require,module,exports){
+},{}],411:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -74613,7 +77696,7 @@ function permuteDomain (domain) {
 
 exports.permuteDomain = permuteDomain;
 
-},{"./pubsuffix":393}],393:[function(require,module,exports){
+},{"./pubsuffix":412}],412:[function(require,module,exports){
 /****************************************************
  * AUTOMATICALLY GENERATED by generate-pubsuffix.js *
  *                  DO NOT EDIT!                    *
@@ -74713,7 +77796,7 @@ var index = module.exports.index = Object.freeze(
 
 // END of automatically generated file
 
-},{"punycode":234}],394:[function(require,module,exports){
+},{"punycode":253}],413:[function(require,module,exports){
 /*!
  * Copyright (c) 2015, Salesforce.com, Inc.
  * All rights reserved.
@@ -74786,7 +77869,7 @@ Store.prototype.getAllCookies = function(cb) {
   throw new Error('getAllCookies is not implemented (therefore jar cannot be serialized)');
 };
 
-},{}],395:[function(require,module,exports){
+},{}],414:[function(require,module,exports){
 module.exports={
   "author": {
     "name": "Jeremy Stashewsky",
@@ -74889,7 +77972,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.3.2.tgz"
 }
 
-},{}],396:[function(require,module,exports){
+},{}],415:[function(require,module,exports){
 (function (process,Buffer){
 'use strict'
 
@@ -75136,7 +78219,7 @@ if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
 exports.debug = debug // for test
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":233,"assert":16,"buffer":31,"events":228,"http":255,"https":229,"net":15,"tls":15,"util":266}],397:[function(require,module,exports){
+},{"_process":252,"assert":35,"buffer":50,"events":247,"http":274,"https":248,"net":34,"tls":34,"util":285}],416:[function(require,module,exports){
 (function (global){
 
 var rng;
@@ -75172,7 +78255,7 @@ module.exports = rng;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],398:[function(require,module,exports){
+},{}],417:[function(require,module,exports){
 // Unique ID creation requires a high quality random # generator.  We feature
 // detect to determine the best RNG source, normalizing to a function that
 // returns 128-bits of randomness, since that's what's usually required
@@ -75331,7 +78414,7 @@ uuid.v4 = v4;
 
 module.exports = uuid;
 
-},{"./lib/rng":397}],399:[function(require,module,exports){
+},{"./lib/rng":416}],418:[function(require,module,exports){
 (function (process,Buffer){
 'use strict'
 
@@ -76810,7 +79893,7 @@ Request.prototype.toJSON = requestToJSON
 module.exports = Request
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"./lib/auth":276,"./lib/cookies":277,"./lib/getProxyFromURI":278,"./lib/har":279,"./lib/helpers":280,"./lib/multipart":281,"./lib/oauth":282,"./lib/querystring":283,"./lib/redirect":284,"./lib/tunnel":285,"_process":233,"aws-sign2":286,"aws4":287,"buffer":31,"caseless":289,"extend":292,"forever-agent":293,"form-data":294,"hawk":323,"http":255,"http-signature":324,"https":229,"is-typedarray":376,"isstream":377,"mime-types":379,"stream":254,"stringstream":388,"url":262,"util":266,"zlib":30}],400:[function(require,module,exports){
+},{"./lib/auth":295,"./lib/cookies":296,"./lib/getProxyFromURI":297,"./lib/har":298,"./lib/helpers":299,"./lib/multipart":300,"./lib/oauth":301,"./lib/querystring":302,"./lib/redirect":303,"./lib/tunnel":304,"_process":252,"aws-sign2":305,"aws4":306,"buffer":50,"caseless":308,"extend":311,"forever-agent":312,"form-data":313,"hawk":342,"http":274,"http-signature":343,"https":248,"is-typedarray":395,"isstream":396,"mime-types":398,"stream":273,"stringstream":407,"url":281,"util":285,"zlib":49}],419:[function(require,module,exports){
 var _forEach = require('lodash/forEach');
 var _map = require('lodash/map');
 var _every = require('lodash/every');
@@ -76885,7 +79968,7 @@ function findBestMatch(mainString, targetStrings) {
   }
 }
 
-},{"lodash/every":511,"lodash/flattenDeep":512,"lodash/forEach":513,"lodash/map":528,"lodash/maxBy":529}],401:[function(require,module,exports){
+},{"lodash/every":530,"lodash/flattenDeep":531,"lodash/forEach":532,"lodash/map":547,"lodash/maxBy":548}],420:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -76894,7 +79977,7 @@ var DataView = getNative(root, 'DataView');
 
 module.exports = DataView;
 
-},{"./_getNative":461,"./_root":498}],402:[function(require,module,exports){
+},{"./_getNative":480,"./_root":517}],421:[function(require,module,exports){
 var hashClear = require('./_hashClear'),
     hashDelete = require('./_hashDelete'),
     hashGet = require('./_hashGet'),
@@ -76928,7 +80011,7 @@ Hash.prototype.set = hashSet;
 
 module.exports = Hash;
 
-},{"./_hashClear":467,"./_hashDelete":468,"./_hashGet":469,"./_hashHas":470,"./_hashSet":471}],403:[function(require,module,exports){
+},{"./_hashClear":486,"./_hashDelete":487,"./_hashGet":488,"./_hashHas":489,"./_hashSet":490}],422:[function(require,module,exports){
 var listCacheClear = require('./_listCacheClear'),
     listCacheDelete = require('./_listCacheDelete'),
     listCacheGet = require('./_listCacheGet'),
@@ -76962,7 +80045,7 @@ ListCache.prototype.set = listCacheSet;
 
 module.exports = ListCache;
 
-},{"./_listCacheClear":480,"./_listCacheDelete":481,"./_listCacheGet":482,"./_listCacheHas":483,"./_listCacheSet":484}],404:[function(require,module,exports){
+},{"./_listCacheClear":499,"./_listCacheDelete":500,"./_listCacheGet":501,"./_listCacheHas":502,"./_listCacheSet":503}],423:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -76971,7 +80054,7 @@ var Map = getNative(root, 'Map');
 
 module.exports = Map;
 
-},{"./_getNative":461,"./_root":498}],405:[function(require,module,exports){
+},{"./_getNative":480,"./_root":517}],424:[function(require,module,exports){
 var mapCacheClear = require('./_mapCacheClear'),
     mapCacheDelete = require('./_mapCacheDelete'),
     mapCacheGet = require('./_mapCacheGet'),
@@ -77005,7 +80088,7 @@ MapCache.prototype.set = mapCacheSet;
 
 module.exports = MapCache;
 
-},{"./_mapCacheClear":485,"./_mapCacheDelete":486,"./_mapCacheGet":487,"./_mapCacheHas":488,"./_mapCacheSet":489}],406:[function(require,module,exports){
+},{"./_mapCacheClear":504,"./_mapCacheDelete":505,"./_mapCacheGet":506,"./_mapCacheHas":507,"./_mapCacheSet":508}],425:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -77014,7 +80097,7 @@ var Promise = getNative(root, 'Promise');
 
 module.exports = Promise;
 
-},{"./_getNative":461,"./_root":498}],407:[function(require,module,exports){
+},{"./_getNative":480,"./_root":517}],426:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -77023,7 +80106,7 @@ var Set = getNative(root, 'Set');
 
 module.exports = Set;
 
-},{"./_getNative":461,"./_root":498}],408:[function(require,module,exports){
+},{"./_getNative":480,"./_root":517}],427:[function(require,module,exports){
 var MapCache = require('./_MapCache'),
     setCacheAdd = require('./_setCacheAdd'),
     setCacheHas = require('./_setCacheHas');
@@ -77052,7 +80135,7 @@ SetCache.prototype.has = setCacheHas;
 
 module.exports = SetCache;
 
-},{"./_MapCache":405,"./_setCacheAdd":499,"./_setCacheHas":500}],409:[function(require,module,exports){
+},{"./_MapCache":424,"./_setCacheAdd":518,"./_setCacheHas":519}],428:[function(require,module,exports){
 var ListCache = require('./_ListCache'),
     stackClear = require('./_stackClear'),
     stackDelete = require('./_stackDelete'),
@@ -77081,7 +80164,7 @@ Stack.prototype.set = stackSet;
 
 module.exports = Stack;
 
-},{"./_ListCache":403,"./_stackClear":502,"./_stackDelete":503,"./_stackGet":504,"./_stackHas":505,"./_stackSet":506}],410:[function(require,module,exports){
+},{"./_ListCache":422,"./_stackClear":521,"./_stackDelete":522,"./_stackGet":523,"./_stackHas":524,"./_stackSet":525}],429:[function(require,module,exports){
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -77089,7 +80172,7 @@ var Symbol = root.Symbol;
 
 module.exports = Symbol;
 
-},{"./_root":498}],411:[function(require,module,exports){
+},{"./_root":517}],430:[function(require,module,exports){
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -77097,7 +80180,7 @@ var Uint8Array = root.Uint8Array;
 
 module.exports = Uint8Array;
 
-},{"./_root":498}],412:[function(require,module,exports){
+},{"./_root":517}],431:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -77106,7 +80189,7 @@ var WeakMap = getNative(root, 'WeakMap');
 
 module.exports = WeakMap;
 
-},{"./_getNative":461,"./_root":498}],413:[function(require,module,exports){
+},{"./_getNative":480,"./_root":517}],432:[function(require,module,exports){
 /**
  * A specialized version of `_.forEach` for arrays without support for
  * iteratee shorthands.
@@ -77130,7 +80213,7 @@ function arrayEach(array, iteratee) {
 
 module.exports = arrayEach;
 
-},{}],414:[function(require,module,exports){
+},{}],433:[function(require,module,exports){
 /**
  * A specialized version of `_.every` for arrays without support for
  * iteratee shorthands.
@@ -77155,7 +80238,7 @@ function arrayEvery(array, predicate) {
 
 module.exports = arrayEvery;
 
-},{}],415:[function(require,module,exports){
+},{}],434:[function(require,module,exports){
 /**
  * A specialized version of `_.filter` for arrays without support for
  * iteratee shorthands.
@@ -77182,7 +80265,7 @@ function arrayFilter(array, predicate) {
 
 module.exports = arrayFilter;
 
-},{}],416:[function(require,module,exports){
+},{}],435:[function(require,module,exports){
 var baseTimes = require('./_baseTimes'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray'),
@@ -77233,7 +80316,7 @@ function arrayLikeKeys(value, inherited) {
 
 module.exports = arrayLikeKeys;
 
-},{"./_baseTimes":445,"./_isIndex":473,"./isArguments":517,"./isArray":518,"./isBuffer":520,"./isTypedArray":526}],417:[function(require,module,exports){
+},{"./_baseTimes":464,"./_isIndex":492,"./isArguments":536,"./isArray":537,"./isBuffer":539,"./isTypedArray":545}],436:[function(require,module,exports){
 /**
  * A specialized version of `_.map` for arrays without support for iteratee
  * shorthands.
@@ -77256,7 +80339,7 @@ function arrayMap(array, iteratee) {
 
 module.exports = arrayMap;
 
-},{}],418:[function(require,module,exports){
+},{}],437:[function(require,module,exports){
 /**
  * Appends the elements of `values` to `array`.
  *
@@ -77278,7 +80361,7 @@ function arrayPush(array, values) {
 
 module.exports = arrayPush;
 
-},{}],419:[function(require,module,exports){
+},{}],438:[function(require,module,exports){
 /**
  * A specialized version of `_.some` for arrays without support for iteratee
  * shorthands.
@@ -77303,7 +80386,7 @@ function arraySome(array, predicate) {
 
 module.exports = arraySome;
 
-},{}],420:[function(require,module,exports){
+},{}],439:[function(require,module,exports){
 var eq = require('./eq');
 
 /**
@@ -77326,7 +80409,7 @@ function assocIndexOf(array, key) {
 
 module.exports = assocIndexOf;
 
-},{"./eq":510}],421:[function(require,module,exports){
+},{"./eq":529}],440:[function(require,module,exports){
 var baseForOwn = require('./_baseForOwn'),
     createBaseEach = require('./_createBaseEach');
 
@@ -77342,7 +80425,7 @@ var baseEach = createBaseEach(baseForOwn);
 
 module.exports = baseEach;
 
-},{"./_baseForOwn":426,"./_createBaseEach":452}],422:[function(require,module,exports){
+},{"./_baseForOwn":445,"./_createBaseEach":471}],441:[function(require,module,exports){
 var baseEach = require('./_baseEach');
 
 /**
@@ -77365,7 +80448,7 @@ function baseEvery(collection, predicate) {
 
 module.exports = baseEvery;
 
-},{"./_baseEach":421}],423:[function(require,module,exports){
+},{"./_baseEach":440}],442:[function(require,module,exports){
 var isSymbol = require('./isSymbol');
 
 /**
@@ -77399,7 +80482,7 @@ function baseExtremum(array, iteratee, comparator) {
 
 module.exports = baseExtremum;
 
-},{"./isSymbol":525}],424:[function(require,module,exports){
+},{"./isSymbol":544}],443:[function(require,module,exports){
 var arrayPush = require('./_arrayPush'),
     isFlattenable = require('./_isFlattenable');
 
@@ -77439,7 +80522,7 @@ function baseFlatten(array, depth, predicate, isStrict, result) {
 
 module.exports = baseFlatten;
 
-},{"./_arrayPush":418,"./_isFlattenable":472}],425:[function(require,module,exports){
+},{"./_arrayPush":437,"./_isFlattenable":491}],444:[function(require,module,exports){
 var createBaseFor = require('./_createBaseFor');
 
 /**
@@ -77457,7 +80540,7 @@ var baseFor = createBaseFor();
 
 module.exports = baseFor;
 
-},{"./_createBaseFor":453}],426:[function(require,module,exports){
+},{"./_createBaseFor":472}],445:[function(require,module,exports){
 var baseFor = require('./_baseFor'),
     keys = require('./keys');
 
@@ -77475,7 +80558,7 @@ function baseForOwn(object, iteratee) {
 
 module.exports = baseForOwn;
 
-},{"./_baseFor":425,"./keys":527}],427:[function(require,module,exports){
+},{"./_baseFor":444,"./keys":546}],446:[function(require,module,exports){
 var castPath = require('./_castPath'),
     toKey = require('./_toKey');
 
@@ -77501,7 +80584,7 @@ function baseGet(object, path) {
 
 module.exports = baseGet;
 
-},{"./_castPath":450,"./_toKey":508}],428:[function(require,module,exports){
+},{"./_castPath":469,"./_toKey":527}],447:[function(require,module,exports){
 var arrayPush = require('./_arrayPush'),
     isArray = require('./isArray');
 
@@ -77523,7 +80606,7 @@ function baseGetAllKeys(object, keysFunc, symbolsFunc) {
 
 module.exports = baseGetAllKeys;
 
-},{"./_arrayPush":418,"./isArray":518}],429:[function(require,module,exports){
+},{"./_arrayPush":437,"./isArray":537}],448:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     getRawTag = require('./_getRawTag'),
     objectToString = require('./_objectToString');
@@ -77553,7 +80636,7 @@ function baseGetTag(value) {
 
 module.exports = baseGetTag;
 
-},{"./_Symbol":410,"./_getRawTag":462,"./_objectToString":496}],430:[function(require,module,exports){
+},{"./_Symbol":429,"./_getRawTag":481,"./_objectToString":515}],449:[function(require,module,exports){
 /**
  * The base implementation of `_.gt` which doesn't coerce arguments.
  *
@@ -77569,7 +80652,7 @@ function baseGt(value, other) {
 
 module.exports = baseGt;
 
-},{}],431:[function(require,module,exports){
+},{}],450:[function(require,module,exports){
 /**
  * The base implementation of `_.hasIn` without support for deep paths.
  *
@@ -77584,7 +80667,7 @@ function baseHasIn(object, key) {
 
 module.exports = baseHasIn;
 
-},{}],432:[function(require,module,exports){
+},{}],451:[function(require,module,exports){
 var baseGetTag = require('./_baseGetTag'),
     isObjectLike = require('./isObjectLike');
 
@@ -77604,7 +80687,7 @@ function baseIsArguments(value) {
 
 module.exports = baseIsArguments;
 
-},{"./_baseGetTag":429,"./isObjectLike":524}],433:[function(require,module,exports){
+},{"./_baseGetTag":448,"./isObjectLike":543}],452:[function(require,module,exports){
 var baseIsEqualDeep = require('./_baseIsEqualDeep'),
     isObjectLike = require('./isObjectLike');
 
@@ -77634,7 +80717,7 @@ function baseIsEqual(value, other, bitmask, customizer, stack) {
 
 module.exports = baseIsEqual;
 
-},{"./_baseIsEqualDeep":434,"./isObjectLike":524}],434:[function(require,module,exports){
+},{"./_baseIsEqualDeep":453,"./isObjectLike":543}],453:[function(require,module,exports){
 var Stack = require('./_Stack'),
     equalArrays = require('./_equalArrays'),
     equalByTag = require('./_equalByTag'),
@@ -77719,7 +80802,7 @@ function baseIsEqualDeep(object, other, bitmask, customizer, equalFunc, stack) {
 
 module.exports = baseIsEqualDeep;
 
-},{"./_Stack":409,"./_equalArrays":454,"./_equalByTag":455,"./_equalObjects":456,"./_getTag":464,"./isArray":518,"./isBuffer":520,"./isTypedArray":526}],435:[function(require,module,exports){
+},{"./_Stack":428,"./_equalArrays":473,"./_equalByTag":474,"./_equalObjects":475,"./_getTag":483,"./isArray":537,"./isBuffer":539,"./isTypedArray":545}],454:[function(require,module,exports){
 var Stack = require('./_Stack'),
     baseIsEqual = require('./_baseIsEqual');
 
@@ -77783,7 +80866,7 @@ function baseIsMatch(object, source, matchData, customizer) {
 
 module.exports = baseIsMatch;
 
-},{"./_Stack":409,"./_baseIsEqual":433}],436:[function(require,module,exports){
+},{"./_Stack":428,"./_baseIsEqual":452}],455:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isMasked = require('./_isMasked'),
     isObject = require('./isObject'),
@@ -77832,7 +80915,7 @@ function baseIsNative(value) {
 
 module.exports = baseIsNative;
 
-},{"./_isMasked":477,"./_toSource":509,"./isFunction":521,"./isObject":523}],437:[function(require,module,exports){
+},{"./_isMasked":496,"./_toSource":528,"./isFunction":540,"./isObject":542}],456:[function(require,module,exports){
 var baseGetTag = require('./_baseGetTag'),
     isLength = require('./isLength'),
     isObjectLike = require('./isObjectLike');
@@ -77894,7 +80977,7 @@ function baseIsTypedArray(value) {
 
 module.exports = baseIsTypedArray;
 
-},{"./_baseGetTag":429,"./isLength":522,"./isObjectLike":524}],438:[function(require,module,exports){
+},{"./_baseGetTag":448,"./isLength":541,"./isObjectLike":543}],457:[function(require,module,exports){
 var baseMatches = require('./_baseMatches'),
     baseMatchesProperty = require('./_baseMatchesProperty'),
     identity = require('./identity'),
@@ -77927,7 +81010,7 @@ function baseIteratee(value) {
 
 module.exports = baseIteratee;
 
-},{"./_baseMatches":441,"./_baseMatchesProperty":442,"./identity":516,"./isArray":518,"./property":531}],439:[function(require,module,exports){
+},{"./_baseMatches":460,"./_baseMatchesProperty":461,"./identity":535,"./isArray":537,"./property":550}],458:[function(require,module,exports){
 var isPrototype = require('./_isPrototype'),
     nativeKeys = require('./_nativeKeys');
 
@@ -77959,7 +81042,7 @@ function baseKeys(object) {
 
 module.exports = baseKeys;
 
-},{"./_isPrototype":478,"./_nativeKeys":494}],440:[function(require,module,exports){
+},{"./_isPrototype":497,"./_nativeKeys":513}],459:[function(require,module,exports){
 var baseEach = require('./_baseEach'),
     isArrayLike = require('./isArrayLike');
 
@@ -77983,7 +81066,7 @@ function baseMap(collection, iteratee) {
 
 module.exports = baseMap;
 
-},{"./_baseEach":421,"./isArrayLike":519}],441:[function(require,module,exports){
+},{"./_baseEach":440,"./isArrayLike":538}],460:[function(require,module,exports){
 var baseIsMatch = require('./_baseIsMatch'),
     getMatchData = require('./_getMatchData'),
     matchesStrictComparable = require('./_matchesStrictComparable');
@@ -78007,7 +81090,7 @@ function baseMatches(source) {
 
 module.exports = baseMatches;
 
-},{"./_baseIsMatch":435,"./_getMatchData":460,"./_matchesStrictComparable":491}],442:[function(require,module,exports){
+},{"./_baseIsMatch":454,"./_getMatchData":479,"./_matchesStrictComparable":510}],461:[function(require,module,exports){
 var baseIsEqual = require('./_baseIsEqual'),
     get = require('./get'),
     hasIn = require('./hasIn'),
@@ -78042,7 +81125,7 @@ function baseMatchesProperty(path, srcValue) {
 
 module.exports = baseMatchesProperty;
 
-},{"./_baseIsEqual":433,"./_isKey":475,"./_isStrictComparable":479,"./_matchesStrictComparable":491,"./_toKey":508,"./get":514,"./hasIn":515}],443:[function(require,module,exports){
+},{"./_baseIsEqual":452,"./_isKey":494,"./_isStrictComparable":498,"./_matchesStrictComparable":510,"./_toKey":527,"./get":533,"./hasIn":534}],462:[function(require,module,exports){
 /**
  * The base implementation of `_.property` without support for deep paths.
  *
@@ -78058,7 +81141,7 @@ function baseProperty(key) {
 
 module.exports = baseProperty;
 
-},{}],444:[function(require,module,exports){
+},{}],463:[function(require,module,exports){
 var baseGet = require('./_baseGet');
 
 /**
@@ -78076,7 +81159,7 @@ function basePropertyDeep(path) {
 
 module.exports = basePropertyDeep;
 
-},{"./_baseGet":427}],445:[function(require,module,exports){
+},{"./_baseGet":446}],464:[function(require,module,exports){
 /**
  * The base implementation of `_.times` without support for iteratee shorthands
  * or max array length checks.
@@ -78098,7 +81181,7 @@ function baseTimes(n, iteratee) {
 
 module.exports = baseTimes;
 
-},{}],446:[function(require,module,exports){
+},{}],465:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     arrayMap = require('./_arrayMap'),
     isArray = require('./isArray'),
@@ -78137,7 +81220,7 @@ function baseToString(value) {
 
 module.exports = baseToString;
 
-},{"./_Symbol":410,"./_arrayMap":417,"./isArray":518,"./isSymbol":525}],447:[function(require,module,exports){
+},{"./_Symbol":429,"./_arrayMap":436,"./isArray":537,"./isSymbol":544}],466:[function(require,module,exports){
 /**
  * The base implementation of `_.unary` without support for storing metadata.
  *
@@ -78153,7 +81236,7 @@ function baseUnary(func) {
 
 module.exports = baseUnary;
 
-},{}],448:[function(require,module,exports){
+},{}],467:[function(require,module,exports){
 /**
  * Checks if a `cache` value for `key` exists.
  *
@@ -78168,7 +81251,7 @@ function cacheHas(cache, key) {
 
 module.exports = cacheHas;
 
-},{}],449:[function(require,module,exports){
+},{}],468:[function(require,module,exports){
 var identity = require('./identity');
 
 /**
@@ -78184,7 +81267,7 @@ function castFunction(value) {
 
 module.exports = castFunction;
 
-},{"./identity":516}],450:[function(require,module,exports){
+},{"./identity":535}],469:[function(require,module,exports){
 var isArray = require('./isArray'),
     isKey = require('./_isKey'),
     stringToPath = require('./_stringToPath'),
@@ -78207,7 +81290,7 @@ function castPath(value, object) {
 
 module.exports = castPath;
 
-},{"./_isKey":475,"./_stringToPath":507,"./isArray":518,"./toString":534}],451:[function(require,module,exports){
+},{"./_isKey":494,"./_stringToPath":526,"./isArray":537,"./toString":553}],470:[function(require,module,exports){
 var root = require('./_root');
 
 /** Used to detect overreaching core-js shims. */
@@ -78215,7 +81298,7 @@ var coreJsData = root['__core-js_shared__'];
 
 module.exports = coreJsData;
 
-},{"./_root":498}],452:[function(require,module,exports){
+},{"./_root":517}],471:[function(require,module,exports){
 var isArrayLike = require('./isArrayLike');
 
 /**
@@ -78249,7 +81332,7 @@ function createBaseEach(eachFunc, fromRight) {
 
 module.exports = createBaseEach;
 
-},{"./isArrayLike":519}],453:[function(require,module,exports){
+},{"./isArrayLike":538}],472:[function(require,module,exports){
 /**
  * Creates a base function for methods like `_.forIn` and `_.forOwn`.
  *
@@ -78276,7 +81359,7 @@ function createBaseFor(fromRight) {
 
 module.exports = createBaseFor;
 
-},{}],454:[function(require,module,exports){
+},{}],473:[function(require,module,exports){
 var SetCache = require('./_SetCache'),
     arraySome = require('./_arraySome'),
     cacheHas = require('./_cacheHas');
@@ -78361,7 +81444,7 @@ function equalArrays(array, other, bitmask, customizer, equalFunc, stack) {
 
 module.exports = equalArrays;
 
-},{"./_SetCache":408,"./_arraySome":419,"./_cacheHas":448}],455:[function(require,module,exports){
+},{"./_SetCache":427,"./_arraySome":438,"./_cacheHas":467}],474:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     Uint8Array = require('./_Uint8Array'),
     eq = require('./eq'),
@@ -78475,7 +81558,7 @@ function equalByTag(object, other, tag, bitmask, customizer, equalFunc, stack) {
 
 module.exports = equalByTag;
 
-},{"./_Symbol":410,"./_Uint8Array":411,"./_equalArrays":454,"./_mapToArray":490,"./_setToArray":501,"./eq":510}],456:[function(require,module,exports){
+},{"./_Symbol":429,"./_Uint8Array":430,"./_equalArrays":473,"./_mapToArray":509,"./_setToArray":520,"./eq":529}],475:[function(require,module,exports){
 var getAllKeys = require('./_getAllKeys');
 
 /** Used to compose bitmasks for value comparisons. */
@@ -78566,7 +81649,7 @@ function equalObjects(object, other, bitmask, customizer, equalFunc, stack) {
 
 module.exports = equalObjects;
 
-},{"./_getAllKeys":458}],457:[function(require,module,exports){
+},{"./_getAllKeys":477}],476:[function(require,module,exports){
 (function (global){
 /** Detect free variable `global` from Node.js. */
 var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
@@ -78574,7 +81657,7 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 module.exports = freeGlobal;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],458:[function(require,module,exports){
+},{}],477:[function(require,module,exports){
 var baseGetAllKeys = require('./_baseGetAllKeys'),
     getSymbols = require('./_getSymbols'),
     keys = require('./keys');
@@ -78592,7 +81675,7 @@ function getAllKeys(object) {
 
 module.exports = getAllKeys;
 
-},{"./_baseGetAllKeys":428,"./_getSymbols":463,"./keys":527}],459:[function(require,module,exports){
+},{"./_baseGetAllKeys":447,"./_getSymbols":482,"./keys":546}],478:[function(require,module,exports){
 var isKeyable = require('./_isKeyable');
 
 /**
@@ -78612,7 +81695,7 @@ function getMapData(map, key) {
 
 module.exports = getMapData;
 
-},{"./_isKeyable":476}],460:[function(require,module,exports){
+},{"./_isKeyable":495}],479:[function(require,module,exports){
 var isStrictComparable = require('./_isStrictComparable'),
     keys = require('./keys');
 
@@ -78638,7 +81721,7 @@ function getMatchData(object) {
 
 module.exports = getMatchData;
 
-},{"./_isStrictComparable":479,"./keys":527}],461:[function(require,module,exports){
+},{"./_isStrictComparable":498,"./keys":546}],480:[function(require,module,exports){
 var baseIsNative = require('./_baseIsNative'),
     getValue = require('./_getValue');
 
@@ -78657,7 +81740,7 @@ function getNative(object, key) {
 
 module.exports = getNative;
 
-},{"./_baseIsNative":436,"./_getValue":465}],462:[function(require,module,exports){
+},{"./_baseIsNative":455,"./_getValue":484}],481:[function(require,module,exports){
 var Symbol = require('./_Symbol');
 
 /** Used for built-in method references. */
@@ -78705,7 +81788,7 @@ function getRawTag(value) {
 
 module.exports = getRawTag;
 
-},{"./_Symbol":410}],463:[function(require,module,exports){
+},{"./_Symbol":429}],482:[function(require,module,exports){
 var arrayFilter = require('./_arrayFilter'),
     stubArray = require('./stubArray');
 
@@ -78737,7 +81820,7 @@ var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
 
 module.exports = getSymbols;
 
-},{"./_arrayFilter":415,"./stubArray":532}],464:[function(require,module,exports){
+},{"./_arrayFilter":434,"./stubArray":551}],483:[function(require,module,exports){
 var DataView = require('./_DataView'),
     Map = require('./_Map'),
     Promise = require('./_Promise'),
@@ -78797,7 +81880,7 @@ if ((DataView && getTag(new DataView(new ArrayBuffer(1))) != dataViewTag) ||
 
 module.exports = getTag;
 
-},{"./_DataView":401,"./_Map":404,"./_Promise":406,"./_Set":407,"./_WeakMap":412,"./_baseGetTag":429,"./_toSource":509}],465:[function(require,module,exports){
+},{"./_DataView":420,"./_Map":423,"./_Promise":425,"./_Set":426,"./_WeakMap":431,"./_baseGetTag":448,"./_toSource":528}],484:[function(require,module,exports){
 /**
  * Gets the value at `key` of `object`.
  *
@@ -78812,7 +81895,7 @@ function getValue(object, key) {
 
 module.exports = getValue;
 
-},{}],466:[function(require,module,exports){
+},{}],485:[function(require,module,exports){
 var castPath = require('./_castPath'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray'),
@@ -78853,7 +81936,7 @@ function hasPath(object, path, hasFunc) {
 
 module.exports = hasPath;
 
-},{"./_castPath":450,"./_isIndex":473,"./_toKey":508,"./isArguments":517,"./isArray":518,"./isLength":522}],467:[function(require,module,exports){
+},{"./_castPath":469,"./_isIndex":492,"./_toKey":527,"./isArguments":536,"./isArray":537,"./isLength":541}],486:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /**
@@ -78870,7 +81953,7 @@ function hashClear() {
 
 module.exports = hashClear;
 
-},{"./_nativeCreate":493}],468:[function(require,module,exports){
+},{"./_nativeCreate":512}],487:[function(require,module,exports){
 /**
  * Removes `key` and its value from the hash.
  *
@@ -78889,7 +81972,7 @@ function hashDelete(key) {
 
 module.exports = hashDelete;
 
-},{}],469:[function(require,module,exports){
+},{}],488:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used to stand-in for `undefined` hash values. */
@@ -78921,7 +82004,7 @@ function hashGet(key) {
 
 module.exports = hashGet;
 
-},{"./_nativeCreate":493}],470:[function(require,module,exports){
+},{"./_nativeCreate":512}],489:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used for built-in method references. */
@@ -78946,7 +82029,7 @@ function hashHas(key) {
 
 module.exports = hashHas;
 
-},{"./_nativeCreate":493}],471:[function(require,module,exports){
+},{"./_nativeCreate":512}],490:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used to stand-in for `undefined` hash values. */
@@ -78971,7 +82054,7 @@ function hashSet(key, value) {
 
 module.exports = hashSet;
 
-},{"./_nativeCreate":493}],472:[function(require,module,exports){
+},{"./_nativeCreate":512}],491:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray');
@@ -78993,7 +82076,7 @@ function isFlattenable(value) {
 
 module.exports = isFlattenable;
 
-},{"./_Symbol":410,"./isArguments":517,"./isArray":518}],473:[function(require,module,exports){
+},{"./_Symbol":429,"./isArguments":536,"./isArray":537}],492:[function(require,module,exports){
 /** Used as references for various `Number` constants. */
 var MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -79017,7 +82100,7 @@ function isIndex(value, length) {
 
 module.exports = isIndex;
 
-},{}],474:[function(require,module,exports){
+},{}],493:[function(require,module,exports){
 var eq = require('./eq'),
     isArrayLike = require('./isArrayLike'),
     isIndex = require('./_isIndex'),
@@ -79049,7 +82132,7 @@ function isIterateeCall(value, index, object) {
 
 module.exports = isIterateeCall;
 
-},{"./_isIndex":473,"./eq":510,"./isArrayLike":519,"./isObject":523}],475:[function(require,module,exports){
+},{"./_isIndex":492,"./eq":529,"./isArrayLike":538,"./isObject":542}],494:[function(require,module,exports){
 var isArray = require('./isArray'),
     isSymbol = require('./isSymbol');
 
@@ -79080,7 +82163,7 @@ function isKey(value, object) {
 
 module.exports = isKey;
 
-},{"./isArray":518,"./isSymbol":525}],476:[function(require,module,exports){
+},{"./isArray":537,"./isSymbol":544}],495:[function(require,module,exports){
 /**
  * Checks if `value` is suitable for use as unique object key.
  *
@@ -79097,7 +82180,7 @@ function isKeyable(value) {
 
 module.exports = isKeyable;
 
-},{}],477:[function(require,module,exports){
+},{}],496:[function(require,module,exports){
 var coreJsData = require('./_coreJsData');
 
 /** Used to detect methods masquerading as native. */
@@ -79119,7 +82202,7 @@ function isMasked(func) {
 
 module.exports = isMasked;
 
-},{"./_coreJsData":451}],478:[function(require,module,exports){
+},{"./_coreJsData":470}],497:[function(require,module,exports){
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -79139,7 +82222,7 @@ function isPrototype(value) {
 
 module.exports = isPrototype;
 
-},{}],479:[function(require,module,exports){
+},{}],498:[function(require,module,exports){
 var isObject = require('./isObject');
 
 /**
@@ -79156,7 +82239,7 @@ function isStrictComparable(value) {
 
 module.exports = isStrictComparable;
 
-},{"./isObject":523}],480:[function(require,module,exports){
+},{"./isObject":542}],499:[function(require,module,exports){
 /**
  * Removes all key-value entries from the list cache.
  *
@@ -79171,7 +82254,7 @@ function listCacheClear() {
 
 module.exports = listCacheClear;
 
-},{}],481:[function(require,module,exports){
+},{}],500:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /** Used for built-in method references. */
@@ -79208,7 +82291,7 @@ function listCacheDelete(key) {
 
 module.exports = listCacheDelete;
 
-},{"./_assocIndexOf":420}],482:[function(require,module,exports){
+},{"./_assocIndexOf":439}],501:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -79229,7 +82312,7 @@ function listCacheGet(key) {
 
 module.exports = listCacheGet;
 
-},{"./_assocIndexOf":420}],483:[function(require,module,exports){
+},{"./_assocIndexOf":439}],502:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -79247,7 +82330,7 @@ function listCacheHas(key) {
 
 module.exports = listCacheHas;
 
-},{"./_assocIndexOf":420}],484:[function(require,module,exports){
+},{"./_assocIndexOf":439}],503:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -79275,7 +82358,7 @@ function listCacheSet(key, value) {
 
 module.exports = listCacheSet;
 
-},{"./_assocIndexOf":420}],485:[function(require,module,exports){
+},{"./_assocIndexOf":439}],504:[function(require,module,exports){
 var Hash = require('./_Hash'),
     ListCache = require('./_ListCache'),
     Map = require('./_Map');
@@ -79298,7 +82381,7 @@ function mapCacheClear() {
 
 module.exports = mapCacheClear;
 
-},{"./_Hash":402,"./_ListCache":403,"./_Map":404}],486:[function(require,module,exports){
+},{"./_Hash":421,"./_ListCache":422,"./_Map":423}],505:[function(require,module,exports){
 var getMapData = require('./_getMapData');
 
 /**
@@ -79318,7 +82401,7 @@ function mapCacheDelete(key) {
 
 module.exports = mapCacheDelete;
 
-},{"./_getMapData":459}],487:[function(require,module,exports){
+},{"./_getMapData":478}],506:[function(require,module,exports){
 var getMapData = require('./_getMapData');
 
 /**
@@ -79336,7 +82419,7 @@ function mapCacheGet(key) {
 
 module.exports = mapCacheGet;
 
-},{"./_getMapData":459}],488:[function(require,module,exports){
+},{"./_getMapData":478}],507:[function(require,module,exports){
 var getMapData = require('./_getMapData');
 
 /**
@@ -79354,7 +82437,7 @@ function mapCacheHas(key) {
 
 module.exports = mapCacheHas;
 
-},{"./_getMapData":459}],489:[function(require,module,exports){
+},{"./_getMapData":478}],508:[function(require,module,exports){
 var getMapData = require('./_getMapData');
 
 /**
@@ -79378,7 +82461,7 @@ function mapCacheSet(key, value) {
 
 module.exports = mapCacheSet;
 
-},{"./_getMapData":459}],490:[function(require,module,exports){
+},{"./_getMapData":478}],509:[function(require,module,exports){
 /**
  * Converts `map` to its key-value pairs.
  *
@@ -79398,7 +82481,7 @@ function mapToArray(map) {
 
 module.exports = mapToArray;
 
-},{}],491:[function(require,module,exports){
+},{}],510:[function(require,module,exports){
 /**
  * A specialized version of `matchesProperty` for source values suitable
  * for strict equality comparisons, i.e. `===`.
@@ -79420,7 +82503,7 @@ function matchesStrictComparable(key, srcValue) {
 
 module.exports = matchesStrictComparable;
 
-},{}],492:[function(require,module,exports){
+},{}],511:[function(require,module,exports){
 var memoize = require('./memoize');
 
 /** Used as the maximum memoize cache size. */
@@ -79448,7 +82531,7 @@ function memoizeCapped(func) {
 
 module.exports = memoizeCapped;
 
-},{"./memoize":530}],493:[function(require,module,exports){
+},{"./memoize":549}],512:[function(require,module,exports){
 var getNative = require('./_getNative');
 
 /* Built-in method references that are verified to be native. */
@@ -79456,7 +82539,7 @@ var nativeCreate = getNative(Object, 'create');
 
 module.exports = nativeCreate;
 
-},{"./_getNative":461}],494:[function(require,module,exports){
+},{"./_getNative":480}],513:[function(require,module,exports){
 var overArg = require('./_overArg');
 
 /* Built-in method references for those with the same name as other `lodash` methods. */
@@ -79464,7 +82547,7 @@ var nativeKeys = overArg(Object.keys, Object);
 
 module.exports = nativeKeys;
 
-},{"./_overArg":497}],495:[function(require,module,exports){
+},{"./_overArg":516}],514:[function(require,module,exports){
 var freeGlobal = require('./_freeGlobal');
 
 /** Detect free variable `exports`. */
@@ -79488,7 +82571,7 @@ var nodeUtil = (function() {
 
 module.exports = nodeUtil;
 
-},{"./_freeGlobal":457}],496:[function(require,module,exports){
+},{"./_freeGlobal":476}],515:[function(require,module,exports){
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -79512,7 +82595,7 @@ function objectToString(value) {
 
 module.exports = objectToString;
 
-},{}],497:[function(require,module,exports){
+},{}],516:[function(require,module,exports){
 /**
  * Creates a unary function that invokes `func` with its argument transformed.
  *
@@ -79529,7 +82612,7 @@ function overArg(func, transform) {
 
 module.exports = overArg;
 
-},{}],498:[function(require,module,exports){
+},{}],517:[function(require,module,exports){
 var freeGlobal = require('./_freeGlobal');
 
 /** Detect free variable `self`. */
@@ -79540,7 +82623,7 @@ var root = freeGlobal || freeSelf || Function('return this')();
 
 module.exports = root;
 
-},{"./_freeGlobal":457}],499:[function(require,module,exports){
+},{"./_freeGlobal":476}],518:[function(require,module,exports){
 /** Used to stand-in for `undefined` hash values. */
 var HASH_UNDEFINED = '__lodash_hash_undefined__';
 
@@ -79561,7 +82644,7 @@ function setCacheAdd(value) {
 
 module.exports = setCacheAdd;
 
-},{}],500:[function(require,module,exports){
+},{}],519:[function(require,module,exports){
 /**
  * Checks if `value` is in the array cache.
  *
@@ -79577,7 +82660,7 @@ function setCacheHas(value) {
 
 module.exports = setCacheHas;
 
-},{}],501:[function(require,module,exports){
+},{}],520:[function(require,module,exports){
 /**
  * Converts `set` to an array of its values.
  *
@@ -79597,7 +82680,7 @@ function setToArray(set) {
 
 module.exports = setToArray;
 
-},{}],502:[function(require,module,exports){
+},{}],521:[function(require,module,exports){
 var ListCache = require('./_ListCache');
 
 /**
@@ -79614,7 +82697,7 @@ function stackClear() {
 
 module.exports = stackClear;
 
-},{"./_ListCache":403}],503:[function(require,module,exports){
+},{"./_ListCache":422}],522:[function(require,module,exports){
 /**
  * Removes `key` and its value from the stack.
  *
@@ -79634,7 +82717,7 @@ function stackDelete(key) {
 
 module.exports = stackDelete;
 
-},{}],504:[function(require,module,exports){
+},{}],523:[function(require,module,exports){
 /**
  * Gets the stack value for `key`.
  *
@@ -79650,7 +82733,7 @@ function stackGet(key) {
 
 module.exports = stackGet;
 
-},{}],505:[function(require,module,exports){
+},{}],524:[function(require,module,exports){
 /**
  * Checks if a stack value for `key` exists.
  *
@@ -79666,7 +82749,7 @@ function stackHas(key) {
 
 module.exports = stackHas;
 
-},{}],506:[function(require,module,exports){
+},{}],525:[function(require,module,exports){
 var ListCache = require('./_ListCache'),
     Map = require('./_Map'),
     MapCache = require('./_MapCache');
@@ -79702,7 +82785,7 @@ function stackSet(key, value) {
 
 module.exports = stackSet;
 
-},{"./_ListCache":403,"./_Map":404,"./_MapCache":405}],507:[function(require,module,exports){
+},{"./_ListCache":422,"./_Map":423,"./_MapCache":424}],526:[function(require,module,exports){
 var memoizeCapped = require('./_memoizeCapped');
 
 /** Used to match property names within property paths. */
@@ -79732,7 +82815,7 @@ var stringToPath = memoizeCapped(function(string) {
 
 module.exports = stringToPath;
 
-},{"./_memoizeCapped":492}],508:[function(require,module,exports){
+},{"./_memoizeCapped":511}],527:[function(require,module,exports){
 var isSymbol = require('./isSymbol');
 
 /** Used as references for various `Number` constants. */
@@ -79755,7 +82838,7 @@ function toKey(value) {
 
 module.exports = toKey;
 
-},{"./isSymbol":525}],509:[function(require,module,exports){
+},{"./isSymbol":544}],528:[function(require,module,exports){
 /** Used for built-in method references. */
 var funcProto = Function.prototype;
 
@@ -79783,7 +82866,7 @@ function toSource(func) {
 
 module.exports = toSource;
 
-},{}],510:[function(require,module,exports){
+},{}],529:[function(require,module,exports){
 /**
  * Performs a
  * [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
@@ -79822,7 +82905,7 @@ function eq(value, other) {
 
 module.exports = eq;
 
-},{}],511:[function(require,module,exports){
+},{}],530:[function(require,module,exports){
 var arrayEvery = require('./_arrayEvery'),
     baseEvery = require('./_baseEvery'),
     baseIteratee = require('./_baseIteratee'),
@@ -79880,7 +82963,7 @@ function every(collection, predicate, guard) {
 
 module.exports = every;
 
-},{"./_arrayEvery":414,"./_baseEvery":422,"./_baseIteratee":438,"./_isIterateeCall":474,"./isArray":518}],512:[function(require,module,exports){
+},{"./_arrayEvery":433,"./_baseEvery":441,"./_baseIteratee":457,"./_isIterateeCall":493,"./isArray":537}],531:[function(require,module,exports){
 var baseFlatten = require('./_baseFlatten');
 
 /** Used as references for various `Number` constants. */
@@ -79907,7 +82990,7 @@ function flattenDeep(array) {
 
 module.exports = flattenDeep;
 
-},{"./_baseFlatten":424}],513:[function(require,module,exports){
+},{"./_baseFlatten":443}],532:[function(require,module,exports){
 var arrayEach = require('./_arrayEach'),
     baseEach = require('./_baseEach'),
     castFunction = require('./_castFunction'),
@@ -79950,7 +83033,7 @@ function forEach(collection, iteratee) {
 
 module.exports = forEach;
 
-},{"./_arrayEach":413,"./_baseEach":421,"./_castFunction":449,"./isArray":518}],514:[function(require,module,exports){
+},{"./_arrayEach":432,"./_baseEach":440,"./_castFunction":468,"./isArray":537}],533:[function(require,module,exports){
 var baseGet = require('./_baseGet');
 
 /**
@@ -79985,7 +83068,7 @@ function get(object, path, defaultValue) {
 
 module.exports = get;
 
-},{"./_baseGet":427}],515:[function(require,module,exports){
+},{"./_baseGet":446}],534:[function(require,module,exports){
 var baseHasIn = require('./_baseHasIn'),
     hasPath = require('./_hasPath');
 
@@ -80021,7 +83104,7 @@ function hasIn(object, path) {
 
 module.exports = hasIn;
 
-},{"./_baseHasIn":431,"./_hasPath":466}],516:[function(require,module,exports){
+},{"./_baseHasIn":450,"./_hasPath":485}],535:[function(require,module,exports){
 /**
  * This method returns the first argument it receives.
  *
@@ -80044,7 +83127,7 @@ function identity(value) {
 
 module.exports = identity;
 
-},{}],517:[function(require,module,exports){
+},{}],536:[function(require,module,exports){
 var baseIsArguments = require('./_baseIsArguments'),
     isObjectLike = require('./isObjectLike');
 
@@ -80082,7 +83165,7 @@ var isArguments = baseIsArguments(function() { return arguments; }()) ? baseIsAr
 
 module.exports = isArguments;
 
-},{"./_baseIsArguments":432,"./isObjectLike":524}],518:[function(require,module,exports){
+},{"./_baseIsArguments":451,"./isObjectLike":543}],537:[function(require,module,exports){
 /**
  * Checks if `value` is classified as an `Array` object.
  *
@@ -80110,7 +83193,7 @@ var isArray = Array.isArray;
 
 module.exports = isArray;
 
-},{}],519:[function(require,module,exports){
+},{}],538:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isLength = require('./isLength');
 
@@ -80145,7 +83228,7 @@ function isArrayLike(value) {
 
 module.exports = isArrayLike;
 
-},{"./isFunction":521,"./isLength":522}],520:[function(require,module,exports){
+},{"./isFunction":540,"./isLength":541}],539:[function(require,module,exports){
 var root = require('./_root'),
     stubFalse = require('./stubFalse');
 
@@ -80185,7 +83268,7 @@ var isBuffer = nativeIsBuffer || stubFalse;
 
 module.exports = isBuffer;
 
-},{"./_root":498,"./stubFalse":533}],521:[function(require,module,exports){
+},{"./_root":517,"./stubFalse":552}],540:[function(require,module,exports){
 var baseGetTag = require('./_baseGetTag'),
     isObject = require('./isObject');
 
@@ -80224,7 +83307,7 @@ function isFunction(value) {
 
 module.exports = isFunction;
 
-},{"./_baseGetTag":429,"./isObject":523}],522:[function(require,module,exports){
+},{"./_baseGetTag":448,"./isObject":542}],541:[function(require,module,exports){
 /** Used as references for various `Number` constants. */
 var MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -80261,7 +83344,7 @@ function isLength(value) {
 
 module.exports = isLength;
 
-},{}],523:[function(require,module,exports){
+},{}],542:[function(require,module,exports){
 /**
  * Checks if `value` is the
  * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
@@ -80294,7 +83377,7 @@ function isObject(value) {
 
 module.exports = isObject;
 
-},{}],524:[function(require,module,exports){
+},{}],543:[function(require,module,exports){
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
@@ -80325,7 +83408,7 @@ function isObjectLike(value) {
 
 module.exports = isObjectLike;
 
-},{}],525:[function(require,module,exports){
+},{}],544:[function(require,module,exports){
 var baseGetTag = require('./_baseGetTag'),
     isObjectLike = require('./isObjectLike');
 
@@ -80356,7 +83439,7 @@ function isSymbol(value) {
 
 module.exports = isSymbol;
 
-},{"./_baseGetTag":429,"./isObjectLike":524}],526:[function(require,module,exports){
+},{"./_baseGetTag":448,"./isObjectLike":543}],545:[function(require,module,exports){
 var baseIsTypedArray = require('./_baseIsTypedArray'),
     baseUnary = require('./_baseUnary'),
     nodeUtil = require('./_nodeUtil');
@@ -80385,7 +83468,7 @@ var isTypedArray = nodeIsTypedArray ? baseUnary(nodeIsTypedArray) : baseIsTypedA
 
 module.exports = isTypedArray;
 
-},{"./_baseIsTypedArray":437,"./_baseUnary":447,"./_nodeUtil":495}],527:[function(require,module,exports){
+},{"./_baseIsTypedArray":456,"./_baseUnary":466,"./_nodeUtil":514}],546:[function(require,module,exports){
 var arrayLikeKeys = require('./_arrayLikeKeys'),
     baseKeys = require('./_baseKeys'),
     isArrayLike = require('./isArrayLike');
@@ -80424,7 +83507,7 @@ function keys(object) {
 
 module.exports = keys;
 
-},{"./_arrayLikeKeys":416,"./_baseKeys":439,"./isArrayLike":519}],528:[function(require,module,exports){
+},{"./_arrayLikeKeys":435,"./_baseKeys":458,"./isArrayLike":538}],547:[function(require,module,exports){
 var arrayMap = require('./_arrayMap'),
     baseIteratee = require('./_baseIteratee'),
     baseMap = require('./_baseMap'),
@@ -80479,7 +83562,7 @@ function map(collection, iteratee) {
 
 module.exports = map;
 
-},{"./_arrayMap":417,"./_baseIteratee":438,"./_baseMap":440,"./isArray":518}],529:[function(require,module,exports){
+},{"./_arrayMap":436,"./_baseIteratee":457,"./_baseMap":459,"./isArray":537}],548:[function(require,module,exports){
 var baseExtremum = require('./_baseExtremum'),
     baseGt = require('./_baseGt'),
     baseIteratee = require('./_baseIteratee');
@@ -80515,7 +83598,7 @@ function maxBy(array, iteratee) {
 
 module.exports = maxBy;
 
-},{"./_baseExtremum":423,"./_baseGt":430,"./_baseIteratee":438}],530:[function(require,module,exports){
+},{"./_baseExtremum":442,"./_baseGt":449,"./_baseIteratee":457}],549:[function(require,module,exports){
 var MapCache = require('./_MapCache');
 
 /** Error message constants. */
@@ -80590,7 +83673,7 @@ memoize.Cache = MapCache;
 
 module.exports = memoize;
 
-},{"./_MapCache":405}],531:[function(require,module,exports){
+},{"./_MapCache":424}],550:[function(require,module,exports){
 var baseProperty = require('./_baseProperty'),
     basePropertyDeep = require('./_basePropertyDeep'),
     isKey = require('./_isKey'),
@@ -80624,7 +83707,7 @@ function property(path) {
 
 module.exports = property;
 
-},{"./_baseProperty":443,"./_basePropertyDeep":444,"./_isKey":475,"./_toKey":508}],532:[function(require,module,exports){
+},{"./_baseProperty":462,"./_basePropertyDeep":463,"./_isKey":494,"./_toKey":527}],551:[function(require,module,exports){
 /**
  * This method returns a new empty array.
  *
@@ -80649,7 +83732,7 @@ function stubArray() {
 
 module.exports = stubArray;
 
-},{}],533:[function(require,module,exports){
+},{}],552:[function(require,module,exports){
 /**
  * This method returns `false`.
  *
@@ -80669,7 +83752,7 @@ function stubFalse() {
 
 module.exports = stubFalse;
 
-},{}],534:[function(require,module,exports){
+},{}],553:[function(require,module,exports){
 var baseToString = require('./_baseToString');
 
 /**
@@ -80699,7 +83782,7 @@ function toString(value) {
 
 module.exports = toString;
 
-},{"./_baseToString":446}],535:[function(require,module,exports){
+},{"./_baseToString":465}],554:[function(require,module,exports){
 /*!
  * URI.js - Mutating URLs
  * IPv6 Support
@@ -80886,7 +83969,7 @@ module.exports = toString;
   };
 }));
 
-},{}],536:[function(require,module,exports){
+},{}],555:[function(require,module,exports){
 /*!
  * URI.js - Mutating URLs
  * Second Level Domain (SLD) Support
@@ -81133,7 +84216,7 @@ module.exports = toString;
   return SLD;
 }));
 
-},{}],537:[function(require,module,exports){
+},{}],556:[function(require,module,exports){
 /*!
  * URI.js - Mutating URLs
  *
@@ -83389,7 +86472,7 @@ module.exports = toString;
   return URI;
 }));
 
-},{"./IPv6":535,"./SecondLevelDomains":536,"./punycode":538}],538:[function(require,module,exports){
+},{"./IPv6":554,"./SecondLevelDomains":555,"./punycode":557}],557:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.0 by @mathias */
 ;(function(root) {
@@ -83926,3052 +87009,14 @@ module.exports = toString;
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],539:[function(require,module,exports){
-var Queue = require('./queue')
-var SpotifyRequestHandler = require('./spotify')
-var Track = require('./track')
-
-/**
- * Create album entry.
- * @constructor
- * @param {SpotifyRequestHandler} spotify - Spotify request handler.
- * @param {string} entry - The album to search for.
- * @param {string} [id] - The Spotify ID, if known.
- * @param {string} [limit] - The number of tracks to fetch.
- */
-function Album (spotify, entry, id, limit) {
-  /**
-   * Entry string.
-   */
-  this.entry = ''
-
-  /**
-   * Whether to fetch tracks.
-   */
-  this.fetchTracks = true
-
-  /**
-   * Spotify ID.
-   */
-  this.id = ''
-
-  /**
-   * Number of albums to fetch.
-   */
-  this.limit = null
-
-  /**
-   * The album name.
-   */
-  this.name = ''
-
-  /**
-   * The album popularity.
-   * @return {string} - The album popularity.
-   */
-  this.popularity = null
-
-  /**
-   * Spotify request handler.
-   */
-  this.spotify = null
-
-  /**
-   * Album tracks.
-   */
-  this.tracks = []
-
-  /**
-   * Spotify URI
-   * (a string on the form `spotify:album:xxxxxxxxxxxxxxxxxxxxxx`).
-   */
-  this.uri = ''
-
-  this.entry = entry.trim()
-  this.id = id
-  this.limit = limit
-  this.name = entry
-  this.spotify = spotify || new SpotifyRequestHandler()
-  this.uri = this.id ? ('spotify:album:' + this.id) : this.uri
-}
-
-/**
- * Clone a JSON response.
- * @param {Object} response - The response.
- */
-Album.prototype.clone = function (response) {
-  for (var prop in response) {
-    if (response.hasOwnProperty(prop)) {
-      this[prop] = response[prop] || this[prop]
-    }
-  }
-  if (response &&
-      response.tracks &&
-      response.tracks.items) {
-    this.tracks = response.tracks.items
-  }
-}
-
-/**
- * Create a queue of tracks.
- * @param {JSON} response - A JSON response object.
- * @return {Promise | Queue} A queue of tracks.
- */
-Album.prototype.createQueue = function () {
-  var self = this
-  var tracks = this.tracks.map(function (item) {
-    var track = new Track(self.spotify, self.entry)
-    track.clone(item)
-    track.album = self.name
-    return track
-  })
-  var queue = new Queue(tracks)
-  if (self.limit) {
-    queue = queue.slice(0, self.limit)
-  }
-  return queue
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Album.prototype.dispatch = function () {
-  var self = this
-  if (this.fetchTracks) {
-    return this.searchForAlbum().then(function () {
-      return self.fetchAlbum()
-    }).then(function () {
-      return self.createQueue()
-    })
-  } else {
-    return this.searchForAlbum()
-  }
-}
-
-/**
- * Fetch album metadata.
- * @return {Promise | JSON} A JSON response.
- */
-Album.prototype.fetchAlbum = function (id) {
-  id = id || this.id
-  var self = this
-  if (Number.isInteger(this.popularity)) {
-    return Promise.resolve(this)
-  } else {
-    return this.spotify.getAlbum(id).then(function (response) {
-      self.clone(response)
-      return self
-    })
-  }
-}
-
-/**
- * Get album popularity.
- * @return {Promise | integer} The track popularity.
- */
-Album.prototype.getPopularity = function () {
-  var self = this
-  if (Number.isInteger(this.popularity)) {
-    return Promise.resolve(this.popularity)
-  } else {
-    return self.fetchAlbum().then(function () {
-      return self.popularity
-    })
-  }
-}
-
-/**
- * Search for album if not known.
- * @return {Promise | JSON} A JSON response, or `null` if not found.
- */
-Album.prototype.searchForAlbum = function () {
-  var self = this
-  if (this.id) {
-    return Promise.resolve(this)
-  } else {
-    return this.spotify.searchForAlbum(this.entry).then(function (response) {
-      if (response &&
-          response.albums &&
-          response.albums.items &&
-          response.albums.items[0]) {
-        response = response.albums.items[0]
-        self.clone(response)
-        return Promise.resolve(self)
-      } else {
-        return Promise.reject(response)
-      }
-    }).catch(function () {
-      if (self.entry.match(/^[0-9a-z]+$/i)) {
-        return self.fetchAlbum(self.entry)
-      } else {
-        console.log('COULD NOT FIND ' + self.entry)
-        return Promise.reject(null)
-      }
-    })
-  }
-}
-
-module.exports = Album
-
-},{"./queue":549,"./spotify":553,"./track":555}],540:[function(require,module,exports){
-var Album = require('./album')
-var Queue = require('./queue')
-var SpotifyRequestHandler = require('./spotify')
-var sort = require('./sort')
-
-/**
- * Artist entry.
- * @constructor
- * @param {SpotifyRequestHandler} spotify - Spotify request handler.
- * @param {string} entry - The artist to search for.
- * @param {string} [id] - The Spotify ID, if known.
- * @param {string} [limit] - The number of albums to fetch.
- */
-function Artist (spotify, entry, id, limit) {
-  /**
-   * Array of albums.
-   */
-  this.albums = null
-
-  /**
-   * Entry string.
-   */
-  this.entry = ''
-
-  /**
-   * Spotify ID.
-   */
-  this.id = ''
-
-  /**
-   * Number of tracks to fetch.
-   */
-  this.limit = null
-
-  /**
-   * The artist name.
-   */
-  this.name = ''
-
-  /**
-   * Spotify request handler.
-   */
-  this.spotify = null
-
-  this.entry = entry.trim()
-  this.id = id
-  this.limit = limit
-  this.name = entry
-  this.spotify = spotify || new SpotifyRequestHandler()
-}
-
-/**
- * Clone a JSON response.
- * @param {Object} response - The response.
- */
-Artist.prototype.clone = function (response) {
-  for (var prop in response) {
-    if (response.hasOwnProperty(prop)) {
-      this[prop] = response[prop] || this[prop]
-    }
-  }
-}
-
-/**
- * Create a queue of tracks.
- * @param {JSON} response - A JSON response object.
- * @return {Promise | Queue} A queue of tracks.
- */
-Artist.prototype.createQueue = function () {
-  var self = this
-  var albums = self.albums.map(function (item) {
-    var album = new Album(self.spotify, self.entry)
-    album.clone(item)
-    return album
-  })
-  var albumQueue = new Queue(albums)
-  if (self.limit) {
-    albumQueue = albumQueue.slice(0, self.limit)
-  }
-  return albumQueue.forEachPromise(function (album) {
-    return album.fetchAlbum()
-  }).then(function (albumQueue) {
-    albumQueue = albumQueue.sort(sort.album)
-    return albumQueue.dispatch()
-  }).then(function (queue) {
-    return queue.flatten().filter(function (track) {
-      return track.hasArtist(self.name)
-    })
-  })
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Artist.prototype.dispatch = function () {
-  var self = this
-  return this.searchForArtist().then(function () {
-    return self.fetchAlbums()
-  }).then(function () {
-    return self.createQueue()
-  })
-}
-
-/**
- * Fetch albums.
- * @return {Promise | JSON} A JSON response.
- */
-Artist.prototype.fetchAlbums = function (id) {
-  id = id || this.id
-  var self = this
-  if (this.albums) {
-    return Promise.resolve(this)
-  } else {
-    return this.spotify.getAlbumsByArtist(id).then(function (response) {
-      self.albums = response.items
-      self.id = id
-      return self
-    })
-  }
-}
-
-/**
- * Search for artist.
- * @return {Promise | JSON} A JSON response.
- */
-Artist.prototype.searchForArtist = function () {
-  var self = this
-  if (this.id) {
-    return Promise.resolve(this)
-  } else {
-    return this.spotify.searchForArtist(this.entry).then(function (response) {
-      if (response &&
-          response.artists &&
-          response.artists.items &&
-          response.artists.items[0]) {
-        response = response.artists.items[0]
-        self.clone(response)
-        return Promise.resolve(self)
-      } else {
-        return Promise.reject(response)
-      }
-    }).catch(function () {
-      if (self.entry.match(/^[0-9a-z]+$/i)) {
-        return self.fetchAlbums(self.entry)
-      } else {
-        return Promise.reject(null)
-      }
-    })
-  }
-}
-
-module.exports = Artist
-
-},{"./album":539,"./queue":549,"./sort":552,"./spotify":553}],541:[function(require,module,exports){
-var base64 = require('base-64')
-var defaults = require('./defaults')
-var http = require('./http')
-
-/**
- * Create a Spotify authenticator.
- * @constructor
- * @param {string} [clientId] - Client ID.
- * @param {string} [clientSecret] - Client secret key.
- * @param {string} [token] - Access token (if already authenticated).
- */
-function SpotifyAuthenticator (clientId, clientSecret, token) {
-  /**
-   * Client ID.
-   */
-  this.clientId = clientId || defaults.id
-
-  /**
-   * Client secret key.
-   */
-  this.clientSecret = clientSecret || defaults.key
-
-  /**
-   * Access token.
-   */
-  this.token = token || ''
-}
-
-/**
- * Authenticate with the Clients Credentials Flow.
- *
- * Note: this authentication method only works if the script is run
- * from the command line. It does not work when run from a browser,
- * because Spotify's authentication server rejects cross-site
- * requests. In that case, authenticate with the Implicit Grant Flow
- * instead.
- *
- * [Reference](https://developer.spotify.com/web-api/authorization-guide/#client-credentials-flow).
- *
- * @param {string} clientId - Client ID.
- * @param {string} clientSecret - Client secret key.
- * @param {string} [grantType] - Grant type, default "client_credentials".
- * @return {Promise | JSON} An access token response.
- */
-SpotifyAuthenticator.prototype.clientsCredentialsFlow = function (clientId, clientSecret, grantType) {
-  clientId = clientId || this.clientId
-  clientSecret = clientSecret || this.clientSecret
-  grantType = grantType || 'client_credentials'
-  var auth = 'Basic ' + base64.encode(clientId + ':' + clientSecret)
-  var uri = 'https://accounts.spotify.com/api/token'
-  return http.json(uri, {
-    method: 'POST',
-    headers: {
-      Authorization: auth
-    },
-    form: {
-      'grant_type': grantType
-    }
-  })
-}
-
-/**
- * Authenticate with the Implicit Grant Flow.
- *
- * Returns a URI that the calling web application can use to redirect
- * the user to a Spotify login screen. After the user has logged in,
- * Spotify redirects back to the web application with an access token
- * (included in the hash fragment of the URI). That token can then be
- * passed to this class.
- *
- * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
- *
- * @param {string} uri - Redirect URI.
- * @param {string} [clientId] - Client ID.
- * @return {string} An authentication URI.
- */
-SpotifyAuthenticator.prototype.implicitGrantFlow = function (uri, clientId) {
-  clientId = clientId || this.clientId
-  var url = 'https://accounts.spotify.com/authorize'
-  url += '/' +
-    '?client_id=' + encodeURIComponent(clientId) +
-    '&response_type=' + encodeURIComponent('token') +
-    '&redirect_uri=' + encodeURIComponent(uri)
-  return url
-}
-
-/**
- * Refresh the bearer access token.
- *
- * @return {Promise | string} A new bearer access token,
- * or the empty string if not available.
- */
-SpotifyAuthenticator.prototype.refreshToken = function () {
-  return this.clientsCredentialsFlow().then(function (response) {
-    if (response &&
-        response.access_token) {
-      this.token = response.access_token
-    }
-    return this.token
-  })
-}
-
-/**
- * Obtain a bearer access token.
- *
- * @return {Promise | string} A bearer access token,
- * or the empty string if not available.
- */
-SpotifyAuthenticator.prototype.getToken = function () {
-  if (this.token) {
-    return Promise.resolve(this.token)
-  } else {
-    return this.refreshToken()
-  }
-}
-
-module.exports = SpotifyAuthenticator
-
-},{"./defaults":543,"./http":545,"base-64":1}],542:[function(require,module,exports){
-var stringify = require('csv-stringify/lib/sync')
-
-/**
- * Create CSV formatter.
- * @constructor
- * @param {track} track - A track with fetched metadata.
- */
-function CSV (track) {
-  /**
-   * A track with fetched metadata.
-   */
-  this.track = track
-}
-
-/**
- * Track data in CSV format, with the following fields:
- *
- * Spotify URI,
- * Track Name,
- * Artist Name,
- * Album Name,
- * Disc Number,
- * Track Number,
- * Track Duration,
- * Added By,
- * Added At
- *
- * @return {string} Track data in CSV format.
- */
-CSV.prototype.toString = function () {
-  function numberToString (num) {
-    return (num < 0) ? '' : num
-  }
-  return stringify([[
-    this.track.uri,
-    this.track.name,
-    this.track.artist,
-    this.track.album,
-    numberToString(this.track.disc_number),
-    numberToString(this.track.track_number),
-    numberToString(this.track.duration_ms),
-    numberToString(this.track.popularity),
-    numberToString(this.track.lastfm)
-  ]]).trim()
-}
-
-module.exports = CSV
-
-},{"csv-stringify/lib/sync":271}],543:[function(require,module,exports){
-var _0x22f8=['\x35\x66\x30\x63\x66\x63\x32\x32\x66\x61\x39\x65\x34\x37\x66\x65\x61\x31\x35\x61\x35\x66\x35\x63\x65\x66\x37\x64\x38\x62\x30\x37','\x65\x78\x70\x6f\x72\x74\x73'];(function(_0x2c655a,_0x2213f0){var _0x457c86=function(_0x50d308){while(--_0x50d308){_0x2c655a['\x70\x75\x73\x68'](_0x2c655a['\x73\x68\x69\x66\x74']());}};_0x457c86(++_0x2213f0);}(_0x22f8,0xe1));var _0x822f=function(_0xff0804,_0x38aff9){_0xff0804=_0xff0804-0x0;var _0x41bc24=_0x22f8[_0xff0804];return _0x41bc24;};module[_0x822f('0x0')]={'\x61\x70\x69':'\x38\x30\x33\x64\x33\x63\x62\x65\x61\x30\x62\x62\x65\x35\x30\x63\x36\x31\x61\x62\x38\x31\x63\x34\x66\x65\x35\x66\x65\x32\x30\x66','\x69\x64':'\x36\x62\x36\x39\x66\x33\x62\x34\x64\x35\x33\x36\x34\x35\x37\x65\x38\x66\x39\x35\x34\x62\x33\x61\x33\x61\x65\x65\x32\x34\x35\x38','\x6b\x65\x79':_0x822f('0x1')};
-
-},{}],544:[function(require,module,exports){
-var eol = require('eol')
-var Album = require('./album')
-var CSV = require('./csv')
-var Queue = require('./queue')
-var SpotifyRequestHandler = require('./spotify')
-var Track = require('./track')
-
-/**
- * Create a playlist generator.
- * @constructor
- * @param {SpotifyRequestHandler} [spotify] - Spotify request handler.
- */
-function Generator (spotify) {
-  /**
-   * Playlist alternating.
-   */
-  this.alternating = null
-
-  /**
-   * Whether to output as CSV.
-   */
-  this.csv = false
-
-  /**
-   * List of entries.
-   */
-  this.entries = new Queue()
-
-  /**
-   * Playlist grouping.
-   */
-  this.grouping = null
-
-  /**
-   * Last.fm user.
-   */
-  this.lastfmUser = null
-
-  /**
-   * Playlist order.
-   */
-  this.ordering = null
-
-  /**
-   * Whether to reverse the playlist order.
-   */
-  this.reverse = false
-
-  /**
-   * Whether to shuffle the playlist.
-   */
-  this.shuffle = false
-
-  /**
-   * Whether to remove duplicates.
-   */
-  this.unique = true
-
-  /**
-   * Whether to remove duplicates.
-   */
-  this.spotify = spotify || new SpotifyRequestHandler()
-}
-
-/**
- * Add an entry to the end of the generator queue.
- * @param {Track | Album | Artist} entry -
- * The entry to add.
- */
-Generator.prototype.add = function (entry) {
-  this.entries.add(entry)
-}
-
-/**
- * Alternate the generator entries.
- */
-Generator.prototype.alternate = function () {
-  var self = this
-  if (this.alternating === 'artist') {
-    return this.entries.alternate(function (track) {
-      return track.artist().toLowerCase()
-    })
-  } else if (this.alternating === 'album') {
-    return this.refreshTracks().then(function () {
-      return self.entries.alternate(function (track) {
-        return track.album().toLowerCase()
-      })
-    })
-  } else if (this.alternating === 'entry') {
-    return this.entries.alternate(function (track) {
-      return track.entry.toLowerCase()
-    })
-  } else {
-    return Promise.resolve(this.entries)
-  }
-}
-
-/**
- * Remove duplicate entries.
- * @return {Promise|Generator} - Itself.
- */
-Generator.prototype.dedup = function () {
-  if (this.unique) {
-    return this.entries.dedup()
-  }
-  return Promise.resolve(this.entries)
-}
-
-/**
- * Dispatch all the entries in the generator.
- * @return {Promise | Queue} A queue of results.
- */
-Generator.prototype.dispatch = function () {
-  var self = this
-  return this.fetchTracks().then(function () {
-    return self.dedup()
-  }).then(function () {
-    return self.order()
-  }).then(function () {
-    return self.group()
-  }).then(function () {
-    return self.alternate()
-  }).then(function () {
-    return self.reorder()
-  })
-}
-
-/**
- * Dispatch all the entries in the generator
- * and return the track listing.
- * @return {Promise | string} A newline-separated list
- * of Spotify URIs.
- */
-Generator.prototype.execute = function () {
-  var self = this
-  return this.dispatch().then(function () {
-    return self.toString()
-  })
-}
-
-/**
- * Fetch Last.fm metadata of each generator entry.
- * @return {Promise | Queue} A queue of results.
- */
-Generator.prototype.fetchLastfm = function () {
-  var self = this
-  return this.entries.forEachPromise(function (entry) {
-    return entry.fetchLastfm(self.lastfmUser)
-  })
-}
-
-/**
- * Dispatch the entries in the generator.
- * @return {Promise} A Promise to perform the action.
- */
-Generator.prototype.fetchTracks = function () {
-  var self = this
-  return this.entries.dispatch().then(function (queue) {
-    self.entries = queue.flatten()
-    return self.entries
-  })
-}
-
-/**
- * Group the generator entries.
- */
-Generator.prototype.group = function () {
-  var self = this
-  if (this.grouping === 'artist') {
-    return this.entries.group(function (track) {
-      return track.artist().toLowerCase()
-    })
-  } else if (this.grouping === 'album') {
-    return this.refreshTracks().then(function () {
-      return self.entries.group(function (track) {
-        return track.album().toLowerCase()
-      })
-    })
-  } else if (this.grouping === 'entry') {
-    return this.entries.group(function (track) {
-      return track.entry.toLowerCase()
-    })
-  } else {
-    return Promise.resolve(this.entries)
-  }
-}
-
-/**
- * Order the generator entries.
- * @return {Promise} A Promise to perform the action.
- */
-Generator.prototype.order = function () {
-  var self = this
-  if (this.ordering === 'popularity') {
-    return this.refreshTracks().then(function () {
-      self.entries.orderByPopularity()
-    })
-  } else if (this.ordering === 'lastfm') {
-    return this.fetchLastfm().then(function () {
-      self.entries.orderByLastfm()
-    })
-  } else {
-    return Promise.resolve(this.entries)
-  }
-}
-
-/**
- * Print the generator to the console.
- */
-Generator.prototype.print = function () {
-  console.log(this.toString())
-}
-
-/**
- * Refresh the metadata of each generator entry.
- * @return {Promise} A Promise to perform the action.
- */
-Generator.prototype.refreshTracks = function () {
-  var self = this
-  return this.entries.dispatch().then(function (result) {
-    self.entries = result.flatten()
-  })
-}
-
-/**
- * Reverse the order of the entries.
- * @return {Promise|Generator} - Itself.
- */
-Generator.prototype.reorder = function () {
-  if (this.reverse) {
-    return this.entries.reverse()
-  } else if (this.shuffle) {
-    return this.entries.shuffle()
-  }
-  return Promise.resolve(this.entries)
-}
-
-/**
- * Convert the generator to a string.
- * @return {string} A newline-separated list of Spotify URIs.
- */
-Generator.prototype.toString = function () {
-  var self = this
-  var result = ''
-  if (self.csv) {
-    result += 'sep=,\n'
-  }
-  this.entries.forEach(function (entry) {
-    if (entry instanceof Track || entry instanceof Album) {
-      if (entry instanceof Track) {
-        var log = entry.title
-        if (entry.popularity || entry.lastfm) {
-          log += ' ('
-          log += entry.popularity ? ('Spotify popularity: ' + entry.popularity) : ''
-          log += (entry.popularity && entry.lastfm) ? ', ' : ''
-          log += entry.lastfm ? 'Last.fm rating: ' + entry.lastfm : ''
-          log += ')'
-        }
-        console.log(log)
-      }
-      if (self.csv) {
-        var csvFormat = new CSV(entry)
-        var csvLine = csvFormat.toString()
-        result += csvLine + '\n'
-      } else {
-        if (entry.uri) {
-          result += entry.uri + '\n'
-        }
-      }
-    }
-  })
-  result = eol.auto(result.trim())
-  return result
-}
-
-module.exports = Generator
-
-},{"./album":539,"./csv":542,"./queue":549,"./spotify":553,"./track":555,"eol":273}],545:[function(require,module,exports){
-var request = require('request')
-
-/**
- * Perform a HTTP(S) request.
- *
- * If the script is hosted on a HTTPS server, we cannot perform
- * HTTP requests because of the Same Origin Policy. Therefore,
- * this function falls back to HTTPS if HTTP fails.
- *
- * @param {string} uri - The URI to look up.
- * @param {Object} [options] - Request options.
- * @return {Promise} A promise.
- */
-function http (uri, options) {
-  return http.get(uri, options).catch(function (err) {
-    var message = err + ''
-    if (message.match(/XHR error/i)) {
-      if (uri.match(/^http:/i)) {
-        return http.get(uri.replace(/^http:/i, 'https:'), options)
-      } else if (uri.match(/^https:/i)) {
-        return http.get(uri.replace(/^https:/i, 'http:'), options)
-      }
-    }
-  })
-}
-
-/**
- * Perform a HTTP request.
- * @param {string} uri - The URI to look up.
- * @param {Object} [options] - Request options.
- * @return {Promise} A promise.
- */
-http.get = function (uri, options) {
-  var agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0; T312461)'
-  options = options || {}
-  options.headers = options.headers || {}
-  options.headers['User-Agent'] = options.headers['User-Agent'] || agent
-  var delay = options.delay || 100
-  options.uri = uri || options.uri
-  options.method = options.method || 'GET'
-  delete options.delay
-  return new Promise(function (resolve, reject) {
-    setTimeout(function () {
-      request(options, function (err, response, body) {
-        if (err) {
-          reject(err)
-        } else if (response.statusCode !== 200) {
-          reject(response.statusCode)
-        } else {
-          resolve(body)
-        }
-      })
-    }, delay)
-  })
-}
-
-/**
- * Perform a HTTP JSON request.
- * @param {string} uri - The URI to look up.
- * @param {Object} [options] - Request options.
- * @return {Promise | JSON} A JSON response.
- */
-http.json = function (uri, options) {
-  return http(uri, options).then(function (response) {
-    try {
-      response = JSON.parse(response)
-    } catch (e) {
-      return Promise.reject(e)
-    }
-    if (response.error) {
-      return Promise.reject(response)
-    } else {
-      return Promise.resolve(response)
-    }
-  })
-}
-
-module.exports = http
-
-},{"request":275}],546:[function(require,module,exports){
-var http = require('./http')
-
-module.exports = function (key) {
-  var lastfm = {}
-
-  /**
-   * Get the Last.fm metadata for a track.
-   *
-   * [Reference](http://www.last.fm/api/show/track.getInfo).
-   *
-   * @param {String} artist - The artist.
-   * @param {String} title - The title.
-   * @param {boolean} [correct] - Whether to autocorrect misspellings,
-   * default true.
-   * @return {Promise | JSON} The track info.
-   */
-  lastfm.getInfo = function (artist, title, user, correct) {
-    var uri = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
-    correct = (correct === undefined) ? true : correct
-    correct = correct ? 1 : 0
-    return lastfm.request(uri, {
-      qs: {
-        artist: artist,
-        track: title,
-        user: user,
-        autocorrect: correct,
-        format: 'json'
-      }
-    }).then(function (result) {
-      if (result && !result.error && result.track) {
-        return Promise.resolve(result)
-      } else {
-        return Promise.reject(result)
-      }
-    })
-  }
-
-  /**
-   * Perform a Last.fm request.
-   * @param {string} uri - The URI to look up.
-   */
-  lastfm.request = function (uri, options) {
-    console.log(uri +
-                '&artist=' + encodeURIComponent(options.qs.artist) +
-                '&track=' + encodeURIComponent(options.qs.track))
-    options.qs.api_key = key
-    return http.json(uri, options)
-  }
-
-  return lastfm
-}
-
-},{"./http":545}],547:[function(require,module,exports){
-var eol = require('eol')
-var Album = require('./album')
-var Artist = require('./artist')
-var Generator = require('./generator')
-var Playlist = require('./playlist')
-var Similar = require('./similar')
-var SpotifyRequestHandler = require('./spotify')
-var Top = require('./top')
-var Track = require('./track')
-var WebScraper = require('./scraper')
-
-/**
- * Create a parser.
- * @constructor
- */
-function Parser (token, handler) {
-  this.spotify = handler || new SpotifyRequestHandler(null, null, token)
-}
-
-/**
- * Parse a string and create a playlist generator.
- * @param {string} [str] - A newline-separated string of
- * entries on the form `TITLE - ARTIST`. May also contain
- * `#ALBUM`, `#ARTIST`, `#ORDER` and `#GROUP` commands.
- * @return {Generator} A playlist generator.
- */
-Parser.prototype.parse = function (str) {
-  var generator = new Generator(this.spotify)
-  str = str.trim()
-  if (str) {
-    var lines = eol.split(str)
-    while (lines.length > 0) {
-      var match = null
-      var line = lines.shift().trim()
-      if ((match = line.match(/^#(SORT|ORDER)\s+BY\s+([^\s]*)(\s+([^\s]*))?/i))) {
-        generator.ordering = match[2].toLowerCase()
-        generator.lastfmUser = match[4]
-      } else if ((match = line.match(/^#GROUP\s+BY\s+(.*)/i))) {
-        generator.grouping = match[1].toLowerCase()
-      } else if ((match = line.match(/^#ALTERNATE\s+BY\s+(.*)/i))) {
-        generator.alternating = match[1].toLowerCase()
-      } else if (line.match(/^#(DUP(LICATES?)?|NONUNIQUE|NONDISTINCT)/i)) {
-        generator.unique = false
-      } else if (line.match(/^#REVERSE/i)) {
-        generator.reverse = true
-      } else if (line.match(/^#SHUFFLE/i)) {
-        generator.shuffle = true
-      } else if (line.match(/^#(UNIQUE|DISTINCT)/i)) {
-        generator.unique = true
-      } else if (line.match(/^#DEDUP/i)) {
-        generator.unique = false
-      } else if (line.match(/^#(CSV|CVS)/i)) {
-        generator.csv = true
-      } else if (line.match(/^##/i) ||
-                 line.match(/^#EXTM3U/i) ||
-                 line.match(/^sep=,/i)) {
-        // comment
-      } else if ((match = line.match(/^#ALBUM((ID)?)([0-9]*)\s+(.*)/i))) {
-        var album = new Album(this.spotify, match[4], null, parseInt(match[3]))
-        if (match[2]) {
-          album.fetchTracks = false
-        }
-        generator.add(album)
-      } else if ((match = line.match(/^#ARTIST([0-9]*)\s+(.*)/i))) {
-        generator.add(new Artist(this.spotify, match[2], null, parseInt(match[1])))
-      } else if ((match = line.match(/^#TOP([0-9]*)\s+(.*)/i))) {
-        generator.add(new Top(this.spotify, match[2], null, parseInt(match[1])))
-      } else if ((match = line.match(/^#SIMILAR([0-9]*)\s+(.*)/i))) {
-        generator.add(new Similar(this.spotify, match[2], null, parseInt(match[1])))
-      } else if ((match = line.match(/^#PLAYLIST([0-9]*)\s+([0-9a-z]+)[\s/]([0-9a-z]+)/i))) {
-        generator.add(new Playlist(this.spotify, line, match[3], match[2], parseInt(match[1])))
-      } else if ((match = line.match(/^#PLAYLIST([0-9]*)\s+(.*)/i))) {
-        generator.add(new Playlist(this.spotify, match[2], null, null, parseInt(match[1])))
-      } else if ((match = line.match(/^#EXTINF(:[0-9]+,(.*))?/i))) {
-        if (match[1]) {
-          generator.add(new Track(this.spotify, match[2]))
-          if (lines.length > 0 &&
-              !lines[0].match(/^#/)) {
-            lines.shift()
-          }
-        }
-      } else if ((match = line.match(/spotify:artist:([0-9a-z]+)/i))) {
-        generator.add(new Artist(this.spotify, line, match[1]))
-      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*artist\/(.*\/)*([0-9a-z]+)/i))) {
-        generator.add(new Artist(this.spotify, line, match[5], parseInt(match[1])))
-      } else if ((match = line.match(/spotify:album:([0-9a-z]+)/i))) {
-        generator.add(new Album(this.spotify, line, match[1]))
-      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*album\/(.*\/)*([0-9a-z]+)/i))) {
-        generator.add(new Album(this.spotify, line, match[5], parseInt(match[1])))
-      } else if ((match = line.match(/spotify:user:([0-9a-z]+):playlist:([0-9a-z]+)/i))) {
-        generator.add(new Playlist(this.spotify, line, match[2], match[1]))
-      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*user\/([0-9a-z]+)\/playlist\/([0-9a-z]+)/i))) {
-        generator.add(new Playlist(this.spotify, line, match[5], match[4], parseInt(match[1])))
-      } else if ((match = line.match(/spotify:track:([0-9a-z]+)/i))) {
-        generator.add(new Track(this.spotify, line, match[1]))
-      } else if ((match = line.match(/^([0-9]+ )?https?:\/\/(.*\.)?spotify\.com\/(.*\/)*([0-9a-z]+)/i))) {
-        generator.add(new Track(this.spotify, line, match[4]))
-      } else if ((match = line.match(/^([0-9]+ )?(https?:.*)/i))) {
-        generator.add(new WebScraper(match[2], parseInt(match[1]), this))
-      } else if (line) {
-        generator.add(new Track(this.spotify, line))
-      }
-    }
-  }
-  return generator
-}
-
-module.exports = Parser
-
-},{"./album":539,"./artist":540,"./generator":544,"./playlist":548,"./scraper":550,"./similar":551,"./spotify":553,"./top":554,"./track":555,"eol":273}],548:[function(require,module,exports){
-var Queue = require('./queue')
-var SpotifyRequestHandler = require('./spotify')
-var Track = require('./track')
-
-/**
- * Create playlist entry.
- * @constructor
- * @param {SpotifyRequestHandler} spotify - Spotify request handler.
- * @param {string} entry - The playlist to search for.
- * @param {string} [id] - The Spotify ID, if known.
- * @param {string} [limit] - The number of tracks to fetch.
- */
-function Playlist (spotify, entry, id, owner, limit) {
-  /**
-   * Entry string.
-   */
-  this.entry = ''
-
-  /**
-   * The ID of the playlist.
-   */
-  this.id = ''
-
-  /**
-   * Playlist tracks.
-   */
-  this.items = []
-
-  /**
-   * Number of tracks to fetch.
-   */
-  this.limit = null
-
-  /**
-   * Spotify request handler.
-   */
-  this.spotify = null
-
-  /**
-   * The user who owns the playlist.
-   */
-  this.owner = {}
-
-  /**
-   * Spotify URI
-   * (a string on the form `spotify:user:xxxxxxxx:playlist:xxxxxxxxxxxxxxxxxxxxxx`).
-   */
-  this.uri = ''
-
-  this.entry = entry.trim()
-  this.id = id || this.id
-  this.limit = limit
-  this.owner.id = owner || this.owner.id
-  this.spotify = spotify || new SpotifyRequestHandler()
-  this.uri = (this.owner.id && this.id) ? ('spotify:user:' + this.owner.id + ':playlist:' + this.id) : this.uri
-}
-
-/**
- * Clone a JSON response.
- * @param {Object} response - The response.
- */
-Playlist.prototype.clone = function (response) {
-  for (var prop in response) {
-    if (response.hasOwnProperty(prop) &&
-        prop !== 'limit') {
-      this[prop] = response[prop] || this[prop]
-    }
-  }
-}
-
-/**
- * Create a queue of tracks.
- * @param {JSON} response - A JSON response object.
- * @return {Promise | Queue} A queue of tracks.
- */
-Playlist.prototype.createQueue = function () {
-  var self = this
-  var tracks = this.items.map(function (item) {
-    var track = new Track(self.spotify, self.entry)
-    track.clone(item.track)
-    return track
-  })
-  var queue = new Queue(tracks)
-  if (self.limit) {
-    queue = queue.slice(0, self.limit)
-  }
-  return queue
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Playlist.prototype.dispatch = function () {
-  var self = this
-  return this.searchForPlaylist().then(function () {
-    return self.fetchPlaylist()
-  }).then(function () {
-    return self.createQueue()
-  })
-}
-
-/**
- * Fetch playlist tracks.
- * @return {Promise | JSON} A JSON response.
- */
-Playlist.prototype.fetchPlaylist = function (id, owner) {
-  id = id || this.id
-  owner = owner || (this.owner && this.owner.id)
-  var self = this
-  return this.spotify.getPlaylist(id, owner).then(function (response) {
-    self.clone(response)
-    return self
-  })
-}
-
-/**
- * Search for playlist.
- * @return {Promise | JSON} A JSON response, or `null` if not found.
- */
-Playlist.prototype.searchForPlaylist = function () {
-  var self = this
-  if (this.id && this.owner && this.owner.id) {
-    return Promise.resolve(this)
-  } else {
-    return this.spotify.searchForPlaylist(this.entry).then(function (response) {
-      if (response &&
-          response.playlists &&
-          response.playlists.items &&
-          response.playlists.items[0]) {
-        response = response.playlists.items[0]
-        self.clone(response)
-        return Promise.resolve(self)
-      } else {
-        return Promise.reject(response)
-      }
-    }).catch(function () {
-      // console.log('COULD NOT FIND ' + self.entry)
-      return Promise.reject(null)
-    })
-  }
-}
-
-module.exports = Playlist
-
-},{"./queue":549,"./spotify":553,"./track":555}],549:[function(require,module,exports){
-var sort = require('./sort')
-
-/**
- * Create a queue of playlist entries.
- * @constructor
- * @param {Array} [arr] - An array of playlist entries.
- */
-function Queue (arr) {
-  /**
-   * Array of entries.
-   */
-  this.queue = []
-
-  if (arr) {
-    this.queue = arr
-  }
-}
-
-/**
- * Add an entry to the end of the queue.
- * @param {Track | Album | Artist} entry -
- * The entry to add.
- */
-Queue.prototype.add = function (entry) {
-  this.queue.push(entry)
-}
-
-/**
- * Group entries and interleave them.
- * @param {Function} fn - A grouping function.
- * Takes an entry as input and returns a grouping key,
- * a string, as output.
- * @return {Queue} - Itself.
- */
-Queue.prototype.alternate = function (fn) {
-  this.groupBy(fn)
-  this.interleave()
-}
-
-/**
- * Concatenate with another queue.
- * @param {Queue} queue - Another queue to append to this queue.
- * @return {Queue} - A new queue containing all the entries
- * from this queue followed by all the entries from the other queue.
- */
-Queue.prototype.concat = function (queue) {
-  return new Queue(this.toArray().concat(queue.toArray()))
-}
-
-/**
- * Whether the queue contains an entry.
- * @param {Track | Album | Artist} entry -
- * The entry to check for.
- * @return {boolean} - `true` if the queue contains `entry`,
- * `false` otherwise.
- */
-Queue.prototype.contains = function (obj) {
-  return this.indexOf(obj) >= 0
-}
-
-/**
- * Remove duplicate entries.
- * If a track occurs more than once, the version with
- * the highest Spotify popularity is preferred.
- * @return {Promise | Queue} - Itself.
- */
-Queue.prototype.dedup = function () {
-  var self = this
-  var result = new Queue()
-  return self.forEachPromise(function (entry) {
-    if (!result.contains(entry)) {
-      result.add(entry)
-      return Promise.resolve(entry)
-    } else {
-      var idx = self.indexOf(entry)
-      var other = result.get(idx)
-      if (entry.equals(other)) {
-        return Promise.resolve(other)
-      } else {
-        return other.getPopularity().then(function (otherPopularity) {
-          return entry.getPopularity().then(function (entryPopularity) {
-            if (entryPopularity > otherPopularity) {
-              Queue.set(idx, entry)
-            }
-          })
-        })
-      }
-    }
-  }).then(function () {
-    self.queue = result.toArray()
-    return self
-  })
-}
-
-/**
- * Dispatch all entries in sequence.
- * Ensure that only one entry is dispatched at a time.
- * @return {Promise | Queue} A queue of results.
- */
-Queue.prototype.dispatch = function () {
-  return this.forEachPromise(function (entry) {
-    return entry.dispatch()
-  })
-}
-
-/**
- * Filter the queue by a predicate.
- * @param {Function} fn - A predicate function.
- * Takes the current entry as input and returns
- * `true` if it passes the test, `false` otherwise.
- * @return {Queue} - A new queue.
- */
-Queue.prototype.filter = function (fn) {
-  return new Queue(this.toArray().filter(fn))
-}
-
-/**
- * Transform a nested queue into a flat queue.
- * @return {Queue} - Itself.
- */
-Queue.prototype.flatten = function () {
-  var result = []
-  for (var i in this.queue) {
-    var entry = this.queue[i]
-    if (entry instanceof Queue) {
-      entry = entry.flatten()
-      result = result.concat(entry.queue)
-    } else {
-      result.push(entry)
-    }
-  }
-  this.queue = result
-  return this
-}
-
-/**
- * Iterate over the queue.
- * @param {Function} fn - An iterator function.
- * Takes the current entry as input and returns
- * the modified value as output.
- * @return {Queue} - Itself.
- */
-Queue.prototype.forEach = function (fn) {
-  this.queue.forEach(fn)
-  return this
-}
-
-/**
- * Similar to Queue.forEach(), but with promises.
- * Each iteration must return a promise
- * (e.g., by invoking a promise-returning method).
- *
- * The execution is strictly sequential to prevent overloading
- * the server. (If parallel execution is needed, use a library
- * function like Promise.all() instead.)
- *
- * @param {Function} fn - An iterator function.
- * Takes an entry as input and returns a promise.
- * @return {Promise | Queue} A promise that invokes
- * each promise in sequence. The promise's value is
- * a queue of the values of each invoked promise.
- */
-Queue.prototype.forEachPromise = function (fn) {
-  var result = new Queue()
-  var ready = Promise.resolve(null)
-  this.queue.forEach(function (entry) {
-    ready = ready.then(function () {
-      return fn(entry)
-    }).then(function (value) {
-      result.add(value)
-    }).catch(function () { })
-  })
-  return ready.then(function () {
-    return result
-  })
-}
-
-/**
- * Get a playlist entry.
- * @param {integer} idx - The index of the entry.
- * The indices start at 0.
- */
-Queue.prototype.get = function (idx) {
-  return this.queue[idx]
-}
-
-/**
- * Group entries.
- * @param {Function} fn - A grouping function.
- * Takes an entry as input and returns a grouping key,
- * a string, as output.
- * @return {Queue} - Itself.
- */
-Queue.prototype.group = function (fn) {
-  this.groupBy(fn)
-  this.flatten()
-}
-
-/**
- * Group entries.
- * @param {Function} fn - A grouping function.
- * Takes an entry as input and returns a grouping key,
- * a string, as output.
- * @return {Queue} - Itself.
- */
-Queue.prototype.groupBy = function (fn) {
-  var map = []
-  var rest = []
-  var result = []
-  for (var i in this.queue) {
-    var entry = this.queue[i]
-    var key = fn(entry)
-    if (typeof key !== 'string' || key.trim() === '') {
-      rest.push(entry)
-    } else {
-      if (!map[key]) {
-        map[key] = new Queue()
-      }
-      map[key].add(entry)
-    }
-  }
-  for (var k in map) {
-    result.push(map[k])
-  }
-  result = result.concat(rest)
-  this.queue = result
-  return this
-}
-
-/**
- * Get the index of an entry.
- * @param {Object} obj - The entry to find.
- * @return The index of `obj`, or `-1` if not found.
- * The indices start at 0.
- */
-Queue.prototype.indexOf = function (obj) {
-  for (var i in this.queue) {
-    var entry = this.queue[i]
-    if (entry === obj ||
-        (entry && entry.similarTo &&
-         obj && obj.similarTo &&
-         entry.similarTo(obj))) {
-      return i
-    }
-  }
-  return -1
-}
-
-/**
- * Interleave a nested queue into a flat queue.
- * @return {Queue} - Itself.
- */
-Queue.prototype.interleave = function () {
-  var queues = this
-  var result = new Queue()
-  var temp = new Queue()
-  function iterator (queue) {
-    if (!queue.isEmpty()) {
-      var entry = queue.shift()
-      result.add(entry)
-    }
-    if (!queue.isEmpty()) {
-      temp.add(queue)
-    }
-  }
-  while (!queues.isEmpty()) {
-    queues.forEach(iterator)
-    queues = temp
-    temp = new Queue()
-  }
-  this.queue = result.queue
-  return this
-}
-
-/**
- * Whether the playlist is empty.
- * @return {boolean} - `true` if empty, `false` otherwise.
- */
-Queue.prototype.isEmpty = function () {
-  return this.size() <= 0
-}
-
-/**
- * Map a function over the queue.
- * @param {Function} fn - An iterator function.
- * Takes the current entry as input and returns
- * the modified value as output.
- * @return {Queue} - A new queue.
- */
-Queue.prototype.map = function (fn) {
-  return new Queue(this.toArray().map(fn))
-}
-
-/**
- * Reverse the order of the queue.
- * @return {Queue} - Itself.
- */
-Queue.prototype.reverse = function () {
-  this.queue.reverse()
-  return this
-}
-
-/**
- * Set a playlist entry.
- * @param {integer} idx - The index of the entry.
- * The indices start at 0. If out of bounds,
- * the entry is added at the end.
- * @param {Object} entry - The entry to add.
- */
-Queue.prototype.set = function (idx, entry) {
-  if (idx < 0 || idx >= this.size()) {
-    this.add(entry)
-  } else {
-    this.queue[idx] = entry
-  }
-}
-
-/**
- * The playlist size.
- * @return {integer} - The number of entries.
- */
-Queue.prototype.size = function () {
-  return this.queue.length
-}
-
-/**
- * Slice a queue.
- * @param {integer} start - The index of the first element.
- * @param {integer} end - The index of the last element (not included).
- * @return {Queue} - A new queue containing all elements
- * from `start` (inclusive) to `end` (exclusive).
- */
-Queue.prototype.slice = function (start, end) {
-  return new Queue(this.toArray().slice(start, end))
-}
-
-/**
- * Sort the queue.
- * @param {Function} fn - A sorting function.
- * Takes two entries as input and returns
- * `-1` if the first entry is less than the second,
- * `1` if the first entry is greater than the second, and
- * `0` if the entries are equal.
- * @return {Queue} - Itself.
- */
-Queue.prototype.sort = function (fn) {
-  sort(this.queue, fn)
-  return this
-}
-
-/**
- * Order the playlist entries by Last.fm playcount.
- * @return {Queue} - Itself.
- */
-Queue.prototype.orderByLastfm = function () {
-  return this.sort(sort.lastfm)
-}
-
-/**
- * Order the playlist entries by Spotify popularity.
- * @return {Queue} - Itself.
- */
-Queue.prototype.orderByPopularity = function () {
-  return this.sort(sort.popularity)
-}
-
-/**
- * Remove the first element from the queue.
- * @return {Object} - The first element, or `undefined`
- * if the queue is empty.
- */
-Queue.prototype.shift = function () {
-  return this.queue.shift()
-}
-
-/**
- * Shuffle the elements in the queue.
- *
- * Uses the Fisher-Yates algorithm.
- *
- * @return {Queue} - Itself.
- */
-Queue.prototype.shuffle = function () {
-  var counter = this.queue.length
-  // while there are elements in the array ...
-  while (counter > 0) {
-    // ... pick a random index ...
-    var index = Math.floor(Math.random() * counter)
-    // ... decrease the counter by 1 ...
-    counter--
-    // ... and swap the last element with it
-    var temp = this.queue[counter]
-    this.queue[counter] = this.queue[index]
-    this.queue[index] = temp
-  }
-  return this
-}
-
-/**
- * Convert queue to array.
- * @return {Array} An array of playlist entries.
- */
-Queue.prototype.toArray = function () {
-  return this.queue
-}
-
-module.exports = Queue
-
-},{"./sort":552}],550:[function(require,module,exports){
-/* global jQuery:true */
-/* exported jQuery */
-
-var http = require('./http')
-var util = require('./util')
-var URI = require('urijs')
-var $ = require('jquery')
-jQuery = $
-
-/**
- * Create a web scraper.
- * @constructor
- * @param {string} uri - The URI of the web page to scrape.
- */
-function WebScraper (uri, count, parser) {
-  /**
-   * Number of pages to fetch.
-   */
-  this.count = 0
-
-  /**
-   * Parser instance to handle the generator string.
-   */
-  this.parser = null
-
-  /**
-   * The URI of the first page to fetch.
-   */
-  this.uri = uri
-
-  this.count = count || this.count
-  this.parser = parser
-}
-
-/**
- * Scrape a web page.
- *
- * This function inspects the host of the web page and invokes an
- * appropriate scraping function. The scraping functions are written
- * in the following manner: they take the web page URI as input,
- * fetch the page, and return a generator string as output (wrapped
- * in a Promise). Schematically:
- *
- *           web page:                      generator string
- *     +-------------------+                   (Promise):
- *     | track1 by artist1 |    scraping
- *     +-------------------+    function    artist1 - track1
- *     | track2 by artist2 |    =======>    artist2 - track2
- *     +-------------------+                artist3 - track3
- *     | track3 by artist3 |
- *     +-------------------+
- *
- * In the example above, the scraping function converts a table of
- * tracks to a generator string on the form `ARTIST - TRACK`. If the
- * input were an albums chart, then the output would be a string of
- * `#album` commands instead. In other words, the scraping function
- * should extract the *meaning* of the web page and express it as
- * input to the generator.
- *
- * @param {string} uri - The URI of the web page to scrape.
- * @param {integer} count - Number of pages to fetch.
- * @return {Promise | string} A generator string.
- */
-WebScraper.prototype.scrape = function (uri, count) {
-  var domain = URI(uri).domain()
-  if (domain === 'last.fm') {
-    return this.lastfm(uri, count)
-  } else if (domain === 'pitchfork.com') {
-    return this.pitchfork(uri, count)
-  } else if (domain === 'rateyourmusic.com') {
-    return this.rateyourmusic(uri, count)
-  } else if (domain === 'reddit.com') {
-    return this.reddit(uri, count)
-  } else if (domain === 'youtube.com') {
-    return this.youtube(uri)
-  } else {
-    return this.webpage(uri)
-  }
-}
-
-/**
- * Create a queue of tracks.
- * @param {string} result - A newline-separated list of tracks.
- * @return {Promise | Queue} A queue of results.
- */
-WebScraper.prototype.createQueue = function (result) {
-  var generator = this.parser.parse(result)
-  return generator.dispatch()
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of results.
- */
-WebScraper.prototype.dispatch = function () {
-  var self = this
-  return this.scrape(this.uri, this.count).then(function (result) {
-    return self.createQueue(result)
-  })
-}
-
-/**
- * Clean up a string's contents.
- * @return {string} A new string.
- */
-WebScraper.prototype.cleanup = function (str) {
-  str = str.replace(/].*/gi, ']')
-    .replace(/\).*/gi, ')')
-    .replace(/\[[^\]]*]/gi, '')
-    .replace(/\([^)]*\)/gi, '')
-    .replace(/-+/gi, '-')
-    .replace(/\.+/gi, '.')
-    .replace(/[^-'.\w\s]/gi, '')
-  str = this.trim(str)
-  return str
-}
-
-/**
- * Clean up a string's whitespace.
- * @return {string} A new string.
- */
-WebScraper.prototype.trim = function (str) {
-  str = str || ''
-  str = str.trim()
-  str = str.replace(/[\s]+/g, ' ')
-  str = util.toAscii(str)
-  return str
-}
-
-/**
- * Scrape a Last.fm tracklist.
- * @param {string} uri - The URI of the web page to scrape.
- * @param {integer} [count] - The number of pages to scrape.
- * @return {Promise | string} A newline-separated list of tracks.
- */
-WebScraper.prototype.lastfm = function (uri, count) {
-  var self = this
-  count = count || 1
-  function getPages (nextUri, result, count) {
-    nextUri = URI(nextUri).absoluteTo(uri).toString()
-    console.log(nextUri)
-    return http(nextUri).then(function (data) {
-      var html = $($.parseHTML(data))
-      var lines = ''
-      if (uri.match(/\/\+tracks/gi)) {
-        // tracks by a single artist
-        var header = html.find('header a.library-header-crumb')
-        if (header.length === 0) {
-          header = html.find('h1.header-title')
-        }
-        var artist = self.trim(header.first().text())
-        html.find('td.chartlist-name').each(function () {
-          lines += artist + ' - ' + self.trim($(this).text()) + '\n'
-        })
-      } else if (uri.match(/\/\+similar/gi)) {
-        // similar artists
-        html.find('h3.big-artist-list-title').each(function () {
-          lines += '#top ' + self.trim($(this).text()) + '\n'
-        })
-      } else if (uri.match(/\/artists/gi)) {
-        // list of artists
-        html.find('td.chartlist-name').each(function () {
-          lines += '#top ' + self.trim($(this).text()) + '\n'
-        })
-      } else if (uri.match(/\/albums/gi)) {
-        // list of albums
-        html.find('td.chartlist-name').each(function () {
-          lines += '#album ' + self.trim($(this).text()) + '\n'
-        })
-      } else {
-        // list of tracks by various artists
-        html.find('td.chartlist-name').each(function () {
-          lines += self.trim($(this).text()) + '\n'
-        })
-      }
-      console.log(lines.trim())
-      result += lines
-      if (count === 1) {
-        return result
-      } else {
-        var next = html.find('.pagination-next a')
-        if (next.length > 0) {
-          nextUri = next.attr('href')
-          return getPages(nextUri, result, count - 1)
-        } else {
-          return result
-        }
-      }
-    })
-  }
-  return getPages(uri, '', count)
-}
-
-/**
- * Scrape a Pitchfork list.
- * @param {string} uri - The URI of the web page to scrape.
- * @param {integer} [count] - The number of pages to scrape.
- * @return {Promise | string} A newline-separated list of albums.
- */
-WebScraper.prototype.pitchfork = function (uri, count) {
-  var self = this
-  count = count || 0
-  function getPages (nextUri, result, count) {
-    nextUri = URI(nextUri).absoluteTo(uri).toString()
-    console.log(nextUri)
-    return http(nextUri).then(function (data) {
-      var html = $($.parseHTML(data))
-      var lines = ''
-      html.find('div.artist-work').each(function () {
-        var artist = self.trim($(this).find('ul.artist-list li:first').text())
-        var album = self.trim($(this).find('h2.work-title').text())
-        lines += '#album ' + artist + ' - ' + album + '\n'
-      })
-      console.log(lines.trim())
-      result += lines
-      if (count === 1) {
-        return result
-      } else {
-        var nextPage = html.find('.fts-pagination__list-item--active').next()
-        if (nextPage.length > 0) {
-          nextUri = nextPage.find('a').attr('href')
-          return getPages(nextUri, result, count - 1)
-        } else {
-          return result
-        }
-      }
-    })
-  }
-  return getPages(uri, '', count)
-}
-
-/**
- * Scrape a Rate Your Music chart.
- * @param {string} uri - The URI of the web page to scrape.
- * @param {integer} [count] - The number of pages to scrape.
- * @return {Promise | string} A newline-separated list of albums.
- */
-WebScraper.prototype.rateyourmusic = function (uri, count) {
-  var self = this
-  count = count || 0
-  function getPages (nextUri, result, count) {
-    nextUri = URI(nextUri).absoluteTo(uri).toString()
-    console.log(nextUri)
-    return http(nextUri).then(function (data) {
-      var html = $($.parseHTML(data))
-      var lines = ''
-      html.find('div.chart_details').each(function () {
-        var artist = self.trim($(this).find('a.artist').text())
-        var album = self.trim($(this).find('a.album').text())
-        lines += '#album ' + artist + ' - ' + album + '\n'
-      })
-      console.log(lines.trim())
-      result += lines
-      if (count === 1) {
-        return result
-      } else {
-        var next = html.find('a.navlinknext')
-        if (next.length > 0) {
-          nextUri = next.attr('href')
-          return getPages(nextUri, result, count - 1)
-        } else {
-          return result
-        }
-      }
-    })
-  }
-  return getPages(uri, '', count)
-}
-
-/**
- * Scrape a Reddit forum.
- *
- * Handles post listing and comment threads. Employs Bob Nisco's
- * heuristic for parsing comments.
- *
- * @param {string} uri - The URI of the web page to scrape.
- * @param {integer} [count] - The number of pages to scrape.
- * @return {Promise | string} A newline-separated list of tracks.
- */
-WebScraper.prototype.reddit = function (uri, count) {
-  var self = this
-  count = count || 1
-  function getPages (nextUri, result, count) {
-    nextUri = URI(nextUri).absoluteTo(uri).toString()
-    console.log(nextUri)
-    return http(nextUri).then(function (data) {
-      var html = $($.parseHTML(data))
-      var lines = ''
-      if (uri.match(/\/comments\//gi)) {
-        // comments thread
-        html.find('div.entry div.md').each(function () {
-          // first assumption: if there are links,
-          // they are probably links to songs
-          var links = $(this).find('a')
-          if (links.length > 0) {
-            links.each(function () {
-              var txt = $(this).text()
-              if (!txt.match(/https?:/gi)) {
-                lines += self.cleanup(txt) + '\n'
-              }
-            })
-            return
-          }
-          // second assumption: if there are multiple sentences,
-          // the song is the first one
-          var body = $(this).text()
-          var sentences = body.split('.')
-          if (sentences.length > 1) {
-            lines += self.cleanup(sentences[0]) + '\n'
-            return
-          }
-          // third assumption: if there are multiple lines to a comment,
-          // then the song will be on the first line with a user's
-          // comments on other lines after it
-          var lines = body.split('\n')
-          if (lines.length > 1) {
-            lines += self.cleanup(lines[0]) + '\n'
-            return
-          }
-          // fall-back case
-          lines += self.cleanup(body) + '\n'
-        })
-      } else {
-        // post listing
-        html.find('a.title').each(function () {
-          var track = self.cleanup($(this).text())
-          lines += track + '\n'
-        })
-      }
-      console.log(lines.trim())
-      result += lines
-      if (count === 1) {
-        return result
-      } else {
-        var next = html.find('.next-button a')
-        if (next.length > 0) {
-          nextUri = next.attr('href')
-          return getPages(nextUri, result, count - 1)
-        } else {
-          return result
-        }
-      }
-    })
-  }
-  return getPages(uri, '', count)
-}
-
-/**
- * Scrape a web page.
- *
- * This is a fall-back function in case none of the other
- * scraping functions apply.
- *
- * @param {string} uri - The URI of the web page to scrape.
- * @return {Promise | string} A newline-separated list of tracks.
- */
-WebScraper.prototype.webpage = function (uri) {
-  var self = this
-  console.log(uri)
-  return http(uri).then(function (data) {
-    var html = $($.parseHTML(data))
-    var result = ''
-    html.find('a').each(function () {
-      var track = self.cleanup($(this).text())
-      result += track + '\n'
-    })
-    result = result.trim()
-    console.log(result)
-    return result
-  })
-}
-
-/**
- * Scrape a YouTube playlist.
- * @param {string} uri - The URI of the web page to scrape.
- * @return {Promise | string} A newline-separated list of tracks.
- */
-WebScraper.prototype.youtube = function (uri) {
-  var self = this
-  console.log(uri)
-  return http(uri).then(function (data) {
-    var html = $($.parseHTML(data))
-    var result = ''
-    html.find('div.playlist-video-description h4, a.pl-video-title-link').each(function () {
-      var track = self.cleanup($(this).text())
-      result += track + '\n'
-    })
-    result = result.trim()
-    console.log(result)
-    return result
-  })
-}
-
-module.exports = WebScraper
-
-},{"./http":545,"./util":556,"jquery":274,"urijs":537}],551:[function(require,module,exports){
-var Artist = require('./artist')
-var Queue = require('./queue')
-var SpotifyRequestHandler = require('./spotify')
-var Top = require('./top')
-
-/**
- * Similar entry.
- * @constructor
- * @param {string} entry - The artist to search for.
- * @param {string} [id] - The Spotify ID, if known.
- */
-function Similar (spotify, entry, id, trackLimit, artistLimit) {
-  /**
-   * Array of related artists.
-   */
-  this.artists = []
-
-  /**
-   * Number of artists to fetch.
-   */
-  this.artistLimit = 20
-
-  /**
-   * Entry string.
-   */
-  this.entry = null
-
-  /**
-   * Spotify ID.
-   */
-  this.id = ''
-
-  /**
-   * Number of tracks to fetch per artist.
-   */
-  this.trackLimit = 5
-
-  /**
-   * Spotify request handler.
-   */
-  this.spotify = null
-
-  this.entry = entry.trim()
-  this.id = id
-  this.spotify = spotify || new SpotifyRequestHandler()
-  this.trackLimit = trackLimit || this.trackLimit
-  this.artistLimit = artistLimit || this.artistLimit
-}
-
-/**
- * Create a queue of tracks.
- * @return {Promise | Queue} A queue of tracks.
- */
-Similar.prototype.createQueue = function () {
-  var self = this
-  var artists = this.artists.map(function (artist) {
-    return new Top(self.spotify, self.entry, artist.id, self.limit)
-  })
-  var queue = new Queue(artists)
-  queue = queue.slice(0, self.artistLimit)
-  return queue.dispatch().then(function (result) {
-    return result.interleave()
-  })
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Similar.prototype.dispatch = function () {
-  var self = this
-  return this.searchForArtist().then(function () {
-    return self.searchForRelatedArtists()
-  }).then(function () {
-    return self.createQueue()
-  })
-}
-
-/**
- * Search for artist.
- * @return {Promise} A Promise to perform the action.
- */
-Similar.prototype.searchForArtist = function () {
-  var self = this
-  var artist = new Artist(this.spotify, this.entry)
-  return artist.searchForArtist().then(function (artist) {
-    self.id = artist.id
-  })
-}
-
-/**
- * Search for related artists.
- * @return {Promise} A Promise to perform the action.
- */
-Similar.prototype.searchForRelatedArtists = function () {
-  var self = this
-  return this.spotify.searchForRelatedArtists(this.id).then(function (response) {
-    self.artists = response.artists
-    return self
-  })
-}
-
-module.exports = Similar
-
-},{"./artist":540,"./queue":549,"./spotify":553,"./top":554}],552:[function(require,module,exports){
-var stringSimilarity = require('string-similarity')
-var util = require('./util')
-
-/**
- * Stable sort, preserving the original order when possible.
- * @param {Array} arr - The array to sort.
- * @param {function} [fn] - A comparison function that returns
- * `-1` if the first argument scores less than the second argument,
- * `1` if the first argument scores more than the second argument,
- * and `0` if the scores are equal.
- * @return {Array} - The array, sorted.
- */
-function sort (arr, fn) {
-  fn = fn || sort.ascending()
-  var i = 0
-  var pairs = arr.map(function (x) {
-    return {
-      idx: i++,
-      val: x
-    }
-  })
-  pairs = pairs.sort(function (a, b) {
-    var x = fn(a.val, b.val)
-    if (x) { return x }
-    return (a.idx < b.idx) ? -1 : ((a.idx > b.idx) ? 1 : 0)
-  })
-  for (i = 0; i < arr.length; i++) {
-    arr[i] = pairs[i].val
-  }
-  return arr
-}
-
-/**
- * Create an ascending comparison function.
- * @param {function} fn - A scoring function.
- * @return {function} - A comparison function that returns
- * `-1` if the first argument scores less than the second argument,
- * `1` if the first argument scores more than the second argument,
- * and `0` if the scores are equal.
- */
-sort.ascending = function (fn) {
-  fn = fn || util.identity
-  return function (a, b) {
-    var x = fn(a)
-    var y = fn(b)
-    return (x < y) ? -1 : ((x > y) ? 1 : 0)
-  }
-}
-
-/**
- * Create a descending comparison function.
- * @param {function} fn - A scoring function.
- * @return {function} - A comparison function that returns
- * `-1` if the first argument scores more than the second argument,
- * `1` if the first argument scores less than the second argument,
- * and `0` if the scores are equal.
- */
-sort.descending = function (fn) {
-  fn = fn || util.identity
-  return function (a, b) {
-    var x = fn(a)
-    var y = fn(b)
-    return (x < y) ? 1 : ((x > y) ? -1 : 0)
-  }
-}
-
-/**
- * Combine comparison functions.
- * @param {...function} fn - A comparison function.
- * @return {function} - A combined comparison function that returns
- * the first comparison value unless the comparands are equal,
- * in which case it returns the next value.
- */
-sort.combine = function () {
-  var args = Array.prototype.slice.call(arguments)
-  return args.reduce(function (fn1, fn2) {
-    return function (a, b) {
-      var val = fn1(a, b)
-      return (val === 0) ? fn2(a, b) : val
-    }
-  })
-}
-
-/**
- * Compare tracks by Spotify popularity.
- * @param {Track} a - A track.
- * @param {Track} b - A track.
- * @return {integer} - `1` if `a` is less than `b`,
- * `-1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.popularity = sort.descending(function (x) {
-  return x.popularity || -1
-})
-
-/**
- * Compare tracks by Last.fm rating.
- * @param {Track} a - A track.
- * @param {Track} b - A track.
- * @return {integer} - `1` if `a` is less than `b`,
- * `-1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.lastfm = sort.combine(sort.descending(function (x) {
-  return x.lastfmPersonal
-}), sort.descending(function (x) {
-  return x.lastfmGlobal
-}), sort.popularity)
-
-/**
- * Compare albums by type. Proper albums are ranked highest,
- * followed by singles, guest albums, and compilation albums.
- * @param {JSON} a - An album.
- * @param {JSON} b - An album.
- * @return {integer} - `-1` if `a` is less than `b`,
- * `1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.type = sort.descending(function (album) {
-  var rankings = {
-    'album': 4,
-    'single': 3,
-    'appears_on': 2,
-    'compilation': 1
-  }
-  var type = album.album_type
-  return rankings[type] || 0
-})
-
-/**
- * Compare albums by type and popularity.
- * @param {JSON} a - An album.
- * @param {JSON} b - An album.
- * @return {integer} - `-1` if `a` is less than `b`,
- * `1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.album = sort.combine(sort.type, sort.popularity)
-
-/**
- * Sort objects by similarity to a string.
- * @param {function} fn - A function returning the object's name
- * as a string.
- * @param {string} str - The string to compare against.
- * @return {function} - A comparison function.
- */
-sort.similarity = function (fn, str) {
-  return sort.descending(function (x) {
-    return stringSimilarity.compareTwoStrings(fn(x), str)
-  })
-}
-
-/**
- * Sort album objects by similarity to a string.
- * @param {string} album - The string to compare against.
- * @return {function} - A comparison function.
- */
-sort.similarAlbum = function (album) {
-  return sort.similarity(function (x) {
-    return x.name + ' - ' + (x.artists[0].name || '')
-  }, album)
-}
-
-/**
- * Sort artist objects by similarity to a string.
- * @param {string} artist - The string to compare against.
- * @return {function} - A comparison function.
- */
-sort.similarArtist = function (artist) {
-  return sort.similarity(function (x) {
-    return x.name
-  }, artist)
-}
-
-/**
- * Sort track objects by similarity to a string.
- * @param {string} track - The string to compare against.
- * @return {function} - A comparison function.
- */
-sort.similarTrack = function (track) {
-  return sort.similarity(function (x) {
-    return x.name + ' - ' + (x.artists[0].name || '')
-  }, track)
-}
-
-/**
- * Sort track objects by censorship.
- * Explicit tracks are preferred over censored ones.
- * @param {Track} a - A track.
- * @param {Track} b - A track.
- * @return {integer} - `1` if `a` is less than `b`,
- * `-1` if `a` is greater than `b`,
- * and `0` if `a` is equal to `b`.
- */
-sort.censorship = sort.descending(function (x) {
-  return x.explicit ? 1 : 0
-})
-
-/**
- * Sort track objects by similarity to a track,
- * popularity, and censorship.
- * @param {string} track - The track to compare against.
- * @return {function} - A comparison function.
- */
-sort.track = function (track) {
-  return sort.combine(sort.similarTrack(track),
-                      sort.popularity,
-                      sort.censorship)
-}
-
-module.exports = sort
-
-},{"./util":556,"string-similarity":400}],553:[function(require,module,exports){
-var http = require('./http')
-var sort = require('./sort')
-var SpotifyAuthenticator = require('./auth')
-
-/**
- * Create a Spotify request handler.
- * @constructor
- * @param {string} [clientId] - Client ID.
- * @param {string} [clientSecret] - Client secret key.
- * @param {string} [token] - Access token (if already authenticated).
- */
-function SpotifyRequestHandler (clientId, clientSecret, token) {
-  /**
-   * Spotify authenticator.
-   */
-  this.auth = new SpotifyAuthenticator(clientId, clientSecret, token)
-}
-
-/**
- * Fetch album metadata.
- *
- * [Reference](https://developer.spotify.com/web-api/get-album/#example).
- *
- * @param {string} id - Album ID.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.getAlbum = function (id) {
-  var uri = 'https://api.spotify.com/v1/albums/'
-  uri += encodeURIComponent(id)
-  return this.request(uri).then(function (response) {
-    if (response &&
-        response.id) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Get all albums by an artist.
- *
- * [Reference](https://developer.spotify.com/web-api/get-artists-albums/#example).
- *
- * @param {string} id - Artist ID.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
-  var self = this
-  var uri = 'https://api.spotify.com/v1/artists/'
-  uri += encodeURIComponent(id) + '/albums?limit=50'
-
-  function getAlbums (uri, result) {
-    return self.request(uri).then(function (response) {
-      if (!(response &&
-            response.items)) {
-        return Promise.reject(response)
-      }
-      if (result) {
-        result.items = result.items.concat(response.items)
-      } else {
-        result = response
-      }
-      if (response.next) {
-        return getAlbums(response.next, result)
-      } else {
-        return Promise.resolve(result)
-      }
-    })
-  }
-
-  // sort albums by type
-  function sortAlbums (response) {
-    if (response && response.items) {
-      sort(response.items, sort.album)
-    }
-    return response
-  }
-
-  return getAlbums(uri).then(sortAlbums)
-}
-
-/**
- * Fetch a playlist's tracks.
- *
- * @param {string} [id] - The playlist ID.
- * @param {string} [owner] - The owner ID.
- *
- * [Reference](https://developer.spotify.com/web-api/get-playlists-tracks/#example).
- *
- * @param {string} id - Album ID.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
-  var self = this
-  var uri = 'https://api.spotify.com/v1/users/' +
-      encodeURIComponent(owner) +
-      '/playlists/' +
-      encodeURIComponent(id) +
-      '/tracks'
-  function getTracks (uri, result) {
-    return self.request(uri).then(function (response) {
-      if (!(response &&
-            response.items)) {
-        return Promise.reject(response)
-      }
-      if (result) {
-        result.items = result.items.concat(response.items)
-      } else {
-        result = response
-      }
-      if (response.next) {
-        return getTracks(response.next, result)
-      } else {
-        return Promise.resolve(result)
-      }
-    })
-  }
-  return getTracks(uri)
-}
-
-/**
- * Get the top tracks of an artist.
- *
- * [Reference](https://developer.spotify.com/web-api/get-artists-top-tracks/#example).
- *
- * @param {string} id - Artist ID.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.getTopTracks = function (id) {
-  var uri = 'https://api.spotify.com/v1/artists/'
-  uri += encodeURIComponent(id) + '/top-tracks?country=US'
-  return this.request(uri).then(function (response) {
-    if (response &&
-        response.tracks) {
-      sort(response.tracks, sort.popularity)
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Get a track.
- *
- * [Reference](https://developer.spotify.com/web-api/get-track/#example).
- *
- * @param {string} id - Track ID.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.getTrack = function (id) {
-  var uri = 'https://api.spotify.com/v1/tracks/'
-  uri += encodeURIComponent(id)
-  return this.request(uri)
-}
-
-/**
- * Perform a Spotify request.
- * @param {string} uri - The URI to resolve.
- * @param {Object} [options] - Request options.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.request = function (uri, options) {
-  var self = this
-  options = options || {}
-  console.log(uri)
-  return this.auth.getToken().then(function (token) {
-    options.headers = options.headers || {}
-    options.headers.Authorization = 'Bearer ' + token
-    return http.json(uri, options)
-  }).catch(function (status) {
-    return self.refreshToken().then(function (token) {
-      options.headers.Authorization = 'Bearer ' + token
-      return http.json(uri, options)
-    })
-  })
-}
-
-/**
- * Search for artist.
- *
- * [Reference](https://developer.spotify.com/web-api/search-item/#example).
- *
- * @param {string} artist - The artist to search for.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.searchForArtist = function (artist) {
-  var uri = 'https://api.spotify.com/v1/search?type=artist&q='
-  uri += encodeURIComponent(artist)
-  return this.request(uri).then(function (response) {
-    if (response &&
-        response.artists &&
-        response.artists.items[0] &&
-        response.artists.items[0].id) {
-      // sort results by string similarity
-      sort(response.artists.items, sort.similarArtist(artist))
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Search for album.
- *
- * [Reference](https://developer.spotify.com/web-api/search-item/#example).
- *
- * @param {string} album - The album to search for.
- * @param {string} [artist] - The album artist.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
-  var query = album
-  if (artist) {
-    query = 'album:"' + album + '"'
-    query += artist ? (' artist:"' + artist + '"') : ''
-  }
-  var uri = 'https://api.spotify.com/v1/search?type=album&q='
-  uri += encodeURIComponent(query)
-  return this.request(uri).then(function (response) {
-    if (response &&
-        response.albums &&
-        response.albums.items[0] &&
-        response.albums.items[0].id) {
-      // sort results by string similarity
-      if (!artist) {
-        sort(response.albums.items, sort.similarAlbum(album))
-      }
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Search for playlist.
- *
- * @param {string} playlist - The playlist to search for.
-
- * [Reference](https://developer.spotify.com/web-api/search-item/#example).
- *
- * @param {string} playlist - The track to search for.
- * @return {Promise | JSON} JSON response.
- */
-SpotifyRequestHandler.prototype.searchForPlaylist = function (playlist) {
-  var uri = 'https://api.spotify.com/v1/search?type=playlist&limit=50&q='
-  uri += encodeURIComponent(playlist)
-  return this.request(uri).then(function (response) {
-    if (response.playlists &&
-        response.playlists.items[0] &&
-        response.playlists.items[0].uri) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Search for related artists.
- *
- * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
- *
- * @param {string} id - The album ID.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.searchForRelatedArtists = function (id) {
-  var uri = 'https://api.spotify.com/v1/artists/'
-  uri += encodeURIComponent(id) + '/related-artists'
-  return this.request(uri).then(function (response) {
-    if (response &&
-        response.artists) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Search for track.
- *
- * [Reference](https://developer.spotify.com/web-api/search-item/#example).
- *
- * @param {string} track - The track to search for.
- * @param {string} [artist] - The track artist.
- * @param {string} [album] - The track album.
- * @return {Promise | JSON} JSON response.
- */
-SpotifyRequestHandler.prototype.searchForTrack = function (track, artist, album) {
-  var query = track
-  if (artist || album) {
-    query = 'track:"' + track + '"'
-    query += artist ? (' artist:"' + artist + '"') : ''
-    query += album ? (' album:"' + album + '"') : ''
-  }
-  var uri = 'https://api.spotify.com/v1/search?type=track&limit=50&q='
-  uri += encodeURIComponent(query)
-  return this.request(uri).then(function (response) {
-    if (response.tracks &&
-        response.tracks.items[0] &&
-        response.tracks.items[0].uri) {
-      // Sort results by string similarity. This takes care of some
-      // odd cases where a random track from an album of the same name
-      // is returned as the first hit.
-      if (!(album && artist)) {
-        sort(response.tracks.items, sort.track(track))
-      }
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-module.exports = SpotifyRequestHandler
-
-},{"./auth":541,"./http":545,"./sort":552}],554:[function(require,module,exports){
-var Artist = require('./artist')
-var Queue = require('./queue')
-var SpotifyRequestHandler = require('./spotify')
-var Track = require('./track')
-
-/**
- * Top entry.
- * @constructor
- * @param {string} entry - The artist to search for.
- * @param {string} [id] - The Spotify ID, if known.
- * @param {string} [limit] - The number of tracks to fetch.
- */
-function Top (spotify, entry, id, limit) {
-  /**
-   * Entry string.
-   */
-  this.entry = null
-
-  /**
-   * Spotify ID.
-   */
-  this.id = ''
-
-  /**
-   * Number of tracks to fetch.
-   */
-  this.limit = null
-
-  /**
-   * Top tracks.
-   */
-  this.tracks = []
-
-  /**
-   * Spotify request handler.
-   */
-  this.spotify = null
-
-  this.entry = entry.trim()
-  this.id = id
-  this.limit = limit
-  this.spotify = spotify || new SpotifyRequestHandler()
-}
-
-/**
- * Create a queue of tracks.
- * @param {JSON} response - A JSON response object.
- * @return {Promise | Queue} A queue of tracks.
- */
-Top.prototype.createQueue = function () {
-  var self = this
-  var tracks = this.tracks.map(function (item) {
-    var track = new Track(this.spotify, self.entry)
-    track.clone(item)
-    return track
-  })
-  var trackQueue = new Queue(tracks)
-  if (self.limit) {
-    trackQueue = trackQueue.slice(0, self.limit)
-  }
-  return trackQueue
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Queue} A queue of tracks.
- */
-Top.prototype.dispatch = function () {
-  var self = this
-  return this.searchForArtist().then(function () {
-    return self.fetchTopTracks()
-  }).then(function () {
-    return self.createQueue()
-  })
-}
-
-/**
- * Fetch top tracks.
- * @return {Promise | JSON} A JSON response.
- */
-Top.prototype.fetchTopTracks = function () {
-  var self = this
-  return this.spotify.getTopTracks(this.id).then(function (response) {
-    self.tracks = response.tracks
-    return self
-  })
-}
-
-/**
- * Search for the artist's ID if not known.
- * @return {Promise} A Promise to perform the action.
- */
-Top.prototype.searchForArtist = function () {
-  var self = this
-  if (this.id) {
-    return Promise.resolve(this)
-  } else {
-    var artist = new Artist(this.spotify, this.entry)
-    return artist.searchForArtist().then(function (artist) {
-      self.id = artist.id
-      return self
-    })
-  }
-}
-
-module.exports = Top
-
-},{"./artist":540,"./queue":549,"./spotify":553,"./track":555}],555:[function(require,module,exports){
-var defaults = require('./defaults')
-var lastfm = require('./lastfm')(defaults.api)
-var SpotifyRequestHandler = require('./spotify')
-
-/**
- * Create track entry.
- * @constructor
- * @param {SpotifyRequestHandler} spotify - Spotify request handler.
- * @param {string} entry - The track to search for.
- * @param {string} [id] - The Spotify ID, if known.
- */
-function Track (spotify, entry, id) {
-  /**
-   * Album name.
-   */
-  this.album = ''
-
-  /**
-   * Track artists, separated by `,`.
-   */
-  this.artist = ''
-
-  /**
-   * Array of track artists.
-   */
-  this.artists = []
-
-  /**
-   * Entry string.
-   */
-  this.entry = ''
-
-  /**
-   * Spotify ID.
-   */
-  this.id = ''
-
-  /**
-   * Last.fm global playcount.
-   */
-  this.lastfm = ''
-
-  /**
-   * Last.fm global playcount.
-   */
-  this.lastfmGlobal = ''
-
-  /**
-   * Last.fm personal playcount.
-   */
-  this.lastfmPersonal = ''
-
-  /**
-   * Main track artist.
-   */
-  this.mainArtist = ''
-
-  /**
-   * Track name.
-   */
-  this.name = ''
-
-  /**
-   * Spotify popularity.
-   */
-  this.popularity = ''
-
-  /**
-   * Spotify request handler.
-   */
-  this.spotify = null
-
-  /**
-   * Full track name on the form `Title - Artist`.
-   */
-  this.title = ''
-
-  /**
-   * Spotify URI
-   * (a string on the form `spotify:track:xxxxxxxxxxxxxxxxxxxxxx`).
-   */
-  this.uri = ''
-
-  this.entry = entry.trim()
-  this.id = id
-  this.name = entry
-  this.spotify = spotify || new SpotifyRequestHandler()
-  this.uri = this.id ? ('spotify:track:' + this.id) : this.uri
-}
-
-/**
- * Clone a JSON response.
- * @param {Object} response - The response.
- */
-Track.prototype.clone = function (response) {
-  for (var prop in response) {
-    if (response.hasOwnProperty(prop)) {
-      this[prop] = response[prop] || this[prop]
-    }
-  }
-  if (response.album &&
-      response.album.name) {
-    this.album = response.album.name
-  }
-  if (response.artists) {
-    this.artists = response.artists.map(function (artist) {
-      return artist.name.trim()
-    })
-    this.artist = this.artists.join(', ')
-    this.mainArtist = this.artists[0]
-  }
-  if (this.mainArtist && this.name) {
-    this.title = this.name + ' - ' + this.mainArtist
-  } else {
-    this.title = this.name
-  }
-}
-
-/**
- * Dispatch entry.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.dispatch = function () {
-  if (this.popularity) {
-    return Promise.resolve(this)
-  } else if (this.id) {
-    return this.fetchTrack()
-  } else {
-    return this.searchForTrack()
-  }
-}
-
-/**
- * Whether this track is equal to another track.
- * @param {Track} track - The track to compare against.
- * @return {boolean} `true` if the tracks are equal,
- * `false` otherwise.
- */
-Track.prototype.equals = function (track) {
-  return this.uri && track.uri && this.uri === track.uri
-}
-
-/**
- * Fetch Last.fm information.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.fetchLastfm = function (user) {
-  var self = this
-  return lastfm.getInfo(this.artist, this.name, user).then(function (result) {
-    self.lastfmGlobal = parseInt(result.track.playcount)
-    self.lastfmPersonal = parseInt(result.track.userplaycount)
-    self.lastfm = self.lastfmPersonal > -1 ? self.lastfmPersonal : self.lastfmGlobal
-    return self
-  })
-}
-
-/**
- * Fetch track metadata.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.fetchTrack = function (id) {
-  id = id || this.id
-  var self = this
-  if (Number.isInteger(this.popularity)) {
-    return Promise.resolve(this)
-  } else {
-    return this.spotify.getTrack(id).then(function (response) {
-      self.clone(response)
-      return self
-    })
-  }
-}
-
-/**
- * Get track popularity.
- * @return {Promise | integer} The track popularity.
- */
-Track.prototype.getPopularity = function () {
-  var self = this
-  if (Number.isInteger(this.popularity)) {
-    return Promise.resolve(this.popularity)
-  } else {
-    return self.refresh().then(function () {
-      return self.popularity
-    })
-  }
-}
-
-/**
- * Whether the track has the given artist.
- * @param {string} artist - The artist.
- * @return {boolean} `true` the track has the artist,
- * `false` otherwise.
- */
-Track.prototype.hasArtist = function (artist) {
-  artist = artist.trim().toLowerCase()
-  for (var i in this.artists) {
-    var trackArtist = this.artists[i].toLowerCase().trim()
-    if (trackArtist.includes(artist)) {
-      return true
-    }
-  }
-  return false
-}
-
-/**
- * Refresh track metadata.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.refresh = function () {
-  var self = this
-  return self.dispatch().then(function () {
-    return self.dispatch()
-  })
-}
-
-/**
- * Search for track.
- * @param {string} query - The query text.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.searchForTrack = function () {
-  var self = this
-  return this.spotify.searchForTrack(this.entry).then(function (response) {
-    if (response &&
-        response.tracks &&
-        response.tracks.items &&
-        response.tracks.items[0]) {
-      response = response.tracks.items[0]
-      self.clone(response)
-      return Promise.resolve(self)
-    } else {
-      return Promise.reject(response)
-    }
-  }).catch(function () {
-    if (self.entry.match(/^[0-9a-z]+$/i)) {
-      return self.fetchTrack(self.entry)
-    } else {
-      // console.log('COULD NOT FIND ' + self.entry)
-      return Promise.reject(null)
-    }
-  })
-}
-
-/**
- * Whether this track is similar to another track.
- * @param {Track} track - The track to compare against.
- * @return {boolean} `true` if the tracks are similar,
- * `false` otherwise.
- */
-Track.prototype.similarTo = function (track) {
-  return this.equals(track) ||
-    this.title.toLowerCase() === track.title.toLowerCase()
-}
-
-/**
- * Full track title.
- * @return {string} The track title.
- */
-Track.prototype.toString = function () {
-  return this.title || this.name || this.entry || this.id
-}
-
-module.exports = Track
-
-},{"./defaults":543,"./lastfm":546,"./spotify":553}],556:[function(require,module,exports){
-var util = {}
-
-/**
- * Identity function.
- * @param {Object} x - A value.
- * @return {Object} - The same value.
- */
-util.identity = function (x) {
-  return x
-}
-
-/**
- * Replace Unicode characters with their ASCII equivalents.
- * @param {string} x - A string.
- * @return {string} - A new string.
- */
-util.toAscii = function (str) {
-  return str.replace(/[\u2018\u2019\u00b4]/g, "'")
-    .replace(/[\u201c\u201d\u2033]/g, '"')
-    .replace(/[\u2212\u2022\u00b7\u25aa]/g, '-')
-    .replace(/[\u2013\u2015]/g, '-')
-    .replace(/\u2014/g, '-')
-    // .replace(/[\u2013\u2015]/g, '--')
-    // .replace(/\u2014/g, '---')
-    .replace(/\u2026/g, '...')
-    .replace(/[ ]+\n/g, '\n')
-    .replace(/\s*\\\n/g, '\\\n')
-    .replace(/\s*\\\n\s*\\\n/g, '\n\n')
-    .replace(/\s*\\\n\n/g, '\n\n')
-    .replace(/\n-\n/g, '\n')
-    .replace(/\n\n\s*\\\n/g, '\n\n')
-    .replace(/\n\n\n*/g, '\n\n')
-    .replace(/[ ]+$/gm, '')
-    .replace(/^\s+|[\s\\]+$/g, '')
-}
-
-module.exports = util
-
-},{}],557:[function(require,module,exports){
+},{}],558:[function(require,module,exports){
 /* global jQuery:true, localStorage, URLSearchParams */
 /* exported jQuery */
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
-var Parser = require('../src/parser')
-var SpotifyAuthenticator = require('../src/auth')
+var Generator = require('../lib/generator')
+var SpotifyAuthenticator = require('../lib/auth')
 
 console.log = function (message) {
   if (typeof message === 'string') {
@@ -87026,14 +87071,13 @@ function hasToken () {
 function generate () {
   var textarea = $('textarea')
   var button = $('a.btn')
-  var parser = new Parser(token())
-  var generator = parser.parse(textarea.val())
+  var generator = new Generator(textarea.val(), token())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')
   button.mouseleave()
   button.tooltip('disable')
-  generator.execute().then(function (result) {
+  generator.generate().then(function (result) {
     console.log('')
     button.removeClass('disabled')
     textarea.val(result)
@@ -87078,4 +87122,4 @@ $(function () {
   }
 })
 
-},{"../src/auth":541,"../src/parser":547,"bootstrap":2,"jquery":274}]},{},[557]);
+},{"../lib/auth":3,"../lib/generator":7,"bootstrap":21,"jquery":293}]},{},[558]);
