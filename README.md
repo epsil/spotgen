@@ -322,6 +322,9 @@ Then install it with `npm link`:
 
 The latest developer version can then be obtained with `git pull`.
 
+Web version
+-----------
+
 The generator is also available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotgen/>.
 
 The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the [command-line version](#command-line-script) can be used without logging in.)
@@ -337,6 +340,26 @@ This will start up a `http-server` instance at <http://localhost:9000/>.
 Note that Spotify's authentication service requires the web version to be hosted at a whitelisted address. This is the reason for running `http-server` at port 9000 (merely opening `index.html` in a browser will not work).
 
 For more information about authentication, see the [Spotify Web API](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow) documentation.
+
+Library
+-------
+
+The generator is also available as a library, so it can be utilized by another project. To install it into the project's `node_modules/` folder:
+
+    npm install --save spotgen
+
+The library is used as follows:
+
+```js
+var Generator = require('spotgen')
+var spotgen = new Generator('#top Beach House\n#top Deer Hunter')
+spotgen.generate().then(function (result) {
+  // output Spotify URIs to console
+  console.log(result)
+})
+```
+
+The `generate()` method returns a [promise](https://www.promisejs.org/) that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the `then()` callback like shown above.
 
 Links
 -----
