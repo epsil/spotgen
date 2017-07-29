@@ -1,14 +1,36 @@
 {
   "name": "spotgen",
+  "version": "1.0.0",
   "author": "Vegard Øye",
-  "main": "index.js",
   "license": "MIT",
+  "main": "index.js",
+  "bin": {
+    "spotgen": "index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/epsil/spotgen.git"
   },
-  "bin": {
-    "spotgen": "index.js"
+  "dependencies": {
+    "base-64": "^0.1.0",
+    "bootstrap": "^3.3.7",
+    "browserify": "^13.1.1",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+    "csv-stringify": "^1.0.4",
+    "eol": "^0.8.1",
+    "http-server": "^0.10.0",
+    "jquery": "^3.1.1",
+    "jsdoc": "^3.4.3",
+    "jsdom": "^9.4.1",
+    "jshint": "^2.9.4",
+    "mocha": "^3.2.0",
+    "promise": "^7.1.1",
+    "request": "^2.79.0",
+    "standard": "^8.6.0",
+    "string-similarity": "^1.1.0",
+    "uglify-js": "^2.7.5",
+    "urijs": "^1.18.10"
   },
   "scripts": {
     "clean": "git stash && git clean -d -f -f -x",
@@ -47,26 +69,5 @@
     "log": "git log -p",
     "gitk": "gitk &",
     "status": "git status"
-  },
-  "dependencies": {
-    "base-64": "^0.1.0",
-    "bootstrap": "^3.3.7",
-    "browserify": "^13.1.1",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
-    "csv-stringify": "^1.0.4",
-    "eol": "^0.8.1",
-    "http-server": "^0.10.0",
-    "jquery": "^3.1.1",
-    "jsdoc": "^3.4.3",
-    "jsdom": "^9.4.1",
-    "jshint": "^2.9.4",
-    "mocha": "^3.2.0",
-    "promise": "^7.1.1",
-    "request": "^2.79.0",
-    "standard": "^8.6.0",
-    "string-similarity": "^1.1.0",
-    "uglify-js": "^2.7.5",
-    "urijs": "^1.18.10"
   }
 }
