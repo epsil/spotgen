@@ -3,4 +3,4 @@ node_modules/*
 *.log
 *.log.*
 *.txt
-*.json
+package-lock.json
