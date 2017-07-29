@@ -1,6 +1,16 @@
-# spotgen
+spotgen
+=======
 
-> A tool for converting, processing and generating [Spotify](http://www.spotify.com/) playlists, scraping information off of websites, and leveraging [Last.fm](http://last.fm/) user data.
+A tool for converting, processing and generating [Spotify](http://www.spotify.com/) playlists, scraping information off of websites, and leveraging [Last.fm](http://last.fm/) user data.
+
+Installation
+------------
+
+Install [Node](http://nodejs.org/) and fetch the package with:
+
+    npm install -g spotgen
+
+The script can now be invoked from the command line as `spotgen`. (On some systems, it might be necessary to prepend the `npm` command with `sudo`.)
 
 Usage
 -----
@@ -22,15 +32,6 @@ To **import** the playlist into Spotify:
 1.  **Copy the output of the generator:** Choose *Edit -> Copy* (<kbd>Ctrl</kbd> + <kbd>C</kbd>).
 2.  **Create a new playlist in Spotify:** Choose *File -> New Playlist* (<kbd>Ctrl</kbd> + <kbd>N</kbd>).
 3.  **Paste into the playlist:** Select the playlist and choose *Edit -> Paste* (<kbd>Ctrl</kbd> + <kbd>V</kbd>).
-
-Installation
-------------
-
-Install [Node](http://nodejs.org/) and fetch the package with:
-
-    npm install -g spotgen
-
-The script can now be invoked from the command line as `spotgen`. (On some systems, it might be necessary to prepend the `npm` command with `sudo`.)
 
 Commands
 --------
