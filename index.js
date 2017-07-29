@@ -5,7 +5,7 @@ var fs = require('fs')
 var jsdom = require('jsdom').jsdom
 document = jsdom()
 window = document.defaultView
-var Parser = require('./src/parser')
+var Parser = require('./lib/parser')
 
 /**
  * Main method.

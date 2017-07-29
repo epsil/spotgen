@@ -3,8 +3,8 @@
 var $ = require('jquery')
 jQuery = $
 require('bootstrap')
-var Parser = require('../src/parser')
-var SpotifyAuthenticator = require('../src/auth')
+var Parser = require('../lib/parser')
+var SpotifyAuthenticator = require('../lib/auth')
 
 console.log = function (message) {
   if (typeof message === 'string') {

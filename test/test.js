@@ -5,12 +5,12 @@ chai.use(chaiAsPromised)
 chai.should()
 
 var eol = require('eol')
-var Artist = require('../src/artist')
-var Album = require('../src/album')
-var Parser = require('../src/parser')
-var Queue = require('../src/queue')
-var Track = require('../src/track')
-var sort = require('../src/sort')
+var Artist = require('../lib/artist')
+var Album = require('../lib/album')
+var Parser = require('../lib/parser')
+var Queue = require('../lib/queue')
+var Track = require('../lib/track')
+var sort = require('../lib/sort')
 
 describe('Spotify Playlist Generator', function () {
   this.timeout(999999)
