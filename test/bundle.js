@@ -89160,7 +89160,6 @@ module.exports = function (key) {
 }
 
 },{"./http":570}],572:[function(require,module,exports){
-var defaults = require('./defaults')
 var eol = require('eol')
 var Album = require('./album')
 var Artist = require('./artist')
@@ -89177,7 +89176,7 @@ var WebScraper = require('./scraper')
  * @constructor
  */
 function Parser (token, handler) {
-  this.spotify = handler || new SpotifyRequestHandler(defaults.id, defaults.key, token)
+  this.spotify = handler || new SpotifyRequestHandler(null, null, token)
 }
 
 /**
@@ -89270,7 +89269,7 @@ Parser.prototype.parse = function (str) {
 
 module.exports = Parser
 
-},{"./album":564,"./artist":565,"./defaults":568,"./generator":569,"./playlist":573,"./scraper":575,"./similar":576,"./spotify":578,"./top":579,"./track":580,"eol":298}],573:[function(require,module,exports){
+},{"./album":564,"./artist":565,"./generator":569,"./playlist":573,"./scraper":575,"./similar":576,"./spotify":578,"./top":579,"./track":580,"eol":298}],573:[function(require,module,exports){
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')

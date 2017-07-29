@@ -14,7 +14,7 @@ var WebScraper = require('./scraper')
  * @constructor
  */
 function Parser (token, handler) {
-  this.spotify = handler || new SpotifyRequestHandler()
+  this.spotify = handler || new SpotifyRequestHandler(null, null, token)
 }
 
 /**
