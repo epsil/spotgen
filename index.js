@@ -17,9 +17,9 @@ function main () {
 
   var str = fs.readFileSync(input, 'utf8').toString()
   var parser = new Parser()
-  var generator = parser.parse(str)
+  var collection = parser.parse(str)
 
-  generator.execute().then(function (str) {
+  collection.execute().then(function (str) {
     fs.writeFile(output, str, function (err) {
       if (err) { return }
       console.log('Wrote to ' + output)

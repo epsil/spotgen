@@ -60,13 +60,13 @@ function generate () {
   var textarea = $('textarea')
   var button = $('a.btn')
   var parser = new Parser(token())
-  var generator = parser.parse(textarea.val())
+  var collection = parser.parse(textarea.val())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')
   button.mouseleave()
   button.tooltip('disable')
-  generator.execute().then(function (result) {
+  collection.execute().then(function (result) {
     console.log('')
     button.removeClass('disabled')
     textarea.val(result)

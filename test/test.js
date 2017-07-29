@@ -180,50 +180,50 @@ describe('Spotify Playlist Generator', function () {
   describe('Generator', function () {
     it('should create empty playlist when passed empty string', function () {
       var parser = new Parser()
-      var generator = parser.parse('')
-      generator.should.have.deep.property('entries.queue').that.eql([])
+      var collection = parser.parse('')
+      collection.should.have.deep.property('entries.queue').that.eql([])
     })
 
     it('should create a one-entry playlist', function () {
       var parser = new Parser()
-      var generator = parser.parse('test')
-      generator.should.have.deep.property('entries.queue[0].entry', 'test')
+      var collection = parser.parse('test')
+      collection.should.have.deep.property('entries.queue[0].entry', 'test')
     })
 
     it('should create a two-entry playlist', function () {
       var parser = new Parser()
-      var generator = parser.parse('test1\ntest2')
-      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
-      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
+      var collection = parser.parse('test1\ntest2')
+      collection.should.have.deep.property('entries.queue[0].entry', 'test1')
+      collection.should.have.deep.property('entries.queue[1].entry', 'test2')
     })
 
     it('should ignore empty lines', function () {
       var parser = new Parser()
-      var generator = parser.parse('test1\n\n\n\ntest2')
-      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
-      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
+      var collection = parser.parse('test1\n\n\n\ntest2')
+      collection.should.have.deep.property('entries.queue[0].entry', 'test1')
+      collection.should.have.deep.property('entries.queue[1].entry', 'test2')
     })
 
     it('should order tracks by Spotify popularity', function () {
       var parser = new Parser()
-      var generator = parser.parse('#ORDER BY POPULARITY\ntest1\ntest2')
-      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
-      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
-      generator.should.have.property('ordering', 'popularity')
+      var collection = parser.parse('#ORDER BY POPULARITY\ntest1\ntest2')
+      collection.should.have.deep.property('entries.queue[0].entry', 'test1')
+      collection.should.have.deep.property('entries.queue[1].entry', 'test2')
+      collection.should.have.property('ordering', 'popularity')
     })
 
     it('should order tracks by Last.fm rating', function () {
       var parser = new Parser()
-      var generator = parser.parse('#ORDER BY LASTFM\ntest1\ntest2')
-      generator.should.have.deep.property('entries.queue[0].entry', 'test1')
-      generator.should.have.deep.property('entries.queue[1].entry', 'test2')
-      generator.should.have.property('ordering', 'lastfm')
+      var collection = parser.parse('#ORDER BY LASTFM\ntest1\ntest2')
+      collection.should.have.deep.property('entries.queue[0].entry', 'test1')
+      collection.should.have.deep.property('entries.queue[1].entry', 'test2')
+      collection.should.have.property('ordering', 'lastfm')
     })
 
     it('should create an ordered playlist', function () {
       var parser = new Parser()
-      var generator = parser.parse('#ORDER BY POPULARITY\ntest1\ntest2')
-      return generator.execute().then(function (str) {
+      var collection = parser.parse('#ORDER BY POPULARITY\ntest1\ntest2')
+      return collection.execute().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:2gEhpagAXuAtuE8Bcjkq3b\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
@@ -232,22 +232,22 @@ describe('Spotify Playlist Generator', function () {
 
     it('should parse album entries', function () {
       var parser = new Parser()
-      var generator = parser.parse('#ALBUM test')
-      generator.should.have.deep.property('entries.queue[0]')
+      var collection = parser.parse('#ALBUM test')
+      collection.should.have.deep.property('entries.queue[0]')
         .that.is.instanceof(Album)
     })
 
     it('should parse artist entries', function () {
       var parser = new Parser()
-      var generator = parser.parse('#ARTIST test')
-      generator.should.have.deep.property('entries.queue[0]')
+      var collection = parser.parse('#ARTIST test')
+      collection.should.have.deep.property('entries.queue[0]')
         .that.is.instanceof(Artist)
     })
 
     it('should dispatch all entries', function () {
       var parser = new Parser()
-      var generator = parser.parse('test1\ntest2')
-      return generator.execute().then(function (str) {
+      var collection = parser.parse('test1\ntest2')
+      return collection.execute().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:2gEhpagAXuAtuE8Bcjkq3b\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
