@@ -339,6 +339,7 @@ Links
 -----
 
 -   [Web interface](https://epsil.github.io/spotgen/)
+-   [npm package](https://www.npmjs.com/package/spotgen)
 -   [GitHub repository](https://github.com/epsil/spotgen)
 -   [Developer documentation](https://epsil.github.io/spotgen/doc/)
 -   [Spotify Web API documentation](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow)

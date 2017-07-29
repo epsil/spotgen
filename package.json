@@ -1,7 +1,8 @@
 {
   "name": "spotgen",
   "version": "1.0.1",
-  "author": "Vegard Øye",
+  "description": "A tool for converting, processing and generating Spotify playlists, scraping information off of websites, and leveraging Last.fm user data.",
+  "author": "Vegard Øye <vegard_oye@hotmail.com>",
   "license": "MIT",
   "main": "index.js",
   "bin": {
@@ -11,6 +12,11 @@
     "type": "git",
     "url": "git+https://github.com/epsil/spotgen.git"
   },
+  "keywords": [
+    "spotify",
+    "playlist",
+    "generator"
+  ],
   "dependencies": {
     "base-64": "^0.1.0",
     "bootstrap": "^3.3.7",
