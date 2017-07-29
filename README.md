@@ -308,20 +308,6 @@ To output to this format, add the line `#csv`:
 
 CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs. (The URIs might, conceivably, change or become outdated. On the other hand, the title, artist and album of a track can be used to find that track on any music streaming service.)
 
-Developer version
------------------
-
-Instead of installing the package with `npm`, one can fetch the source code from [GitHub](https://github.com/epsil/spotgen):
-
-    git clone https://github.com/epsil/spotgen.git
-
-Then install it with `npm link`:
-
-    cd spotgen
-    npm link
-
-The latest developer version can then be obtained with `git pull`.
-
 Web version
 -----------
 
@@ -360,6 +346,20 @@ spotgen.generate().then(function (result) {
 ```
 
 The `generate()` method returns a [promise](https://www.promisejs.org/) that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the `then()` callback like shown above.
+
+Developer version
+-----------------
+
+Instead of installing the package with `npm`, one can fetch the source code from [GitHub](https://github.com/epsil/spotgen):
+
+    git clone https://github.com/epsil/spotgen.git
+
+Then install it with `npm link`:
+
+    cd spotgen
+    npm link
+
+The latest developer version can then be obtained with `git pull`.
 
 Links
 -----
