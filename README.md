@@ -23,7 +23,7 @@ Usage
 
     spotgen input.txt output.spotify.txt
 
-where `input.txt` is a textfile containing one or more of the [commands](#commands) below, and `output.spotify.txt` is a list of Spotify links.
+where `input.txt` is a text file containing one or more of the [commands](#commands) below, and `output.spotify.txt` is a list of Spotify URIs.
 
 ### Importing the playlist
 
