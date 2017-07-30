@@ -363,6 +363,12 @@ Then install it with `npm link`:
 
 The latest developer version can then be obtained with `git pull`.
 
+### Unit tests
+
+The package includes a test suite. To run it, type:
+
+    npm test
+
 License
 -------
 
