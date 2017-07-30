@@ -10,7 +10,9 @@ Install [Node](http://nodejs.org/) and fetch the package with:
 
     npm install -g spotgen
 
-The script can now be invoked from the command line as `spotgen`. (On some systems, it might be necessary to prepend the `npm` command with `sudo`.)
+On some systems, it might be necessary to prepend the `npm` command with [`sudo`](https://docs.npmjs.com/getting-started/installing-npm-packages-globally).
+
+The generator can now be invoked from the command line as `spotgen` (see [usage](#usage)).
 
 Usage
 -----
@@ -36,13 +38,13 @@ To **import** the playlist into Spotify:
 Commands
 --------
 
-The generator defines a *domain-specific language* for creating Spotify playlists. One can create a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
+The generator effectively defines a "mini-language" for creating Spotify playlists. One can create a playlist in many ways: on the basis of [track titles](#tracks), [album titles](#albums), [artist names](#artists), [similar artists](#similar-artists), [top tracks](#top-tracks) or [webpages](#web-scraping).
 
 Below follows a list of **generator commands**.
 
 ### Web scraping
 
-The generator can scrape data from web pages. Note that this functionality is only available in the [command-line version](#command-line-script).
+The generator can scrape data from web pages. Note that this functionality is only available in the [command-line version](#command-line-version).
 
 #### Last.fm
 
@@ -242,7 +244,7 @@ The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV f
 
 ### Import existing Spotify playlists
 
-The generator understands Spotify links and Spotify URIs. These are obtained by opening the item in Spotify and choosing *More* -> *Share* (look for the `...` symbol). The following example creates a new playlist out of an existing playlist, applying the [`#order`](#order) command in the process:
+The generator understands Spotify links and Spotify URIs. These are obtained by opening the item in Spotify and choosing *More* -> *Share* (click on the `...` symbol). The following example creates a new playlist out of an existing playlist, applying the [`#order`](#order) command in the process:
 
     #order by popularity
     https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D
@@ -311,9 +313,9 @@ CSV files have the advantage of being editable with a spreadsheet editor such as
 Web version
 -----------
 
-The generator is also available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotgen/>.
+The generator is available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotgen/>.
 
-The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the [command-line version](#command-line-script) can be used without logging in.)
+The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the [command-line version](#command-line-version) can be used without logging in.)
 
 The web version does not support [web scraping](#web-scraping), due to browser limits on [cross-site requests](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing). For this, one has to use the command-line version.
 
@@ -325,12 +327,12 @@ This will start up a `http-server` instance at <http://localhost:9000/>.
 
 Note that Spotify's authentication service requires the web version to be hosted at a whitelisted address. This is the reason for running `http-server` at port 9000 (merely opening `index.html` in a browser will not work).
 
-For more information about authentication, see the [Spotify Web API](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow) documentation.
+For more information about authentication, see the [developer documentation](https://epsil.github.io/spotgen/doc/SpotifyAuthenticator.html), as well as the official [Spotify Web API documentation](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
 
 Library
 -------
 
-The generator is also available as a library, so it can be utilized by another project. To install it into the project's `node_modules/` folder:
+The generator is also available as a library, which can be utilized by another project. To install it in the project's `node_modules/` folder:
 
     npm install --save spotgen
 
@@ -360,6 +362,11 @@ Then install it with `npm link`:
     npm link
 
 The latest developer version can then be obtained with `git pull`.
+
+License
+-------
+
+[MIT License](LICENSE).
 
 Links
 -----
