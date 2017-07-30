@@ -45,7 +45,8 @@
     <section>
         <article><h1>spotgen</h1><p>A tool for generating <a href="http://www.spotify.com/">Spotify</a> playlists programmatically. Convert websites to Spotify playlists, incorporate <a href="http://last.fm/">Last.fm</a> listener data, and employ algorithms to order the tracks.</p>
 <h2>Installation</h2><p>Install <a href="http://nodejs.org/">Node</a> and fetch the package with:</p>
-<pre class="prettyprint source"><code>npm install -g spotgen</code></pre><p>The script can now be invoked from the command line as <code>spotgen</code>. (On some systems, it might be necessary to prepend the <code>npm</code> command with <code>sudo</code>.)</p>
+<pre class="prettyprint source"><code>npm install -g spotgen</code></pre><p>On some systems, it might be necessary to prepend the <code>npm</code> command with <a href="https://docs.npmjs.com/getting-started/installing-npm-packages-globally"><code>sudo</code></a>.</p>
+<p>The generator can now be invoked from the command line as <code>spotgen</code> (see <a href="#usage">usage</a>).</p>
 <h2>Usage</h2><h3>Web version</h3><https://epsil.github.io/spotgen/>
 
 <h3>Command-line version</h3><pre class="prettyprint source"><code>spotgen input.txt output.spotify.txt</code></pre><p>where <code>input.txt</code> is a text file containing one or more of the <a href="#commands">commands</a> below, and <code>output.spotify.txt</code> is a list of Spotify URIs.</p>
@@ -55,9 +56,9 @@
 <li><strong>Create a new playlist in Spotify:</strong> Choose <em>File -&gt; New Playlist</em> (<kbd>Ctrl</kbd> + <kbd>N</kbd>).</li>
 <li><strong>Paste into the playlist:</strong> Select the playlist and choose <em>Edit -&gt; Paste</em> (<kbd>Ctrl</kbd> + <kbd>V</kbd>).</li>
 </ol>
-<h2>Commands</h2><p>The generator defines a <em>domain-specific language</em> for creating Spotify playlists. One can create a playlist in many ways: on the basis of <a href="#tracks">track titles</a>, <a href="#albums">album titles</a>, <a href="#artists">artist names</a>, <a href="#similar-artists">similar artists</a>, <a href="#top-tracks">top tracks</a> or <a href="#web-scraping">webpages</a>.</p>
+<h2>Commands</h2><p>The generator effectively defines a &quot;mini-language&quot; for creating Spotify playlists. One can create a playlist in many ways: on the basis of <a href="#tracks">track titles</a>, <a href="#albums">album titles</a>, <a href="#artists">artist names</a>, <a href="#similar-artists">similar artists</a>, <a href="#top-tracks">top tracks</a> or <a href="#web-scraping">webpages</a>.</p>
 <p>Below follows a list of <strong>generator commands</strong>.</p>
-<h3>Web scraping</h3><p>The generator can scrape data from web pages. Note that this functionality is only available in the <a href="#command-line-script">command-line version</a>.</p>
+<h3>Web scraping</h3><p>The generator can scrape data from web pages. Note that this functionality is only available in the <a href="#command-line-version">command-line version</a>.</p>
 <h4>Last.fm</h4><p>The generator can be instructed to fetch data from <a href="http://last.fm/">Last.fm</a>'s webpages simply by supplying the page's address. For example, to create a playlist of artists similar to an artist, add the line:</p>
 <pre class="prettyprint source"><code>http://www.last.fm/music/Artist+Name/+similar</code></pre><p>To create a playlist of a user's recently played tracks:</p>
 <pre class="prettyprint source"><code>http://www.last.fm/user/username/library</code></pre><p>To fetch multiple pages in succession, add a number parameter:</p>
@@ -118,7 +119,7 @@ Wishes - Beach House</code></pre><p>Alternatively, use the track's Spotify link 
 #similar Beach House
 #similar Hooverphonic</code></pre><p>This will create a Last.fm-ordered playlist of artists similar to Beach House and Hooverphonic, with each track having a different artist from the previous track.</p>
 <h2>Supported formats</h2><p>The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV files. By default, the generator outputs a list of Spotify URIs.</p>
-<h3>Import existing Spotify playlists</h3><p>The generator understands Spotify links and Spotify URIs. These are obtained by opening the item in Spotify and choosing <em>More</em> -&gt; <em>Share</em> (look for the <code>...</code> symbol). The following example creates a new playlist out of an existing playlist, applying the <a href="#order"><code>#order</code></a> command in the process:</p>
+<h3>Import existing Spotify playlists</h3><p>The generator understands Spotify links and Spotify URIs. These are obtained by opening the item in Spotify and choosing <em>More</em> -&gt; <em>Share</em> (click on the <code>...</code> symbol). The following example creates a new playlist out of an existing playlist, applying the <a href="#order"><code>#order</code></a> command in the process:</p>
 <pre class="prettyprint source"><code>#order by popularity
 https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D</code></pre><p>Another method is to select the playlist's tracks in Spotify, copy them, and then paste them into a text file. This produces a list of Spotify links that are understood by the generator:</p>
 <pre class="prettyprint source"><code>https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
@@ -157,17 +158,27 @@ Saved By Old Times - Deerhunter
 Agoraphobia - Deerhunter
 Revival - Deerhunter
 Twilight at Carbon Lake - Deerhunter</code></pre><p>CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs. (The URIs might, conceivably, change or become outdated. On the other hand, the title, artist and album of a track can be used to find that track on any music streaming service.)</p>
-<h2>Developer version</h2><p>Instead of installing the package with <code>npm</code>, one can fetch the source code from <a href="https://github.com/epsil/spotgen">GitHub</a>:</p>
-<pre class="prettyprint source"><code>git clone https://github.com/epsil/spotgen.git</code></pre><p>Then install it with <code>npm link</code>:</p>
-<pre class="prettyprint source"><code>cd spotgen
-npm link</code></pre><p>The latest developer version can then be obtained with <code>git pull</code>.</p>
-<p>The generator is also available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotgen/>.</p>
-<p>The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the <a href="#command-line-script">command-line version</a> can be used without logging in.)</p>
+<h2>Web version</h2><p>The generator is available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotgen/>.</p>
+<p>The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the <a href="#command-line-version">command-line version</a> can be used without logging in.)</p>
 <p>The web version does not support <a href="#web-scraping">web scraping</a>, due to browser limits on <a href="http://en.wikipedia.org/wiki/Cross-origin_resource_sharing">cross-site requests</a>. For this, one has to use the command-line version.</p>
 <p>It is also possible to run the web version locally:</p>
 <pre class="prettyprint source"><code>npm run http</code></pre><p>This will start up a <code>http-server</code> instance at <http://localhost:9000/>.</p>
 <p>Note that Spotify's authentication service requires the web version to be hosted at a whitelisted address. This is the reason for running <code>http-server</code> at port 9000 (merely opening <code>index.html</code> in a browser will not work).</p>
-<p>For more information about authentication, see the <a href="http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Spotify Web API</a> documentation.</p>
+<p>For more information about authentication, see the <a href="https://epsil.github.io/spotgen/doc/SpotifyAuthenticator.html">developer documentation</a>, as well as the official <a href="http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Spotify Web API documentation</a>.</p>
+<h2>Library</h2><p>The generator is also available as a library, which can be utilized by another project. To install it in the project's <code>node_modules/</code> folder:</p>
+<pre class="prettyprint source"><code>npm install --save spotgen</code></pre><p>The library is used as follows:</p>
+<pre class="prettyprint source lang-js"><code>var Generator = require('spotgen')
+var spotgen = new Generator('#top Beach House\n#top Deer Hunter')
+spotgen.generate().then(function (result) {
+  // output Spotify URIs to console
+  console.log(result)
+})</code></pre><p>The <code>generate()</code> method returns a <a href="https://www.promisejs.org/">promise</a> that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the <code>then()</code> callback like shown above.</p>
+<h2>Developer version</h2><p>Instead of installing the package with <code>npm</code>, one can fetch the source code from <a href="https://github.com/epsil/spotgen">GitHub</a>:</p>
+<pre class="prettyprint source"><code>git clone https://github.com/epsil/spotgen.git</code></pre><p>Then install it with <code>npm link</code>:</p>
+<pre class="prettyprint source"><code>cd spotgen
+npm link</code></pre><p>The latest developer version can then be obtained with <code>git pull</code>.</p>
+<h3>Unit tests</h3><p>The package includes a test suite. To run it, type:</p>
+<pre class="prettyprint source"><code>npm test</code></pre><h2>License</h2><p><a href="LICENSE">MIT License</a>.</p>
 <h2>Links</h2><ul>
 <li><a href="https://epsil.github.io/spotgen/">Web interface</a></li>
 <li><a href="https://www.npmjs.com/package/spotgen">npm package</a></li>
@@ -201,7 +212,7 @@ npm link</code></pre><p>The latest developer version can then be obtained with <
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 30 2017 00:21:33 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Sun Jul 30 2017 19:04:20 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>
