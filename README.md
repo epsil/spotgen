@@ -12,7 +12,7 @@ Install [Node](http://nodejs.org/) and fetch the package with:
 
 On some systems, it might be necessary to prepend the `npm` command with [`sudo`](https://docs.npmjs.com/getting-started/installing-npm-packages-globally).
 
-The generator can now be invoked from the command line as `spotgen` (see [usage](#usage)).
+The generator can now be invoked from the command line as `spotgen` (see [usage](#command-line-version)).
 
 Usage
 -----
