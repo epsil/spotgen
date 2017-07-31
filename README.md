@@ -161,7 +161,7 @@ Alternatively, use the artist's Spotify link or Spotify URI:
 
     https://open.spotify.com/artist/56ZTgzPBDge0OvCGgMO3OY
 
-Note that this command can be rather slow, as it endeavors to retrieve every track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the [`#top`](#top-tracks) command.
+Note that this command can be rather slow, as it attempts to retrieve every single track by the artist, including tracks from collaboration and compilation albums. A fast alternative is the [`#top`](#top-tracks) command.
 
 ### Playlist
 
