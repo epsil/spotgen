@@ -356,12 +356,14 @@ Instead of installing the package with `npm`, one can fetch the source code from
 
     git clone https://github.com/epsil/spotgen.git
 
-Then install it with `npm link`:
+Then fetch all depencies with `npm install`:
 
     cd spotgen
-    npm link
+    npm install
 
-The latest developer version can then be obtained with `git pull`.
+Then create a global package link with `npm link`:
+
+    npm link
 
 ### Unit tests
 
