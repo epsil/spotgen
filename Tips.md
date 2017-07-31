@@ -162,4 +162,4 @@ Note that other playlist formats, like [ASX](https://en.wikipedia.org/wiki/Advan
 Miscellaneous
 -------------
 
-Single tracks should be on the form `Track - Artist`. However, Spotify isn't terribly strict about this; `Artist - Track` also works well, as does a [Spotify search](https://support.spotify.com/us/using_spotify/search_play/advanced-search1/). One can even add [field filters](https://developer.spotify.com/web-api/search-item/).
+Single tracks should be on the form `Artist - Track`. However, Spotify isn't terribly strict about this; `Track - Artist` also works well, as does a [Spotify search](https://support.spotify.com/us/using_spotify/search_play/advanced-search1/). One can even add [field filters](https://developer.spotify.com/web-api/search-item/).

@@ -170,9 +170,9 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should not confuse album title with track title', function () {
-      var track = new Track(null, 'Off the Wall - Michael Jackson')
+      var track = new Track(null, 'Michael Jackson - Off the Wall')
       return track.dispatch().then(function (track) {
-        track.title.should.eql('Off the Wall - Michael Jackson')
+        track.title.should.eql('Michael Jackson - Off the Wall')
       })
     })
   })

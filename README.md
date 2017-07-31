@@ -149,7 +149,7 @@ To retrieve more tracks, use `#similar10`.
 
 To add an album:
 
-    #album Substrata - Biosphere
+    #album Biosphere - Substrata
 
 Alternatively, use the album's Spotify link or Spotify URI:
 
@@ -181,13 +181,13 @@ Alternatively, use the playlist's Spotify link or Spotify URI:
 
 ### Tracks
 
-To add a single track to the playlist, add a line on the form `TITLE - ARTIST`:
+To add a single track to the playlist, add a line on the form `ARTIST - TRACK`:
 
-    Walk in the Park - Beach House
-    Irene - Beach House
-    Other People - Beach House
-    Troublemaker - Beach House
-    Wishes - Beach House
+    Beach House - Walk in the Park
+    Beach House - Irene
+    Beach House - Other People
+    Beach House - Troublemaker
+    Beach House - Wishes
 
 Alternatively, use the track's Spotify link or Spotify URI:
 
@@ -301,11 +301,11 @@ One can also import [M3U](http://en.wikipedia.org/wiki/M3U) playlists (with the 
 
 The generator translates this to:
 
-    Desire Lines - Deerhunter
-    Saved By Old Times - Deerhunter
-    Agoraphobia - Deerhunter
-    Revival - Deerhunter
-    Twilight at Carbon Lake - Deerhunter
+    Deerhunter - Desire Lines
+    Deerhunter - Saved By Old Times
+    Deerhunter - Agoraphobia
+    Deerhunter - Revival
+    Deerhunter - Twilight at Carbon Lake
 
 [More on M3U playlists](Tips.md#m3u-playlists).
 
@@ -322,11 +322,11 @@ The generator can read and write the CSV format used by [Exportify](https://gith
 To output to this format, add the line `#csv`:
 
     #csv
-    Desire Lines - Deerhunter
-    Saved By Old Times - Deerhunter
-    Agoraphobia - Deerhunter
-    Revival - Deerhunter
-    Twilight at Carbon Lake - Deerhunter
+    Deerhunter - Desire Lines
+    Deerhunter - Saved By Old Times
+    Deerhunter - Agoraphobia
+    Deerhunter - Revival
+    Deerhunter - Twilight at Carbon Lake
 
 CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs. (The URIs might, conceivably, change or become outdated. On the other hand, the title, artist and album of a track can be used to find that track on any music streaming service.)
 
