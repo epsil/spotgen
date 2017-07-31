@@ -21,7 +21,7 @@ Usage
 
 ### Web demo
 
-Go to <https://epsil.github.io/spotgen/>, enter a [generator string](#commands) in text field and press *Create Playlist*.
+Go to <https://epsil.github.io/spotgen/>, enter a [generator string](#commands) in the text field and press *Create Playlist*.
 
 ### Command-line version
 
