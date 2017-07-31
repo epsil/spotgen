@@ -12,15 +12,28 @@ var Generator = require('./lib/generator')
  * Invoked when run from the command line.
  */
 function main () {
-  var input = process.argv[2] || 'input.txt'
-  var output = process.argv[3] || 'output.spotify.txt'
-  var str = fs.readFileSync(input, 'utf8').toString()
+  var input = process.argv[2]
+  var output = process.argv[3]
+  var str = input
+  if (!input) {
+    input = input || 'input.txt'
+    output = output || 'output.spotify.txt'
+  }
+  if (!output) {
+    str = str.replace(/\\n/gi, '\n')
+  } else {
+    str = fs.readFileSync(input, 'utf8').toString()
+  }
   var generator = new Generator(str)
   generator.generate().then(function (str) {
-    fs.writeFile(output, str, function (err) {
-      if (err) { return }
-      console.log('Wrote to ' + output)
-    })
+    if (output) {
+      fs.writeFile(output, str, function (err) {
+        if (err) { return }
+        console.log('Wrote to ' + output.trim())
+      })
+    } else {
+      console.log('\n' + str)
+    }
   })
 }
 

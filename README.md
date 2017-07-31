@@ -25,7 +25,15 @@ Usage
 
     spotgen input.txt output.spotify.txt
 
-where `input.txt` is a text file containing one or more of the [commands](#commands) below, and `output.spotify.txt` is a list of Spotify URIs.
+where `input.txt` is a text file containing one or more of the [commands](#commands) below, and `output.spotify.txt` contains the generator's output: a list of [Spotify URIs](#spotify-uris) which can be [imported into Spotify](#importing-the-playlist).
+
+You can also pass a command directly to the generator:
+
+    spotgen "#artist Bowery Electric"
+    spotgen "#similar Beach House\n#similar Hooverphonic"
+    spotgen http://www.last.fm/user/username/library
+
+In this case, the Spotify URIs are written to standard output.
 
 ### Importing the playlist
 
@@ -244,17 +252,23 @@ The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV f
 
 ### Import existing Spotify playlists
 
-The generator understands Spotify links and Spotify URIs. These are obtained by opening the item in Spotify and choosing *More* -> *Share* (click on the `...` symbol). The following example creates a new playlist out of an existing playlist, applying the [`#order`](#order) command in the process:
+The generator understands Spotify links and Spotify URIs. These are usually obtained by opening the item in Spotify and choosing *More* -> *Share* (click on the `...` symbol).
+
+#### Spotify links
+
+The following example creates a new playlist out of an existing playlist, applying the [`#order`](#order) command in the process:
 
     #order by popularity
     https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D
 
-Another method is to select the playlist's tracks in Spotify, copy them, and then paste them into a text file. This produces a list of Spotify links that are understood by the generator:
+Another method is to select the playlist's tracks in Spotify, copy them, and then paste them into a text file. This produces a list of Spotify track links:
 
     https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH
     https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2
     https://open.spotify.com/track/2Nt4Uw91pQLXSJ28SttDdF
     ...
+
+#### Spotify URIs
 
 Spotify URIs are also supported:
 
@@ -342,12 +356,13 @@ The library is used as follows:
 var Generator = require('spotgen')
 var spotgen = new Generator('#top Beach House\n#top Deer Hunter')
 spotgen.generate().then(function (result) {
-  // output Spotify URIs to console
+  // do something with the Spotify URIs,
+  // e.g., output them to the console
   console.log(result)
 })
 ```
 
-The `generate()` method returns a [promise](https://www.promisejs.org/) that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the `then()` callback like shown above.
+The `generate()` method returns a [promise](https://www.promisejs.org/) that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the `then()` callback as shown.
 
 Developer version
 -----------------
