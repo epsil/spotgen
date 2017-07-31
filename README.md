@@ -352,7 +352,7 @@ The generator is also available as a library which can be utilized by your own p
 
     npm install --save spotgen
 
-The following example shows how to use the library:
+The following example demonstrates how to use the library:
 
 ```js
 var Generator = require('spotgen')
