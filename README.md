@@ -1,7 +1,9 @@
 spotgen
 =======
 
-A tool for generating [Spotify](http://www.spotify.com/) playlists programmatically. Convert websites to Spotify playlists, incorporate [Last.fm](http://last.fm/) listener data, and employ algorithms to order the tracks.
+A tool for generating [Spotify](http://www.spotify.com/) playlists programmatically. Convert websites to Spotify playlists, incorporate [Last.fm](http://last.fm/) listener data, and employ smart algorithms to order the tracks.
+
+Web demo: <https://epsil.github.io/spotgen/>
 
 Installation
 ------------
@@ -10,16 +12,16 @@ Install [Node](http://nodejs.org/) and fetch the package with:
 
     npm install -g spotgen
 
-On some systems, it might be necessary to prepend the `npm` command with [`sudo`](https://docs.npmjs.com/getting-started/installing-npm-packages-globally).
+Note that on some systems, it might be necessary to prepend the `npm` command with [`sudo`](https://docs.npmjs.com/getting-started/installing-npm-packages-globally).
 
 The generator can now be invoked from the command line as `spotgen` (see [usage](#command-line-version)).
 
 Usage
 -----
 
-### Web version
+### Web demo
 
-<https://epsil.github.io/spotgen/>
+Go to <https://epsil.github.io/spotgen/>, enter the desired generator commands in the text field and press *Create Playlist*.
 
 ### Command-line version
 
@@ -52,7 +54,7 @@ Below follows a list of **generator commands**.
 
 ### Web scraping
 
-The generator can scrape data from web pages. Note that this functionality is only available in the [command-line version](#command-line-version).
+The generator can scrape data from web pages. (Note that this functionality is only available in the [command-line version](#command-line-version).)
 
 #### Last.fm
 
@@ -248,7 +250,7 @@ This will create a Last.fm-ordered playlist of artists similar to Beach House an
 Supported formats
 -----------------
 
-The generator can work with Spotify URIs, Spotify links, M3U playlists and CSV files. By default, the generator outputs a list of Spotify URIs.
+The generator can work with [Spotify links](#spotify-links), [Spotify URIs](#spotify-uris), [M3U playlists](#m3u-playlists) and [CSV files](#comma-separated-values). By default, the generator outputs a list of Spotify URIs.
 
 ### Import existing Spotify playlists
 
@@ -270,7 +272,7 @@ Another method is to select the playlist's tracks in Spotify, copy them, and the
 
 #### Spotify URIs
 
-Spotify URIs are also supported:
+Spotify URIs are the default output format of the generator. They look like this:
 
     spotify:track:4oNXgGnumnu5oIXXyP8StH
     spotify:track:7rAjeWkQM6cLqbPjZtXxl2
@@ -324,22 +326,22 @@ To output to this format, add the line `#csv`:
 
 CSV files have the advantage of being editable with a spreadsheet editor such as Microsoft Excel or LibreOffice Calc. They are also future-proof, as they contain additional info to the Spotify URIs. (The URIs might, conceivably, change or become outdated. On the other hand, the title, artist and album of a track can be used to find that track on any music streaming service.)
 
-Web version
------------
+Web demo
+--------
 
 The generator is available as a single-page application running in the browser. It is hosted at <https://epsil.github.io/spotgen/>.
 
 The generator code runs entirely on the client side. However, because of restrictions in Spotify's authentication service, the user first has to log in with their Spotify account. Despite the warning, the application does not access any private data. (Alternatively, the [command-line version](#command-line-version) can be used without logging in.)
 
-The web version does not support [web scraping](#web-scraping), due to browser limits on [cross-site requests](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing). For this, one has to use the command-line version.
+The web demo does not support [web scraping](#web-scraping), due to browser limits on [cross-site requests](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing). For this, one has to use the command-line version.
 
-It is also possible to run the web version locally:
+It is also possible to run the web demo locally:
 
     npm run http
 
 This will start up a `http-server` instance at <http://localhost:9000/>.
 
-Note that Spotify's authentication service requires the web version to be hosted at a whitelisted address. This is the reason for running `http-server` at port 9000 (merely opening `index.html` in a browser will not work).
+Note that Spotify's authentication service requires the web demo to be hosted at a whitelisted address. This is the reason for running `http-server` at port 9000 (merely opening `index.html` in a browser will not work).
 
 For more information about authentication, see the [developer documentation](https://epsil.github.io/spotgen/doc/SpotifyAuthenticator.html), as well as the official [Spotify Web API documentation](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
 
@@ -350,7 +352,7 @@ The generator is also available as a library which can be utilized by your own p
 
     npm install --save spotgen
 
-The library is used as follows:
+The following example shows how to use the library:
 
 ```js
 var Generator = require('spotgen')
@@ -364,10 +366,10 @@ spotgen.generate().then(function (result) {
 
 The `generate()` method returns a [promise](https://www.promisejs.org/) that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the `then()` callback as shown.
 
-Note that if you are writing your own application, you should [register the application with Spotify](https://developer.spotify.com/web-api/authorization-guide/#introduction) and obtain a client ID and client secret key. These are passed to the `Generator` class like so:
+Note that if you are writing your own application, then you should [register your application with Spotify](https://developer.spotify.com/web-api/authorization-guide/#introduction) and obtain a client ID and client secret key for it. These are passed to the `Generator` class like so:
 
 ```js
-var spotgen = new Generator('#top Beach House', clientId, clientSecret)
+var spotgen = new Generator('#top Beach House', clientId, clientKey)
 ```
 
 The generator will then use these values to acquire an access token for web API requests.
@@ -402,7 +404,7 @@ License
 Links
 -----
 
--   [Web interface](https://epsil.github.io/spotgen/)
+-   [Web demo](https://epsil.github.io/spotgen/)
 -   [npm package](https://www.npmjs.com/package/spotgen)
 -   [GitHub repository](https://github.com/epsil/spotgen)
 -   [Developer documentation](https://epsil.github.io/spotgen/doc/)
