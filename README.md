@@ -366,7 +366,7 @@ spotgen.generate().then(function (result) {
 
 The `generate()` method returns a [promise](https://www.promisejs.org/) that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the `then()` callback as shown.
 
-Note that if you are writing your own application, then you should [register your application with Spotify](https://developer.spotify.com/web-api/authorization-guide/#introduction) and obtain a client ID and client secret key for it. These are passed to the `Generator` class like so:
+Note that if you are writing your own application for Spotify, then you should [register your application](https://developer.spotify.com/web-api/authorization-guide/#introduction) and obtain a client ID and client secret key. These are passed to the `Generator` class like so:
 
 ```js
 var spotgen = new Generator('#top Beach House', clientId, clientKey)
