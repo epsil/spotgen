@@ -346,7 +346,7 @@ For more information about authentication, see the [developer documentation](htt
 Library
 -------
 
-The generator is also available as a library, which can be utilized by another project. To install it in the project's `node_modules/` folder:
+The generator is also available as a library which can be utilized by your own project. To install it in your project's `node_modules/` folder:
 
     npm install --save spotgen
 
@@ -363,6 +363,14 @@ spotgen.generate().then(function (result) {
 ```
 
 The `generate()` method returns a [promise](https://www.promisejs.org/) that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the `then()` callback as shown.
+
+Note that if you are writing your own application, you should [register the application with Spotify](https://developer.spotify.com/web-api/authorization-guide/#introduction) and obtain a client ID and client secret key. These are passed to the `Generator` class like so:
+
+```js
+var spotgen = new Generator('#top Beach House', clientId, clientSecret)
+```
+
+The generator will then use these values to acquire an access token for web API requests.
 
 Developer version
 -----------------

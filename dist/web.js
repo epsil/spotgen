@@ -59,7 +59,7 @@ function hasToken () {
 function generate () {
   var textarea = $('textarea')
   var button = $('a.btn')
-  var generator = new Generator(textarea.val(), token())
+  var generator = new Generator(textarea.val(), null, null, token())
   button.text('Creating Playlist \u2026')
   button.addClass('active')
   button.addClass('disabled')
