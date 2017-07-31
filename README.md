@@ -8,7 +8,7 @@ Web demo: <https://epsil.github.io/spotgen/>
 Installation
 ------------
 
-Install [Node](http://nodejs.org/) and fetch the package with:
+Install [Node](http://nodejs.org/) and fetch the package with [npm](https://www.npmjs.com/package/spotgen):
 
     npm install -g spotgen
 

@@ -1,9 +1,14 @@
 {
   "name": "spotgen",
   "version": "1.0.9",
-  "description": "A tool for generating Spotify playlists programmatically. Convert websites to Spotify playlists, incorporate Last.fm listener data, and employ algorithms to order the tracks.",
   "author": "Vegard Øye <vegard_oye@hotmail.com>",
+  "description": "A tool for generating Spotify playlists programmatically. Convert websites to Spotify playlists, incorporate Last.fm listener data, and employ smart algorithms to order the tracks.",
   "license": "MIT",
+  "keywords": [
+    "spotify",
+    "playlist",
+    "generator"
+  ],
   "main": "index.js",
   "bin": {
     "spotgen": "index.js"
@@ -12,11 +17,13 @@
     "type": "git",
     "url": "git+https://github.com/epsil/spotgen.git"
   },
-  "keywords": [
-    "spotify",
-    "playlist",
-    "generator"
-  ],
+  "bugs": {
+    "url": "https://github.com/epsil/spotgen/issues"
+  },
+  "homepage": "https://github.com/epsil/spotgen",
+  "engines": {
+    "node": ">=4.0.0"
+  },
   "dependencies": {
     "base-64": "^0.1.0",
     "bootstrap": "^3.3.7",
