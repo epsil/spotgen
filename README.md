@@ -21,21 +21,21 @@ Usage
 
 ### Web demo
 
-Go to <https://epsil.github.io/spotgen/>, enter the desired generator commands in the text field and press *Create Playlist*.
+Go to <https://epsil.github.io/spotgen/>, enter a generator string in text field and press *Create Playlist*.
 
 ### Command-line version
 
     spotgen input.txt output.spotify.txt
 
-where `input.txt` is a text file containing one or more of the [commands](#commands) below, and `output.spotify.txt` contains the generator's output: a list of [Spotify URIs](#spotify-uris) which can be [imported into Spotify](#importing-the-playlist).
+`input.txt` is a text file containing a generator string, consisting of one or more of the [commands](#commands) below. `output.spotify.txt` will contain the generator's output, a list of [Spotify URIs](#spotify-uris) which can be [imported into Spotify](#importing-the-playlist).
 
-You can also pass a command directly to the generator:
+You can also pass a generator string as a single argument. In that case, the Spotify URIs are written to standard output:
 
     spotgen "#artist Bowery Electric"
     spotgen "#similar Beach House\n#similar Hooverphonic"
     spotgen http://www.last.fm/user/username/library
 
-In this case, the Spotify URIs are written to standard output.
+Make sure to surround the string with quotes (`"`) if it contains spaces. Line breaks can be expressed as `\n`.
 
 ### Importing the playlist
 
