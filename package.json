@@ -1,6 +1,6 @@
 {
   "name": "spotgen",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "A tool for generating Spotify playlists programmatically. Convert websites to Spotify playlists, incorporate Last.fm listener data, and employ algorithms to order the tracks.",
   "author": "Vegard Øye <vegard_oye@hotmail.com>",
   "license": "MIT",
