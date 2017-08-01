@@ -39,6 +39,8 @@ You can also pass a generator string as a single argument. In that case, the Spo
 
 Make sure to surround the string with quotes (`"`) if it contains spaces. Line breaks can be expressed as `\n`.
 
+For more information, type `spotgen --help`.
+
 ### Importing the playlist
 
 To **import** the playlist into Spotify:
