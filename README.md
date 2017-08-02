@@ -376,7 +376,7 @@ Note that if you are writing your own application for Spotify, then you should [
 var spotgen = new Generator('#top Beach House', clientId, clientKey)
 ```
 
-The generator will then use these values to acquire an access token for web API requests. If you already have a token, you can pass it to `Generator`:
+The generator will then use these values to acquire an access token for web API requests. If you already have a token, then you can pass that to `Generator` as well:
 
 ```js
 var spotgen = new Generator('#top Beach House', clientId, clientKey, token)

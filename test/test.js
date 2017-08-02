@@ -80,8 +80,11 @@ describe('Spotify Playlist Generator', function () {
 
     it('should remove duplicates', function () {
       var foo1 = new Track(null, 'foo')
+      foo1.title = foo1.entry
       var foo2 = new Track(null, 'foo')
+      foo2.title = foo2.entry
       var bar = new Track(null, 'bar')
+      bar.title = bar.entry
       var queue = new Queue()
       queue.add(foo1)
       queue.add(foo2)
