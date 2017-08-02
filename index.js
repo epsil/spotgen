@@ -5,6 +5,7 @@ var fs = require('fs')
 var jsdom = require('jsdom').jsdom
 document = jsdom()
 window = document.defaultView
+var prompt = require('cli-input')
 var Generator = require('./lib/generator')
 
 var help = 'Usage:\n' +
@@ -35,6 +36,28 @@ var help = 'Usage:\n' +
     '    Select the playlist and choose Edit -> Paste (Ctrl + V).'
 
 /**
+ * Generator function.
+ * @param {string} str - Generator string.
+ * @param {output} [output] - Output file.
+ * @return {Promise} A promise.
+ */
+function generate (str, output) {
+  output = output || 'STDOUT'
+  output = output.trim()
+  var generator = new Generator(str)
+  return generator.generate().then(function (result) {
+    if (output === 'STDOUT') {
+      console.log('\n' + result)
+    } else {
+      fs.writeFile(output, result, function (err) {
+        if (err) { return }
+        console.log('Wrote to ' + output)
+      })
+    }
+  })
+}
+
+/**
  * Main method.
  * Invoked when run from the command line.
  */
@@ -48,26 +71,29 @@ function main () {
     return
   }
   if (!input) {
-    input = input || 'input.txt'
-    output = output || 'output.spotify.txt'
-  }
-  if (!output) {
-    // help out primitive shells (e.g., Windows') with newlines
-    str = str.replace(/\\n/gi, '\n')
-  } else {
-    str = fs.readFileSync(input, 'utf8').toString()
-  }
-  var generator = new Generator(str)
-  generator.generate().then(function (str) {
-    if (output) {
-      fs.writeFile(output, str, function (err) {
-        if (err) { return }
-        console.log('Wrote to ' + output.trim())
+    console.log('Enter generator string (submit with Ctrl-D):')
+    var ps = prompt()
+    ps.multiline(function (err, lines, str) {
+      if (err) {
+        return
+      }
+      if (str !== '' && str.slice(-1) !== '\n') {
+        console.log('')
+      }
+      generate(str).then(function () {
+        process.exit(0)
       })
+    })
+  } else {
+    if (!output) {
+      // help out primitive shells (e.g., Windows') with newlines
+      str = str.replace(/\\n/gi, '\n')
+      generate(str)
     } else {
-      console.log('\n' + str)
+      str = fs.readFileSync(input, 'utf8').toString()
+      generate(str, output)
     }
-  })
+  }
 }
 
 if (require.main === module) {
