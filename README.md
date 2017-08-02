@@ -37,7 +37,7 @@ You can also pass a generator string as a single argument. In that case, the Spo
     spotgen "#similar Beach House\n#similar Hooverphonic"
     spotgen http://www.last.fm/user/username/library
 
-Make sure to surround the string with quotes (`"`) if it contains spaces. Line breaks can be expressed as `\n`.
+Make sure to surround the string with quotes (`"`) if it contains spaces or special characters. Line breaks can be expressed as `\n`.
 
 For more information, type `spotgen --help`.
 
