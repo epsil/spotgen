@@ -171,7 +171,7 @@ Note that this command can be rather slow, as it attempts to retrieve every sing
 
 To add all the tracks of a playlist:
 
-    #playlist username/playlistid
+    #playlist username:playlistid
 
 where `username` is the owner of the playlist and `playlistid` is the ID of the playlist.
 

@@ -23,8 +23,8 @@ var help = 'Usage:\n' +
     '    spotgen "#similar Beach House\\n#similar Hooverphonic"\n' +
     '    spotgen http://www.last.fm/user/username/library\n' +
     '\n' +
-    'Make sure to surround the string with quotes (") if it contains spaces.\n' +
-    'Line breaks can be expressed as \\n.\n' +
+    'Make sure to surround the string with quotes (") if it contains\n' +
+    'spaces or special characters. Line breaks can be expressed as \\n.\n' +
     '\n' +
     'To import the playlist into Spotify:\n' +
     '\n' +
