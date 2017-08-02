@@ -27,9 +27,9 @@ Go to <https://epsil.github.io/spotgen/>, enter a [generator string](#commands) 
 
 ### Command-line version
 
-    spotgen input.txt output.spotify.txt
+    spotgen input.txt output.txt
 
-`input.txt` is a text file containing a [generator string](#commands), invoking any of the *commands* described below. `output.spotify.txt` will contain the generator's output, a list of [Spotify URIs](#spotify-uris) which can be [imported into Spotify](#importing-the-playlist).
+`input.txt` is a text file containing a [generator string](#commands), invoking any of the *commands* described below. `output.txt` will contain the generator's output, a list of [Spotify URIs](#spotify-uris) which can be [imported into Spotify](#importing-the-playlist).
 
 You can also pass a generator string as a single argument. In that case, the Spotify URIs are written to standard output:
 
@@ -38,6 +38,8 @@ You can also pass a generator string as a single argument. In that case, the Spo
     spotgen http://www.last.fm/user/username/library
 
 Make sure to surround the string with quotes (`"`) if it contains spaces or special characters. Line breaks can be expressed as `\n`.
+
+You can also run the generator with no arguments and enter commands interactively.
 
 For more information, type `spotgen --help`.
 

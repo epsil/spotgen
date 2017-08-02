@@ -10,11 +10,12 @@ var Generator = require('./lib/generator')
 
 var help = 'Usage:\n' +
     '\n' +
-    '    spotgen input.txt output.spotify.txt\n' +
+    '    spotgen input.txt output.txt\n' +
     '\n' +
-    'input.txt is a text file containing a generator string.\n' +
-    'output.spotify.txt will contain the generator\'s output,\n' +
-    'a list of Spotify URIs which can be imported into Spotify.\n' +
+    'input.txt is a text file containing a generator string,\n' +
+    'invoking any number of generator commands. output.txt\n' +
+    'will contain the generator\'s output, a list of Spotify URIs\n' +
+    'which can be imported into Spotify.\n' +
     '\n' +
     'You can also pass a generator string as a single argument.\n' +
     'In that case, the Spotify URIs are written to standard output:\n' +
@@ -25,6 +26,9 @@ var help = 'Usage:\n' +
     '\n' +
     'Make sure to surround the string with quotes (") if it contains\n' +
     'spaces or special characters. Line breaks can be expressed as \\n.\n' +
+    '\n' +
+    'You can also run the generator with no arguments and enter commands\n' +
+    'interactively.\n' +
     '\n' +
     'To import the playlist into Spotify:\n' +
     '\n' +
