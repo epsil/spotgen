@@ -51,7 +51,7 @@ function Track (spotify, entry, id) {
   /**
    * Array of track artists.
    */
-  this.artists = []
+  this.artists = null
 
   /**
    * Entry string.
@@ -99,7 +99,7 @@ function Track (spotify, entry, id) {
   this.spotify = null
 
   /**
-   * Full track name on the form `Title - Artist`.
+   * Full track name on the form `Artist - Title`.
    */
   this.title = ''
 
@@ -111,7 +111,6 @@ function Track (spotify, entry, id) {
 
   this.entry = entry.trim()
   this.id = id
-  this.name = entry
   this.spotify = spotify || new SpotifyRequestHandler()
   this.uri = this.id ? ('spotify:track:' + this.id) : this.uri
 }
@@ -138,7 +137,7 @@ Track.prototype.clone = function (response) {
     this.mainArtist = this.artists[0]
   }
   if (this.mainArtist &amp;&amp; this.name) {
-    this.title = this.name + ' - ' + this.mainArtist
+    this.title = this.mainArtist + ' - ' + this.name
   } else {
     this.title = this.name
   }
@@ -149,13 +148,7 @@ Track.prototype.clone = function (response) {
  * @return {Promise | Track} Itself.
  */
 Track.prototype.dispatch = function () {
-  if (this.popularity) {
-    return Promise.resolve(this)
-  } else if (this.id) {
-    return this.fetchTrack()
-  } else {
-    return this.searchForTrack()
-  }
+  return this.getURI()
 }
 
 /**
@@ -166,20 +159,6 @@ Track.prototype.dispatch = function () {
  */
 Track.prototype.equals = function (track) {
   return this.uri &amp;&amp; track.uri &amp;&amp; this.uri === track.uri
-}
-
-/**
- * Fetch Last.fm information.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.fetchLastfm = function (user) {
-  var self = this
-  return lastfm.getInfo(this.artist, this.name, user).then(function (result) {
-    self.lastfmGlobal = parseInt(result.track.playcount)
-    self.lastfmPersonal = parseInt(result.track.userplaycount)
-    self.lastfm = self.lastfmPersonal > -1 ? self.lastfmPersonal : self.lastfmGlobal
-    return self
-  })
 }
 
 /**
@@ -200,6 +179,34 @@ Track.prototype.fetchTrack = function (id) {
 }
 
 /**
+ * Get track info.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.getInfo = function () {
+  if (this.popularity) {
+    return Promise.resolve(this)
+  } else if (this.id) {
+    return this.fetchTrack()
+  } else {
+    return this.searchForTrack()
+  }
+}
+
+/**
+ * Fetch Last.fm information.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.getLastfm = function (user) {
+  var self = this
+  return lastfm.getInfo(this.artist, this.name, user).then(function (result) {
+    self.lastfmGlobal = parseInt(result.track.playcount)
+    self.lastfmPersonal = parseInt(result.track.userplaycount)
+    self.lastfm = self.lastfmPersonal > -1 ? self.lastfmPersonal : self.lastfmGlobal
+    return self
+  })
+}
+
+/**
  * Get track popularity.
  * @return {Promise | integer} The track popularity.
  */
@@ -208,8 +215,23 @@ Track.prototype.getPopularity = function () {
   if (Number.isInteger(this.popularity)) {
     return Promise.resolve(this.popularity)
   } else {
-    return self.refresh().then(function () {
+    return self.getInfo().then(function () {
       return self.popularity
+    })
+  }
+}
+
+/**
+ * Get track URI.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.getURI = function () {
+  var self = this
+  if (this.uri) {
+    return Promise.resolve(this)
+  } else {
+    return this.getInfo().then(function () {
+      return self
     })
   }
 }
@@ -232,24 +254,14 @@ Track.prototype.hasArtist = function (artist) {
 }
 
 /**
- * Refresh track metadata.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.refresh = function () {
-  var self = this
-  return self.dispatch().then(function () {
-    return self.dispatch()
-  })
-}
-
-/**
  * Search for track.
  * @param {string} query - The query text.
  * @return {Promise | Track} Itself.
  */
-Track.prototype.searchForTrack = function () {
+Track.prototype.searchForTrack = function (str, retry) {
+  str = str || this.entry
   var self = this
-  return this.spotify.searchForTrack(this.entry).then(function (response) {
+  return this.spotify.searchForTrack(str).then(function (response) {
     if (response &amp;&amp;
         response.tracks &amp;&amp;
         response.tracks.items &amp;&amp;
@@ -261,8 +273,21 @@ Track.prototype.searchForTrack = function () {
       return Promise.reject(response)
     }
   }).catch(function () {
-    if (self.entry.match(/^[0-9a-z]+$/i)) {
-      return self.fetchTrack(self.entry)
+    if (str.match(/^[0-9a-z]+$/i)) {
+      return self.fetchTrack(str)
+    } else if (!retry) {
+      // simplify query and try again
+      str = str.trim()
+        .replace(/].*/gi, ']')
+        .replace(/\).*/gi, ')')
+        .replace(/^[0-9]+\. /gi, '')
+        .replace(/\[[^\]]*]/gi, '')
+        .replace(/\([^)]*\)/gi, '')
+        .replace(/-+/gi, '')
+        .replace(/\.+/gi, '.')
+        .replace(/[\s]+/gi, ' ')
+        .replace(/[^-'.\w\s]/gi, '')
+      return self.searchForTrack(str, true)
     } else {
       // console.log('COULD NOT FIND ' + self.entry)
       return Promise.reject(null)
@@ -278,7 +303,8 @@ Track.prototype.searchForTrack = function () {
  */
 Track.prototype.similarTo = function (track) {
   return this.equals(track) ||
-    this.title.toLowerCase() === track.title.toLowerCase()
+    (this.title &amp;&amp; track.title &amp;&amp;
+     this.title.toLowerCase() === track.title.toLowerCase())
 }
 
 /**
@@ -300,13 +326,13 @@ module.exports = Track
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jul 31 2017 13:59:20 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

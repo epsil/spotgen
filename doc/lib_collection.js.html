@@ -26,8 +26,7 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>var eol = require('eol')
-var Album = require('./album')
+            <pre class="prettyprint source linenums"><code>var Album = require('./album')
 var CSV = require('./csv')
 var Queue = require('./queue')
 var SpotifyRequestHandler = require('./spotify')
@@ -109,7 +108,7 @@ Collection.prototype.alternate = function () {
       return track.mainArtist.toLowerCase()
     })
   } else if (this.alternating === 'album') {
-    return this.refreshTracks().then(function () {
+    return this.getTrackInfo().then(function () {
       return self.entries.alternate(function (track) {
         return track.album.toLowerCase()
       })
@@ -156,13 +155,51 @@ Collection.prototype.dispatch = function () {
 /**
  * Dispatch all the entries in the collection
  * and return the track listing.
+ * @param {string} [format] - The output format.
+ * May be `csv`, `list`, `log` or `uri` (the default).
  * @return {Promise | string} A newline-separated list
  * of Spotify URIs.
  */
-Collection.prototype.execute = function () {
+Collection.prototype.execute = function (format) {
   var self = this
   return this.dispatch().then(function () {
-    return self.toString()
+    return self.toString(format)
+  })
+}
+
+/**
+ * Iterate over the collection's entries.
+ * @param {Function} fn - An iterator function.
+ * Takes the current entry as input.
+ */
+Collection.prototype.forEach = function (fn) {
+  return this.entries.forEach(fn)
+}
+
+/**
+ * Iterate over the collection's valid entries.
+ * @param {Function} fn - An iterator function.
+ * Takes the current entry as input.
+ */
+Collection.prototype.forEachEntry = function (fn) {
+  return this.forEach(function (entry) {
+    if ((entry instanceof Track || entry instanceof Album) &amp;&amp;
+        entry.uri) {
+      return fn(entry)
+    }
+  })
+}
+
+/**
+ * Iterate over the collection's valid track.
+ * @param {Function} fn - An iterator function.
+ * Takes the current entry as input.
+ */
+Collection.prototype.forEachTrack = function (fn) {
+  return this.forEach(function (entry) {
+    if (entry instanceof Track &amp;&amp; entry.uri) {
+      return fn(entry)
+    }
   })
 }
 
@@ -170,10 +207,30 @@ Collection.prototype.execute = function () {
  * Fetch Last.fm metadata of each collection entry.
  * @return {Promise | Queue} A queue of results.
  */
-Collection.prototype.fetchLastfm = function () {
+Collection.prototype.getLastfm = function () {
   var self = this
   return this.entries.forEachPromise(function (entry) {
-    return entry.fetchLastfm(self.lastfmUser)
+    return entry.getLastfm(self.lastfmUser)
+  })
+}
+
+/**
+ * Fetch Spotify popularity of each collection entry.
+ * @return {Promise | Queue} A queue of results.
+ */
+Collection.prototype.getPopularity = function () {
+  return this.entries.forEachPromise(function (entry) {
+    return entry.getPopularity()
+  })
+}
+
+/**
+ * Refresh the metadata of each collection entry.
+ * @return {Promise} A Promise to perform the action.
+ */
+Collection.prototype.getTrackInfo = function () {
+  return this.entries.forEachPromise(function (entry) {
+    return entry.getInfo()
   })
 }
 
@@ -199,7 +256,7 @@ Collection.prototype.group = function () {
       return track.mainArtist.toLowerCase()
     })
   } else if (this.grouping === 'album') {
-    return this.refreshTracks().then(function () {
+    return this.getTrackInfo().then(function () {
       return self.entries.group(function (track) {
         return track.album.toLowerCase()
       })
@@ -214,17 +271,27 @@ Collection.prototype.group = function () {
 }
 
 /**
+ * Log information about the collection.
+ */
+Collection.prototype.log = function () {
+  var log = this.toLog()
+  if (log) {
+    console.log(log)
+  }
+}
+
+/**
  * Order the collection entries.
  * @return {Promise} A Promise to perform the action.
  */
 Collection.prototype.order = function () {
   var self = this
   if (this.ordering === 'popularity') {
-    return this.refreshTracks().then(function () {
+    return this.getPopularity().then(function () {
       self.entries.orderByPopularity()
     })
   } else if (this.ordering === 'lastfm') {
-    return this.fetchLastfm().then(function () {
+    return this.getLastfm().then(function () {
       self.entries.orderByLastfm()
     })
   } else {
@@ -234,20 +301,11 @@ Collection.prototype.order = function () {
 
 /**
  * Print the collection to the console.
+ * @param {string} [format] - The output format.
+ * May be `csv`, `list`, `log` or `uri` (the default).
  */
-Collection.prototype.print = function () {
-  console.log(this.toString())
-}
-
-/**
- * Refresh the metadata of each collection entry.
- * @return {Promise} A Promise to perform the action.
- */
-Collection.prototype.refreshTracks = function () {
-  var self = this
-  return this.entries.dispatch().then(function (result) {
-    self.entries = result.flatten()
-  })
+Collection.prototype.print = function (format) {
+  console.log(this.toString(format))
 }
 
 /**
@@ -264,41 +322,83 @@ Collection.prototype.reorder = function () {
 }
 
 /**
+ * Convert the collection to CSV format.
+ * @return {string} A newline-separated list of comma-separated values.
+ */
+Collection.prototype.toCSV = function () {
+  var result = 'sep=,\n'
+  this.forEachTrack(function (track) {
+    var csvFormat = new CSV(track)
+    var csvLine = csvFormat.toString()
+    result += csvLine + '\n'
+  })
+  return result.trim()
+}
+
+/**
+ * Convert the collection to a string.
+ * @return {string} A newline-separated list of track titles.
+ */
+Collection.prototype.toList = function () {
+  var result = ''
+  this.forEachTrack(function (track) {
+    result += track.title + '\n'
+  })
+  return result.trim()
+}
+
+/**
+ * Produce a log string.
+ * @return {string} A newline-separated list of track information.
+ */
+Collection.prototype.toLog = function () {
+  var result = ''
+  this.forEachTrack(function (track) {
+    if (track.title) {
+      var line = track.title
+      if (track.popularity || track.lastfm) {
+        line += ' ('
+        line += track.popularity ? ('Spotify popularity: ' + track.popularity) : ''
+        line += (track.popularity &amp;&amp; track.lastfm) ? ', ' : ''
+        line += track.lastfm ? 'Last.fm rating: ' + track.lastfm : ''
+        line += ')'
+      }
+      result += line + '\n'
+    }
+  })
+  return result.trim()
+}
+
+/**
+ * Convert the collection to a string.
+ * @param {string} [format] - The output format.
+ * May be `csv`, `list`, `log` or `uri` (the default).
+ * @return {string} A newline-separated list of Spotify URIs.
+ */
+Collection.prototype.toString = function (format) {
+  format = format || (this.csv ? 'csv' : '')
+  this.log()
+  if (format === 'csv') {
+    return this.toCSV()
+  } else if (format === 'list') {
+    return this.toList()
+  } else if (format === 'log') {
+    return this.toLog()
+  } else {
+    return this.toURIs()
+  }
+}
+
+/**
  * Convert the collection to a string.
  * @return {string} A newline-separated list of Spotify URIs.
  */
-Collection.prototype.toString = function () {
-  var self = this
+Collection.prototype.toURIs = function () {
   var result = ''
-  if (self.csv) {
-    result += 'sep=,\n'
-  }
-  this.entries.forEach(function (entry) {
-    if (entry instanceof Track || entry instanceof Album) {
-      if (entry instanceof Track) {
-        var log = entry.title
-        if (entry.popularity || entry.lastfm) {
-          log += ' ('
-          log += entry.popularity ? ('Spotify popularity: ' + entry.popularity) : ''
-          log += (entry.popularity &amp;&amp; entry.lastfm) ? ', ' : ''
-          log += entry.lastfm ? 'Last.fm rating: ' + entry.lastfm : ''
-          log += ')'
-        }
-        console.log(log)
-      }
-      if (self.csv) {
-        var csvFormat = new CSV(entry)
-        var csvLine = csvFormat.toString()
-        result += csvLine + '\n'
-      } else {
-        if (entry.uri) {
-          result += entry.uri + '\n'
-        }
-      }
-    }
+  this.forEachTrack(function (track) {
+    result += track.uri + '\n'
   })
-  result = eol.auto(result.trim())
-  return result
+  return result.trim()
 }
 
 module.exports = Collection
@@ -312,13 +412,13 @@ module.exports = Collection
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jul 31 2017 13:59:20 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

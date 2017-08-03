@@ -220,7 +220,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line12">line 12</a>
+        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -312,7 +312,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line16">line 16</a>
+        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -374,7 +374,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line21">line 21</a>
+        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -436,7 +436,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line26">line 26</a>
+        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -645,7 +645,7 @@ instead.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line45">line 45</a>
+        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line48">line 48</a>
     </li></ul></dd>
     
 
@@ -756,7 +756,7 @@ instead.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line109">line 109</a>
+        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line178">line 178</a>
     </li></ul></dd>
     
 
@@ -816,7 +816,7 @@ or the empty string if not available.</p>
     
 
     
-    <h4 class="name" id="implicitGrantFlow"><span class="type-signature"></span>implicitGrantFlow<span class="signature">(uri, clientId<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="implicitGrantFlowURI"><span class="type-signature"></span>implicitGrantFlowURI<span class="signature">(uri, clientId<span class="signature-attributes">opt</span>, scopes<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
     
 
     
@@ -824,7 +824,7 @@ or the empty string if not available.</p>
 
 
 <div class="description">
-    <p>Authenticate with the Implicit Grant Flow.</p>
+    <p>Authentication URI for the Implicit Grant Flow.</p>
 <p>Returns a URI that the calling web application can use to redirect
 the user to a Spotify login screen. After the user has logged in,
 Spotify redirects back to the web application with an access token
@@ -929,6 +929,39 @@ passed to this class.</p>
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>scopes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>A space-separated list of scopes.</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -966,7 +999,7 @@ passed to this class.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line77">line 77</a>
+        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line81">line 81</a>
     </li></ul></dd>
     
 
@@ -1074,7 +1107,7 @@ passed to this class.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line93">line 93</a>
+        <a href="lib_auth.js.html">lib/auth.js</a>, <a href="lib_auth.js.html#line162">line 162</a>
     </li></ul></dd>
     
 
@@ -1144,13 +1177,13 @@ or the empty string if not available.</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jul 31 2017 13:59:20 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

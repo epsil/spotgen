@@ -29,6 +29,9 @@
             <pre class="prettyprint source linenums"><code>var base64 = require('base-64')
 var defaults = require('./defaults')
 var http = require('./http')
+// var express = require('express')
+// var opn = require('opn')
+// var URI = require('urijs')
 
 /**
  * Create a Spotify authenticator.
@@ -88,7 +91,7 @@ SpotifyAuthenticator.prototype.clientsCredentialsFlow = function (clientId, clie
 }
 
 /**
- * Authenticate with the Implicit Grant Flow.
+ * Authentication URI for the Implicit Grant Flow.
  *
  * Returns a URI that the calling web application can use to redirect
  * the user to a Spotify login screen. After the user has logged in,
@@ -100,17 +103,83 @@ SpotifyAuthenticator.prototype.clientsCredentialsFlow = function (clientId, clie
  *
  * @param {string} uri - Redirect URI.
  * @param {string} [clientId] - Client ID.
+ * @param {string} [scopes] - A space-separated list of scopes.
  * @return {string} An authentication URI.
  */
-SpotifyAuthenticator.prototype.implicitGrantFlow = function (uri, clientId) {
+SpotifyAuthenticator.prototype.implicitGrantFlowURI = function (uri, clientId, scopes) {
   clientId = clientId || this.clientId
   var url = 'https://accounts.spotify.com/authorize'
   url += '/' +
     '?client_id=' + encodeURIComponent(clientId) +
-    '&amp;response_type=' + encodeURIComponent('token') +
+    '&amp;response_type=token' +
     '&amp;redirect_uri=' + encodeURIComponent(uri)
+  if (scopes) {
+    url += '&amp;scope' + encodeURIComponent(scopes)
+  }
   return url
 }
+
+/**
+ * Authenticate with the Implicit Grant Flow.
+ *
+ * Runs a temporary HTTP server at port 9000 and opens a Spotify login
+ * page in a web browser. After the user has logged in, Spotify
+ * redirects to the HTTP server with an access token (included in the
+ * hash fragment of the URI). The token is picked up by the server and
+ * returned by this function in a Promise.
+ *
+ * [Reference](https://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
+ *
+ * @param {string} [clientId] - Client ID.
+ * @param {string} [scopes] - A space-separated list of scopes.
+ * @param {string} [port] - Port number, default 9000.
+ * Must be white-listed by Spotify.
+ */
+// SpotifyAuthenticator.prototype.implicitGrantFlow = function (clientId, scopes, port) {
+//   var self = this
+//   return new Promise(function (resolve, reject) {
+//     clientId = clientId || self.clientId
+//     port = port || 9000
+//     var localhost = 'http://localhost:' + port + '/'
+//     var login = self.implicitGrantFlowURI(localhost, clientId, scopes)
+//     var server = express()
+//     var http = server.listen(port)
+//     server.get('/', function (req, res) {
+//       var url = URI(req.url)
+//       if (url.query()) {
+//         http.close()
+//         req.connection.ref()
+//         req.connection.unref()
+//         self.token = url.search(true).access_token
+//         if (!self.token) {
+//           reject(self.token)
+//         } else {
+//           resolve(self.token)
+//         }
+//       } else {
+//         // the hash fragment is not part of a HTTP request,
+//         // so we convert it to a query string (which is!)
+//         // and perform a second request against our server
+//         var js = 'var hash = window.location.hash\n' +
+//             'if (hash) {\n' +
+//             'var url = \'/?\' + hash.replace(/^#/, \'\')\n' +
+//             'var http = new XMLHttpRequest()\n' +
+//             'http.open(\'GET\', url, true)\n' +
+//             'http.send(null)\n' +
+//             '}\n' +
+//             'setTimeout(window.close, 500)'
+//         var tag = '&lt;script type="text/javascript">\n' + js + '\n&lt;/script>'
+//         res.send(tag)
+//       }
+//     })
+//     opn(login, function (err) {
+//       if (err) {
+//         http.close()
+//         reject(err)
+//       }
+//     })
+//   })
+// }
 
 /**
  * Refresh the bearer access token.
@@ -153,13 +222,13 @@ module.exports = SpotifyAuthenticator
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jul 31 2017 13:59:20 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>
