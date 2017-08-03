@@ -4,7 +4,6 @@ var chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 chai.should()
 
-var eol = require('eol')
 var Artist = require('../lib/artist')
 var Album = require('../lib/album')
 var Generator = require('../lib/generator')
@@ -303,10 +302,10 @@ describe('Spotify Playlist Generator', function () {
 
     it('should create an ordered playlist', function () {
       var generator = new Generator('#order by popularity\ntest1\ntest2')
-      return generator.generate().then(function (str) {
+      return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        eol.lf(str).should.eql('spotify:track:0nJaPZB8zftehHfGNSMagY\n' +
-                               'spotify:track:0MB5wpo41nfoiaD96wWOtW')
+        str.should.eql('test1 - Test2\n' +
+                       'test - test2')
       })
     })
 
@@ -315,8 +314,21 @@ describe('Spotify Playlist Generator', function () {
         'spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,\n' +
           'spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,')
       return generator.generate().then(function (str) {
-        eol.lf(str).should.eql('spotify:track:3jZ0GKAZiDMya0dZPrw8zq\n' +
-                               'spotify:track:20DDHYR4vZqDwHyNFLwkXI')
+        str.should.eql('spotify:track:3jZ0GKAZiDMya0dZPrw8zq\n' +
+                       'spotify:track:20DDHYR4vZqDwHyNFLwkXI')
+      })
+    })
+
+    it('should output comma-separated values', function () {
+      var generator = new Generator(
+        '#csv\n' +
+          'spotify:track:3jZ0GKAZiDMya0dZPrw8zq\n' +
+          'spotify:track:20DDHYR4vZqDwHyNFLwkXI')
+      return generator.generate().then(function (str) {
+        str.should.eql(
+          'sep=,\n' +
+            'spotify:track:3jZ0GKAZiDMya0dZPrw8zq,,,,,,,,\n' +
+            'spotify:track:20DDHYR4vZqDwHyNFLwkXI,,,,,,,,')
       })
     })
 
@@ -327,15 +339,9 @@ describe('Spotify Playlist Generator', function () {
           'Deerhunter/Halcyon Digest/06 Desire Lines.mp3\n' +
           '#EXTINF:230,Saved By Old Times - Deerhunter\n' +
           'Deerhunter/Microcastle/10 Saved By Old Times.mp3')
-      return generator.generate().then(function (str) {
-        generator.should.have.deep.property('collection.entries.queue[0]')
-          .that.is.instanceof(Track)
-        generator.should.have.deep.property('collection.entries.queue[0].title')
-          .that.eql('Deerhunter - Desire Lines')
-        generator.should.have.deep.property('collection.entries.queue[1]')
-          .that.is.instanceof(Track)
-        generator.should.have.deep.property('collection.entries.queue[1].title')
-          .that.eql('Deerhunter - Saved By Old Times')
+      return generator.generate('list').then(function (str) {
+        str.should.eql('Deerhunter - Desire Lines\n' +
+                       'Deerhunter - Saved By Old Times')
       })
     })
 
@@ -343,8 +349,12 @@ describe('Spotify Playlist Generator', function () {
       var generator = new Generator('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
                                     'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
       return generator.generate().then(function (str) {
-        eol.lf(str).should.eql('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
-                               'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
+        generator.should.have.deep.property('collection.entries.queue[0]')
+          .that.is.instanceof(Track)
+        generator.should.have.deep.property('collection.entries.queue[1]')
+          .that.is.instanceof(Track)
+        str.should.eql('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
+                       'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
       })
     })
 
@@ -356,8 +366,8 @@ describe('Spotify Playlist Generator', function () {
           .that.is.instanceof(Track)
         generator.should.have.deep.property('collection.entries.queue[1]')
           .that.is.instanceof(Track)
-        eol.lf(str).should.eql('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
-                               'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
+        str.should.eql('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
+                       'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
       })
     })
 
@@ -385,13 +395,9 @@ describe('Spotify Playlist Generator', function () {
 
     it('should dispatch #album entries', function () {
       var generator = new Generator('#album Beach House - Depression Cherry')
-      return generator.generate().then(function (str) {
+      return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        generator.should.have.deep.property('collection.entries.queue[0]')
-          .that.is.instanceof(Track)
-        generator.should.have.deep.property('collection.entries.queue[0].artist')
-          .that.eql('Beach House')
-        eol.lf(str).should.match(/^spotify:track:1oCUj7YvKxxSKRDAU3pePN/gi)
+        str.should.match(/^Beach House - Levitation/gi)
       })
     })
 
@@ -419,13 +425,9 @@ describe('Spotify Playlist Generator', function () {
 
     it('should dispatch #artist entries', function () {
       var generator = new Generator('#artist Bowery Electric')
-      return generator.generate().then(function (str) {
+      return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        generator.should.have.deep.property('collection.entries.queue[0]')
-          .that.is.instanceof(Track)
-        generator.should.have.deep.property('collection.entries.queue[0].artist')
-          .that.eql('Bowery Electric')
-        eol.lf(str).should.match(/^spotify:track:2IeWEq7aUg4HtcGgfLaLtV/gi)
+        str.should.match(/^Bowery Electric - Floating World/gi)
       })
     })
 
@@ -437,13 +439,9 @@ describe('Spotify Playlist Generator', function () {
 
     it('should dispatch #top entries', function () {
       var generator = new Generator('#top Bowery Electric')
-      return generator.generate().then(function (str) {
+      return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        generator.should.have.deep.property('collection.entries.queue[0]')
-          .that.is.instanceof(Track)
-        generator.should.have.deep.property('collection.entries.queue[0].artist')
-          .that.eql('Bowery Electric')
-        eol.lf(str).should.match(/^spotify:track:2IeWEq7aUg4HtcGgfLaLtV/gi)
+        str.should.match(/^Bowery Electric - Floating World/gi)
       })
     })
 
@@ -455,22 +453,18 @@ describe('Spotify Playlist Generator', function () {
 
     it('should dispatch #similar entries', function () {
       var generator = new Generator('#similar Bowery Electric')
-      return generator.generate().then(function (str) {
+      return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        generator.should.have.deep.property('collection.entries.queue[0]')
-          .that.is.instanceof(Track)
-        generator.should.have.deep.property('collection.entries.queue[0].artist')
-          .that.eql('Flying Saucer Attack')
-        eol.lf(str).should.match(/^spotify:track:4xVb769QQHzWlGR9L9Flbl/gi)
+        str.should.match(/^Flying Saucer Attack - My Dreaming Hill/gi)
       })
     })
 
     it('should dispatch multiple entries', function () {
       var generator = new Generator('test1\ntest2')
-      return generator.generate().then(function (str) {
+      return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        eol.lf(str).should.eql('spotify:track:0nJaPZB8zftehHfGNSMagY\n' +
-                               'spotify:track:0MB5wpo41nfoiaD96wWOtW')
+        str.should.eql('test1 - Test2\n' +
+                       'test - test2')
       })
     })
   })

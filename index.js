@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* global document:true, window:true */
 
+var eol = require('eol')
 var fs = require('fs')
 var jsdom = require('jsdom').jsdom
 document = jsdom()
@@ -54,6 +55,7 @@ function generate (str, output) {
     if (output === 'STDOUT') {
       console.log('\n' + result)
     } else {
+      result = eol.auto(result)
       fs.writeFile(output, result, function (err) {
         if (err) { return }
         console.log('Wrote to ' + output)
@@ -96,6 +98,7 @@ function main () {
       generate(str)
     } else {
       str = fs.readFileSync(input, 'utf8').toString()
+      str = eol.lf(str)
       generate(str, output)
     }
   }

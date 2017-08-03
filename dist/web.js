@@ -105,7 +105,7 @@ $(function () {
     }
   } else {
     var spotify = new SpotifyAuthenticator()
-    var url = spotify.implicitGrantFlowUri(window.location.href)
+    var url = spotify.implicitGrantFlowURI(window.location.href)
     button.attr('href', url)
   }
 })
