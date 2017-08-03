@@ -9,7 +9,9 @@ var Artist = require('../lib/artist')
 var Album = require('../lib/album')
 var Generator = require('../lib/generator')
 var Queue = require('../lib/queue')
+var Similar = require('../lib/similar')
 var Track = require('../lib/track')
+var Top = require('../lib/top')
 var sort = require('../lib/sort')
 
 describe('Spotify Playlist Generator', function () {
@@ -155,17 +157,17 @@ describe('Spotify Playlist Generator', function () {
   })
 
   describe('Track', function () {
-    it('should create an empty track', function () {
+    it('should create an empty entry', function () {
       var track = new Track(null, '')
       track.entry.should.eql('')
     })
 
-    it('should create a single track', function () {
+    it('should create a single entry', function () {
       var track = new Track(null, 'test')
       track.entry.should.eql('test')
     })
 
-    it('should dispatch a single track', function () {
+    it('should dispatch a single entry', function () {
       var track = new Track(null, 'test')
       track.entry.should.eql('test')
       var promise = track.dispatch()
@@ -176,6 +178,88 @@ describe('Spotify Playlist Generator', function () {
       var track = new Track(null, 'Michael Jackson - Off the Wall')
       return track.dispatch().then(function (track) {
         track.title.should.eql('Michael Jackson - Off the Wall')
+      })
+    })
+  })
+
+  describe('Album', function () {
+    it('should create an empty entry', function () {
+      var album = new Album(null, '')
+      album.entry.should.eql('')
+    })
+
+    it('should create a single entry', function () {
+      var album = new Album(null, 'Beach House - Depression Cherry')
+      album.entry.should.eql('Beach House - Depression Cherry')
+    })
+
+    it('should dispatch a single entry', function () {
+      var album = new Album(null, 'Beach House - Depression Cherry')
+      return album.dispatch().then(function (queue) {
+        // FIXME: this is really brittle
+        album.uri.should.eql('spotify:album:35vTE3hx3AAXtM6okpJIIt')
+        queue.should.be.instanceof(Queue)
+      })
+    })
+  })
+
+  describe('Artist', function () {
+    it('should create an empty entry', function () {
+      var artist = new Artist(null, '')
+      artist.entry.should.eql('')
+    })
+
+    it('should create a single entry', function () {
+      var artist = new Artist(null, 'Bowery Electric')
+      artist.entry.should.eql('Bowery Electric')
+    })
+
+    it('should fetch an artist\'s tracks', function () {
+      var artist = new Artist(null, 'Bowery Electric', null, 5)
+      return artist.dispatch().then(function (queue) {
+        // FIXME: this is really brittle
+        artist.uri.should.eql('spotify:artist:6a27jEzxHDgONdmADAGcej')
+        queue.should.be.instanceof(Queue)
+      })
+    })
+  })
+
+  describe('Top', function () {
+    it('should create an empty entry', function () {
+      var top = new Top(null, '')
+      top.entry.should.eql('')
+    })
+
+    it('should create a single entry', function () {
+      var top = new Top(null, 'Bowery Electric')
+      top.entry.should.eql('Bowery Electric')
+    })
+
+    it('should fetch an artist\'s top tracks', function () {
+      var top = new Top(null, 'Bowery Electric')
+      return top.dispatch().then(function (queue) {
+        top.id.should.eql('6a27jEzxHDgONdmADAGcej')
+        queue.should.be.instanceof(Queue)
+      })
+    })
+  })
+
+  describe('Similar', function () {
+    it('should create an empty entry', function () {
+      var similar = new Similar(null, '')
+      similar.entry.should.eql('')
+    })
+
+    it('should create a single entry', function () {
+      var similar = new Similar(null, 'Bowery Electric')
+      similar.entry.should.eql('Bowery Electric')
+    })
+
+    it('should fetch similar tracks to an artist', function () {
+      var similar = new Similar(null, 'Bowery Electric')
+      return similar.dispatch().then(function (queue) {
+        similar.id.should.eql('6a27jEzxHDgONdmADAGcej')
+        queue.should.be.instanceof(Queue)
       })
     })
   })
@@ -226,31 +310,158 @@ describe('Spotify Playlist Generator', function () {
       })
     })
 
-    it('should parse album entries', function () {
+    it('should parse comma-separated values', function () {
+      var generator = new Generator(
+        'spotify:track:3jZ0GKAZiDMya0dZPrw8zq,Desire Lines,Deerhunter,Halcyon Digest,1,6,404413,,\n' +
+          'spotify:track:20DDHYR4vZqDwHyNFLwkXI,Saved By Old Times,Deerhunter,Microcastle,1,10,230226,,')
+      return generator.generate().then(function (str) {
+        eol.lf(str).should.eql('spotify:track:3jZ0GKAZiDMya0dZPrw8zq\n' +
+                               'spotify:track:20DDHYR4vZqDwHyNFLwkXI')
+      })
+    })
+
+    it('should parse extended M3U playlists', function () {
+      var generator = new Generator(
+        '#EXTM3U\n' +
+          '#EXTINF:404,Desire Lines - Deerhunter\n' +
+          'Deerhunter/Halcyon Digest/06 Desire Lines.mp3\n' +
+          '#EXTINF:230,Saved By Old Times - Deerhunter\n' +
+          'Deerhunter/Microcastle/10 Saved By Old Times.mp3')
+      return generator.generate().then(function (str) {
+        generator.should.have.deep.property('collection.entries.queue[0]')
+          .that.is.instanceof(Track)
+        generator.should.have.deep.property('collection.entries.queue[0].title')
+          .that.eql('Deerhunter - Desire Lines')
+        generator.should.have.deep.property('collection.entries.queue[1]')
+          .that.is.instanceof(Track)
+        generator.should.have.deep.property('collection.entries.queue[1].title')
+          .that.eql('Deerhunter - Saved By Old Times')
+      })
+    })
+
+    it('should parse track URIs', function () {
+      var generator = new Generator('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
+                                    'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
+      return generator.generate().then(function (str) {
+        eol.lf(str).should.eql('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
+                               'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
+      })
+    })
+
+    it('should parse track links', function () {
+      var generator = new Generator('https://open.spotify.com/track/4oNXgGnumnu5oIXXyP8StH\n' +
+                                    'https://open.spotify.com/track/7rAjeWkQM6cLqbPjZtXxl2')
+      return generator.generate().then(function (str) {
+        generator.should.have.deep.property('collection.entries.queue[0]')
+          .that.is.instanceof(Track)
+        generator.should.have.deep.property('collection.entries.queue[1]')
+          .that.is.instanceof(Track)
+        eol.lf(str).should.eql('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
+                               'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
+      })
+    })
+
+    it('should parse #album entries', function () {
       var generator = new Generator('#album test')
       generator.should.have.deep.property('collection.entries.queue[0]')
         .that.is.instanceof(Album)
     })
 
-    it('should dispatch album entries', function () {
+    it('should parse album URIs', function () {
+      var generator = new Generator('spotify:album:5QIf4hNIAksV1uMCXHVkAZ')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Album)
+      generator.should.have.deep.property('collection.entries.queue[0].id')
+        .that.eql('5QIf4hNIAksV1uMCXHVkAZ')
+    })
+
+    it('should parse album links', function () {
+      var generator = new Generator('https://open.spotify.com/album/5QIf4hNIAksV1uMCXHVkAZ')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Album)
+      generator.should.have.deep.property('collection.entries.queue[0].id')
+        .that.eql('5QIf4hNIAksV1uMCXHVkAZ')
+    })
+
+    it('should dispatch #album entries', function () {
       var generator = new Generator('#album Beach House - Depression Cherry')
       return generator.generate().then(function (str) {
         // FIXME: this is really brittle
+        generator.should.have.deep.property('collection.entries.queue[0]')
+          .that.is.instanceof(Track)
+        generator.should.have.deep.property('collection.entries.queue[0].artist')
+          .that.eql('Beach House')
         eol.lf(str).should.match(/^spotify:track:1oCUj7YvKxxSKRDAU3pePN/gi)
       })
     })
 
-    it('should parse artist entries', function () {
+    it('should parse #artist entries', function () {
       var generator = new Generator('#artist Bowery Electric')
       generator.should.have.deep.property('collection.entries.queue[0]')
         .that.is.instanceof(Artist)
     })
 
-    it('should dispatch artist entries', function () {
+    it('should parse artist URIs', function () {
+      var generator = new Generator('spotify:artist:56ZTgzPBDge0OvCGgMO3OY')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Artist)
+      generator.should.have.deep.property('collection.entries.queue[0].id')
+        .that.eql('56ZTgzPBDge0OvCGgMO3OY')
+    })
+
+    it('should parse artist links', function () {
+      var generator = new Generator('https://open.spotify.com/artist/56ZTgzPBDge0OvCGgMO3OY')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Artist)
+      generator.should.have.deep.property('collection.entries.queue[0].id')
+        .that.eql('56ZTgzPBDge0OvCGgMO3OY')
+    })
+
+    it('should dispatch #artist entries', function () {
       var generator = new Generator('#artist Bowery Electric')
       return generator.generate().then(function (str) {
         // FIXME: this is really brittle
+        generator.should.have.deep.property('collection.entries.queue[0]')
+          .that.is.instanceof(Track)
+        generator.should.have.deep.property('collection.entries.queue[0].artist')
+          .that.eql('Bowery Electric')
         eol.lf(str).should.match(/^spotify:track:2IeWEq7aUg4HtcGgfLaLtV/gi)
+      })
+    })
+
+    it('should parse #top entries', function () {
+      var generator = new Generator('#top Bowery Electric')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Top)
+    })
+
+    it('should dispatch #top entries', function () {
+      var generator = new Generator('#top Bowery Electric')
+      return generator.generate().then(function (str) {
+        // FIXME: this is really brittle
+        generator.should.have.deep.property('collection.entries.queue[0]')
+          .that.is.instanceof(Track)
+        generator.should.have.deep.property('collection.entries.queue[0].artist')
+          .that.eql('Bowery Electric')
+        eol.lf(str).should.match(/^spotify:track:2IeWEq7aUg4HtcGgfLaLtV/gi)
+      })
+    })
+
+    it('should parse #similar entries', function () {
+      var generator = new Generator('#similar Bowery Electric')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Similar)
+    })
+
+    it('should dispatch #similar entries', function () {
+      var generator = new Generator('#similar Bowery Electric')
+      return generator.generate().then(function (str) {
+        // FIXME: this is really brittle
+        generator.should.have.deep.property('collection.entries.queue[0]')
+          .that.is.instanceof(Track)
+        generator.should.have.deep.property('collection.entries.queue[0].artist')
+          .that.eql('Flying Saucer Attack')
+        eol.lf(str).should.match(/^spotify:track:4xVb769QQHzWlGR9L9Flbl/gi)
       })
     })
 
@@ -260,48 +471,6 @@ describe('Spotify Playlist Generator', function () {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:0nJaPZB8zftehHfGNSMagY\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
-      })
-    })
-  })
-
-  describe('Album', function () {
-    it('should create an empty album', function () {
-      var album = new Album(null, '')
-      album.entry.should.eql('')
-    })
-
-    it('should create a single album', function () {
-      var album = new Album(null, 'Beach House - Depression Cherry')
-      album.entry.should.eql('Beach House - Depression Cherry')
-    })
-
-    it('should dispatch a single album', function () {
-      var album = new Album(null, 'Beach House - Depression Cherry')
-      return album.dispatch().then(function (queue) {
-        // FIXME: this is really brittle
-        album.uri.should.eql('spotify:album:35vTE3hx3AAXtM6okpJIIt')
-        queue.should.be.instanceof(Queue)
-      })
-    })
-  })
-
-  describe('Artist', function () {
-    it('should create an empty artist', function () {
-      var artist = new Artist(null, '')
-      artist.entry.should.eql('')
-    })
-
-    it('should create a single artist', function () {
-      var artist = new Artist(null, 'Bowery Electric')
-      artist.entry.should.eql('Bowery Electric')
-    })
-
-    it('should fetch an artist\'s tracks', function () {
-      var artist = new Artist(null, 'Bowery Electric', null, 5)
-      return artist.dispatch().then(function (queue) {
-        // FIXME: this is really brittle
-        artist.uri.should.eql('spotify:artist:6a27jEzxHDgONdmADAGcej')
-        queue.should.be.instanceof(Queue)
       })
     })
   })
