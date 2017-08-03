@@ -7,7 +7,7 @@ chai.should()
 var eol = require('eol')
 var Artist = require('../lib/artist')
 var Album = require('../lib/album')
-var Parser = require('../lib/parser')
+var Generator = require('../lib/generator')
 var Queue = require('../lib/queue')
 var Track = require('../lib/track')
 var sort = require('../lib/sort')
@@ -182,51 +182,44 @@ describe('Spotify Playlist Generator', function () {
 
   describe('Generator', function () {
     it('should create empty playlist when passed empty string', function () {
-      var parser = new Parser()
-      var collection = parser.parse('')
-      collection.should.have.deep.property('entries.queue').that.eql([])
+      var generator = new Generator('')
+      generator.should.have.deep.property('collection.entries.queue').that.eql([])
     })
 
     it('should create a one-entry playlist', function () {
-      var parser = new Parser()
-      var collection = parser.parse('test')
-      collection.should.have.deep.property('entries.queue[0].entry', 'test')
+      var generator = new Generator('test')
+      generator.should.have.deep.property('collection.entries.queue[0].entry', 'test')
     })
 
     it('should create a two-entry playlist', function () {
-      var parser = new Parser()
-      var collection = parser.parse('test1\ntest2')
-      collection.should.have.deep.property('entries.queue[0].entry', 'test1')
-      collection.should.have.deep.property('entries.queue[1].entry', 'test2')
+      var generator = new Generator('test1\ntest2')
+      generator.should.have.deep.property('collection.entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('collection.entries.queue[1].entry', 'test2')
     })
 
     it('should ignore empty lines', function () {
-      var parser = new Parser()
-      var collection = parser.parse('test1\n\n\n\ntest2')
-      collection.should.have.deep.property('entries.queue[0].entry', 'test1')
-      collection.should.have.deep.property('entries.queue[1].entry', 'test2')
+      var generator = new Generator('test1\n\n\n\ntest2')
+      generator.should.have.deep.property('collection.entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('collection.entries.queue[1].entry', 'test2')
     })
 
     it('should order tracks by Spotify popularity', function () {
-      var parser = new Parser()
-      var collection = parser.parse('#ORDER BY POPULARITY\ntest1\ntest2')
-      collection.should.have.deep.property('entries.queue[0].entry', 'test1')
-      collection.should.have.deep.property('entries.queue[1].entry', 'test2')
-      collection.should.have.property('ordering', 'popularity')
+      var generator = new Generator('#order by popularity\ntest1\ntest2')
+      generator.should.have.deep.property('collection.entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('collection.entries.queue[1].entry', 'test2')
+      generator.should.have.deep.property('collection.ordering', 'popularity')
     })
 
     it('should order tracks by Last.fm rating', function () {
-      var parser = new Parser()
-      var collection = parser.parse('#ORDER BY LASTFM\ntest1\ntest2')
-      collection.should.have.deep.property('entries.queue[0].entry', 'test1')
-      collection.should.have.deep.property('entries.queue[1].entry', 'test2')
-      collection.should.have.property('ordering', 'lastfm')
+      var generator = new Generator('#order by lastfm\ntest1\ntest2')
+      generator.should.have.deep.property('collection.entries.queue[0].entry', 'test1')
+      generator.should.have.deep.property('collection.entries.queue[1].entry', 'test2')
+      generator.should.have.deep.property('collection.ordering', 'lastfm')
     })
 
     it('should create an ordered playlist', function () {
-      var parser = new Parser()
-      var collection = parser.parse('#ORDER BY POPULARITY\ntest1\ntest2')
-      return collection.execute().then(function (str) {
+      var generator = new Generator('#order by popularity\ntest1\ntest2')
+      return generator.generate().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:0nJaPZB8zftehHfGNSMagY\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
@@ -234,23 +227,36 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should parse album entries', function () {
-      var parser = new Parser()
-      var collection = parser.parse('#ALBUM test')
-      collection.should.have.deep.property('entries.queue[0]')
+      var generator = new Generator('#album test')
+      generator.should.have.deep.property('collection.entries.queue[0]')
         .that.is.instanceof(Album)
     })
 
+    it('should dispatch album entries', function () {
+      var generator = new Generator('#album Beach House - Depression Cherry')
+      return generator.generate().then(function (str) {
+        // FIXME: this is really brittle
+        eol.lf(str).should.match(/^spotify:track:1oCUj7YvKxxSKRDAU3pePN/gi)
+      })
+    })
+
     it('should parse artist entries', function () {
-      var parser = new Parser()
-      var collection = parser.parse('#ARTIST test')
-      collection.should.have.deep.property('entries.queue[0]')
+      var generator = new Generator('#artist Bowery Electric')
+      generator.should.have.deep.property('collection.entries.queue[0]')
         .that.is.instanceof(Artist)
     })
 
-    it('should dispatch all entries', function () {
-      var parser = new Parser()
-      var collection = parser.parse('test1\ntest2')
-      return collection.execute().then(function (str) {
+    it('should dispatch artist entries', function () {
+      var generator = new Generator('#artist Bowery Electric')
+      return generator.generate().then(function (str) {
+        // FIXME: this is really brittle
+        eol.lf(str).should.match(/^spotify:track:2IeWEq7aUg4HtcGgfLaLtV/gi)
+      })
+    })
+
+    it('should dispatch multiple entries', function () {
+      var generator = new Generator('test1\ntest2')
+      return generator.generate().then(function (str) {
         // FIXME: this is really brittle
         eol.lf(str).should.eql('spotify:track:0nJaPZB8zftehHfGNSMagY\n' +
                                'spotify:track:0MB5wpo41nfoiaD96wWOtW')
@@ -265,15 +271,17 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should create a single album', function () {
-      var album = new Album(null, 'test')
-      album.entry.should.eql('test')
+      var album = new Album(null, 'Beach House - Depression Cherry')
+      album.entry.should.eql('Beach House - Depression Cherry')
     })
 
     it('should dispatch a single album', function () {
-      var album = new Album(null, 'test')
-      album.entry.should.eql('test')
-      var promise = album.dispatch()
-      return promise.should.eventually.be.instanceof(Queue)
+      var album = new Album(null, 'Beach House - Depression Cherry')
+      return album.dispatch().then(function (queue) {
+        // FIXME: this is really brittle
+        album.uri.should.eql('spotify:album:35vTE3hx3AAXtM6okpJIIt')
+        queue.should.be.instanceof(Queue)
+      })
     })
   })
 
@@ -284,15 +292,17 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should create a single artist', function () {
-      var artist = new Artist(null, 'test')
-      artist.entry.should.eql('test')
+      var artist = new Artist(null, 'Bowery Electric')
+      artist.entry.should.eql('Bowery Electric')
     })
 
     it('should fetch an artist\'s tracks', function () {
-      var artist = new Artist(null, 'test', null, 5)
-      artist.entry.should.eql('test')
-      var promise = artist.dispatch()
-      return promise.should.eventually.be.an.instanceof(Queue)
+      var artist = new Artist(null, 'Bowery Electric', null, 5)
+      return artist.dispatch().then(function (queue) {
+        // FIXME: this is really brittle
+        artist.uri.should.eql('spotify:artist:6a27jEzxHDgONdmADAGcej')
+        queue.should.be.instanceof(Queue)
+      })
     })
   })
 })
