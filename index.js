@@ -52,8 +52,16 @@ function generate (str, output) {
   output = output.trim()
   var generator = new Generator(str)
   return generator.generate().then(function (result) {
+    if (!result) {
+      return
+    }
     if (output === 'STDOUT') {
-      console.log('\n' + result)
+      console.log(
+        '\n' +
+          '********************************************************\n' +
+          '* COPY AND PASTE THE BELOW INTO A NEW SPOTIFY PLAYLIST *\n' +
+          '********************************************************\n')
+      console.log(result + '\n')
     } else {
       result = eol.auto(result)
       fs.writeFile(output, result, function (err) {
