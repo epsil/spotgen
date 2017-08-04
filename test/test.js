@@ -166,20 +166,6 @@ describe('Spotify Playlist Generator', function () {
       var track = new Track(null, 'test')
       track.entry.should.eql('test')
     })
-
-    // it('should dispatch a single entry', function () {
-    //   var track = new Track(null, 'test')
-    //   track.entry.should.eql('test')
-    //   var promise = track.dispatch()
-    //   return promise.should.eventually.be.an.instanceof(Track)
-    // })
-
-    // it('should not confuse album title with track title', function () {
-    //   var track = new Track(null, 'Michael Jackson - Off the Wall')
-    //   return track.dispatch().then(function (track) {
-    //     track.title.should.eql('Michael Jackson - Off the Wall')
-    //   })
-    // })
   })
 
   describe('Album', function () {
@@ -192,15 +178,6 @@ describe('Spotify Playlist Generator', function () {
       var album = new Album(null, 'Beach House - Depression Cherry')
       album.entry.should.eql('Beach House - Depression Cherry')
     })
-
-    // it('should dispatch a single entry', function () {
-    //   var album = new Album(null, 'Beach House - Depression Cherry')
-    //   return album.dispatch().then(function (queue) {
-    //     // FIXME: this is really brittle
-    //     album.uri.should.eql('spotify:album:35vTE3hx3AAXtM6okpJIIt')
-    //     queue.should.be.instanceof(Queue)
-    //   })
-    // })
   })
 
   describe('Artist', function () {
@@ -213,15 +190,6 @@ describe('Spotify Playlist Generator', function () {
       var artist = new Artist(null, 'Bowery Electric')
       artist.entry.should.eql('Bowery Electric')
     })
-
-    // it('should fetch an artist\'s tracks', function () {
-    //   var artist = new Artist(null, 'Bowery Electric', null, 5)
-    //   return artist.dispatch().then(function (queue) {
-    //     // FIXME: this is really brittle
-    //     artist.uri.should.eql('spotify:artist:6a27jEzxHDgONdmADAGcej')
-    //     queue.should.be.instanceof(Queue)
-    //   })
-    // })
   })
 
   describe('Top', function () {
@@ -234,14 +202,6 @@ describe('Spotify Playlist Generator', function () {
       var top = new Top(null, 'Bowery Electric')
       top.entry.should.eql('Bowery Electric')
     })
-
-    // it('should fetch an artist\'s top tracks', function () {
-    //   var top = new Top(null, 'Bowery Electric')
-    //   return top.dispatch().then(function (queue) {
-    //     top.id.should.eql('6a27jEzxHDgONdmADAGcej')
-    //     queue.should.be.instanceof(Queue)
-    //   })
-    // })
   })
 
   describe('Similar', function () {
@@ -254,14 +214,6 @@ describe('Spotify Playlist Generator', function () {
       var similar = new Similar(null, 'Bowery Electric')
       similar.entry.should.eql('Bowery Electric')
     })
-
-    // it('should fetch similar tracks to an artist', function () {
-    //   var similar = new Similar(null, 'Bowery Electric')
-    //   return similar.dispatch().then(function (queue) {
-    //     similar.id.should.eql('6a27jEzxHDgONdmADAGcej')
-    //     queue.should.be.instanceof(Queue)
-    //   })
-    // })
   })
 
   describe('Playlist', function () {
@@ -297,6 +249,20 @@ describe('Spotify Playlist Generator', function () {
       var generator = new Generator('test1\n\n\n\ntest2')
       generator.should.have.deep.property('collection.entries.queue[0].entry', 'test1')
       generator.should.have.deep.property('collection.entries.queue[1].entry', 'test2')
+    })
+
+    it('should dispatch a single entry', function () {
+      var generator = new Generator('test')
+      return generator.generate('list').then(function (str) {
+        str.should.eql('The xx - Test Me')
+      })
+    })
+
+    it('should not confuse album title with track title', function () {
+      var generator = new Generator('Michael Jackson - Off the Wall')
+      return generator.generate('list').then(function (str) {
+        str.should.eql('Michael Jackson - Off the Wall')
+      })
     })
 
     it('should order tracks by Spotify popularity', function () {
