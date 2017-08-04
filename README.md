@@ -349,7 +349,7 @@ This will start up a `http-server` instance at <http://localhost:9000/>.
 
 Note that Spotify's authentication service requires the web demo to be hosted at a whitelisted address. This is the reason for running `http-server` at port 9000 (merely opening `index.html` in a browser will not work).
 
-For more information about authentication, see the [developer documentation](https://epsil.github.io/spotgen/doc/SpotifyAuthenticator.html), as well as the official [Spotify Web API documentation](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
+For more information about authentication, see the official [Spotify Web API documentation](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
 
 Library
 -------
