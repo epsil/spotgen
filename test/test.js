@@ -166,19 +166,19 @@ describe('Spotify Playlist Generator', function () {
       track.entry.should.eql('test')
     })
 
-    it('should dispatch a single entry', function () {
-      var track = new Track(null, 'test')
-      track.entry.should.eql('test')
-      var promise = track.dispatch()
-      return promise.should.eventually.be.an.instanceof(Track)
-    })
+    // it('should dispatch a single entry', function () {
+    //   var track = new Track(null, 'test')
+    //   track.entry.should.eql('test')
+    //   var promise = track.dispatch()
+    //   return promise.should.eventually.be.an.instanceof(Track)
+    // })
 
-    it('should not confuse album title with track title', function () {
-      var track = new Track(null, 'Michael Jackson - Off the Wall')
-      return track.dispatch().then(function (track) {
-        track.title.should.eql('Michael Jackson - Off the Wall')
-      })
-    })
+    // it('should not confuse album title with track title', function () {
+    //   var track = new Track(null, 'Michael Jackson - Off the Wall')
+    //   return track.dispatch().then(function (track) {
+    //     track.title.should.eql('Michael Jackson - Off the Wall')
+    //   })
+    // })
   })
 
   describe('Album', function () {
@@ -192,14 +192,14 @@ describe('Spotify Playlist Generator', function () {
       album.entry.should.eql('Beach House - Depression Cherry')
     })
 
-    it('should dispatch a single entry', function () {
-      var album = new Album(null, 'Beach House - Depression Cherry')
-      return album.dispatch().then(function (queue) {
-        // FIXME: this is really brittle
-        album.uri.should.eql('spotify:album:35vTE3hx3AAXtM6okpJIIt')
-        queue.should.be.instanceof(Queue)
-      })
-    })
+    // it('should dispatch a single entry', function () {
+    //   var album = new Album(null, 'Beach House - Depression Cherry')
+    //   return album.dispatch().then(function (queue) {
+    //     // FIXME: this is really brittle
+    //     album.uri.should.eql('spotify:album:35vTE3hx3AAXtM6okpJIIt')
+    //     queue.should.be.instanceof(Queue)
+    //   })
+    // })
   })
 
   describe('Artist', function () {
@@ -213,14 +213,14 @@ describe('Spotify Playlist Generator', function () {
       artist.entry.should.eql('Bowery Electric')
     })
 
-    it('should fetch an artist\'s tracks', function () {
-      var artist = new Artist(null, 'Bowery Electric', null, 5)
-      return artist.dispatch().then(function (queue) {
-        // FIXME: this is really brittle
-        artist.uri.should.eql('spotify:artist:6a27jEzxHDgONdmADAGcej')
-        queue.should.be.instanceof(Queue)
-      })
-    })
+    // it('should fetch an artist\'s tracks', function () {
+    //   var artist = new Artist(null, 'Bowery Electric', null, 5)
+    //   return artist.dispatch().then(function (queue) {
+    //     // FIXME: this is really brittle
+    //     artist.uri.should.eql('spotify:artist:6a27jEzxHDgONdmADAGcej')
+    //     queue.should.be.instanceof(Queue)
+    //   })
+    // })
   })
 
   describe('Top', function () {
@@ -234,13 +234,13 @@ describe('Spotify Playlist Generator', function () {
       top.entry.should.eql('Bowery Electric')
     })
 
-    it('should fetch an artist\'s top tracks', function () {
-      var top = new Top(null, 'Bowery Electric')
-      return top.dispatch().then(function (queue) {
-        top.id.should.eql('6a27jEzxHDgONdmADAGcej')
-        queue.should.be.instanceof(Queue)
-      })
-    })
+    // it('should fetch an artist\'s top tracks', function () {
+    //   var top = new Top(null, 'Bowery Electric')
+    //   return top.dispatch().then(function (queue) {
+    //     top.id.should.eql('6a27jEzxHDgONdmADAGcej')
+    //     queue.should.be.instanceof(Queue)
+    //   })
+    // })
   })
 
   describe('Similar', function () {
@@ -254,13 +254,13 @@ describe('Spotify Playlist Generator', function () {
       similar.entry.should.eql('Bowery Electric')
     })
 
-    it('should fetch similar tracks to an artist', function () {
-      var similar = new Similar(null, 'Bowery Electric')
-      return similar.dispatch().then(function (queue) {
-        similar.id.should.eql('6a27jEzxHDgONdmADAGcej')
-        queue.should.be.instanceof(Queue)
-      })
-    })
+    // it('should fetch similar tracks to an artist', function () {
+    //   var similar = new Similar(null, 'Bowery Electric')
+    //   return similar.dispatch().then(function (queue) {
+    //     similar.id.should.eql('6a27jEzxHDgONdmADAGcej')
+    //     queue.should.be.instanceof(Queue)
+    //   })
+    // })
   })
 
   describe('Generator', function () {
