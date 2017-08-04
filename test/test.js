@@ -7,6 +7,7 @@ chai.should()
 var Artist = require('../lib/artist')
 var Album = require('../lib/album')
 var Generator = require('../lib/generator')
+var Playlist = require('../lib/playlist')
 var Queue = require('../lib/queue')
 var Similar = require('../lib/similar')
 var Track = require('../lib/track')
@@ -263,6 +264,18 @@ describe('Spotify Playlist Generator', function () {
     // })
   })
 
+  describe('Playlist', function () {
+    it('should create an empty entry', function () {
+      var playlist = new Playlist(null, '')
+      playlist.entry.should.eql('')
+    })
+
+    it('should create a single entry', function () {
+      var playlist = new Playlist(null, 'redditlistentothis:6TMNC59e1TuFFE48tJ9V2D', 'redditlistentothis', '6TMNC59e1TuFFE48tJ9V2D')
+      playlist.entry.should.eql('redditlistentothis:6TMNC59e1TuFFE48tJ9V2D')
+    })
+  })
+
   describe('Generator', function () {
     it('should create empty playlist when passed empty string', function () {
       var generator = new Generator('')
@@ -456,6 +469,44 @@ describe('Spotify Playlist Generator', function () {
       return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
         str.should.match(/^Flying Saucer Attack - My Dreaming Hill/gi)
+      })
+    })
+
+    it('should parse #playlist entries', function () {
+      var generator = new Generator('#playlist redditlistentothis:6TMNC59e1TuFFE48tJ9V2D')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Playlist)
+      generator.should.have.deep.property('collection.entries.queue[0].owner.id')
+        .that.eql('redditlistentothis')
+      generator.should.have.deep.property('collection.entries.queue[0].id')
+        .that.eql('6TMNC59e1TuFFE48tJ9V2D')
+    })
+
+    it('should parse playlist URIs', function () {
+      var generator = new Generator('spotify:user:redditlistentothis:playlist:6TMNC59e1TuFFE48tJ9V2D')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Playlist)
+      generator.should.have.deep.property('collection.entries.queue[0].owner.id')
+        .that.eql('redditlistentothis')
+      generator.should.have.deep.property('collection.entries.queue[0].id')
+        .that.eql('6TMNC59e1TuFFE48tJ9V2D')
+    })
+
+    it('should parse playlist links', function () {
+      var generator = new Generator('https://open.spotify.com/user/redditlistentothis/playlist/6TMNC59e1TuFFE48tJ9V2D')
+      generator.should.have.deep.property('collection.entries.queue[0]')
+        .that.is.instanceof(Playlist)
+      generator.should.have.deep.property('collection.entries.queue[0].owner.id')
+        .that.eql('redditlistentothis')
+      generator.should.have.deep.property('collection.entries.queue[0].id')
+        .that.eql('6TMNC59e1TuFFE48tJ9V2D')
+    })
+
+    it('should dispatch #playlist entries', function () {
+      var generator = new Generator('#playlist redditlistentothis:6TMNC59e1TuFFE48tJ9V2D')
+      return generator.generate('list').then(function (str) {
+        // FIXME: this is really brittle
+        str.should.match(/^Drakkar Nowhere - Higher Now/gi)
       })
     })
 
