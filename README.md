@@ -31,7 +31,7 @@ Go to <https://epsil.github.io/spotgen/>, enter a [generator string](#commands) 
 
 `input.txt` is a text file containing a [generator string](#commands), invoking any of the *commands* described below. `output.txt` will contain the generator's output, a list of [Spotify URIs](#spotify-uris) which can be [imported into Spotify](#importing-the-playlist).
 
-Alternatively, you can pass a generator string as a single argument. In that case, the Spotify URIs are written to standard output:
+Alternatively, one can pass a generator string as a single argument. In that case, the Spotify URIs are written to standard output:
 
     spotgen "#artist Bowery Electric"
     spotgen "#similar Beach House\n#similar Hooverphonic"
@@ -39,7 +39,7 @@ Alternatively, you can pass a generator string as a single argument. In that cas
 
 Make sure to surround the string with quotes (`"`) if it contains spaces or special characters. Line breaks can be expressed as `\n`.
 
-You can also can run the generator with no arguments and enter commands interactively. This saves you the trouble of quoting strings and escaping newlines.
+One can also run the generator with no arguments and enter commands interactively. This saves one the trouble of quoting strings and escaping newlines.
 
 For more information, type `spotgen --help`.
 
@@ -354,7 +354,7 @@ For more information about authentication, see the official [Spotify Web API doc
 Library
 -------
 
-The generator is also available as a library which can be utilized by your own project. To install it in your project's `node_modules/` folder:
+The generator is also available as a library that can be included in another project. To install it in the project's `node_modules/` folder:
 
     npm install --save spotgen
 
@@ -372,13 +372,13 @@ spotgen.generate().then(function (result) {
 
 The `generate()` method returns a [promise](https://www.promisejs.org/) that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the `then()` callback as shown.
 
-Note that if you are writing your own application for Spotify, then you should [register your application](https://developer.spotify.com/web-api/authorization-guide/#introduction) and obtain a client ID and client secret key. These are passed to the `Generator` class like so:
+Note that if one is writing one's own application for Spotify, then one should [register the application](https://developer.spotify.com/web-api/authorization-guide/#introduction) and obtain a client ID and client secret key. These are passed to the `Generator` class like so:
 
 ```js
 var spotgen = new Generator('#top Beach House', clientId, clientKey)
 ```
 
-The generator will then use these values to acquire an access token for web API requests. If you already have a token, then you can pass that to `Generator` as well:
+The generator will then use these values to acquire an access token for web API requests. If one already has a token, then one can pass that to `Generator` as well:
 
 ```js
 var spotgen = new Generator('#top Beach House', clientId, clientKey, token)
