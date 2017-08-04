@@ -4,7 +4,7 @@ var $ = require('jquery')
 jQuery = $
 require('bootstrap')
 var Generator = require('../lib/generator')
-var SpotifyAuthenticator = require('../lib/auth')
+var SpotifyAuth = require('../lib/auth')
 
 console.log = function (message) {
   if (typeof message === 'string') {
@@ -104,7 +104,7 @@ $(function () {
       generate()
     }
   } else {
-    var spotify = new SpotifyAuthenticator()
+    var spotify = new SpotifyAuth()
     var url = spotify.implicitGrantFlowURI(window.location.href)
     button.attr('href', url)
   }
