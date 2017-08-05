@@ -26,22 +26,27 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>var http = require('./http')
-var sort = require('./sort')
-var SpotifyAuthenticator = require('./auth')
+            <pre class="prettyprint source linenums"><code>var URI = require('urijs')
+var http = require('./http')
+var SpotifyAuth = require('./auth')
 
 /**
- * Create a Spotify request handler.
+ * Create a Spotify web API client.
  * @constructor
  * @param {string} [clientId] - Client ID.
  * @param {string} [clientKey] - Client secret key.
  * @param {string} [token] - Access token (if already authenticated).
  */
-function SpotifyRequestHandler (clientId, clientKey, token) {
+function SpotifyWebApi (clientId, clientKey, token) {
   /**
    * Spotify authenticator.
    */
-  this.auth = new SpotifyAuthenticator(clientId, clientKey, token)
+  this.auth = new SpotifyAuth(clientId, clientKey, token)
+
+  /**
+   * HTTP function.
+   */
+  this.http = http.json
 }
 
 /**
@@ -52,13 +57,13 @@ function SpotifyRequestHandler (clientId, clientKey, token) {
  * @param {string} id - Album ID.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.getAlbum = function (id) {
+SpotifyWebApi.prototype.getAlbum = function (id) {
   var uri = 'https://api.spotify.com/v1/albums/'
   uri += encodeURIComponent(id)
   return this.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.id) {
-      return Promise.resolve(response)
+      return Promise.resolve({body: response})
     } else {
       return Promise.reject(response)
     }
@@ -73,39 +78,43 @@ SpotifyRequestHandler.prototype.getAlbum = function (id) {
  * @param {string} id - Artist ID.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
-  var self = this
+SpotifyWebApi.prototype.getArtistAlbums = function (id, opts) {
   var uri = 'https://api.spotify.com/v1/artists/'
   uri += encodeURIComponent(id) + '/albums?limit=50'
-
-  function getAlbums (uri, result) {
-    return self.request(uri).then(function (response) {
-      if (!(response &amp;&amp;
-            response.items)) {
-        return Promise.reject(response)
-      }
-      if (result) {
-        result.items = result.items.concat(response.items)
-      } else {
-        result = response
-      }
-      if (response.next) {
-        return getAlbums(response.next, result)
-      } else {
-        return Promise.resolve(result)
-      }
-    })
+  opts = opts || {}
+  opts = URI.buildQuery(opts)
+  if (opts) {
+    uri += '?' + opts
   }
-
-  // sort albums by type
-  function sortAlbums (response) {
-    if (response &amp;&amp; response.items) {
-      sort(response.items, sort.album)
+  return this.request(uri).then(function (response) {
+    if (response &amp;&amp;
+        response.items) {
+      return Promise.resolve({body: response})
+    } else {
+      return Promise.reject(response)
     }
-    return response
-  }
+  })
+}
 
-  return getAlbums(uri).then(sortAlbums)
+/**
+ * Search for related artists.
+ *
+ * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
+ *
+ * @param {string} id - The album ID.
+ * @return {Promise | JSON} A JSON response.
+ */
+SpotifyWebApi.prototype.getArtistRelatedArtists = function (id) {
+  var uri = 'https://api.spotify.com/v1/artists/'
+  uri += encodeURIComponent(id) + '/related-artists'
+  return this.request(uri).then(function (response) {
+    if (response &amp;&amp;
+        response.artists) {
+      return Promise.resolve({body: response})
+    } else {
+      return Promise.reject(response)
+    }
+  })
 }
 
 /**
@@ -119,32 +128,25 @@ SpotifyRequestHandler.prototype.getAlbumsByArtist = function (id) {
  * @param {string} id - Album ID.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
-  var self = this
+SpotifyWebApi.prototype.getPlaylistTracks = function (owner, id, opts) {
   var uri = 'https://api.spotify.com/v1/users/' +
       encodeURIComponent(owner) +
       '/playlists/' +
       encodeURIComponent(id) +
       '/tracks'
-  function getTracks (uri, result) {
-    return self.request(uri).then(function (response) {
-      if (!(response &amp;&amp;
-            response.items)) {
-        return Promise.reject(response)
-      }
-      if (result) {
-        result.items = result.items.concat(response.items)
-      } else {
-        result = response
-      }
-      if (response.next) {
-        return getTracks(response.next, result)
-      } else {
-        return Promise.resolve(result)
-      }
-    })
+  opts = opts || {}
+  opts = URI.buildQuery(opts)
+  if (opts) {
+    uri += '?' + opts
   }
-  return getTracks(uri)
+  return this.request(uri).then(function (response) {
+    if (response &amp;&amp;
+        response.items) {
+      return Promise.resolve({body: response})
+    } else {
+      return Promise.reject(response)
+    }
+  })
 }
 
 /**
@@ -155,14 +157,13 @@ SpotifyRequestHandler.prototype.getPlaylist = function (id, owner) {
  * @param {string} id - Artist ID.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.getTopTracks = function (id) {
+SpotifyWebApi.prototype.getArtistTopTracks = function (id) {
   var uri = 'https://api.spotify.com/v1/artists/'
   uri += encodeURIComponent(id) + '/top-tracks?country=US'
   return this.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.tracks) {
-      sort(response.tracks, sort.popularity)
-      return Promise.resolve(response)
+      return Promise.resolve({body: response})
     } else {
       return Promise.reject(response)
     }
@@ -177,10 +178,17 @@ SpotifyRequestHandler.prototype.getTopTracks = function (id) {
  * @param {string} id - Track ID.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.getTrack = function (id) {
+SpotifyWebApi.prototype.getTrack = function (id) {
   var uri = 'https://api.spotify.com/v1/tracks/'
   uri += encodeURIComponent(id)
-  return this.request(uri)
+  return this.request(uri).then(function (response) {
+    if (response &amp;&amp;
+        response.uri) {
+      return Promise.resolve({body: response})
+    } else {
+      return Promise.reject(response)
+    }
+  })
 }
 
 /**
@@ -189,18 +197,18 @@ SpotifyRequestHandler.prototype.getTrack = function (id) {
  * @param {Object} [options] - Request options.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.request = function (uri, options) {
+SpotifyWebApi.prototype.request = function (uri, options) {
   var self = this
   options = options || {}
   console.log(uri)
   return this.auth.getToken().then(function (token) {
     options.headers = options.headers || {}
     options.headers.Authorization = 'Bearer ' + token
-    return http.json(uri, options)
+    return self.http(uri, options)
   }).catch(function (status) {
     return self.refreshToken().then(function (token) {
       options.headers.Authorization = 'Bearer ' + token
-      return http.json(uri, options)
+      return self.http(uri, options)
     })
   })
 }
@@ -213,17 +221,15 @@ SpotifyRequestHandler.prototype.request = function (uri, options) {
  * @param {string} artist - The artist to search for.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.searchForArtist = function (artist) {
+SpotifyWebApi.prototype.searchArtists = function (artist) {
   var uri = 'https://api.spotify.com/v1/search?type=artist&amp;q='
   uri += encodeURIComponent(artist)
   return this.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.artists &amp;&amp;
-        response.artists.items[0] &amp;&amp;
-        response.artists.items[0].id) {
-      // sort results by string similarity
-      sort(response.artists.items, sort.similarArtist(artist))
-      return Promise.resolve(response)
+        response.artists.items &amp;&amp;
+        response.artists.items[0]) {
+      return Promise.resolve({body: response})
     } else {
       return Promise.reject(response)
     }
@@ -239,7 +245,7 @@ SpotifyRequestHandler.prototype.searchForArtist = function (artist) {
  * @param {string} [artist] - The album artist.
  * @return {Promise | JSON} A JSON response.
  */
-SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
+SpotifyWebApi.prototype.searchAlbums = function (album, artist) {
   var query = album
   if (artist) {
     query = 'album:"' + album + '"'
@@ -250,13 +256,9 @@ SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
   return this.request(uri).then(function (response) {
     if (response &amp;&amp;
         response.albums &amp;&amp;
-        response.albums.items[0] &amp;&amp;
-        response.albums.items[0].id) {
-      // sort results by string similarity
-      if (!artist) {
-        sort(response.albums.items, sort.similarAlbum(album))
-      }
-      return Promise.resolve(response)
+        response.albums.items &amp;&amp;
+        response.albums.items[0]) {
+      return Promise.resolve({body: response})
     } else {
       return Promise.reject(response)
     }
@@ -273,35 +275,14 @@ SpotifyRequestHandler.prototype.searchForAlbum = function (album, artist) {
  * @param {string} playlist - The track to search for.
  * @return {Promise | JSON} JSON response.
  */
-SpotifyRequestHandler.prototype.searchForPlaylist = function (playlist) {
+SpotifyWebApi.prototype.searchPlaylists = function (playlist) {
   var uri = 'https://api.spotify.com/v1/search?type=playlist&amp;limit=50&amp;q='
   uri += encodeURIComponent(playlist)
   return this.request(uri).then(function (response) {
     if (response.playlists &amp;&amp;
-        response.playlists.items[0] &amp;&amp;
-        response.playlists.items[0].uri) {
-      return Promise.resolve(response)
-    } else {
-      return Promise.reject(response)
-    }
-  })
-}
-
-/**
- * Search for related artists.
- *
- * [Reference](https://developer.spotify.com/web-api/get-related-artists/#example).
- *
- * @param {string} id - The album ID.
- * @return {Promise | JSON} A JSON response.
- */
-SpotifyRequestHandler.prototype.searchForRelatedArtists = function (id) {
-  var uri = 'https://api.spotify.com/v1/artists/'
-  uri += encodeURIComponent(id) + '/related-artists'
-  return this.request(uri).then(function (response) {
-    if (response &amp;&amp;
-        response.artists) {
-      return Promise.resolve(response)
+        response.playlists.items &amp;&amp;
+        response.playlists.items[0]) {
+      return Promise.resolve({body: response})
     } else {
       return Promise.reject(response)
     }
@@ -318,7 +299,7 @@ SpotifyRequestHandler.prototype.searchForRelatedArtists = function (id) {
  * @param {string} [album] - The track album.
  * @return {Promise | JSON} JSON response.
  */
-SpotifyRequestHandler.prototype.searchForTrack = function (track, artist, album) {
+SpotifyWebApi.prototype.searchTracks = function (track, artist, album) {
   var query = track
   if (artist || album) {
     query = 'track:"' + track + '"'
@@ -329,22 +310,16 @@ SpotifyRequestHandler.prototype.searchForTrack = function (track, artist, album)
   uri += encodeURIComponent(query)
   return this.request(uri).then(function (response) {
     if (response.tracks &amp;&amp;
-        response.tracks.items[0] &amp;&amp;
-        response.tracks.items[0].uri) {
-      // Sort results by string similarity. This takes care of some
-      // odd cases where a random track from an album of the same name
-      // is returned as the first hit.
-      if (!(album &amp;&amp; artist)) {
-        sort(response.tracks.items, sort.track(track))
-      }
-      return Promise.resolve(response)
+        response.tracks.items &amp;&amp;
+        response.tracks.items[0]) {
+      return Promise.resolve({body: response})
     } else {
       return Promise.reject(response)
     }
   })
 }
 
-module.exports = SpotifyRequestHandler
+module.exports = SpotifyWebApi
 </code></pre>
         </article>
     </section>
@@ -355,13 +330,13 @@ module.exports = SpotifyRequestHandler
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Sat Aug 05 2017 09:54:08 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

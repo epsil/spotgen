@@ -30,6 +30,7 @@
 /* exported jQuery */
 
 var http = require('./http')
+var util = require('./util')
 var URI = require('urijs')
 var $ = require('jquery')
 jQuery = $
@@ -127,73 +128,16 @@ WebScraper.prototype.dispatch = function () {
 }
 
 /**
- * Clean up a string's contents.
- * @param {string} str - A string.
- * @return {string} A new string.
- */
-WebScraper.prototype.cleanup = function (str) {
-  str = str.replace(/].*/gi, ']')
-    .replace(/\).*/gi, ')')
-    .replace(/\[[^\]]*]/gi, '')
-    .replace(/\([^)]*\)/gi, '')
-    .replace(/-+/gi, '-')
-    .replace(/\.+/gi, '.')
-    // .replace(/[^-'.\w\s]/gi, '')
-    .replace(/[[\]\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&amp;()*+,./:;&lt;=>?@^_`{|}~\u00AA\u00BB\u00B9\u00BA]/gi, '')
-  str = this.trim(str)
-  return str
-}
-
-/**
- * Replace Unicode characters with their ASCII equivalents.
- * @param {string} str - A string.
- * @return {string} - A new string.
- */
-WebScraper.prototype.toAscii = function (str) {
-  return str.replace(/[\u2018\u2019\u00b4]/g, "'")
-    .replace(/[\u201c\u201d\u2033]/g, '"')
-    .replace(/[\u2212\u2022\u00b7\u25aa]/g, '-')
-    .replace(/[\u2013\u2015]/g, '-')
-    .replace(/\u2014/g, '-')
-    // .replace(/[\u2013\u2015]/g, '--')
-    // .replace(/\u2014/g, '---')
-    .replace(/\u2026/g, '...')
-    .replace(/[ ]+\n/g, '\n')
-    .replace(/\s*\\\n/g, '\\\n')
-    .replace(/\s*\\\n\s*\\\n/g, '\n\n')
-    .replace(/\s*\\\n\n/g, '\n\n')
-    .replace(/\n-\n/g, '\n')
-    .replace(/\n\n\s*\\\n/g, '\n\n')
-    .replace(/\n\n\n*/g, '\n\n')
-    .replace(/[ ]+$/gm, '')
-    .replace(/^\s+|[\s\\]+$/g, '')
-}
-
-/**
- * Clean up a string's whitespace.
- * @param {string} str - A string.
- * @return {string} A new string.
- */
-WebScraper.prototype.trim = function (str) {
-  str = str || ''
-  str = str.trim()
-  str = str.replace(/[\s]+/g, ' ')
-  str = this.toAscii(str)
-  return str
-}
-
-/**
  * Scrape a Last.fm tracklist.
  * @param {string} uri - The URI of the web page to scrape.
  * @param {integer} [count] - The number of pages to scrape.
  * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.lastfm = function (uri, count) {
-  var self = this
   count = count || 1
   function getPages (nextUri, result, count) {
     nextUri = URI(nextUri).absoluteTo(uri).toString()
-    console.log(nextUri)
+    console.log(nextUri + '\n')
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
       var lines = ''
@@ -203,32 +147,32 @@ WebScraper.prototype.lastfm = function (uri, count) {
         if (header.length === 0) {
           header = html.find('h1.header-title')
         }
-        var artist = self.trim(header.first().text())
+        var artist = util.trim(header.first().text())
         html.find('td.chartlist-name').each(function () {
-          lines += artist + ' - ' + self.trim($(this).text()) + '\n'
+          lines += artist + ' - ' + util.trim($(this).text()) + '\n'
         })
       } else if (uri.match(/\/\+similar/gi)) {
         // similar artists
         html.find('h3.big-artist-list-title').each(function () {
-          lines += '#top ' + self.trim($(this).text()) + '\n'
+          lines += '#top ' + util.trim($(this).text()) + '\n'
         })
       } else if (uri.match(/\/artists/gi)) {
         // list of artists
         html.find('td.chartlist-name').each(function () {
-          lines += '#top ' + self.trim($(this).text()) + '\n'
+          lines += '#top ' + util.trim($(this).text()) + '\n'
         })
       } else if (uri.match(/\/albums/gi)) {
         // list of albums
         html.find('td.chartlist-name').each(function () {
-          lines += '#album ' + self.trim($(this).text()) + '\n'
+          lines += '#album ' + util.trim($(this).text()) + '\n'
         })
       } else {
         // list of tracks by various artists
         html.find('td.chartlist-name').each(function () {
-          lines += self.trim($(this).text()) + '\n'
+          lines += util.trim($(this).text()) + '\n'
         })
       }
-      console.log(lines.trim())
+      console.log(lines.trim() + '\n')
       result += lines
       if (count === 1) {
         return result
@@ -253,20 +197,19 @@ WebScraper.prototype.lastfm = function (uri, count) {
  * @return {Promise | string} A newline-separated list of albums.
  */
 WebScraper.prototype.pitchfork = function (uri, count) {
-  var self = this
   count = count || 0
   function getPages (nextUri, result, count) {
     nextUri = URI(nextUri).absoluteTo(uri).toString()
-    console.log(nextUri)
+    console.log(nextUri + '\n')
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
       var lines = ''
       html.find('div.artist-work').each(function () {
-        var artist = self.trim($(this).find('ul.artist-list li:first').text())
-        var album = self.trim($(this).find('h2.work-title').text())
+        var artist = util.trim($(this).find('ul.artist-list li:first').text())
+        var album = util.trim($(this).find('h2.work-title').text())
         lines += '#album ' + artist + ' - ' + album + '\n'
       })
-      console.log(lines.trim())
+      console.log(lines.trim() + '\n')
       result += lines
       if (count === 1) {
         return result
@@ -291,20 +234,19 @@ WebScraper.prototype.pitchfork = function (uri, count) {
  * @return {Promise | string} A newline-separated list of albums.
  */
 WebScraper.prototype.rateyourmusic = function (uri, count) {
-  var self = this
   count = count || 0
   function getPages (nextUri, result, count) {
     nextUri = URI(nextUri).absoluteTo(uri).toString()
-    console.log(nextUri)
+    console.log(nextUri + '\n')
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
       var lines = ''
       html.find('div.chart_details').each(function () {
-        var artist = self.trim($(this).find('a.artist').text())
-        var album = self.trim($(this).find('a.album').text())
+        var artist = util.trim($(this).find('a.artist').text())
+        var album = util.trim($(this).find('a.album').text())
         lines += '#album ' + artist + ' - ' + album + '\n'
       })
-      console.log(lines.trim())
+      console.log(lines.trim() + '\n')
       result += lines
       if (count === 1) {
         return result
@@ -333,11 +275,10 @@ WebScraper.prototype.rateyourmusic = function (uri, count) {
  * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.reddit = function (uri, count) {
-  var self = this
   count = count || 1
   function getPages (nextUri, result, count) {
     nextUri = URI(nextUri).absoluteTo(uri).toString()
-    console.log(nextUri)
+    console.log(nextUri + '\n')
     return http(nextUri).then(function (data) {
       var html = $($.parseHTML(data))
       var lines = ''
@@ -351,7 +292,7 @@ WebScraper.prototype.reddit = function (uri, count) {
             links.each(function () {
               var txt = $(this).text()
               if (!txt.match(/https?:/gi)) {
-                lines += self.cleanup(txt) + '\n'
+                lines += util.cleanup(txt) + '\n'
               }
             })
             return
@@ -361,7 +302,7 @@ WebScraper.prototype.reddit = function (uri, count) {
           var body = $(this).text()
           var sentences = body.split('.')
           if (sentences.length > 1) {
-            lines += self.cleanup(sentences[0]) + '\n'
+            lines += util.cleanup(sentences[0]) + '\n'
             return
           }
           // third assumption: if there are multiple lines to a comment,
@@ -369,20 +310,20 @@ WebScraper.prototype.reddit = function (uri, count) {
           // comments on other lines after it
           var lines = body.split('\n')
           if (lines.length > 1) {
-            lines += self.cleanup(lines[0]) + '\n'
+            lines += util.cleanup(lines[0]) + '\n'
             return
           }
           // fall-back case
-          lines += self.cleanup(body) + '\n'
+          lines += util.cleanup(body) + '\n'
         })
       } else {
         // post listing
         html.find('a.title').each(function () {
-          var track = self.cleanup($(this).text())
+          var track = util.cleanup($(this).text())
           lines += track + '\n'
         })
       }
-      console.log(lines.trim())
+      console.log(lines.trim() + '\n')
       result += lines
       if (count === 1) {
         return result
@@ -410,17 +351,16 @@ WebScraper.prototype.reddit = function (uri, count) {
  * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.webpage = function (uri) {
-  var self = this
-  console.log(uri)
+  console.log(uri + '\n')
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
     html.find('a').each(function () {
-      var track = self.cleanup($(this).text())
+      var track = util.cleanup($(this).text())
       result += track + '\n'
     })
     result = result.trim()
-    console.log(result)
+    console.log(result + '\n')
     return result
   })
 }
@@ -431,17 +371,16 @@ WebScraper.prototype.webpage = function (uri) {
  * @return {Promise | string} A newline-separated list of tracks.
  */
 WebScraper.prototype.youtube = function (uri) {
-  var self = this
-  console.log(uri)
+  console.log(uri + '\n')
   return http(uri).then(function (data) {
     var html = $($.parseHTML(data))
     var result = ''
     html.find('div.playlist-video-description h4, a.pl-video-title-link').each(function () {
-      var track = self.cleanup($(this).text())
+      var track = util.cleanup($(this).text())
       result += track + '\n'
     })
     result = result.trim()
-    console.log(result)
+    console.log(result + '\n')
     return result
   })
 }
@@ -457,13 +396,13 @@ module.exports = WebScraper
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Sat Aug 05 2017 09:54:08 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

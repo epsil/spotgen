@@ -27,18 +27,19 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>var Queue = require('./queue')
-var SpotifyRequestHandler = require('./spotify')
 var Track = require('./track')
+var util = require('./util')
 
 /**
  * Create playlist entry.
  * @constructor
- * @param {SpotifyRequestHandler} spotify - Spotify request handler.
+ * @param {SpotifyWebApi} spotify - Spotify web API.
  * @param {string} entry - The playlist to search for.
+ * @param {string} [owner] - The Spotify owner, if known.
  * @param {string} [id] - The Spotify ID, if known.
  * @param {string} [limit] - The number of tracks to fetch.
  */
-function Playlist (spotify, entry, id, owner, limit) {
+function Playlist (spotify, entry, owner, id, limit) {
   /**
    * Entry string.
    */
@@ -79,7 +80,7 @@ function Playlist (spotify, entry, id, owner, limit) {
   this.id = id || this.id
   this.limit = limit
   this.owner.id = owner || this.owner.id
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = spotify
   this.uri = (this.owner.id &amp;&amp; this.id) ? ('spotify:user:' + this.owner.id + ':playlist:' + this.id) : this.uri
 }
 
@@ -121,8 +122,8 @@ Playlist.prototype.createQueue = function () {
  */
 Playlist.prototype.dispatch = function () {
   var self = this
-  return this.searchForPlaylist().then(function () {
-    return self.fetchPlaylist()
+  return this.searchPlaylists().then(function () {
+    return self.getPlaylist()
   }).then(function () {
     return self.createQueue()
   })
@@ -132,31 +133,31 @@ Playlist.prototype.dispatch = function () {
  * Fetch playlist tracks.
  * @return {Promise | JSON} A JSON response.
  */
-Playlist.prototype.fetchPlaylist = function (id, owner) {
+Playlist.prototype.getPlaylist = function (owner, id) {
   id = id || this.id
   owner = owner || (this.owner &amp;&amp; this.owner.id)
   var self = this
-  return this.spotify.getPlaylist(id, owner).then(function (response) {
-    self.clone(response)
+  return util.paging(this.spotify, this.spotify.getPlaylistTracks, [owner, id]).then(function (response) {
+    self.clone(response.body)
     return self
   })
 }
-
 /**
  * Search for playlist.
  * @return {Promise | JSON} A JSON response, or `null` if not found.
  */
-Playlist.prototype.searchForPlaylist = function () {
+Playlist.prototype.searchPlaylists = function () {
   var self = this
   if (this.id &amp;&amp; this.owner &amp;&amp; this.owner.id) {
     return Promise.resolve(this)
   } else {
-    return this.spotify.searchForPlaylist(this.entry).then(function (response) {
+    return this.spotify.searchPlaylists(this.entry).then(function (response) {
       if (response &amp;&amp;
-          response.playlists &amp;&amp;
-          response.playlists.items &amp;&amp;
-          response.playlists.items[0]) {
-        response = response.playlists.items[0]
+          response.body &amp;&amp;
+          response.body.playlists &amp;&amp;
+          response.body.playlists.items &amp;&amp;
+          response.body.playlists.items[0]) {
+        response = response.body.playlists.items[0]
         self.clone(response)
         return Promise.resolve(self)
       } else {
@@ -180,13 +181,13 @@ module.exports = Playlist
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Sat Aug 05 2017 09:54:08 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

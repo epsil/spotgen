@@ -28,12 +28,13 @@
         <article>
             <pre class="prettyprint source linenums"><code>var defaults = require('./defaults')
 var lastfm = require('./lastfm')(defaults.api)
-var SpotifyRequestHandler = require('./spotify')
+var sort = require('./sort')
+var util = require('./util')
 
 /**
  * Create track entry.
  * @constructor
- * @param {SpotifyRequestHandler} spotify - Spotify request handler.
+ * @param {SpotifyWebApi} spotify - Spotify web API.
  * @param {string} entry - The track to search for.
  * @param {string} [id] - The Spotify ID, if known.
  */
@@ -111,7 +112,7 @@ function Track (spotify, entry, id) {
 
   this.entry = entry.trim()
   this.id = id
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = spotify
   this.uri = this.id ? ('spotify:track:' + this.id) : this.uri
 }
 
@@ -162,23 +163,6 @@ Track.prototype.equals = function (track) {
 }
 
 /**
- * Fetch track metadata.
- * @return {Promise | Track} Itself.
- */
-Track.prototype.fetchTrack = function (id) {
-  id = id || this.id
-  var self = this
-  if (Number.isInteger(this.popularity)) {
-    return Promise.resolve(this)
-  } else {
-    return this.spotify.getTrack(id).then(function (response) {
-      self.clone(response)
-      return self
-    })
-  }
-}
-
-/**
  * Get track info.
  * @return {Promise | Track} Itself.
  */
@@ -186,9 +170,9 @@ Track.prototype.getInfo = function () {
   if (this.popularity) {
     return Promise.resolve(this)
   } else if (this.id) {
-    return this.fetchTrack()
+    return this.getTrack()
   } else {
-    return this.searchForTrack()
+    return this.searchTracks()
   }
 }
 
@@ -217,6 +201,23 @@ Track.prototype.getPopularity = function () {
   } else {
     return self.getInfo().then(function () {
       return self.popularity
+    })
+  }
+}
+
+/**
+ * Fetch track metadata.
+ * @return {Promise | Track} Itself.
+ */
+Track.prototype.getTrack = function (id) {
+  id = id || this.id
+  var self = this
+  if (Number.isInteger(this.popularity)) {
+    return Promise.resolve(this)
+  } else {
+    return this.spotify.getTrack(id).then(function (response) {
+      self.clone(response.body)
+      return self
     })
   }
 }
@@ -258,15 +259,20 @@ Track.prototype.hasArtist = function (artist) {
  * @param {string} query - The query text.
  * @return {Promise | Track} Itself.
  */
-Track.prototype.searchForTrack = function (str, retry) {
+Track.prototype.searchTracks = function (str, retry) {
   str = str || this.entry
   var self = this
-  return this.spotify.searchForTrack(str).then(function (response) {
+  return this.spotify.searchTracks(str).then(function (response) {
     if (response &amp;&amp;
-        response.tracks &amp;&amp;
-        response.tracks.items &amp;&amp;
-        response.tracks.items[0]) {
-      response = response.tracks.items[0]
+        response.body &amp;&amp;
+        response.body.tracks &amp;&amp;
+        response.body.tracks.items &amp;&amp;
+        response.body.tracks.items[0]) {
+      // Sort results by string similarity. This takes care of some
+      // odd cases where a random track from an album of the same name
+      // is returned as the first hit.
+      sort(response.body.tracks.items, sort.track(self.entry))
+      response = response.body.tracks.items[0]
       self.clone(response)
       return Promise.resolve(self)
     } else {
@@ -274,20 +280,11 @@ Track.prototype.searchForTrack = function (str, retry) {
     }
   }).catch(function () {
     if (str.match(/^[0-9a-z]+$/i)) {
-      return self.fetchTrack(str)
+      return self.getTrack(str)
     } else if (!retry) {
       // simplify query and try again
-      str = str.trim()
-        .replace(/].*/gi, ']')
-        .replace(/\).*/gi, ')')
-        .replace(/^[0-9]+\. /gi, '')
-        .replace(/\[[^\]]*]/gi, '')
-        .replace(/\([^)]*\)/gi, '')
-        .replace(/-+/gi, '')
-        .replace(/\.+/gi, '.')
-        .replace(/[\s]+/gi, ' ')
-        .replace(/[^-'.\w\s]/gi, '')
-      return self.searchForTrack(str, true)
+      str = util.cleanup(str)
+      return self.searchTracks(str, true)
     } else {
       // console.log('COULD NOT FIND ' + self.entry)
       return Promise.reject(null)
@@ -326,13 +323,13 @@ module.exports = Track
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Sat Aug 05 2017 09:54:08 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

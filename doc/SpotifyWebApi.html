@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: SpotifyRequestHandler</title>
+    <title>JSDoc: Class: SpotifyWebApi</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: SpotifyRequestHandler</h1>
+    <h1 class="page-title">Class: SpotifyWebApi</h1>
 
     
 
@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>SpotifyRequestHandler<span class="signature">(clientId<span class="signature-attributes">opt</span>, clientKey<span class="signature-attributes">opt</span>, token<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>SpotifyWebApi<span class="signature">(clientId<span class="signature-attributes">opt</span>, clientKey<span class="signature-attributes">opt</span>, token<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
         
     
 </header>
@@ -41,7 +41,7 @@
     
 
     
-    <h4 class="name" id="SpotifyRequestHandler"><span class="type-signature"></span>new SpotifyRequestHandler<span class="signature">(clientId<span class="signature-attributes">opt</span>, clientKey<span class="signature-attributes">opt</span>, token<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="SpotifyWebApi"><span class="type-signature"></span>new SpotifyWebApi<span class="signature">(clientId<span class="signature-attributes">opt</span>, clientKey<span class="signature-attributes">opt</span>, token<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -49,7 +49,7 @@
 
 
 <div class="description">
-    <p>Create a Spotify request handler.</p>
+    <p>Create a Spotify web API client.</p>
 </div>
 
 
@@ -329,6 +329,68 @@
 
 
         
+            
+<h4 class="name" id="http"><span class="type-signature"></span>http<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    <p>HTTP function.</p>
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line21">line 21</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
     
 
     
@@ -442,7 +504,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line27">line 27</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line32">line 32</a>
     </li></ul></dd>
     
 
@@ -501,7 +563,7 @@
     
 
     
-    <h4 class="name" id="getAlbumsByArtist"><span class="type-signature"></span>getAlbumsByArtist<span class="signature">(id)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    <h4 class="name" id="getArtistAlbums"><span class="type-signature"></span>getArtistAlbums<span class="signature">(id)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
     
 
     
@@ -603,7 +665,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line48">line 48</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line53">line 53</a>
     </li></ul></dd>
     
 
@@ -662,7 +724,329 @@
     
 
     
-    <h4 class="name" id="getPlaylist"><span class="type-signature"></span>getPlaylist<span class="signature">(id<span class="signature-attributes">opt</span>, owner<span class="signature-attributes">opt</span>, id)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    <h4 class="name" id="getArtistRelatedArtists"><span class="type-signature"></span>getArtistRelatedArtists<span class="signature">(id)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Search for related artists.</p>
+<p><a href="https://developer.spotify.com/web-api/get-related-artists/#example">Reference</a>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The album ID.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line79">line 79</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A JSON response.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type">JSON</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getArtistTopTracks"><span class="type-signature"></span>getArtistTopTracks<span class="signature">(id)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Get the top tracks of an artist.</p>
+<p><a href="https://developer.spotify.com/web-api/get-artists-top-tracks/#example">Reference</a>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Artist ID.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line132">line 132</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>A JSON response.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type">JSON</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getPlaylistTracks"><span class="type-signature"></span>getPlaylistTracks<span class="signature">(id<span class="signature-attributes">opt</span>, owner<span class="signature-attributes">opt</span>, id)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
     
 
     
@@ -840,168 +1224,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line94">line 94</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>A JSON response.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Promise</span>
-|
-
-<span class="param-type">JSON</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="getTopTracks"><span class="type-signature"></span>getTopTracks<span class="signature">(id)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Get the top tracks of an artist.</p>
-<p><a href="https://developer.spotify.com/web-api/get-artists-top-tracks/#example">Reference</a>.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>id</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Artist ID.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line130">line 130</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line103">line 103</a>
     </li></ul></dd>
     
 
@@ -1162,7 +1385,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line152">line 152</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line153">line 153</a>
     </li></ul></dd>
     
 
@@ -1365,7 +1588,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line164">line 164</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line172">line 172</a>
     </li></ul></dd>
     
 
@@ -1424,7 +1647,7 @@
     
 
     
-    <h4 class="name" id="searchForAlbum"><span class="type-signature"></span>searchForAlbum<span class="signature">(album, artist<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    <h4 class="name" id="searchAlbums"><span class="type-signature"></span>searchAlbums<span class="signature">(album, artist<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
     
 
     
@@ -1569,7 +1792,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line214">line 214</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line220">line 220</a>
     </li></ul></dd>
     
 
@@ -1628,7 +1851,7 @@
     
 
     
-    <h4 class="name" id="searchForArtist"><span class="type-signature"></span>searchForArtist<span class="signature">(artist)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    <h4 class="name" id="searchArtists"><span class="type-signature"></span>searchArtists<span class="signature">(artist)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
     
 
     
@@ -1730,7 +1953,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line188">line 188</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line196">line 196</a>
     </li></ul></dd>
     
 
@@ -1789,7 +2012,7 @@
     
 
     
-    <h4 class="name" id="searchForPlaylist"><span class="type-signature"></span>searchForPlaylist<span class="signature">(playlist, playlist)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    <h4 class="name" id="searchPlaylists"><span class="type-signature"></span>searchPlaylists<span class="signature">(playlist, playlist)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
     
 
     
@@ -1914,7 +2137,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line248">line 248</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line250">line 250</a>
     </li></ul></dd>
     
 
@@ -1973,168 +2196,7 @@
     
 
     
-    <h4 class="name" id="searchForRelatedArtists"><span class="type-signature"></span>searchForRelatedArtists<span class="signature">(id)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Search for related artists.</p>
-<p><a href="https://developer.spotify.com/web-api/get-related-artists/#example">Reference</a>.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>id</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The album ID.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line270">line 270</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>A JSON response.</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Promise</span>
-|
-
-<span class="param-type">JSON</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="searchForTrack"><span class="type-signature"></span>searchForTrack<span class="signature">(track, artist<span class="signature-attributes">opt</span>, album<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
+    <h4 class="name" id="searchTracks"><span class="type-signature"></span>searchTracks<span class="signature">(track, artist<span class="signature-attributes">opt</span>, album<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise|JSON}</span></h4>
     
 
     
@@ -2312,7 +2374,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line293">line 293</a>
+        <a href="lib_spotify.js.html">lib/spotify.js</a>, <a href="lib_spotify.js.html#line274">line 274</a>
     </li></ul></dd>
     
 
@@ -2381,13 +2443,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Sat Aug 05 2017 09:54:08 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

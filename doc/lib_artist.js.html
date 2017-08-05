@@ -28,13 +28,13 @@
         <article>
             <pre class="prettyprint source linenums"><code>var Album = require('./album')
 var Queue = require('./queue')
-var SpotifyRequestHandler = require('./spotify')
 var sort = require('./sort')
+var util = require('./util')
 
 /**
  * Artist entry.
  * @constructor
- * @param {SpotifyRequestHandler} spotify - Spotify request handler.
+ * @param {SpotifyWebApi} spotify - Spotify web API.
  * @param {string} entry - The artist to search for.
  * @param {string} [id] - The Spotify ID, if known.
  * @param {string} [limit] - The number of albums to fetch.
@@ -74,7 +74,7 @@ function Artist (spotify, entry, id, limit) {
   this.id = id
   this.limit = limit
   this.name = entry
-  this.spotify = spotify || new SpotifyRequestHandler()
+  this.spotify = spotify
 }
 
 /**
@@ -123,8 +123,8 @@ Artist.prototype.createQueue = function () {
  */
 Artist.prototype.dispatch = function () {
   var self = this
-  return this.searchForArtist().then(function () {
-    return self.fetchAlbums()
+  return this.searchArtists().then(function () {
+    return self.getArtistAlbums()
   }).then(function () {
     return self.createQueue()
   })
@@ -134,14 +134,15 @@ Artist.prototype.dispatch = function () {
  * Fetch albums.
  * @return {Promise | JSON} A JSON response.
  */
-Artist.prototype.fetchAlbums = function (id) {
+Artist.prototype.getArtistAlbums = function (id) {
   id = id || this.id
   var self = this
   if (this.albums) {
     return Promise.resolve(this)
   } else {
-    return this.spotify.getAlbumsByArtist(id).then(function (response) {
-      self.albums = response.items
+    return util.paging(this.spotify, this.spotify.getArtistAlbums, [id]).then(function (response) {
+      sort(response.body.items, sort.album)
+      self.albums = response.body.items
       self.id = id
       return self
     })
@@ -152,17 +153,20 @@ Artist.prototype.fetchAlbums = function (id) {
  * Search for artist.
  * @return {Promise | JSON} A JSON response.
  */
-Artist.prototype.searchForArtist = function () {
+Artist.prototype.searchArtists = function () {
   var self = this
   if (this.id) {
     return Promise.resolve(this)
   } else {
-    return this.spotify.searchForArtist(this.entry).then(function (response) {
+    return this.spotify.searchArtists(this.entry).then(function (response) {
       if (response &amp;&amp;
-          response.artists &amp;&amp;
-          response.artists.items &amp;&amp;
-          response.artists.items[0]) {
-        response = response.artists.items[0]
+          response.body &amp;&amp;
+          response.body.artists &amp;&amp;
+          response.body.artists.items &amp;&amp;
+          response.body.artists.items[0]) {
+        // sort results by string similarity
+        sort(response.body.artists.items, sort.similarArtist(self.entry))
+        response = response.body.artists.items[0]
         self.clone(response)
         return Promise.resolve(self)
       } else {
@@ -170,7 +174,7 @@ Artist.prototype.searchForArtist = function () {
       }
     }).catch(function () {
       if (self.entry.match(/^[0-9a-z]+$/i)) {
-        return self.fetchAlbums(self.entry)
+        return self.getArtistAlbums(self.entry)
       } else {
         return Promise.reject(null)
       }
@@ -189,13 +193,13 @@ module.exports = Artist
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Sat Aug 05 2017 09:54:08 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -51,11 +51,11 @@
 <p>The generator can now be invoked from the command line as <code>spotgen</code> (see <a href="#command-line-version">usage</a>).</p>
 <h2>Usage</h2><h3>Web demo</h3><p>Go to <https://epsil.github.io/spotgen/>, enter a <a href="#commands">generator string</a> in the text field and press <em>Create Playlist</em>.</p>
 <h3>Command-line version</h3><pre class="prettyprint source"><code>spotgen input.txt output.txt</code></pre><p><code>input.txt</code> is a text file containing a <a href="#commands">generator string</a>, invoking any of the <em>commands</em> described below. <code>output.txt</code> will contain the generator's output, a list of <a href="#spotify-uris">Spotify URIs</a> which can be <a href="#importing-the-playlist">imported into Spotify</a>.</p>
-<p>Alternatively, you can pass a generator string as a single argument. In that case, the Spotify URIs are written to standard output:</p>
+<p>Alternatively, one can pass a generator string as a single argument. In that case, the Spotify URIs are written to standard output:</p>
 <pre class="prettyprint source"><code>spotgen &quot;#artist Bowery Electric&quot;
 spotgen &quot;#similar Beach House\n#similar Hooverphonic&quot;
 spotgen http://www.last.fm/user/username/library</code></pre><p>Make sure to surround the string with quotes (<code>&quot;</code>) if it contains spaces or special characters. Line breaks can be expressed as <code>\n</code>.</p>
-<p>You can also can run the generator with no arguments and enter commands interactively. This saves you the trouble of quoting strings and escaping newlines.</p>
+<p>One can also run the generator with no arguments and enter commands interactively. This saves one the trouble of quoting strings and escaping newlines.</p>
 <p>For more information, type <code>spotgen --help</code>.</p>
 <h3>Importing the playlist</h3><p>To <strong>import</strong> the playlist into Spotify:</p>
 <ol>
@@ -172,8 +172,8 @@ Deerhunter - Twilight at Carbon Lake</code></pre><p>CSV files have the advantage
 <p>It is also possible to run the web demo locally:</p>
 <pre class="prettyprint source"><code>npm run http</code></pre><p>This will start up a <code>http-server</code> instance at <http://localhost:9000/>.</p>
 <p>Note that Spotify's authentication service requires the web demo to be hosted at a whitelisted address. This is the reason for running <code>http-server</code> at port 9000 (merely opening <code>index.html</code> in a browser will not work).</p>
-<p>For more information about authentication, see the <a href="https://epsil.github.io/spotgen/doc/SpotifyAuthenticator.html">developer documentation</a>, as well as the official <a href="http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Spotify Web API documentation</a>.</p>
-<h2>Library</h2><p>The generator is also available as a library which can be utilized by your own project. To install it in your project's <code>node_modules/</code> folder:</p>
+<p>For more information about authentication, see the official <a href="http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow">Spotify Web API documentation</a>.</p>
+<h2>Library</h2><p>The generator is also available as a library that can be included in another project. To install it in the project's <code>node_modules/</code> folder:</p>
 <pre class="prettyprint source"><code>npm install --save spotgen</code></pre><p>The following example demonstrates how to use the library:</p>
 <pre class="prettyprint source lang-js"><code>var Generator = require('spotgen')
 var spotgen = new Generator('#top Beach House\n#top Deer Hunter')
@@ -182,8 +182,8 @@ spotgen.generate().then(function (result) {
   // e.g., output them to the console
   console.log(result)
 })</code></pre><p>The <code>generate()</code> method returns a <a href="https://www.promisejs.org/">promise</a> that contains the Spotify URIs, represented as a newline-separated string. To access this value, use the <code>then()</code> callback as shown.</p>
-<p>Note that if you are writing your own application for Spotify, then you should <a href="https://developer.spotify.com/web-api/authorization-guide/#introduction">register your application</a> and obtain a client ID and client secret key. These are passed to the <code>Generator</code> class like so:</p>
-<pre class="prettyprint source lang-js"><code>var spotgen = new Generator('#top Beach House', clientId, clientKey)</code></pre><p>The generator will then use these values to acquire an access token for web API requests. If you already have a token, then you can pass that to <code>Generator</code> as well:</p>
+<p>Note that if one is writing one's own application for Spotify, then one should <a href="https://developer.spotify.com/web-api/authorization-guide/#introduction">register the application</a> and obtain a client ID and client secret key. These are passed to the <code>Generator</code> class like so:</p>
+<pre class="prettyprint source lang-js"><code>var spotgen = new Generator('#top Beach House', clientId, clientKey)</code></pre><p>The generator will then use these values to acquire an access token for web API requests. If one already has a token, then one can pass that to <code>Generator</code> as well:</p>
 <pre class="prettyprint source lang-js"><code>var spotgen = new Generator('#top Beach House', clientId, clientKey, token)</code></pre><h2>Developer version</h2><p>Instead of installing the package with <code>npm</code>, one can fetch the source code from <a href="https://github.com/epsil/spotgen">GitHub</a>:</p>
 <pre class="prettyprint source"><code>git clone https://github.com/epsil/spotgen.git</code></pre><p>Then fetch all depencies with <code>npm install</code>:</p>
 <pre class="prettyprint source"><code>cd spotgen
@@ -217,13 +217,13 @@ npm install</code></pre><p>Then create a global package link with <code>npm link
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuthenticator.html">SpotifyAuthenticator</a></li><li><a href="SpotifyRequestHandler.html">SpotifyRequestHandler</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Thu Aug 03 2017 16:19:46 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Sat Aug 05 2017 09:54:08 GMT+0200 (CEST)
 </footer>
 
 <script> prettyPrint(); </script>
