@@ -13,6 +13,7 @@ var Similar = require('../lib/similar')
 var Track = require('../lib/track')
 var Top = require('../lib/top')
 var sort = require('../lib/sort')
+var util = require('../lib/util')
 
 describe('Spotify Playlist Generator', function () {
   this.timeout(999999)
@@ -54,6 +55,24 @@ describe('Spotify Playlist Generator', function () {
         var y = b[0]
         return (x < y) ? -1 : ((x > y) ? 1 : 0)
       }).should.eql([[1, 0], [2, 2], [4, 1], [4, 3], [8, 4]])
+    })
+  })
+
+  describe('Utilities', function () {
+    it('should remove accents', function () {
+      util.removeAccents('t\u00EAte-\u00E0-t\u00EAte').should.eql('tete-a-tete')
+    })
+
+    it('should remove superfluous punctuation', function () {
+      util.cleanup('test1 (string) - test2').should.eql('test1')
+    })
+
+    it('should convert Unicode strings to ASCII', function () {
+      util.toAscii('t\u00EAte-\u00E0-t\u00EAte \u2013 d\u00E9tente').should.eql('tete-a-tete - detente')
+    })
+
+    it('should remove superfluous whitespace', function () {
+      util.trim(' test1  - test2 ').should.eql('test1 - test2')
     })
   })
 
