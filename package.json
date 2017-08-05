@@ -38,8 +38,7 @@
     "promise": "^7.1.1",
     "request": "^2.79.0",
     "string-similarity": "^1.1.0",
-    "urijs": "^1.18.10",
-    "xregexp": "^2.0.0"
+    "urijs": "^1.18.10"
   },
   "devDependencies": {
     "browserify": "^13.1.1",
