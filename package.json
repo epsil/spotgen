@@ -68,6 +68,7 @@
     "jshint": "jshint index.js lib/album.js lib/artist.js lib/auth.js lib/collection.js lib/csv.js lib/generator.js lib/http.js lib/lastfm.js lib/playlist.js lib/parser.js lib/queue.js lib/scraper.js lib/similar.js lib/sort.js lib/spotify.js lib/top.js lib/track.js lib/util.js dist/web.js test/test.js",
     "standard": "standard index.js lib/album.js lib/artist.js lib/auth.js lib/collection.js lib/csv.js lib/generator.js lib/http.js lib/lastfm.js lib/playlist.js lib/parser.js lib/queue.js lib/scraper.js lib/similar.js lib/sort.js lib/spotify.js lib/top.js lib/track.js lib/util.js dist/web.js test/test.js",
     "markdownlint": "markdownlint README.md Tips.md",
+    "nyan": "mocha --reporter nyan test/test.js",
     "tests": "mocha test/test.js",
     "test": "npm run lint && npm run tests",
     "server": "http-server -p 9000 dist",
