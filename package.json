@@ -38,7 +38,8 @@
     "promise": "^7.1.1",
     "request": "^2.79.0",
     "string-similarity": "^1.1.0",
-    "urijs": "^1.18.10"
+    "urijs": "^1.18.10",
+    "xregexp": "^3.2.0"
   },
   "devDependencies": {
     "browserify": "^13.1.1",
@@ -73,7 +74,7 @@
     "server": "http-server -p 9000 dist",
     "start": "open http://localhost:9000/",
     "http": "npm run start && npm run server",
-    "browser": "browserify dist/web.js -o dist/bundle.js && browserify test/test.js -o test/bundle.js",
+    "browser": "browserify dist/web.js -i xregexp -o dist/bundle.js&& browserify test/test.js -i xregexp -o test/bundle.js",
     "minify": "uglifyjs dist/bundle.js -o dist/bundle.js",
     "open": "open dist/index.html",
     "web": "npm run browser && npm run open",
