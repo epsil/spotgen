@@ -59,10 +59,6 @@ describe('Spotify Playlist Generator', function () {
   })
 
   describe('Utilities', function () {
-    it('should remove accents', function () {
-      util.removeAccents('t\u00EAte-\u00E0-t\u00EAte').should.eql('tete-a-tete')
-    })
-
     it('should remove noise', function () {
       util.removeNoise('1. artist - title (5:30)').should.eql('artist - title')
       util.removeNoise('test1 - test2 (string) test3').should.eql('test1 - test2')
