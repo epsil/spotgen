@@ -59,17 +59,17 @@ describe('Spotify Playlist Generator', function () {
   })
 
   describe('Utilities', function () {
-    it('should remove accents', function () {
-      util.removeAccents('t\u00EAte-\u00E0-t\u00EAte').should.eql('tete-a-tete')
+    it('should clean up search strings', function () {
+      util.normalize('  \u201Cshouldn\u2019t\u201D ').should.eql('"shouldn\'t"')
     })
 
     it('should remove noise', function () {
-      util.removeNoise('1. artist - title (5:30)').should.eql('artist - title')
-      util.removeNoise('test1 - test2 (string) test3').should.eql('test1 - test2')
+      util.stripNoise('1. artist - title (5:30)').should.eql('artist - title')
+      util.stripNoise('test1 - test2 (string) test3').should.eql('test1 - test2')
     })
 
     it('should remove extra punctuation characters', function () {
-      util.removePunctuation('\u201Cshouldn\'t\u201D').should.eql('shouldn\'t')
+      util.stripPunctuation('\u201Cshouldn\'t\u201D').should.eql('shouldn\'t')
     })
 
     it('should convert punctuation to ASCII', function () {
@@ -78,10 +78,11 @@ describe('Spotify Playlist Generator', function () {
 
     it('should convert characters to ASCII', function () {
       util.toAscii('t\u00EAte-\u00E0-t\u00EAte \u2013 d\u00E9tente').should.eql('tete-a-tete - detente')
+      util.toAscii('test1 \u25B2 test2').should.eql('test1  test2')
     })
 
     it('should remove extra whitespace', function () {
-      util.trim(' test1  - test2 ').should.eql('test1 - test2')
+      util.stripWhitespace(' test1  - test2 ').should.eql('test1 - test2')
     })
   })
 
