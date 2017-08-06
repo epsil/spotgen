@@ -56,11 +56,13 @@ function generate (str, output) {
       return
     }
     if (output === 'STDOUT') {
-      console.log(
-        '\n' +
+      console.log('')
+      if (generator.format === 'uri') {
+        console.log(
           '********************************************************\n' +
-          '* COPY AND PASTE THE BELOW INTO A NEW SPOTIFY PLAYLIST *\n' +
-          '********************************************************\n')
+            '* COPY AND PASTE THE BELOW INTO A NEW SPOTIFY PLAYLIST *\n' +
+            '********************************************************\n')
+      }
       console.log(result + '\n')
     } else {
       result = eol.auto(result)
