@@ -354,7 +354,7 @@ Note that Spotify's authentication service requires the web demo to be hosted at
 
 For more information about authentication, see the official [Spotify Web API documentation](http://developer.spotify.com/web-api/authorization-guide/#implicit-grant-flow).
 
-The web demo is built with [Browserify](http://browserify.org/), which goes to show that the library is Browserify compatible.
+The web demo is built with [Browserify](http://browserify.org/), which goes to show that the library is browserifiable.
 
 Library
 -------
