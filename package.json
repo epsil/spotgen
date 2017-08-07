@@ -63,6 +63,7 @@
     "dump": "node index.js > output.txt && cat output.txt",
     "build": "npm run browser && npm run jsdoc",
     "rebuild": "npm run build && npm run http",
+    "retest": "npm run clean! && npm install && npm test",
     "dist": "npm run build && npm run minify && cp -r doc dist && cp -r test dist",
     "lint": "npm run jshint && npm run standard && npm run markdownlint",
     "jshint": "jshint index.js lib/album.js lib/artist.js lib/auth.js lib/collection.js lib/generator.js lib/http.js lib/lastfm.js lib/playlist.js lib/parser.js lib/queue.js lib/scraper.js lib/similar.js lib/sort.js lib/spotify.js lib/top.js lib/track.js lib/util.js dist/web.js test/test.js",
