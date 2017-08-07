@@ -353,6 +353,17 @@ describe('Spotify Playlist Generator', function () {
       })
     })
 
+    it('should return an array of strings', function () {
+      var generator = new Generator('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
+                                    'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
+      return generator.generate('array').then(function (str) {
+        str.should.eql([
+          'spotify:track:4oNXgGnumnu5oIXXyP8StH',
+          'spotify:track:7rAjeWkQM6cLqbPjZtXxl2'
+        ])
+      })
+    })
+
     it('should parse track URIs', function () {
       var generator = new Generator('spotify:track:4oNXgGnumnu5oIXXyP8StH\n' +
                                     'spotify:track:7rAjeWkQM6cLqbPjZtXxl2')
