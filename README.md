@@ -1,6 +1,8 @@
 spotgen
 =======
 
+[![nodei.co](https://nodei.co/npm/spotgen.png)](https://www.npmjs.com/package/spotgen)
+
 [![npm](https://img.shields.io/npm/v/spotgen.svg)](https://www.npmjs.com/package/spotgen)
 [![Build Status](https://travis-ci.org/epsil/spotgen.svg?branch=master)](https://travis-ci.org/epsil/spotgen)
 
