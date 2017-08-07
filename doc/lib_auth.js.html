@@ -29,9 +29,9 @@
             <pre class="prettyprint source linenums"><code>var base64 = require('base-64')
 var defaults = require('./defaults')
 var http = require('./http')
-// var express = require('express')
-// var opn = require('opn')
-// var URI = require('urijs')
+var express = require('express')
+var opn = require('opn')
+var URI = require('urijs')
 
 /**
  * Create a Spotify authentication handler.
@@ -135,51 +135,51 @@ SpotifyAuth.prototype.implicitGrantFlowURI = function (uri, clientId, scopes) {
  * @param {string} [port] - Port number, default 9000.
  * Must be white-listed by Spotify.
  */
-// SpotifyAuth.prototype.implicitGrantFlow = function (clientId, scopes, port) {
-//   var self = this
-//   return new Promise(function (resolve, reject) {
-//     clientId = clientId || self.clientId
-//     port = port || 9000
-//     var localhost = 'http://localhost:' + port + '/'
-//     var login = self.implicitGrantFlowURI(localhost, clientId, scopes)
-//     var server = express()
-//     var http = server.listen(port)
-//     server.get('/', function (req, res) {
-//       var url = URI(req.url)
-//       if (url.query()) {
-//         http.close()
-//         req.connection.ref()
-//         req.connection.unref()
-//         self.token = url.search(true).access_token
-//         if (!self.token) {
-//           reject(self.token)
-//         } else {
-//           resolve(self.token)
-//         }
-//       } else {
-//         // the hash fragment is not part of a HTTP request,
-//         // so we convert it to a query string (which is!)
-//         // and perform a second request against our server
-//         var js = 'var hash = window.location.hash\n' +
-//             'if (hash) {\n' +
-//             'var url = \'/?\' + hash.replace(/^#/, \'\')\n' +
-//             'var http = new XMLHttpRequest()\n' +
-//             'http.open(\'GET\', url, true)\n' +
-//             'http.send(null)\n' +
-//             '}\n' +
-//             'setTimeout(window.close, 500)'
-//         var tag = '&lt;script type="text/javascript">\n' + js + '\n&lt;/script>'
-//         res.send(tag)
-//       }
-//     })
-//     opn(login, function (err) {
-//       if (err) {
-//         http.close()
-//         reject(err)
-//       }
-//     })
-//   })
-// }
+SpotifyAuth.prototype.implicitGrantFlow = function (clientId, scopes, port) {
+  var self = this
+  return new Promise(function (resolve, reject) {
+    clientId = clientId || self.clientId
+    port = port || 9000
+    var localhost = 'http://localhost:' + port + '/'
+    var login = self.implicitGrantFlowURI(localhost, clientId, scopes)
+    var server = express()
+    var http = server.listen(port)
+    server.get('/', function (req, res) {
+      var url = URI(req.url)
+      if (url.query()) {
+        http.close()
+        req.connection.ref()
+        req.connection.unref()
+        self.token = url.search(true).access_token
+        if (!self.token) {
+          reject(self.token)
+        } else {
+          resolve(self.token)
+        }
+      } else {
+        // the hash fragment is not part of a HTTP request,
+        // so we convert it to a query string (which is!)
+        // and perform a second request against our server
+        var js = 'var hash = window.location.hash\n' +
+            'if (hash) {\n' +
+            'var url = \'/?\' + hash.replace(/^#/, \'\')\n' +
+            'var http = new XMLHttpRequest()\n' +
+            'http.open(\'GET\', url, true)\n' +
+            'http.send(null)\n' +
+            '}\n' +
+            'setTimeout(window.close, 500)'
+        var tag = '&lt;script type="text/javascript">\n' + js + '\n&lt;/script>'
+        res.send(tag)
+      }
+    })
+    opn(login, function (err) {
+      if (err) {
+        http.close()
+        reject(err)
+      }
+    })
+  })
+}
 
 /**
  * Refresh the bearer access token.
@@ -222,13 +222,13 @@ module.exports = SpotifyAuth
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CSV.html">CSV</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Album.html">Album</a></li><li><a href="Artist.html">Artist</a></li><li><a href="Collection.html">Collection</a></li><li><a href="Generator.html">Generator</a></li><li><a href="Parser.html">Parser</a></li><li><a href="Playlist.html">Playlist</a></li><li><a href="Queue.html">Queue</a></li><li><a href="Similar.html">Similar</a></li><li><a href="SpotifyAuth.html">SpotifyAuth</a></li><li><a href="SpotifyWebApi.html">SpotifyWebApi</a></li><li><a href="Top.html">Top</a></li><li><a href="Track.html">Track</a></li><li><a href="WebScraper.html">WebScraper</a></li></ul><h3>Global</h3><ul><li><a href="global.html#generate">generate</a></li><li><a href="global.html#http">http</a></li><li><a href="global.html#main">main</a></li><li><a href="global.html#sort">sort</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Sat Aug 05 2017 17:05:32 GMT+0200 (CEST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Mon Aug 07 2017 13:28:21 GMT+0200 (W. Europe Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>
