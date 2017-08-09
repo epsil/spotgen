@@ -5,6 +5,7 @@ spotgen
 
 [![npm](https://img.shields.io/npm/v/spotgen.svg)](https://www.npmjs.com/package/spotgen)
 [![Build Status](https://travis-ci.org/epsil/spotgen.svg?branch=master)](https://travis-ci.org/epsil/spotgen)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A tool for generating [Spotify](http://www.spotify.com/) playlists programmatically. Convert websites to Spotify playlists, incorporate [Last.fm](http://last.fm/) listener data, and employ smart algorithms to reorder the tracks.
 
