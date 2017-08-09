@@ -309,11 +309,11 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should create an ordered playlist', function () {
-      var generator = new Generator('#order by popularity\ntest1\ntest2')
+      var generator = new Generator('#order by popularity\nBowery Electric - Postscript\nBowery Electric - Lushlife')
       return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        str.should.eql('test1 - Test2\n' +
-                       'test - test2')
+        str.should.eql('Bowery Electric - Lushlife\n' +
+                       'Bowery Electric - Postscript')
       })
     })
 
