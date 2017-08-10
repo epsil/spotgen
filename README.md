@@ -429,11 +429,9 @@ Links
 
 ### See also
 
--   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr)), feature-rich AngularJS conversion app
 -   [Exportify](https://github.com/watsonbox/exportify), for exporting Spotify playlists to CSV format
-
-#### Recommendations
-
--   [MagicPlaylist](http://magicplaylist.co/) ([source](https://github.com/loverajoel/magicplaylist))
--   [20v](http://20v.co/) ([source](https://github.com/fusenlabs/20v))
--   [Spotibot](http://www.spotibot.com/)
+-   [Spotlistr](http://spotlistr.herokuapp.com/) ([source](https://github.com/BobNisco/Spotlistr)), conversion app
+-   [Playlist Converter](http://www.playlist-converter.net/), conversion app
+-   [MagicPlaylist](http://magicplaylist.co/) ([source](https://github.com/loverajoel/magicplaylist)), recommendations
+-   [20v](http://20v.co/) ([source](https://github.com/fusenlabs/20v)), recommendations
+-   [Spotibot](http://www.spotibot.com/), recommendations
