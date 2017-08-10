@@ -281,7 +281,7 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should dispatch a single entry', function () {
-      var generator = new Generator('test')
+      var generator = new Generator('The xx - Test Me')
       return generator.generate('list').then(function (str) {
         str.should.eql('The xx - Test Me')
       })
