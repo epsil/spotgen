@@ -517,11 +517,12 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should dispatch multiple entries', function () {
-      var generator = new Generator('test1\ntest2')
+      var generator = new Generator('The xx - Test Me\n' +
+                                    'Rage Against The Machine - Testify')
       return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        str.should.eql('test1 - Test2\n' +
-                       'test - test2')
+        str.should.eql('The xx - Test Me\n' +
+                       'Rage Against The Machine - Testify')
       })
     })
   })
