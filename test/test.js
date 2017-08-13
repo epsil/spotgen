@@ -69,7 +69,7 @@ describe('Spotify Playlist Generator', function () {
     })
 
     it('should remove extra punctuation characters', function () {
-      util.stripPunctuation('\u201Cshouldn\'t\u201D').should.eql('shouldn\'t')
+      util.stripPunctuation('\u201Cshouldn\'t\u201D', '\'').should.eql('shouldn\'t')
     })
 
     it('should convert punctuation to ASCII', function () {
@@ -308,8 +308,21 @@ describe('Spotify Playlist Generator', function () {
       generator.should.have.deep.property('collection.ordering', 'lastfm')
     })
 
-    it('should create an ordered playlist', function () {
-      var generator = new Generator('#order by popularity\nBowery Electric - Postscript\nBowery Electric - Lushlife')
+    it('should create a playlist ordered by Spotify popularity', function () {
+      var generator = new Generator('#order by popularity\n' +
+                                    'Bowery Electric - Postscript\n' +
+                                    'Bowery Electric - Lushlife')
+      return generator.generate('list').then(function (str) {
+        // FIXME: this is really brittle
+        str.should.eql('Bowery Electric - Lushlife\n' +
+                       'Bowery Electric - Postscript')
+      })
+    })
+
+    it('should create an playlist ordered by name', function () {
+      var generator = new Generator('#order by name\n' +
+                                    'Bowery Electric - Postscript\n' +
+                                    'Bowery Electric - Lushlife')
       return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
         str.should.eql('Bowery Electric - Lushlife\n' +

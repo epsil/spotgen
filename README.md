@@ -221,9 +221,20 @@ To shuffle the order of the tracks, add the line:
 
 ### Order
 
-To order the tracks by Spotify popularity, use `#order by`:
+One can reorder the tracks with the `#order by` command. One can order on any track attribute, such as `name`, `artist`, `album`, etc. For example, to order the tracks by Spotify popularity, use `#order by popularity`:
 
     #order by popularity
+    #artist Beach House
+
+One can also leverage Spotify's analytic algorithms and order on the basis of [audio features](https://developer.spotify.com/web-api/get-audio-features/) such as `danceability`, `energy`, `instrumentalness`, `speechiness`, `tempo`, etc. For example, to screen for instrumental tracks:
+
+    #order by instrumentalness
+    #artist Beach House
+
+This moves instrumental tracks towards the beginning of the playlist and vocal tracks towards the end. To do the opposite, add the [`#reverse`](#reverse) command:
+
+    #order by instrumentalness
+    #reverse
     #artist Beach House
 
 The generator also provides [Last.fm](http://last.fm/) support. To order by Last.fm playcount, add the line `#order by lastfm`:
