@@ -12,6 +12,30 @@ Examples
 -   [Rate Your Music's Top Shoegaze Albums](examples/rateyourmusic-top-shoegaze-albums.spotify.txt) ([source](examples/rateyourmusic-top-shoegaze-albums.txt))
 -   [Rolling Stone's 500 Greatest Songs of All Time](examples/rollingstone-500-greatest-songs-of-all-time.spotify.txt) ([source](examples/rollingstone-500-greatest-songs-of-all-time.txt))
 
+Audio features
+--------------
+
+Spotify collaborates with the [Echo Nest Project](http://the.echonest.com/) and provides algorithmic analysis of all tracks. These "[audio features](https://developer.spotify.com/web-api/get-audio-features/)" can be used to filter existing playlists. For example, to create a melodic playlist out of "Pitchfork's Best New Tracks":
+
+    #order by instrumentalness
+    https://open.spotify.com/user/pitchforkmedia/playlist/5ItokEl1f0bbHeXWFiisrm
+
+To create a hip-hop playlist:
+
+    #order by instrumentalness
+    #reverse
+    https://open.spotify.com/user/pitchforkmedia/playlist/5ItokEl1f0bbHeXWFiisrm
+
+To create a workout playlist:
+
+    #order by energy
+    https://open.spotify.com/user/pitchforkmedia/playlist/5ItokEl1f0bbHeXWFiisrm
+
+To create a dancing playlist:
+
+    #order by danceability
+    https://open.spotify.com/user/pitchforkmedia/playlist/5ItokEl1f0bbHeXWFiisrm
+
 Last.fm
 -------
 
@@ -163,3 +187,8 @@ Miscellaneous
 -------------
 
 Single tracks should be on the form `Artist - Track`. However, Spotify isn't terribly strict about this; `Track - Artist` also works well, as does a [Spotify search](https://support.spotify.com/us/using_spotify/search_play/advanced-search1/). One can even add [field filters](https://developer.spotify.com/web-api/search-item/).
+
+Links
+-----
+
+-   [Data Mining: Mental Health as a Function of Music](https://github.com/SunnyShikhar/music-datamining)
