@@ -191,4 +191,5 @@ Single tracks should be on the form `Artist - Track`. However, Spotify isn't ter
 Links
 -----
 
+-   [List of curated playlists](http://www.reddit.com/r/spotify/comments/4lklob/42_awesome_independent_playlist_curators_blogs_me/)
 -   [Data Mining: Mental Health as a Function of Music](https://github.com/SunnyShikhar/music-datamining)
