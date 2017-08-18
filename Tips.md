@@ -55,6 +55,10 @@ To create a playlist of a user's favorite tracks of all time:
 
     http://www.last.fm/user/username/library/tracks
 
+To create a playlist of a user's loved tracks:
+
+    http://www.last.fm/user/username/loved
+
 To create a playlist of a user's favorite albums:
 
     http://www.last.fm/user/username/library/albums
