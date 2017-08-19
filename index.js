@@ -6,7 +6,9 @@ var fs = require('fs')
 var jsdom = require('jsdom').jsdom
 document = jsdom()
 window = document.defaultView
+var clipboardy = require('clipboardy')
 var prompt = require('cli-input')
+
 var Generator = require('./lib/generator')
 
 var help = 'Usage:\n' +
@@ -64,6 +66,7 @@ function generate (str, output) {
             '********************************************************\n')
       }
       console.log(result + '\n')
+      clipboardy.writeSync(result)
     } else {
       result = eol.auto(result)
       fs.writeFile(output, result, function (err) {

@@ -28,6 +28,7 @@
     "base-64": "^0.1.0",
     "bootstrap": "^3.3.7",
     "cli-input": "^0.2.0",
+    "clipboardy": "^1.1.4",
     "csv-stringify": "^1.0.4",
     "eol": "^0.8.1",
     "express": "^4.15.4",
