@@ -66,7 +66,16 @@ function generate (str, output) {
             '********************************************************\n')
       }
       console.log(result + '\n')
-      clipboardy.writeSync(result)
+      var ps = prompt({format: 'Copy to clipboard? (Y/n) '})
+      ps.prompt(null, function (err, val) {
+        if (err) {
+          return
+        }
+        if (val[0].toLowerCase().trim() !== 'n') {
+          clipboardy.writeSync(result)
+        }
+        ps.close()
+      })
     } else {
       result = eol.auto(result)
       fs.writeFile(output, result, function (err) {
@@ -94,15 +103,14 @@ function main () {
     console.log('Enter generator string (submit with Ctrl-D):')
     var ps = prompt()
     ps.multiline(function (err, lines, str) {
+      ps.close()
       if (err) {
         return
       }
       if (str !== '' && str.slice(-1) !== '\n') {
         console.log('')
       }
-      generate(str).then(function () {
-        process.exit(0)
-      })
+      generate(str)
     })
   } else {
     if (!output) {
