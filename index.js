@@ -72,7 +72,7 @@ function generate (str, output) {
           return
         }
         if (val[0].toLowerCase().trim() !== 'n') {
-          clipboardy.writeSync(result)
+          clipboardy.writeSync(result + '\n')
         }
         ps.close()
       })
