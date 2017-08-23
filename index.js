@@ -7,6 +7,7 @@ var jsdom = require('jsdom').jsdom
 document = jsdom()
 window = document.defaultView
 var clipboardy = require('clipboardy')
+var git = require('git-rev')
 var prompt = require('cli-input')
 
 var Generator = require('./lib/generator')
@@ -101,7 +102,10 @@ function main () {
     return
   } else if (typeof input === 'string' &&
              input.match(/(^-*v(ersion)?$)|(^\/\?$)/gi)) {
-    console.log(pkg.version)
+    process.chdir(__dirname)
+    git.short(function (sha) {
+      console.log(pkg.version + (sha ? ('+' + sha) : ''))
+    })
     return
   }
   if (!input) {
