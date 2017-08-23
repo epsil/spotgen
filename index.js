@@ -10,6 +10,7 @@ var clipboardy = require('clipboardy')
 var prompt = require('cli-input')
 
 var Generator = require('./lib/generator')
+var pkg = require('./package.json')
 
 var help = 'Usage:\n' +
     '\n' +
@@ -97,6 +98,10 @@ function main () {
   if (typeof input === 'string' &&
       input.match(/(^-*h(elp)?$)|(^\/\?$)/gi)) {
     console.log(help)
+    return
+  } else if (typeof input === 'string' &&
+             input.match(/(^-*v(ersion)?$)|(^\/\?$)/gi)) {
+    console.log(pkg.version)
     return
   }
   if (!input) {
