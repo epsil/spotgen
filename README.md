@@ -404,11 +404,11 @@ var spotgen = new Generator('#top Beach House', clientId, clientKey, token)
 Developer version
 -----------------
 
-Instead of installing the package with `npm`, one can fetch the source code from [GitHub](https://github.com/epsil/spotgen):
+Instead of installing the package with `npm`, one can fetch the source code from [GitHub](https://github.com/epsil/spotgen). Then one is ensured to have the latest version:
 
     git clone https://github.com/epsil/spotgen.git
 
-Then fetch all depencies with `npm install`:
+When the above command finishes, fetch all package depencies with `npm install`:
 
     cd spotgen
     npm install
@@ -417,11 +417,18 @@ Then create a global package link with `npm link`:
 
     npm link
 
+One can always fetch the latest version with `git pull`. If the package's dependencies change, it might also be necessary to re-run `npm install`.
+
 ### Unit tests
 
-The package includes a test suite. To run it, type:
+The package includes a test suite. To run it, enter:
 
     npm test
+
+Feedback
+--------
+
+Please post suggestions and bug reports at the project's [bug tracker](https://github.com/epsil/spotgen/issues). When reporting a bug, it is helpful to include the minimum number of steps necessary to reproduce the problem, as well as the version number (`spotgen --version`).
 
 License
 -------
