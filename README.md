@@ -244,7 +244,7 @@ The generator also provides [Last.fm](http://last.fm/) support. To order by Last
 
 To order by Last.fm user playcount, add the Last.fm username at the end:
 
-    #order by lastfm username
+    #order by lastfm:username
     #artist Beach House
 
 ### Group
