@@ -15,15 +15,16 @@ var pkg = require('./package.json')
 
 var help = 'Usage:\n' +
     '\n' +
-    '    spotgen input.txt output.txt\n' +
+    '    spotgen input.txt [output.txt]\n' +
     '\n' +
     'input.txt is a text file containing a generator string,\n' +
     'invoking any number of generator commands. output.txt\n' +
     'will contain the generator\'s output, a list of Spotify URIs\n' +
-    'which can be imported into Spotify.\n' +
+    'which can be imported into Spotify. If an output file is not\n' +
+    'specified, then the Spotify URIs are written to standard output,\n' +
+    'with an option to copy them to the clipboard.\n' +
     '\n' +
-    'Alternatively, you can pass a generator string as a single argument.\n' +
-    'In that case, the Spotify URIs are written to standard output:\n' +
+    'Alternatively, you can pass a generator string as a single argument:\n' +
     '\n' +
     '    spotgen "#artist Bowery Electric"\n' +
     '    spotgen "#similar Beach House\\n#similar Hooverphonic"\n' +
@@ -122,13 +123,15 @@ function main () {
       generate(str)
     })
   } else {
-    if (!output) {
-      // help out primitive shells (e.g., Windows') with newlines
-      str = str.replace(/\\n/gi, '\n')
-      generate(str)
-    } else {
+    try {
+      // is input a file name?
       str = fs.readFileSync(input, 'utf8').toString()
       str = eol.lf(str)
+      generate(str, output)
+    } catch (err) {
+      // input is generator string; help out primitive shells
+      // (e.g., Windows') with newlines
+      str = str.replace(/\\n/gi, '\n')
       generate(str, output)
     }
   }

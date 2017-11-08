@@ -31,11 +31,11 @@ Go to <https://epsil.github.io/spotgen/>, enter a [generator string](#commands) 
 
 ### Command-line version
 
-    spotgen input.txt output.txt
+    spotgen input.txt [output.txt]
 
-`input.txt` is a text file containing a [generator string](#commands), invoking any of the *commands* described below. `output.txt` will contain the generator's output, a list of [Spotify URIs](#spotify-uris) which can be [imported into Spotify](#importing-the-playlist).
+`input.txt` is a text file containing a [generator string](#commands), invoking any of the *commands* described below. `output.txt` will contain the generator's output, a list of [Spotify URIs](#spotify-uris) which can be [imported into Spotify](#importing-the-playlist). If an output file is not specified, then the Spotify URIs are written to standard output, with an option to copy them to the clipboard.
 
-Alternatively, one can pass a generator string as a single argument. In that case, the Spotify URIs are written to standard output:
+Alternatively, one can pass a generator string as a single argument:
 
     spotgen "#artist Bowery Electric"
     spotgen "#similar Beach House\n#similar Hooverphonic"
