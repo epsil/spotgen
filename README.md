@@ -426,7 +426,7 @@ The package includes a test suite. To run it, enter:
 Feedback
 --------
 
-Please post suggestions and bug reports at the project's [bug tracker](https://github.com/epsil/spotgen/issues). When reporting a bug, it is helpful to include the minimum number of steps necessary to reproduce the problem, as well as the version number (`spotgen --version`).
+Please post suggestions and bug reports at the project's [bug tracker](https://github.com/epsil/spotgen/issues). When reporting a bug, it is helpful to include the minimum number of steps necessary to reproduce the problem, the platform used, and the version number (`spotgen --version`).
 
 Thanks
 ------
