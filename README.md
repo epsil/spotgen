@@ -356,7 +356,7 @@ The web demo does not support [web scraping](#web-scraping), due to browser limi
 
 It is also possible to run the web demo locally:
 
-    npm run http
+    npm run server
 
 This will start up a `http-server` instance at <http://localhost:9000/>.
 
