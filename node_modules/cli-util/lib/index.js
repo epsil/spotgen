@@ -1,0 +1,17 @@
+module.exports = {
+  define: require('./define'),
+  ltrim: require('./ltrim'),
+  rtrim: require('./rtrim'),
+  uniq: require('./uniq'),
+  funcname: require('./funcname'),
+  wrap: require('./wrap'),
+  repeat: require('./repeat'),
+  pad: require('./pad'),
+  ucfirst: require('./ucfirst'),
+  camelcase: require('./camelcase'),
+  delimited: require('./delimited'),
+  pedantic: require('./pedantic'),
+  walk: require('./walk'),
+  merge: require('./merge'),
+  hasNewline: require('./has-newline'),
+}

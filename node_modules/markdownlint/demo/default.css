@@ -1,0 +1,86 @@
+html, body {
+  height: 100%;
+}
+body {
+  margin: 0px;
+  font-family: "Segoe UI", GillSans, Helvetica, sans-serif;
+  font-weight: lighter;
+}
+blockquote {
+  background: rgba(0, 0, 0, 0.05);
+}
+h1 {
+  font-size: 130%;
+}
+h2 {
+  font-size: 125%;
+}
+h3 {
+  font-size: 120%;
+}
+h4 {
+  font-size: 115%;
+}
+h5 {
+  font-size: 110%;
+}
+h6 {
+  font-size: 105%;
+}
+header {
+  font-size: 140%;
+  font-weight: bold;
+}
+footer {
+  font-size: 90%;
+}
+form {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+textarea {
+  padding: 0;
+  resize: none;
+}
+.detail {
+  font-size: 80%;
+  font-style: italic;
+  white-space: pre-wrap;
+}
+.flex-rows {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.flex-columns {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+.flex-fill {
+  flex-grow: 1;
+  flex-basis: 0;
+  min-width: 0;
+  min-height: 0;
+}
+.highlight {
+  background: yellow;
+}
+.inset {
+  box-sizing: border-box;
+  padding: 4px;
+}
+.inset-side {
+  box-sizing: border-box;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.outlined {
+  border: 1px solid black;
+  margin: 2px;
+  padding-left: 3px;
+}
+.overflow-auto-scroll {
+  overflow-x: auto;
+  overflow-y: scroll;
+}
