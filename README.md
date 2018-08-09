@@ -430,6 +430,11 @@ Feedback
 
 Please post suggestions and bug reports at the project's [bug tracker](https://github.com/epsil/spotgen/issues). When reporting a bug, it is helpful to include the minimum number of steps necessary to reproduce the problem, as well as the version number (`spotgen --version`).
 
+Thanks
+------
+
+This tool is freeware. You can [donate Bitcoin](https://epsil.github.io/donate/) to: [`13cF1WPEfX2AobEJH5eTkde9MKfRhFGuDU`](bitcoin:13cF1WPEfX2AobEJH5eTkde9MKfRhFGuDU)
+
 License
 -------
 
