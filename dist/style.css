@@ -1,7 +1,9 @@
-a, a:hover {
+a,
+a:hover {
     color: inherit;
 }
-body, html {
+body,
+html {
     margin: 0 !important;
     padding: 0 !important;
 }
@@ -11,7 +13,8 @@ body, html {
 ::-moz-selection {
     background-color: rgba(255, 255, 255, 0.1);
 }
-.generator, .instructions {
+.generator,
+.instructions {
     color: #ddd;
     margin: 0;
     padding: 1em 0 0.25em 0;
@@ -26,9 +29,9 @@ body, html {
     max-width: 150px;
     transition: box-shadow 0.15s ease-in-out 0s;
     text-align: center;
- }
+}
 .thumbnail:hover {
-    box-shadow: 0 0 8px rgba(102, 175, 233, .6);
+    box-shadow: 0 0 8px rgba(102, 175, 233, 0.6);
     transition: box-shadow 0.15s ease-in-out 0s;
 }
 .thumbnail p {
@@ -38,7 +41,8 @@ body, html {
 .thumbnail pre {
     display: none;
 }
-.generator > *, .instructions > * {
+.generator > *,
+.instructions > * {
     max-width: 500px;
     margin-left: auto !important;
     margin-right: auto !important;
@@ -49,12 +53,14 @@ body, html {
     padding-bottom: 2em;
 }
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Avenir, "Avenir Next", "Myriad Set Pro", "Myriad Pro", Myriad, Ubuntu, "Bitstream Vera Sans", "DejaVu Sans", Helvetica, Arial, Tahoma, sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Avenir, 'Avenir Next', 'Myriad Set Pro', 'Myriad Pro',
+        Myriad, Ubuntu, 'Bitstream Vera Sans', 'DejaVu Sans', Helvetica, Arial, Tahoma, sans-serif !important;
     /* margin-bottom: 5em; */
     margin: 0;
     padding: 0;
 }
-a.btn, button {
+a.btn,
+button {
     background-color: rgba(0, 0, 0, 0.1) !important;
     border: 2px solid rgba(255, 255, 255, 0.1) !important;
     color: inherit !important;
@@ -62,15 +68,29 @@ a.btn, button {
 h1 {
     margin: 0.5em 0 0.5em 0;
 }
-h1 a, h1 a:link, h1 a:visited, h1 a:hover, h1 a:active,
-.thumbnail a, .thumbnail a:link, .thumbnail a:visited, .thumbnail a:hover, .thumbnail a:active {
+h1 a,
+h1 a:link,
+h1 a:visited,
+h1 a:hover,
+h1 a:active,
+.thumbnail a,
+.thumbnail a:link,
+.thumbnail a:visited,
+.thumbnail a:hover,
+.thumbnail a:active {
     color: inherit;
     text-decoration: none;
 }
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-weight: 200;
 }
-h1, h2 {
+h1,
+h2 {
     text-align: center;
 }
 h2 {
@@ -85,9 +105,10 @@ code {
     color: inherit;
     white-space: pre;
 }
-code, pre {
+code,
+pre {
     color: inherit;
-    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
     background-color: rgba(0, 0, 0, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
@@ -116,12 +137,13 @@ kbd {
     -moz-border-right-colors: none;
     -moz-border-top-colors: none;
 }
-textarea, textarea:focus {
+textarea,
+textarea:focus {
     border: 2px solid rgba(255, 255, 255, 0.1) !important;
     box-shadow: none !important;
     color: inherit !important;
     background-color: rgba(0, 0, 0, 0.1) !important;
-    font-family: Consolas, "Consolas Web", Menlo, Monaco, "Liberation Mono", Courier, monospace;
+    font-family: Consolas, 'Consolas Web', Menlo, Monaco, 'Liberation Mono', Courier, monospace;
     min-height: 15em;
     margin-bottom: 2em !important;
 }
