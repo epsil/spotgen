@@ -19,8 +19,11 @@ var help =
   '    spotgen input.txt [output.txt]\n' +
   '\n' +
   'input.txt is a text file containing a generator string,\n' +
-  'invoking any number of generator commands. output.txt\n' +
-  "will contain the generator's output, a list of Spotify URIs\n" +
+  'invoking any number of generator commands. For details on\n' +
+  'generator string syntax, see the README file at:\n' +
+  'https://github.com/epsil/spotgen\n' +
+  '\n' +
+  "output.txt will contain the generator's output, a list of Spotify URIs\n" +
   'which can be imported into Spotify. If an output file is not\n' +
   'specified, then the Spotify URIs are written to standard output,\n' +
   'with an option to copy them to the clipboard.\n' +
@@ -112,7 +115,7 @@ function main() {
     return;
   }
   if (!input) {
-    console.log('Enter generator string (submit with Ctrl-D):');
+    console.log('Enter generator string (for details on syntax, see spotgen --help).\n' + 'Submit with Ctrl-D.\n');
     var ps = prompt();
     ps.multiline(function(err, lines, str) {
       ps.close();
