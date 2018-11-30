@@ -110,6 +110,7 @@
     "diff": "git diff",
     "log": "git log -p",
     "gitk": "gitk &",
-    "status": "git status"
+    "status": "git status",
+    "help": "cat README.md && echo && spotgen --help"
   }
 }
