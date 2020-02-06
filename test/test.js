@@ -310,12 +310,12 @@ describe('Spotify Playlist Generator', function () {
 
     it('should create a playlist ordered by Spotify popularity', function () {
       var generator = new Generator('#order by popularity\n' +
-                                    'Bowery Electric - Postscript\n' +
-                                    'Bowery Electric - Lushlife')
+                                    'Bowery Electric - Lushlife\n' +
+                                    'Bowery Electric - Postscript')
       return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        str.should.eql('Bowery Electric - Lushlife\n' +
-                       'Bowery Electric - Postscript')
+        str.should.eql('Bowery Electric - Postscript\n' +
+                       'Bowery Electric - Lushlife')
       })
     })
 
@@ -459,7 +459,7 @@ describe('Spotify Playlist Generator', function () {
       var generator = new Generator('#artist Bowery Electric')
       return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        str.should.match(/^Bowery Electric - Floating World/gi)
+        str.should.match(/^Bowery Electric - Beat/gi)
       })
     })
 
@@ -473,7 +473,7 @@ describe('Spotify Playlist Generator', function () {
       var generator = new Generator('#top Bowery Electric')
       return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
-        str.should.match(/^Bowery Electric - Floating World/gi)
+        str.should.match(/^Bowery Electric - Beat/gi)
       })
     })
 
@@ -488,6 +488,15 @@ describe('Spotify Playlist Generator', function () {
       return generator.generate('list').then(function (str) {
         // FIXME: this is really brittle
         str.should.match(/^Flying Saucer Attack - My Dreaming Hill/gi)
+      })
+    })
+
+    it('should dispatch correct amount of #similar entries', function () {
+      var generator = new Generator('#similar2 Bowery Electric')
+      return generator.generate('list').then(function (str) {
+        var defaultArtistLimit = 20
+        var results = str.split('\n')
+        results.length.should.equal(2 * defaultArtistLimit)
       })
     })
 
